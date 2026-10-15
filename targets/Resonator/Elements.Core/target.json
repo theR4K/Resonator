@@ -1,0 +1,6 @@
+{
+  "name": "Elements.Core",
+  "description": "Consumer of native wrappers (Brotli.Core): plain recompile of the shipped dll, so it can be rebuilt against replacement wrappers.",
+  "assembly": "Elements.Core.dll",
+  "weave": "none"
+}

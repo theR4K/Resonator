@@ -1,0 +1,6 @@
+{
+  "name": "Steamworks.NET",
+  "description": "Managed wrapper over a bundled native library (steam_api64, sdkencryptedappticket64; the shipped PE is marked AMD64-only): plain recompile of the shipped dll.",
+  "assembly": "Steamworks.NET.dll",
+  "weave": "none"
+}

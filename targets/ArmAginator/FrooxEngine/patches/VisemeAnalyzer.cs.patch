@@ -1,0 +1,79 @@
+--- a/FrooxEngine/VisemeAnalyzer.cs
++++ b/FrooxEngine/VisemeAnalyzer.cs
+@@ -84,9 +84,7 @@
+ 
+ 	private VisemeAnalyzerEngine? currentEngine;
+ 
++	private IVisemeContext context;
+-	private OVRLipSyncContext ovrContext;
+-
+-	private OpenLipSyncContext openLipSyncContext;
+ 
+ 	private volatile bool _analysisRunning;
+ 
+@@ -138,10 +136,8 @@
+ 
+ 	private void DisposeAnalysisEngine()
+ 	{
++		context?.Dispose();
++		context = null;
+-		ovrContext?.Dispose();
+-		ovrContext = null;
+-		openLipSyncContext?.Dispose();
+-		openLipSyncContext = null;
+ 		currentEngine = null;
+ 	}
+ 
+@@ -210,39 +206,29 @@
+ 		buffer = buffer.EnsureExactSize(readSamples);
+ 		source.Read(buffer.AsMonoBuffer(), Audio.Simulator);
+ 		VisemeAnalyzerEngine targetEngine = PreferredAnalyzer.Value;
+-		if (targetEngine == VisemeAnalyzerEngine.OVRLipSync && !AudioSystem.OVRLipSync.IsInitialized)
+-		{
+-			targetEngine = VisemeAnalyzerEngine.OpenLipSync;
+-		}
+ 		if (targetEngine != currentEngine)
+ 		{
+ 			DisposeAnalysisEngine();
+ 			currentEngine = targetEngine;
++			IVisemeContextFactory factory = NativeServices.Get<IVisemeContextFactory>();
++			int sr = AudioSystem.SampleRate;
++			int fs = AudioSystem.SimulationFrameSize;
++			context = factory?.Create(targetEngine, sr, fs);
++			if (context == null && targetEngine != VisemeAnalyzerEngine.Null)
+-			switch (targetEngine)
+ 			{
++				VisemeAnalyzerEngine alt = targetEngine == VisemeAnalyzerEngine.OVRLipSync ? VisemeAnalyzerEngine.OpenLipSync : VisemeAnalyzerEngine.OVRLipSync;
++				context = factory?.Create(alt, sr, fs);
+-			case VisemeAnalyzerEngine.OVRLipSync:
+-				ovrContext = new OVRLipSyncContext(AudioSystem.OVRLipSync);
+-				break;
+-			case VisemeAnalyzerEngine.OpenLipSync:
+-				openLipSyncContext = new OpenLipSyncContext(AudioSystem.SampleRate, AudioSystem.SimulationFrameSize);
+-				break;
+ 			}
++		}
++		if (context != null)
++		{
++			context.Update(Smoothing);
++			context.Analyze(buffer, analysis, _onAnalyzed);
+ 		}
++		else
+-		switch (currentEngine)
+ 		{
+-		case VisemeAnalyzerEngine.OVRLipSync:
+-			ovrContext.Update(Smoothing);
+-			ovrContext.Analyze(buffer, analysis, _onAnalyzed);
+-			break;
+-		case VisemeAnalyzerEngine.OpenLipSync:
+-			openLipSyncContext.Update(Smoothing);
+-			openLipSyncContext.Analyze(buffer, analysis);
+-			_onAnalyzed();
+-			break;
+-		default:
+ 			Clear();
+ 			OnAnalyzed();
+-			break;
+ 		}
+ 	}
+ 

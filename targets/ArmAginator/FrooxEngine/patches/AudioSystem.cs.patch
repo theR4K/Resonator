@@ -1,0 +1,28 @@
+--- a/FrooxEngine/AudioSystem.cs
++++ b/FrooxEngine/AudioSystem.cs
+@@ -66,8 +66,6 @@
+ 	public AudioDeviceOutput PrimaryOutput { get; private set; }
+ 
+ 	public AudioDeviceOutput StreamingOutput { get; private set; }
+-
+-	public OVRLipSyncInterface OVRLipSync { get; private set; }
+ 
+ 	public bool IsMuted { get; set; }
+ 
+@@ -428,7 +426,7 @@
+ 		Settings.RegisterComponentChanges<AudioInputFilteringSettings>(OnInputChanged);
+ 		Settings.RegisterValueChanges<AudioPerformanceSettings>(OnPerformanceChanged);
+ 		Settings.GetActiveSetting<VoiceSettings>();
++		if (engine.InputInterface.HeadOutputDevice != HeadOutputDevice.Headless && ArmAgedonHost.AudioDrivers) // ArmAgedon seam: simulator-only hosts
+-		if (engine.InputInterface.HeadOutputDevice != HeadOutputDevice.Headless)
+ 		{
+ 			if (engine.Platform == Platform.Linux || options.ForceAlternateAudio)
+ 			{
+@@ -445,7 +443,6 @@
+ 		audioThreadLoop = new AudioThreadLoopUpdater(Simulator);
+ 		audioThreadLoop.StartThread();
+ 		UpdateSampleRate();
+-		OVRLipSync = new OVRLipSyncInterface(SampleRate, SimulationFrameSize);
+ 	}
+ 
+ 	private void Engine_OnShutdown()

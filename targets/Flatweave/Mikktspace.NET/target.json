@@ -1,0 +1,9 @@
+{
+  "name": "Mikktspace.NET",
+  "description": "Yellow Dog Man's own library: their published package.",
+  "assembly": "Mikktspace.NET.dll",
+  "package": {
+    "id": "YellowDogMan.Mikktspace.NET",
+    "version": "0.1.4"
+  }
+}

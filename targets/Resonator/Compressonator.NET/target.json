@@ -1,0 +1,6 @@
+{
+  "name": "Compressonator.NET",
+  "description": "Managed wrapper over a bundled native library (CMP_Framework, CMP_Compressonator): plain recompile of the shipped dll.",
+  "assembly": "Compressonator.NET.dll",
+  "weave": "none"
+}

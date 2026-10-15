@@ -1,0 +1,6 @@
+{
+  "name": "POpusCodec",
+  "description": "Managed wrapper over a bundled native library (opus): plain recompile of the shipped dll.",
+  "assembly": "POpusCodec.dll",
+  "weave": "none"
+}

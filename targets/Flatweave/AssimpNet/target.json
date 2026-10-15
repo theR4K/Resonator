@@ -1,0 +1,9 @@
+{
+  "name": "AssimpNet",
+  "description": "NuGet AssimpNetter (Saalvage) - the maintained continuation of AssimpNet (whose official 5.0.0-beta1 predates assimp 5.1's struct layout); releases track the native assimp version (6.0.5 = ours).",
+  "assembly": "AssimpNet.dll",
+  "package": {
+    "id": "AssimpNetter",
+    "version": "6.0.5"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "crunch.NET",
+  "description": "Managed wrapper over a bundled native library (crnlib): plain recompile of the shipped dll.",
+  "assembly": "crunch.NET.dll",
+  "weave": "none"
+}

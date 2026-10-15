@@ -1,0 +1,24 @@
+--- a/FrooxEngine/OpenLipSyncContext.cs
++++ b/FrooxEngine/OpenLipSyncContext.cs
+@@ -5,7 +5,7 @@
+ 
+ namespace FrooxEngine;
+ 
++public class OpenLipSyncContext : IVisemeContext
+-public class OpenLipSyncContext : IDisposable
+ {
+ 	private OpenLipSyncBackend backend;
+ 
+@@ -73,6 +73,12 @@
+ 		{
+ 			analysis[15] = _frame.laughterScore;
+ 		}
++	}
++
++	public void Analyze(float[] audioData, float[] analysis, Action onDone)
++	{
++		Analyze(audioData, analysis);
++		onDone?.Invoke();
+ 	}
+ 
+ 	public void Dispose()

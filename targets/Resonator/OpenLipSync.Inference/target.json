@@ -1,0 +1,6 @@
+{
+  "name": "OpenLipSync.Inference",
+  "description": "Consumer of native wrappers (Microsoft.ML.OnnxRuntime): plain recompile of the shipped dll, so it can be rebuilt against replacement wrappers.",
+  "assembly": "OpenLipSync.Inference.dll",
+  "weave": "none"
+}

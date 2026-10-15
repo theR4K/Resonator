@@ -1,0 +1,13 @@
+# build output
+bin/
+obj/
+*.user
+.vs/
+.idea/
+
+# pipeline output / scratch (decompiled sources and Resonite binaries never go in git)
+out/
+work/
+*.dll
+*.pdb
+*.exe

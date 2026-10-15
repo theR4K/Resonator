@@ -1,0 +1,7 @@
+{
+  "name": "ProtoFluxBindings",
+  "description": "Weaver-processed (FROOXENGINE_WEAVED), loaded by the engine at run time: deweaved and recompiled like FrooxEngine.",
+  "assembly": "ProtoFluxBindings.dll",
+  "weave": "deweave",
+  "weaver_check": "FrooxEngine.Weaver.dll"
+}

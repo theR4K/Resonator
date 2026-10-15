@@ -1,0 +1,4 @@
+{
+  "description": "The ARM port: inherits every Flatweave (and so Resonator) target; this set holds only the ARM layer.",
+  "extends": "Flatweave"
+}

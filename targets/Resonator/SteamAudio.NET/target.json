@@ -1,0 +1,6 @@
+{
+  "name": "SteamAudio.NET",
+  "description": "Managed wrapper over a bundled native library (phonon): plain recompile of the shipped dll.",
+  "assembly": "SteamAudio.NET.dll",
+  "weave": "none"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Microsoft.ML.OnnxRuntime",
+  "description": "Official NuGet Microsoft.ML.OnnxRuntime.",
+  "assembly": "Microsoft.ML.OnnxRuntime.dll",
+  "package": {
+    "id": "Microsoft.ML.OnnxRuntime",
+    "version": "1.31.0"
+  }
+}

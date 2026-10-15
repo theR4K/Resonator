@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- the official shaders -> a reference source tree + metadata table. Links the game's cloud client
+       from the Resonite install (compile time); at run time the same assemblies resolve from the
+       install given with resonite / RESONITE_DIR -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+    <Reference Include="SkyFrost.Base" HintPath="$(ResoniteDir)\SkyFrost.Base.dll" Private="false" />
+    <Reference Include="Elements.Core" HintPath="$(ResoniteDir)\Elements.Core.dll" Private="false" />
+  </ItemGroup>
+  <Target Name="CheckResoniteDir" BeforeTargets="ResolveAssemblyReferences" Condition="!Exists('$(ResoniteDir)\SkyFrost.Base.dll')">
+    <Error Text="Resonite install not found at '$(ResoniteDir)' (needed to link SkyFrost.Base / Elements.Core). Set RESONITE_DIR or pass -p:ResoniteDir=&lt;dir&gt;." />
+  </Target>
+</Project>

@@ -1,0 +1,6 @@
+{
+  "name": "LeapSharp",
+  "description": "Managed wrapper over a bundled native library (LeapC): plain recompile of the shipped dll.",
+  "assembly": "LeapSharp.dll",
+  "weave": "none"
+}

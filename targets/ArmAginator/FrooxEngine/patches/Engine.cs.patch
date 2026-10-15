@@ -1,0 +1,51 @@
+--- a/FrooxEngine/Engine.cs
++++ b/FrooxEngine/Engine.cs
+@@ -239,6 +239,8 @@
+ 	public string InitSubphase { get; internal set; }
+ 
+ 	public string AppPath { get; private set; }
++
++	public LaunchOptions LaunchOptions { get; private set; }
+ 
+ 	public string DataPath { get; private set; }
+ 
+@@ -669,6 +671,7 @@
+ 		UniqueSessionID = Guid.NewGuid();
+ 		InitProgress?.SetFixedPhase("Initializing Runtime Parameters...");
+ 		AppPath = appPath;
++		LaunchOptions = options;
+ 		DataPath = Path.GetFullPath(Environment.ExpandEnvironmentVariables(options.DataDirectory));
+ 		CachePath = Path.GetFullPath(Environment.ExpandEnvironmentVariables(options.CacheDirectory));
+ 		if (string.IsNullOrWhiteSpace(options.LocaleDirectory))
+@@ -1005,20 +1008,14 @@
+ 		}
+ 		InputInterface.RegisterPostInputStateTask(() =>
+ 		{
++			// VIVE eye/lip tracking driver is provided by the optional FrooxEngine.Ext.Vive plugin.
+-			if (ViveProEyeTrackingDriver.ShouldRegister(options, InputInterface))
+-			{
+-				InputInterface.RegisterInputDriver(new ViveProEyeTrackingDriver());
+-			}
+ 			if (OmniceptTrackingDriver.ShouldRegister(InputInterface))
+ 			{
+ 				InputInterface.RegisterInputDriver(new OmniceptTrackingDriver());
+ 			}
+ 		});
++		// Leap Motion driver is provided by the optional FrooxEngine.Ext.Leap plugin.
++		// bHaptics driver is provided by the optional bHaptics strategy (a module).
+-		if (LeapMotionDriver.IsSupported(this))
+-		{
+-			InputInterface.RegisterInputDriver(new LeapMotionDriver());
+-		}
+-		InputInterface.RegisterInputDriver(new BHapticsDriver());
+ 		InputInterface.RegisterInputDriver(new OWO_Driver());
+ 		InputInterface.RegisterInputDriver(new GiggleTechDriver());
+ 		if (options.ForceBabble || BabbleOSC_Driver.ShouldInitialize)
+@@ -1206,6 +1203,7 @@
+ 	private async Task FinishInitialization(LaunchOptions options)
+ 	{
+ 		InitProgress?.SetFixedPhase("Finalizing initialization");
++		EngineModules.Register(this); // ArmAgedon seam: modules the host registered (NativeServices)
+ 		await RenderSystem.FinishInitialize();
+ 		Userspace.DoNotAutoLoadHome = options.DoNotAutoLoadHome;
+ 		foreach (Action postInitAction in _postInitActions)

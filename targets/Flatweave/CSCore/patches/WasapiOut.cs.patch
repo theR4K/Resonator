@@ -1,0 +1,245 @@
+--- a/SoundOut/WasapiOut.cs
++++ b/SoundOut/WasapiOut.cs
+@@ -31,6 +31,7 @@
+         private bool _isInitialized;
+ 
+         private int _latency;
++        private int? _computeLatency;
+         private WaveFormat _outputFormat;
+         private volatile PlaybackState _playbackState;
+         private Thread _playbackThread;
+@@ -38,6 +39,10 @@
+         private VolumeSource _volumeSource;
+         private IWaveSource _source;
+         private StreamRoutingOptions _streamRoutingOptions = StreamRoutingOptions.OnFormatChange | StreamRoutingOptions.OnDeviceDisconnect;
++        private bool _abortOnZero = true;
++
++        private Guid _sessionGuid;
++        private bool _crossProcessSession;
+ 
+         private Role _deviceRole = DeviceRoleNotSet;
+ 
+@@ -67,9 +72,11 @@
+         ///     playback for the specified device is possible at once.
+         /// </param>
+         /// <param name="latency">Latency of the playback specified in milliseconds.</param>
++        public WasapiOut(bool eventSync, AudioClientShareMode shareMode, int latency, Guid sessionGuid = default, bool crossProcessSession = false)
+-        public WasapiOut(bool eventSync, AudioClientShareMode shareMode, int latency)
+             : this(eventSync, shareMode, latency, ThreadPriority.AboveNormal)
+         {
++            _sessionGuid = sessionGuid;
++            _crossProcessSession = crossProcessSession;
+         }
+ 
+         /// <summary>
+@@ -224,8 +231,41 @@
+                 if (value <= 0)
+                     throw new ArgumentOutOfRangeException("value");
+                 _latency = value;
++            }
++        }
++
++        /// <summary>
++        ///     Gets or sets the latency override used to calculate buffer refresh intervals.
++        /// The <see cref="ComputeLatency" /> property has to be set before initializing.
++        /// </summary>
++        public int? ComputeLatency
++        {
++            get { return _computeLatency; }
++            set
++            {
++                if (value <= 0)
++                    throw new ArgumentOutOfRangeException("value");
++                _computeLatency = value;
+             }
++        }
++
++        /// <summary>
++        /// When true, the output will be aborted when the data stream returns zero read bytes.
++        /// Otherwise it will keep  attempting to read data until it has more.
++        /// </summary>
++        public bool AbortOnZeroData
++        {
++            get { return _abortOnZero; }
++            set { _abortOnZero = value; }
+         }
++
++        public int ActualBufferSize { get; private set; }
++        public int CurrentPadding { get; private set; }
++
++        public WaveFormat ActualOutputFormat { get; private set; }
++
++        public Action<WasapiOut> OnPlaybackUpdateBegin;
++        public Action<WasapiOut> OnPlaybackUpdateEnd;
+ 
+         /// <summary>
+         ///     Occurs when the playback stops.
+@@ -434,10 +474,13 @@
+ 
+         private void PlaybackProc(object playbackStartedEventWaithandle)
+         {
++            var intervalLatency = _computeLatency ?? _latency;
++
+             Exception exception = null;
+             IntPtr avrtHandle = IntPtr.Zero;
++            string mmcssType = intervalLatency > 25 ? "Audio" : "Pro Audio";
+-            string mmcssType = Latency > 25 ? "Audio" : "Pro Audio";
+             int taskIndex = 0;
++
+             try
+             {
+                 //we need a least one wait handle for the streamrouting stuff
+@@ -447,7 +490,7 @@
+                 //the wait time for event sync has the default value of latency * 3
+                 //if we're using a pure render loop, the wait time has to be much lower
+                 //lets say latency / 8. otherwise we might loose too much time
++                int waitTime = _eventSync ? intervalLatency * 3 : intervalLatency / 8;
+-                int waitTime = _eventSync ? _latency * 3 : _latency / 8;
+                 waitTime = Math.Max(1, waitTime);
+ 
+ 
+@@ -474,6 +517,8 @@
+                 byte[] buffer = null;
+                 int bufferSize = 0;
+                 int frameSize = 0;
++
++                bool playbackEventRaised = false;
+ 
+                 while (PlaybackState != PlaybackState.Stopped)
+                 {
+@@ -488,6 +533,8 @@
+                             frameSize = _outputFormat.Channels * _outputFormat.BytesPerSample;
+ 
+                             buffer = new byte[bufferSize * frameSize];
++
++                            ActualBufferSize = bufferSize;
+                         }
+ 
+                         int waitResult = WaitHandle.WaitAny(eventWaitHandleArray, waitTime);
+@@ -553,7 +600,11 @@
+                                 if (_audioClient.GetCurrentPaddingNative(out padding) != (int)HResult.S_OK)
+                                     continue;
+ 
++                                CurrentPadding = padding;
+                             }
++
++                            playbackEventRaised = true;
++                            OnPlaybackUpdateBegin?.Invoke(this);
+ 
+                             int framesReadyToFill = bufferSize - padding;
+ 
+@@ -565,6 +616,9 @@
+ 
+                             if (!FeedBuffer(_renderClient, buffer, framesReadyToFill, frameSize))
+                                 _playbackState = PlaybackState.Stopped; //source is eof
++
++                            OnPlaybackUpdateEnd?.Invoke(this);
++                            playbackEventRaised = false;
+ 
+                         }
+                         else if (PlaybackState == PlaybackState.Paused &&
+@@ -583,6 +637,14 @@
+                         if (ex.ErrorCode != (int)HResult.AUDCLNT_E_DEVICE_INVALIDATED)
+                         {
+                             throw;
++                        }
++                    }
++                    finally
++                    {
++                        if(playbackEventRaised)
++                        {
++                            OnPlaybackUpdateEnd?.Invoke(this);
++                            playbackEventRaised = false;
+                         }
+                     }
+                 }
+@@ -594,7 +656,7 @@
+                 }
+ 
+ 
++                Thread.Sleep(intervalLatency / 2);
+-                Thread.Sleep(_latency / 2);
+ 
+                 _audioClient.Stop();
+                 _audioClient.Reset();
+@@ -635,6 +697,14 @@
+         {
+             if (!_isInitialized)
+                 throw new InvalidOperationException("WasapiOut is not initialized.");
++        }
++
++        AudioClientStreamFlags ProcessFlags(AudioClientStreamFlags flags)
++        {
++            if (_crossProcessSession)
++                flags |= AudioClientStreamFlags.StreamFlagsCrossProcess;
++
++            return flags;
+         }
+ 
+         private void InitializeInternal()
+@@ -643,6 +713,8 @@
+ 
+             _audioClient = AudioClient.FromMMDevice(Device);
+             _outputFormat = SetupWaveFormat(_source, _audioClient);
++
++            ActualOutputFormat = _outputFormat;
+ 
+             long latency = _latency * reftimesPerMillisecond;
+             AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED_TRY_AGAIN:
+@@ -650,19 +722,19 @@
+             {
+ 
+                 if (!_eventSync)
++                    _audioClient.Initialize(_shareMode, ProcessFlags(AudioClientStreamFlags.None), latency, 0, _outputFormat,
++                        _sessionGuid);
+-                    _audioClient.Initialize(_shareMode, AudioClientStreamFlags.None, latency, 0, _outputFormat,
+-                        Guid.Empty);
+                 else //event sync
+                 {
+                     if (_shareMode == AudioClientShareMode.Exclusive) //exclusive
+                     {
++                        _audioClient.Initialize(_shareMode, ProcessFlags(AudioClientStreamFlags.StreamFlagsEventCallback), latency,
++                            latency, _outputFormat, _sessionGuid);
+-                        _audioClient.Initialize(_shareMode, AudioClientStreamFlags.StreamFlagsEventCallback, latency,
+-                            latency, _outputFormat, Guid.Empty);
+                     }
+                     else //shared
+                     {
++                        _audioClient.Initialize(_shareMode, ProcessFlags(AudioClientStreamFlags.StreamFlagsEventCallback), 0, 0,
++                            _outputFormat, _sessionGuid);
+-                        _audioClient.Initialize(_shareMode, AudioClientStreamFlags.StreamFlagsEventCallback, 0, 0,
+-                            _outputFormat, Guid.Empty);
+                         //latency = (int)(_audioClient.StreamLatency / reftimesPerMillisecond);
+                     }
+                 }
+@@ -812,7 +884,7 @@
+                     finalFormat = closestMatch;
+ 
+                 //todo: test channel matrix conversion
++                /*ChannelMatrix channelMatrix = null;
+-                ChannelMatrix channelMatrix = null;
+                 if (UseChannelMixingMatrices)
+                 {
+                     try
+@@ -830,7 +902,7 @@
+                 resampler.Quality = 60;
+ 
+                 _source = resampler;
++                _createdResampler = true;*/
+-                _createdResampler = true;
+ 
+                 return finalFormat;
+             }
+@@ -901,9 +973,10 @@
+ 
+             //get the requested data
+             int read = _source.Read(buffer, 0, count);
++            //if the source did not provide enough data, we abort the playback by returning false when abort is true
++            //otherwise we just skip feedint the data in and try again next time
+-            //if the source did not provide enough data, we abort the playback by returning false
+             if (read <= 0)
++                return !AbortOnZeroData;
+-                return false;
+ 
+             //calculate the number of FRAMES to request
+             int actualNumFramesCount = read / frameSize;

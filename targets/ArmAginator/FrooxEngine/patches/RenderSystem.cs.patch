@@ -1,0 +1,11 @@
+--- a/FrooxEngine/RenderSystem.cs
++++ b/FrooxEngine/RenderSystem.cs
+@@ -191,7 +191,7 @@
+ 			binaryWriter.Flush();
+ 			await udpClient.SendAsync(stream.ToArray(), (int)stream.Length, new IPEndPoint(IPAddress.Loopback, 42512));
+ 		}
++		else if (!ArmAgedonHost.InProcessRenderer) // ArmAgedon seam: the in-process renderer needs no renderer process
+-		else
+ 		{
+ 			RendererProcess = await StartRenderer();
+ 			if (RendererProcess == null)

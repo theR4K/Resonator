@@ -1,0 +1,22 @@
+<!-- Resonator template csproj — deployed by Resonator.ProjectBuilder;
+     __TFM__ and __NAME__ are substituted from the target. Hand-written csprojs
+     (consumer-owned) are never overwritten; this file is re-deployed in place. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>__NAME__</AssemblyName>
+    <TargetFramework>__TFM__</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Nullable>disable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <Version>1.0.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="**/*.cs" Exclude="bin/**;obj/**" />
+  </ItemGroup>
+  <Import Project="references.targets" Condition="Exists('references.targets')" />
+</Project>

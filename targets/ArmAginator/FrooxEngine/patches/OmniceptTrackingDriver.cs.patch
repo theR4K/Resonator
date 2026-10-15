@@ -1,0 +1,13 @@
+--- a/OmniceptTrackingDriver.cs
++++ b/OmniceptTrackingDriver.cs
+@@ -22,7 +22,9 @@
+ 		{
+ 			return false;
+ 		}
++		// ArmAgedon seam: no headset device yet (input before the XR session) -> don't register. Upstream: GetDevice<GeneralHeadset>().ConnectionType
++		GeneralHeadset headset = inputInterface.GetDevice<GeneralHeadset>();
++		if (headset == null || headset.ConnectionType == HeadsetConnection.WirelessSteamLink)
+-		if (inputInterface.GetDevice<GeneralHeadset>().ConnectionType == HeadsetConnection.WirelessSteamLink)
+ 		{
+ 			return false;
+ 		}

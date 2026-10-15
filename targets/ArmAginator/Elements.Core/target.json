@@ -1,0 +1,9 @@
+{
+  "name": "Elements.Core",
+  "description": "Elements.Core built from source by ArmAgedon (generated/ + Injected/). Extends Resonator/Elements.Core; Renderite.Shared is the consumer's in-process build. Native-backed code moves out behind NativeServices strategies the Runner injects (ArmAgedon docs/native-separation.md).",
+  "extends": "Resonator/Elements.Core",
+  "exclude_refs": [
+    "Renderite.Shared",
+    "Brotli.Core"
+  ]
+}

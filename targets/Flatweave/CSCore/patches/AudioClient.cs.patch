@@ -1,0 +1,20 @@
+--- a/CoreAudioAPI/AudioClient.cs
++++ b/CoreAudioAPI/AudioClient.cs
+@@ -161,7 +161,7 @@
+             try
+             {
+                 return InteropCalls.CallI(UnsafeBasePtr, shareMode, streamFlags, hnsBufferDuration, hnsPeriodicity,
++                    hWaveFormat.AddrOfPinnedObject().ToPointer(), &audioSessionGuid, // LPCGUID: by pointer (by value only worked on x64, where 16-byte structs are passed by hidden reference)
+-                    hWaveFormat.AddrOfPinnedObject().ToPointer(), audioSessionGuid,
+                     ((void**) (*(void**) UnsafeBasePtr))[3]);
+             }
+             finally
+@@ -216,7 +216,7 @@
+             IntPtr waveFormat, Guid audioSessionGuid)
+         {
+             return InteropCalls.CallI(UnsafeBasePtr, shareMode, streamFlags, hnsBufferDuration, hnsPeriodicity,
++                waveFormat.ToPointer(), &audioSessionGuid, // LPCGUID: by pointer
+-                waveFormat.ToPointer(), audioSessionGuid,
+                 ((void**) (*(void**) UnsafeBasePtr))[3]);
+         }
+ 

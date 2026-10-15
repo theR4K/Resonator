@@ -1,0 +1,9 @@
+{
+  "name": "SharpPipe",
+  "description": "Yellow Dog Man's own library: their published package (= YDM git HEAD).",
+  "assembly": "SharpPipe.dll",
+  "package": {
+    "id": "YellowDogMan.SharpPipe",
+    "version": "1.4.2"
+  }
+}

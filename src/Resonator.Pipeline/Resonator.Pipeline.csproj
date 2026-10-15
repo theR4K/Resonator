@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- shared by ProjectBuilder and PatchGenerator: target sets, prepare -> decompile -> fixup, patch application -->
+  <ItemGroup>
+    <PackageReference Include="ICSharpCode.Decompiler" Version="11.1.0.9782" />
+    <PackageReference Include="ICSharpCode.ILSpyX" Version="11.1.0.9782" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Resonator.Weaver\Resonator.Weaver.csproj" />
+  </ItemGroup>
+</Project>

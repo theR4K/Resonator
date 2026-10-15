@@ -1,0 +1,9 @@
+{
+  "name": "Brotli.Core",
+  "description": "Official NuGet Brotli.NET (XieJJ99) instead of YDM's fork (which adds Linux-arm64 loading and a block-size parameter the engine leaves at 0).",
+  "assembly": "Brotli.Core.dll",
+  "package": {
+    "id": "Brotli.NET",
+    "version": "2.1.1"
+  }
+}

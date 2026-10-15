@@ -1,0 +1,6 @@
+{
+  "name": "Brotli.Core",
+  "description": "Managed wrapper over a bundled native library (brolib_x64 / brolib_x86, loaded via LoadLibrary/dlopen by bitness): plain recompile of the shipped dll.",
+  "assembly": "Brotli.Core.dll",
+  "weave": "none"
+}

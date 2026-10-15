@@ -1,0 +1,6 @@
+{
+  "name": "SharpFont",
+  "description": "Managed wrapper over a bundled native library (freetype6, resolved via NativeLibrary.SetDllImportResolver): plain recompile of the shipped dll.",
+  "assembly": "SharpFont.dll",
+  "weave": "none"
+}

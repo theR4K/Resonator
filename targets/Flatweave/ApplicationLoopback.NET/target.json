@@ -1,0 +1,13 @@
+{
+  "name": "ApplicationLoopback.NET",
+  "description": "Yellow Dog Man's own library, no package: source at YDM git HEAD.",
+  "assembly": "ApplicationLoopback.NET.dll",
+  "source": {
+    "git": "https://github.com/Yellow-Dog-Man/ApplicationLoopback.NET",
+    "ref": "9e24978e1d8175c11f065b79984970360da53668",
+    "dir": "ApplicationLoopback.NET/ApplicationLoopback.NET",
+    "exclude": [
+      "Properties/"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "SDL3-CS",
+  "description": "Managed wrapper over a bundled native library (SDL3, SDL3_image, SDL3_ttf, SDL3_shadercross, SDL2_mixer): plain recompile of the shipped dll.",
+  "assembly": "SDL3-CS.dll",
+  "weave": "none"
+}

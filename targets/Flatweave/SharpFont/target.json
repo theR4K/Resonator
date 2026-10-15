@@ -1,0 +1,13 @@
+{
+  "name": "SharpFont",
+  "description": "Official source: Robmaister/SharpFont master (its NuGet 4.0.1 targets net45 only, which net10 projects don't consume). YDM's fork changes only the native loading.",
+  "assembly": "SharpFont.dll",
+  "source": {
+    "git": "https://github.com/Robmaister/SharpFont",
+    "ref": "26454a8b5b53733ff7a10de2322469b64cb75ee8",
+    "dir": "Source/SharpFont",
+    "exclude": [
+      "Properties/"
+    ]
+  }
+}

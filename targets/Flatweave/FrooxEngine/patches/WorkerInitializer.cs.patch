@@ -1,0 +1,37 @@
+--- a/FrooxEngine/WorkerInitializer.cs
++++ b/FrooxEngine/WorkerInitializer.cs
+@@ -277,7 +277,25 @@
+ 				str.Append(" ");
+ 			}
+ 			str.AppendLine("- " + c2.Name);
++		}
++	}
++
++	// Flatweave: the flattener clears InitOnly on sync-member fields (C# cannot store into readonly outside a ctor) and marks
++	// them [Resonator.FlattenedInitOnly]; the engine's InitOnly-based reflection (sync member discovery, data-model hash) reads both.
++	internal static bool IsInitOnlyOrFlattened(this FieldInfo field)
++	{
++		if (field.IsInitOnly)
++		{
++			return true;
++		}
++		foreach (CustomAttributeData attribute in field.CustomAttributes)
++		{
++			if (attribute.AttributeType.FullName == "Resonator.FlattenedInitOnlyAttribute")
++			{
++				return true;
++			}
+ 		}
++		return false;
+ 	}
+ 
+ 	private static bool IsValidField(FieldInfo field, Type workerType)
+@@ -288,7 +306,7 @@
+ 			{
+ 				return false;
+ 			}
++			if (!field.IsInitOnlyOrFlattened())
+-			if (!field.IsInitOnly)
+ 			{
+ 				return false;
+ 			}

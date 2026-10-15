@@ -1,0 +1,9 @@
+{
+  "name": "FrooxEngine",
+  "description": "The whole FrooxEngine.dll recompiled WITH the weave baked into the source: the shipped (weaved) dll is flattened (Resonator.Weaver Flattener: sync fields lose InitOnly, protected flips with inaccessible field types revert to private, CoderAOT.Dummy emptied) and decompiled as-is. The weaver-generated InitializeSyncMembers/GetSyncMember/__New become ordinary source, the version stamp is kept, so the rebuilt dll drops in next to the shipped weaved assemblies with no reweave. Patches layer on Resonator/FrooxEngine.",
+  "extends": "Resonator/FrooxEngine",
+  "weave": "flatten",
+  "packages": {
+    "Concentus": "2.2.2"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "FrooxEngine",
+  "description": "Resonator's default target: the whole FrooxEngine.dll, deweaved and recompiled, with only the patches needed to build. No splits, no seams - a plain recompile of the shipped engine.",
+  "assembly": "FrooxEngine.dll",
+  "weave": "deweave",
+  "exclude_types": [
+    "_003C_003Ez__ReadOnlySingleElementList"
+  ]
+}

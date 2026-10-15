@@ -1,0 +1,11 @@
+--- a/FrooxEngine/Font.cs
++++ b/FrooxEngine/Font.cs
+@@ -633,7 +633,7 @@
+ 					obj = backingBufferAllocator;
+ 				}
+ 				IBackingBufferAllocator allocator = (IBackingBufferAllocator)obj;
++				GlyphAtlas glyphAtlas = new GlyphAtlas(Data, RenderMethod, allocator, Padding, PixelRange, FontAtlasPolicy.PackRegionSize(GlyphEmSize), 4096);
+-				GlyphAtlas glyphAtlas = new GlyphAtlas(Data, RenderMethod, allocator, Padding, PixelRange, MathX.Max(512, GlyphEmSize), 4096);
+ 				dynamicAtlas.AddAtlas(new GlyphAtlasManager(this, glyphAtlas));
+ 			}
+ 			GlyphAtlasManager atlas = dynamicAtlas.GetAtlas(currentAtlas);

@@ -1,0 +1,168 @@
+--- a/Renderite/Shared/MessagingManager.cs
++++ /dev/null
+@@ -1,165 @@
+-using System;
+-using System.Threading;
+-using System.Threading.Tasks;
+-using Cloudtoid.Interprocess;
+-
+-namespace Renderite.Shared;
+-
+-public class MessagingManager : IDisposable
+-{
+-	public const int DEFAULT_CAPACITY = 8388608;
+-
+-	public RenderCommandHandler CommandHandler;
+-
+-	public Action<Exception> FailureHandler;
+-
+-	public Action<string> WarningHandler;
+-
+-	private IPublisher _publisher;
+-
+-	private ISubscriber _subscriber;
+-
+-	private object _lock = new object();
+-
+-	private IMemoryPackerEntityPool _pool;
+-
+-	private CancellationTokenSource cancellation;
+-
+-	private Memory<byte> writerBuffer;
+-
+-	private Memory<byte> receiverBuffer;
+-
+-	private Thread receiverThread;
+-
+-	public int ReceivedMessages { get; private set; }
+-
+-	public int SentMessages { get; private set; }
+-
+-	public MessagingManager(IMemoryPackerEntityPool pool)
+-	{
+-		_pool = pool;
+-	}
+-
+-	public void Connect(string queueName, bool isAuthority, long capacity = 8388608L)
+-	{
+-		writerBuffer = new Memory<byte>(new byte[capacity]);
+-		receiverBuffer = new Memory<byte>(new byte[capacity]);
+-		QueueFactory queueFactory = new QueueFactory();
+-		QueueOptions options = new QueueOptions(queueName + (isAuthority ? "A" : "S"), capacity, isAuthority);
+-		QueueOptions options2 = new QueueOptions(queueName + (isAuthority ? "S" : "A"), capacity, isAuthority);
+-		_publisher = queueFactory.CreatePublisher(options);
+-		_subscriber = queueFactory.CreateSubscriber(options2);
+-		StartProcessing();
+-	}
+-
+-	private void StartProcessing()
+-	{
+-		cancellation = new CancellationTokenSource();
+-		receiverThread = new Thread(ReceiverLogic);
+-		receiverThread.Priority = ThreadPriority.Highest;
+-		receiverThread.IsBackground = true;
+-		receiverThread.Start();
+-	}
+-
+-	public void SendCommand(RendererCommand command)
+-	{
+-		if (command == null)
+-		{
+-			throw new ArgumentNullException("command");
+-		}
+-		try
+-		{
+-			if (_publisher == null)
+-			{
+-				throw new InvalidOperationException("Cannot send commands when publisher is gone!");
+-			}
+-			lock (_lock)
+-			{
+-				MemoryPacker packer = new MemoryPacker(writerBuffer.Span);
+-				command.Encode(ref packer);
+-				int num = packer.ComputeLength(writerBuffer.Span);
+-				if (num == 0)
+-				{
+-					throw new Exception($"Serializing command resulted in zero length. Command: {command}");
+-				}
+-				Span<byte> span = writerBuffer.Span.Slice(0, num);
+-				while (!_publisher.TryEnqueue(span))
+-				{
+-					WarningHandler("Queue doesn't have enough free capacity, stalling message writing!");
+-					Thread.Sleep(10);
+-				}
+-				SentMessages++;
+-			}
+-		}
+-		catch (Exception obj)
+-		{
+-			FailureHandler?.Invoke(obj);
+-			throw;
+-		}
+-	}
+-
+-	public void StartKeepAlive(int intervalMilliseconds = 50, Action onSend = null)
+-	{
+-		Task.Run(async () =>
+-		{
+-			await KeepAliveHandler(intervalMilliseconds, onSend);
+-		});
+-	}
+-
+-	private async Task KeepAliveHandler(int intervalMilliseconds, Action onSend = null)
+-	{
+-		while (!cancellation.IsCancellationRequested)
+-		{
+-			await Task.Delay(TimeSpan.FromMilliseconds((double)intervalMilliseconds)).ConfigureAwait(continueOnCapturedContext: false);
+-			SendCommand(new KeepAlive());
+-			onSend?.Invoke();
+-		}
+-	}
+-
+-	private void ReceiverLogic()
+-	{
+-		try
+-		{
+-			while (!cancellation.IsCancellationRequested)
+-			{
+-				ReadOnlyMemory<byte> readOnlyMemory = _subscriber.Dequeue(receiverBuffer, cancellation.Token);
+-				ReceivedMessages++;
+-				if (cancellation.IsCancellationRequested)
+-				{
+-					break;
+-				}
+-				if (!readOnlyMemory.IsEmpty)
+-				{
+-					int length = readOnlyMemory.Length;
+-					MemoryUnpacker unpacker = new MemoryUnpacker(readOnlyMemory.Span, _pool);
+-					RendererCommand rendererCommand = null;
+-					try
+-					{
+-						rendererCommand = PolymorphicMemoryPackableEntity<RendererCommand>.Decode(ref unpacker);
+-						CommandHandler?.Invoke(rendererCommand, length);
+-					}
+-					catch (Exception innerException)
+-					{
+-						throw new Exception($"Failure processing message. Message length: {readOnlyMemory.Span.Length}. Remaining data: {unpacker.RemainingData}, Command: {rendererCommand}", innerException);
+-					}
+-				}
+-			}
+-		}
+-		catch (Exception obj)
+-		{
+-			FailureHandler?.Invoke(obj);
+-		}
+-		finally
+-		{
+-			_publisher.Dispose();
+-			_subscriber.Dispose();
+-			_publisher = null;
+-			_subscriber = null;
+-		}
+-	}
+-
+-	public void Dispose()
+-	{
+-		cancellation?.Cancel();
+-	}
+-}

@@ -1,0 +1,11 @@
+--- a/FrooxEngine/QUIC_Manager.cs
++++ b/FrooxEngine/QUIC_Manager.cs
+@@ -56,7 +56,7 @@
+ 		{
+ 			port = 0;
+ 		}
++		return [new QUIC_Listener(this, port, world, Config)];
+-		return new _003C_003Ez__ReadOnlySingleElementList<IListener>(new QUIC_Listener(this, port, world, Config));
+ 	}
+ 
+ 	public QUIC_Manager(IPlatformProfile profile, QUICConfig? config)

@@ -1,0 +1,6 @@
+{
+  "name": "Microsoft.ML.OnnxRuntime",
+  "description": "Managed wrapper over a bundled native library (onnxruntime, ortextensions): plain recompile of the shipped dll.",
+  "assembly": "Microsoft.ML.OnnxRuntime.dll",
+  "weave": "none"
+}

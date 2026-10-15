@@ -1,0 +1,9 @@
+{
+  "name": "Msdfgen.NET",
+  "description": "Yellow Dog Man's own library: their published package (= YDM git HEAD).",
+  "assembly": "Msdfgen.NET.dll",
+  "package": {
+    "id": "YellowDogMan.Msdfgen.NET",
+    "version": "0.1.1"
+  }
+}

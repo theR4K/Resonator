@@ -1,0 +1,20 @@
+--- a/FrooxEngine/AssemblyTypeRegistry.cs
++++ b/FrooxEngine/AssemblyTypeRegistry.cs
+@@ -364,7 +364,7 @@
+ 		FieldInfo[] fields = type.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+ 		foreach (FieldInfo field in fields)
+ 		{
++			if (field.IsInitOnlyOrFlattened())
+-			if (field.IsInitOnly)
+ 			{
+ 				hasher.Write(field.FieldType.GetNiceFullName());
+ 			}
+@@ -479,7 +479,7 @@
+ 		FieldInfo[] fields = type.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+ 		foreach (FieldInfo field in fields)
+ 		{
++			if (!field.IsInitOnlyOrFlattened() || !field.FieldType.IsGenericType)
+-			if (!field.IsInitOnly || !field.FieldType.IsGenericType)
+ 			{
+ 				continue;
+ 			}

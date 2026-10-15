@@ -1,0 +1,22 @@
+--- a/Elements/Assets/TextureEncoder.cs
++++ b/Elements/Assets/TextureEncoder.cs
+@@ -168,14 +168,16 @@
+ 
+ 	private static bool ClearMetadata(FIBITMAP dib)
+ 	{
++		foreach (MetadataModel model in new ImageMetadata(dib, hideEmptyModels: true))
+-		foreach (MetadataModel model in new ImageMetadata(dib, hideEmptyModels: true, includeRaw: true))
+ 		{
++			if (model.Model != FREE_IMAGE_MDMODEL.FIMD_ANIMATION && !model.DestoryModel())
+-			if (model.Model != FREE_IMAGE_MDMODEL.FIMD_ANIMATION && !model.DestroyModel())
+ 			{
+ 				return false;
+ 			}
+ 		}
++		// Flatweave: the official FreeImage.NET enumerates no raw EXIF model (FIMD_EXIF_RAW = 11 in FreeImage.h; Yellow Dog
++		// Man's wrapper adds it as includeRaw), so clear it directly, as DestoryModel does for the others
++		return FreeImage.SetMetadata((FREE_IMAGE_MDMODEL)11, dib, null, FITAG.Zero);
+-		return true;
+ 	}
+ 
+ 	public static void ConvertToEXR(Stream data, string outputFile, int maxSize = -1)

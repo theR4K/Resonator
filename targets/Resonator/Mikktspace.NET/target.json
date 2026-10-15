@@ -1,0 +1,6 @@
+{
+  "name": "Mikktspace.NET",
+  "description": "Managed wrapper over a bundled native library (mikktspace): plain recompile of the shipped dll.",
+  "assembly": "Mikktspace.NET.dll",
+  "weave": "none"
+}

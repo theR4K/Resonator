@@ -1,0 +1,117 @@
+--- a/FrooxEngine/ModelImporter.cs
++++ b/FrooxEngine/ModelImporter.cs
+@@ -5,6 +5,11 @@
+ using System.Text;
+ using System.Threading.Tasks;
+ using Assimp;
++// Flatweave: AssimpNetter (the maintained AssimpNet) uses the System.Numerics types
++using Color4D = System.Numerics.Vector4;
++using Matrix4x4 = System.Numerics.Matrix4x4;
++using Quaternion = System.Numerics.Quaternion;
++using Vector3D = System.Numerics.Vector3;
+ using Assimp.Configs;
+ using Elements.Assets;
+ using Elements.Core;
+@@ -329,7 +334,7 @@
+ 			importer.Scale = settings.Scale;
+ 			importer.SetConfig(new NormalSmoothingAngleConfig(66f));
+ 			importer.SetConfig(new TangentSmoothingAngleConfig(10f));
++			PostProcessSteps flags = PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.ImproveCacheLocality | (PostProcessSteps)0x4000 /* aiProcess_PopulateArmatureData; not in AssimpNetter */ | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.FlipWindingOrder;
+-			PostProcessSteps flags = PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.ImproveCacheLocality | PostProcessSteps.PopulateArmatureData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.FlipWindingOrder;
+ 			if (settings.DeduplicateInstances)
+ 			{
+ 				flags |= PostProcessSteps.FindInstances;
+@@ -396,7 +401,7 @@
+ 							Light engineLight = slot.AttachComponent<Light>();
+ 							engineLight.LightType.Value = assimpLight.LightType.ToEngine();
+ 							engineLight.SpotAngle.Value = assimpLight.AngleOuterCone * 57.29578f;
++							colorX c = assimpLight.ColorDiffuse.ToEngineRGB().NormalizeHDR(out var gain);
+-							colorX c = assimpLight.ColorDiffuse.ToEngine().NormalizeHDR(out var gain);
+ 							engineLight.Color.Value = c;
+ 							engineLight.Intensity.Value = gain;
+ 							if (engineLight.LightType.Value == LightType.Directional)
+@@ -551,7 +556,7 @@
+ 
+ 	private static void PreprocessScene(Scene scene)
+ 	{
++		Matrix4x4 flipScaling = AssimpExtensions.AssimpScaling(new Vector3D(-1f, 1f, 1f));
+-		Matrix4x4 flipScaling = Matrix4x4.FromScaling(new Vector3D(-1f, 1f, 1f));
+ 		Matrix4x4 identity = Matrix4x4.Identity;
+ 		Vector3D flipVector = new Vector3D(-1f, 1f, 1f);
+ 		Dictionary<Node, Matrix4x4> globalMatrices = new Dictionary<Node, Matrix4x4>();
+@@ -570,7 +575,7 @@
+ 					positionKeys.Add(channel, keys);
+ 					for (int i = 0; i < channel.PositionKeys.Count; i++)
+ 					{
++						Matrix4x4 matrix = AssimpExtensions.AssimpTranslation(channel.PositionKeys[i].Value);
+-						Matrix4x4 matrix = Matrix4x4.FromTranslation(channel.PositionKeys[i].Value);
+ 						matrix = toGlobal * matrix;
+ 						keys[i] = matrix;
+ 					}
+@@ -641,9 +646,10 @@
+ 					{
+ 						Matrix4x4 matrix3 = keys3[num];
+ 						matrix3 = toLocal * matrix3;
++						matrix3 *= AssimpExtensions.AssimpScaling(new Vector3D(-1f, 1f, 1f));
+-						matrix3 *= Matrix4x4.FromScaling(new Vector3D(-1f, 1f, 1f));
+ 						VectorKey key = channel2.PositionKeys[num];
++						matrix3.Decompose(out scaling, out var _, out var keyValue);
++						key.Value = keyValue;
+-						matrix3.Decompose(out scaling, out var _, out key.Value);
+ 						channel2.PositionKeys[num] = key;
+ 					}
+ 				}
+@@ -656,10 +662,10 @@
+ 				{
+ 					Matrix4x4 matrix4 = keys4[num2];
+ 					matrix4 = toLocal * matrix4;
++					matrix4 *= AssimpExtensions.AssimpScaling(new Vector3D(-1f, 1f, 1f));
+-					matrix4 *= Matrix4x4.FromScaling(new Vector3D(-1f, 1f, 1f));
+ 					QuaternionKey key2 = channel2.RotationKeys[num2];
+ 					matrix4.DecomposeNoScaling(out var q0, out scaling);
++					Quaternion q1 = new Quaternion(0f - q0.X, 0f - q0.Y, 0f - q0.Z, 0f - q0.W);
+-					Quaternion q1 = new Quaternion(0f - q0.W, 0f - q0.X, 0f - q0.Y, 0f - q0.Z);
+ 					int prev = MathX.Max(num2 - 1, 0);
+ 					Quaternion value = channel2.RotationKeys[prev].Value;
+ 					float dist0 = MathX.Distance((float4)value.ToEngine(), (float4)q0.ToEngine());
+@@ -724,7 +730,7 @@
+ 		Matrix4x4 globalToLocal = localToGlobal;
+ 		globalToLocal.Inverse();
+ 		Matrix4x4 local = globalToLocal * global;
++		local *= AssimpExtensions.AssimpScaling(new Vector3D(-1f, 1f, 1f));
+-		local *= Matrix4x4.FromScaling(new Vector3D(-1f, 1f, 1f));
+ 		node.Transform = local;
+ 		Matrix4x4 nodeLocalToGlobal = localToGlobal * local;
+ 		Matrix4x4 nodeGlobalToLocal = nodeLocalToGlobal;
+@@ -738,7 +744,7 @@
+ 					Matrix4x4 matrix = bones[bone];
+ 					bones.Remove(bone);
+ 					matrix = nodeGlobalToLocal * matrix;
++					matrix *= AssimpExtensions.AssimpScaling(new Vector3D(-1f, 1f, 1f));
+-					matrix *= Matrix4x4.FromScaling(new Vector3D(-1f, 1f, 1f));
+ 					matrix.Inverse();
+ 					bone.OffsetMatrix = matrix;
+ 				}
+@@ -1591,9 +1597,11 @@
+ 						string boneName = b.Name;
+ 						if (!importedBones.TryGetValue(boneName, out var bone))
+ 						{
++							// Flatweave: AssimpNetter's Bone has no Node link; PopulateArmatureData sets it to the node of the bone's name
++							Node bNode = FindNode(b.Name, data.Scene.RootNode);
++							if (bNode != null)
+-							if (b.Node != null)
+ 							{
++								boneMapping.Add(boneName, bNode);
+-								boneMapping.Add(boneName, b.Node);
+ 							}
+ 							bone = meshx.AddBone(boneName);
+ 							bone.BindPose = b.OffsetMatrix.ToEngine();
+@@ -1649,7 +1657,7 @@
+ 		yield return Context.ToWorld();
+ 		Slot materialSlot = data.assetsSlot.AddSlot("Material: " + assimpMat.Name);
+ 		yield return Context.ToBackground();
++		TextureSlot[] textures = assimpMat.GetAllMaterialTextures().ToArray();
+-		TextureSlot[] textures = assimpMat.GetAllMaterialTextures();
+ 		List<TextureMapping> textureMap = new List<TextureMapping>(textures.Length);
+ 		for (int i = 0; i < textures.Length; i++)
+ 		{

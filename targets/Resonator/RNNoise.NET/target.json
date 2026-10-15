@@ -1,0 +1,6 @@
+{
+  "name": "RNNoise.NET",
+  "description": "Managed wrapper over a bundled native library (rnnoise): plain recompile of the shipped dll.",
+  "assembly": "RNNoise.NET.dll",
+  "weave": "none"
+}

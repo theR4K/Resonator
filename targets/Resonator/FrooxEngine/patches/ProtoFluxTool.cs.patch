@@ -1,0 +1,25 @@
+--- a/FrooxEngine/ProtoFlux/ProtoFluxTool.cs
++++ b/FrooxEngine/ProtoFlux/ProtoFluxTool.cs
+@@ -1273,6 +1273,11 @@
+ 	private P FindProxy<P>() where P : class
+ 	{
+ 		Canvas canvas;
++
++		bool IsNodeGrabbed()
++		{
++			return canvas.Slot.GetComponentInParents<Grabbable>()?.IsGrabbed ?? false;
++		}
+ 		if (InputInterface.VR_Active)
+ 		{
+ 			List<ICollider> overlaps = Pool.BorrowList<ICollider>();
+@@ -1289,10 +1294,6 @@
+ 					{
+ 						nearestProxy = proxy;
+ 					}
+-				}
+-				bool IsNodeGrabbed()
+-				{
+-					return canvas.Slot.GetComponentInParents<Grabbable>()?.IsGrabbed ?? false;
+ 				}
+ 			}
+ 			Pool.Return(ref overlaps);

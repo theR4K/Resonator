@@ -1,0 +1,17 @@
+{
+  "name": "OpenLipSync.Inference",
+  "description": "Official source: KyuubiYoru/OpenLipSync (no NuGet package) instead of YDM's fork (which only updates ONNX Runtime).",
+  "assembly": "OpenLipSync.Inference.dll",
+  "source": {
+    "git": "https://github.com/KyuubiYoru/OpenLipSync",
+    "ref": "52d43db613c20a5cfcd3aae7d9bcaffef1f87a77",
+    "dir": "inference/OpenLipSync.Inference/OpenLipSync.Inference",
+    "exclude": [
+      "Properties/"
+    ]
+  },
+  "properties": {
+    "ImplicitUsings": "enable",
+    "Nullable": "enable"
+  }
+}

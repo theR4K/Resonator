@@ -1,0 +1,31 @@
+--- a/FrooxEngine/UpdateManager.cs
++++ b/FrooxEngine/UpdateManager.cs
+@@ -591,6 +591,10 @@
+ 		if (changeBucketEnumerator.Current.Value == null)
+ 		{
+ 			return true;
++		}
++		if (DeferrableChanges.Enabled)
++		{
++			deferrableChanges.BeginStage(); // ARMA hook C (FREEZES_PLAN F3)
+ 		}
+ 		while (changeBucketEnumerator.Current.Value != null)
+ 		{
+@@ -608,9 +612,17 @@
+ 		updatable.InternalRunDestruction();
+ 		CurrentlyUpdating = null;
+ 	}
++
++	// ARMA hook C (FREEZES_PLAN F3)
++	private readonly DeferrableChanges deferrableChanges = new DeferrableChanges();
+ 
+ 	private void ProcessChange(IUpdatable updatable)
+ 	{
++		if (!updatable.IsRemoved && DeferrableChanges.Enabled && deferrableChanges.ShouldDefer(updatable))
++		{
++			toApplyChangesNext.Enqueue(updatable);
++			return;
++		}
+ 		World.LastChanges++;
+ 		if (!updatable.IsRemoved)
+ 		{

@@ -1,0 +1,6 @@
+{
+  "name": "PDFiumSharp",
+  "description": "Managed wrapper over a bundled native library (pdfium_x64 / pdfium_x86, chosen by bitness): plain recompile of the shipped dll.",
+  "assembly": "PDFiumSharp.dll",
+  "weave": "none"
+}

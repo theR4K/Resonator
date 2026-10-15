@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- shipped dll -> buildable C# project: prepare -> decompile -> fixup -> build -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="template\template.csproj" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Resonator.Pipeline\Resonator.Pipeline.csproj" />
+  </ItemGroup>
+</Project>

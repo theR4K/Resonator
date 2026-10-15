@@ -1,0 +1,6 @@
+{
+  "name": "ProtoFlux.Nodes.FrooxEngine",
+  "description": "ProtoFlux.Nodes.FrooxEngine recompiled with the weave baked into the source (flatten, like Flatweave/FrooxEngine): drops in next to the flattened engine with no reweave. Patches layer on Resonator/ProtoFlux.Nodes.FrooxEngine.",
+  "extends": "Resonator/ProtoFlux.Nodes.FrooxEngine",
+  "weave": "flatten"
+}

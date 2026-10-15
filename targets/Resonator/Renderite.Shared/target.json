@@ -1,0 +1,6 @@
+{
+  "name": "Renderite.Shared",
+  "description": "Consumer of native wrappers (YellowDogMan.Cloudtoid.Interprocess): plain recompile of the shipped dll, so it can be rebuilt against replacement wrappers.",
+  "assembly": "Renderite.Shared.dll",
+  "weave": "none"
+}

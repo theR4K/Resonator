@@ -1,0 +1,11 @@
+{
+  "name": "POpusCodec",
+  "description": "Official source: jasl8r/P-Opus, its Enums only - the data-model types OpusStream syncs (OpusApplicationType, Delay, ...). The codec itself is Concentus (Flatweave/FrooxEngine packages); P-Opus's own codec targets 'libopus.dll' with fixed frame sizes.",
+  "assembly": "POpusCodec.dll",
+  "source": {
+    "git": "https://github.com/jasl8r/P-Opus",
+    "ref": "7dec72911795c0bd3f789e81a0785d62f7bc6854",
+    "dir": "Enums",
+    "exclude": []
+  }
+}

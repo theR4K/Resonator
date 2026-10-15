@@ -1,0 +1,19 @@
+--- a/FrooxEngine/WorldAssetManager.cs
++++ b/FrooxEngine/WorldAssetManager.cs
+@@ -9,7 +9,7 @@
+ 
+ namespace FrooxEngine;
+ 
++public partial class WorldAssetManager : IDisposable
+-public class WorldAssetManager : IDisposable
+ {
+ 	public enum AssetChange
+ 	{
+@@ -185,6 +185,7 @@
+ 
+ 	public void SendAssetProviderChanges()
+ 	{
++		if (FrameBudget.Enabled) { SendAssetProviderChangesBudgeted(); return; } // ArmAgedon seam (FREEZES_PLAN F1)
+ 		AssetProviderChange change;
+ 		while (assetProviderChanges.TryDequeue(out change))
+ 		{

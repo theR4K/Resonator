@@ -1,0 +1,10 @@
+{
+  "name": "Elements.Assets",
+  "description": "Elements.Assets built from source by ArmAgedon (generated/ + Injected/). Extends Flatweave/Elements.Assets (official CSCore codecs, FreeImage.NET EXIF); Elements.Core and Renderite.Shared are the consumer's builds. Native-backed code moves out behind NativeServices strategies the Runner injects (ArmAgedon docs/native-separation.md).",
+  "extends": "Flatweave/Elements.Assets",
+  "exclude_refs": [
+    "Elements.Core",
+    "Renderite.Shared",
+    "CSCore"
+  ]
+}

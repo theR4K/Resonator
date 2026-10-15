@@ -1,0 +1,6 @@
+{
+  "name": "AssimpNet",
+  "description": "Managed wrapper over a bundled native library (assimp, loaded via LoadLibrary/dlopen): plain recompile of the shipped dll.",
+  "assembly": "AssimpNet.dll",
+  "weave": "none"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "FreeImageNET",
+  "description": "Managed wrapper over a bundled native library (FreeImage): plain recompile of the shipped dll. Built for its shipped .NET Framework 2.0 TFM: its System.Drawing interop (Bitmap, PixelFormat, ...) is not inbox on net10.0.",
+  "assembly": "FreeImageNET.dll",
+  "weave": "none",
+  "tfm": "net20"
+}

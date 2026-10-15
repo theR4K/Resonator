@@ -1,0 +1,3 @@
+* text=auto eol=lf
+# patches are applied byte-exact (deletion patches need LF) - never normalize
+*.patch -text

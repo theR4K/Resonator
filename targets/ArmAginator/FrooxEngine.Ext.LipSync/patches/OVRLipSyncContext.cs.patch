@@ -1,0 +1,11 @@
+--- a/FrooxEngine/OVRLipSyncContext.cs
++++ b/FrooxEngine/OVRLipSyncContext.cs
+@@ -4,7 +4,7 @@
+ 
+ namespace FrooxEngine;
+ 
++public class OVRLipSyncContext : IVisemeContext
+-public class OVRLipSyncContext : IDisposable
+ {
+ 	private readonly struct AnalysisTask(OVRLipSyncContext context, float[] buffer, float[] analysis, Action onDone)
+ 	{

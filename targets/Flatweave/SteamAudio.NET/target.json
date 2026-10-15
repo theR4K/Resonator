@@ -1,0 +1,9 @@
+{
+  "name": "SteamAudio.NET",
+  "description": "Official NuGet SteamAudio.NET (Mirsario). It names its native 'phonon.dll', which only loads on Windows: Flatweave/FrooxEngine's LibraryInitializer maps it to 'phonon' (libphonon.so) on other platforms (YDM's fork renamed it to 'phonon').",
+  "assembly": "SteamAudio.NET.dll",
+  "package": {
+    "id": "SteamAudio.NET",
+    "version": "4.6.1"
+  }
+}

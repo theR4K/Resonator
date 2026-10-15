@@ -1,0 +1,9 @@
+{
+  "name": "SDL3-CS",
+  "description": "Official NuGet SDL3-CS (edwardgushchin), latest stable, instead of YDM's fork.",
+  "assembly": "SDL3-CS.dll",
+  "package": {
+    "id": "SDL3-CS",
+    "version": "3.4.18"
+  }
+}

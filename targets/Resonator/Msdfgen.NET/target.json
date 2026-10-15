@@ -1,0 +1,6 @@
+{
+  "name": "Msdfgen.NET",
+  "description": "Managed wrapper over a bundled native library (msdfgen): plain recompile of the shipped dll.",
+  "assembly": "Msdfgen.NET.dll",
+  "weave": "none"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "crunch.NET",
+  "description": "Yellow Dog Man's own library: their published package (= YDM git HEAD).",
+  "assembly": "crunch.NET.dll",
+  "package": {
+    "id": "YellowDogMan.crunch.NET",
+    "version": "0.1.1"
+  }
+}

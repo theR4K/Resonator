@@ -1,0 +1,6 @@
+{
+  "name": "Elements.Assets",
+  "description": "Consumer of native wrappers (AssimpNet, Compressonator.NET, crunch.NET, FreeImageNET, Mikktspace.NET, Msdfgen.NET, PDFiumSharp, RNNoise.NET, SharpFont, SharpPipe): plain recompile of the shipped dll, so it can be rebuilt against replacement wrappers.",
+  "assembly": "Elements.Assets.dll",
+  "weave": "none"
+}

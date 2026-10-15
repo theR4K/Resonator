@@ -1,0 +1,11 @@
+<Project>
+  <!-- shared by every project under src/ -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- the Resonite install: the pipeline's default and the link source of the shader tool -->
+    <ResoniteDir Condition="'$(ResoniteDir)' == ''">$(RESONITE_DIR)</ResoniteDir>
+    <ResoniteDir Condition="'$(ResoniteDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Resonite</ResoniteDir>
+  </PropertyGroup>
+</Project>

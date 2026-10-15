@@ -1,0 +1,19 @@
+--- a/FrooxEngine/CoroutineManager.cs
++++ b/FrooxEngine/CoroutineManager.cs
+@@ -7,7 +7,7 @@
+ 
+ namespace FrooxEngine;
+ 
++public partial class CoroutineManager : SynchronizationContext, IDisposable
+-public class CoroutineManager : SynchronizationContext, IDisposable
+ {
+ 	private readonly struct TaskData(SendOrPostCallback callback, object state, IUpdatable updatable)
+ 	{
+@@ -131,6 +131,7 @@
+ 				}
+ 			}
+ 		}
++		if (World != null && CoroutineBudget.Enabled) return ExecuteWorldQueueBudgeted(); // ArmAgedon seam (FREEZES_PLAN F7)
+ 		int count = 0;
+ 		CoroutineHandle coroutine;
+ 		while (worldQueue.TryDequeue(out coroutine))

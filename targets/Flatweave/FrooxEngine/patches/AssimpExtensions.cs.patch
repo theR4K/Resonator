@@ -1,0 +1,84 @@
+--- a/FrooxEngine/AssimpExtensions.cs
++++ b/FrooxEngine/AssimpExtensions.cs
+@@ -1,5 +1,12 @@
+ using System;
+ using Assimp;
++// Flatweave: AssimpNetter (the maintained AssimpNet) uses the System.Numerics types for vectors, colors and matrices
++using Color3D = System.Numerics.Vector3;
++using Color4D = System.Numerics.Vector4;
++using Matrix4x4 = System.Numerics.Matrix4x4;
++using Quaternion = System.Numerics.Quaternion;
++using Vector2D = System.Numerics.Vector2;
++using Vector3D = System.Numerics.Vector3;
+ using Elements.Core;
+ using Renderite.Shared;
+ 
+@@ -34,17 +41,17 @@
+ 
+ 	public static Quaternion ToAssimp(this floatQ q)
+ 	{
++		return new Quaternion(q.x, q.y, q.z, q.w);
+-		return new Quaternion(q.w, q.x, q.y, q.z);
+ 	}
+ 
++	public static colorX ToEngineRGB(this Color3D c)
+-	public static colorX ToEngine(this Color3D c)
+ 	{
++		return new colorX(c.X, c.Y, c.Z);
+-		return new colorX(c.R, c.G, c.B);
+ 	}
+ 
+ 	public static colorX ToEngine(this Color4D c)
+ 	{
++		return new colorX(c.X, c.Y, c.Z, c.W);
+-		return new colorX(c.R, c.G, c.B, c.A);
+ 	}
+ 
+ 	public static Color4D ToAssimp(this color c)
+@@ -69,12 +76,45 @@
+ 
+ 	public static float4x4 ToEngine(this Matrix4x4 m)
+ 	{
++		return new float4x4(m.M11, m.M12, m.M13, m.M14, m.M21, m.M22, m.M23, m.M24, m.M31, m.M32, m.M33, m.M34, m.M41, m.M42, m.M43, m.M44);
+-		return new float4x4(m.A1, m.A2, m.A3, m.A4, m.B1, m.B2, m.B3, m.B4, m.C1, m.C2, m.C3, m.C4, m.D1, m.D2, m.D3, m.D4);
+ 	}
+ 
+ 	public static Matrix4x4 ToAssimp(this float4x4 m)
+ 	{
+ 		return new Matrix4x4(m.m00, m.m01, m.m02, m.m03, m.m10, m.m11, m.m12, m.m13, m.m20, m.m21, m.m22, m.m23, m.m30, m.m31, m.m32, m.m33);
++	}
++
++	// Flatweave: AssimpNet's matrix helpers, which AssimpNetter dropped for System.Numerics. Its matrices hold assimp's
++	// aiMatrix4x4 as is (column vectors, translation in M14/M24/M34), while System.Numerics' builders and Decompose assume
++	// row vectors - so those go through a transpose. Multiplication and inversion are convention-free.
++	public static Matrix4x4 AssimpScaling(Vector3D scale)
++	{
++		return Matrix4x4.CreateScale(scale);
++	}
++
++	public static Matrix4x4 AssimpTranslation(Vector3D translation)
++	{
++		return Matrix4x4.Transpose(Matrix4x4.CreateTranslation(translation));
++	}
++
++	public static Matrix4x4 GetMatrix(this Quaternion q)
++	{
++		return Matrix4x4.Transpose(Matrix4x4.CreateFromQuaternion(q));
++	}
++
++	public static void Inverse(ref this Matrix4x4 m)
++	{
++		Matrix4x4.Invert(m, out m);
++	}
++
++	public static void Decompose(this Matrix4x4 m, out Vector3D scaling, out Quaternion rotation, out Vector3D translation)
++	{
++		Matrix4x4.Decompose(Matrix4x4.Transpose(m), out scaling, out rotation, out translation);
++	}
++
++	public static void DecomposeNoScaling(this Matrix4x4 m, out Quaternion rotation, out Vector3D translation)
++	{
++		Matrix4x4.Decompose(Matrix4x4.Transpose(m), out _, out rotation, out translation);
+ 	}
+ 
+ 	public static LightType ToEngine(this LightSourceType type)

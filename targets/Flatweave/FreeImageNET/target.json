@@ -1,0 +1,15 @@
+{
+  "name": "FreeImageNET",
+  "description": "Official source: the FreeImage 3.18.0 release's .NET wrapper (no official package) instead of YDM's fork.",
+  "assembly": "FreeImageNET.dll",
+  "source": {
+    "archive": "https://downloads.sourceforge.net/project/freeimage/Source%20Distribution/3.18.0/FreeImage3180.zip",
+    "dir": "FreeImage/Wrapper/FreeImage.NET/cs/Library",
+    "exclude": [
+      "Properties/"
+    ]
+  },
+  "packages": {
+    "System.Drawing.Common": "10.0.0"
+  }
+}

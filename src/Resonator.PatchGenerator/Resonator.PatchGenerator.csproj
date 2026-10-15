@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- an edited project -> the target set's patches (working tree vs a fresh baseline) -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Resonator.Pipeline\Resonator.Pipeline.csproj" />
+  </ItemGroup>
+</Project>

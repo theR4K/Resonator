@@ -1,0 +1,9 @@
+{
+  "description": "Renderer-protocol target. Extends Resonator/Renderite.Shared (not weaver-processed: the shipped dll decompiled directly) and replaces it in this set. The ArmAgedon csproj compiles the generated source bound to ArmAgedon.Inprocess (in-process transport). MessagingManager is replaced in place (deletion patch here + Injected/MessagingManager.cs + Injected/DirectTransport.cs in ArmAgedon/RenderiteShared): same public surface, direct in-process object hand-offs, no queues, no IPC. verify is empty: the acceptance for this layer is a live ArmAgedon.Runner session, not a structural gate against a reference.",
+  "extends": "Resonator/Renderite.Shared",
+  "exclude_refs": [
+    "Renderite.Shared",
+    "YellowDogMan.Cloudtoid.Interprocess"
+  ],
+  "weaver_check": null
+}

@@ -1,0 +1,12 @@
+--- a/FrooxEngine/SteamConnector.cs
++++ b/FrooxEngine/SteamConnector.cs
+@@ -104,7 +104,8 @@
+ 	public static void InitializeSteamAPI()
+ 	{
+ 		InitializationAttempted = true;
++		// Flatweave: official Steamworks.NET has no settable CallbackDispatcher.ExceptionHandler (Yellow Dog Man's fork adds it);
++		// callback exceptions go to its own default log instead of SteamAPIExceptionHandler
+-		CallbackDispatcher.ExceptionHandler = SteamAPIExceptionHandler;
+ 		try
+ 		{
+ 			Initialized = InitializeSteamAPIInner();

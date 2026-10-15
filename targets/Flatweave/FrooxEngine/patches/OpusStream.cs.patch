@@ -1,0 +1,85 @@
+--- a/FrooxEngine/OpusStream.cs
++++ b/FrooxEngine/OpusStream.cs
+@@ -180,5 +180,82 @@
+ 	public static OpusStream<S> __New()
+ 	{
+ 		return new OpusStream<S>();
++	}
++}
++
++// Flatweave: Opus through Concentus (official NuGet, managed - no native opus). These adapters keep the call semantics of
++// the shipped (Yellow Dog Man) POpusCodec that OpusStream was written against: Encode codes `count` frames into the
++// caller's buffer and reports a 1-byte (DTX) packet as 0 bytes; DecodePacketFloat decodes into the caller's buffer and
++// conceals with FEC after a lost packet; DecodePacketLostFloat conceals `count` samples. EncoderDelay, as in the shipped
++// float path, does not change the coded frame size.
++internal sealed class OpusEncoder : IDisposable
++{
++	private readonly Concentus.IOpusEncoder _impl;
++
++	public OpusEncoder(SamplingRate samplingRate, Channels channels, int bitrate, OpusApplicationType applicationType)
++	{
++		_impl = Concentus.OpusCodecFactory.CreateEncoder((int)samplingRate, (int)channels, (Concentus.Enums.OpusApplication)(int)applicationType);
++		_impl.Bitrate = bitrate;
++	}
++
++	public Delay EncoderDelay { get; set; }
++
++	public Complexity Complexity
++	{
++		get => (Complexity)_impl.Complexity;
++		set => _impl.Complexity = (int)value;
++	}
++
++	public SignalHint SignalHint
++	{
++		get => (SignalHint)(int)_impl.SignalType;
++		set => _impl.SignalType = (Concentus.Enums.OpusSignal)(int)value;
++	}
++
++	public int Encode(float[] pcmSamples, int count, byte[] encodedData)
++	{
++		int size = _impl.Encode(pcmSamples, count, encodedData, encodedData.Length);
++		return size <= 1 ? 0 : size;
++	}
++
++	public void Dispose() => _impl.Dispose();
++}
++
++internal sealed class OpusDecoder : IDisposable
++{
++	private readonly Concentus.IOpusDecoder _impl;
++
++	private readonly int _channels;
++
++	private bool _previousPacketInvalid;
++
++	public OpusDecoder(SamplingRate samplingRate, Channels channels)
++	{
++		_channels = (int)channels;
++		_impl = Concentus.OpusCodecFactory.CreateDecoder((int)samplingRate, _channels);
++	}
++
++	public int DecodePacketFloat(byte[] packetData, int count, float[] decodedSamples)
++	{
++		int frameSize = decodedSamples.Length / _channels;
++		try
++		{
++			int decoded = _impl.Decode(new ReadOnlySpan<byte>(packetData, 0, count), decodedSamples, frameSize, _previousPacketInvalid);
++			_previousPacketInvalid = false;
++			return decoded;
++		}
++		catch (Concentus.OpusException)
++		{
++			_previousPacketInvalid = true;
++			return _impl.Decode(ReadOnlySpan<byte>.Empty, decodedSamples, frameSize);
++		}
++	}
++
++	public int DecodePacketLostFloat(float[] decodedSamples, int count)
++	{
++		_previousPacketInvalid = true;
++		return _impl.Decode(ReadOnlySpan<byte>.Empty, decodedSamples, count / _channels);
+ 	}
++
++	public void Dispose() => _impl.Dispose();
+ }

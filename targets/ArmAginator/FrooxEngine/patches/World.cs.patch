@@ -1,0 +1,10 @@
+--- a/FrooxEngine/World.cs
++++ b/FrooxEngine/World.cs
+@@ -1712,6 +1712,7 @@
+ 		stopwatch.Restart();
+ 		_lastName = Configuration.WorldName.Value;
+ 		StageUpdateTime[28] = 0.0;
++		AssetManager.FrameBudget.Reset(); // ARMA hook B (FREEZES_PLAN F1)
+ 		do
+ 		{
+ 			RefreshStage _stage = Stage;

@@ -1,0 +1,6 @@
+{
+  "name": "YellowDogMan.Cloudtoid.Interprocess",
+  "description": "Managed wrapper over a bundled native library (shmbridge (shmbridge.dll.so), the renderer IPC shared-memory bridge): plain recompile of the shipped dll.",
+  "assembly": "YellowDogMan.Cloudtoid.Interprocess.dll",
+  "weave": "none"
+}

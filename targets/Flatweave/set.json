@@ -1,0 +1,4 @@
+{
+  "description": "Resonator with the weave kept as source: inherits every Resonator target; the weaved ones are re-layered here as flatten (no reweave).",
+  "extends": "Resonator"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "SoundFlow",
+  "description": "Managed wrapper over a bundled native library (miniaudio, resolved via NativeLibrary.SetDllImportResolver): plain recompile of the shipped dll.",
+  "assembly": "SoundFlow.dll",
+  "weave": "none"
+}

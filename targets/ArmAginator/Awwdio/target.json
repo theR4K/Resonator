@@ -1,0 +1,11 @@
+{
+  "name": "Awwdio",
+  "description": "Awwdio built from source by ArmAgedon (generated/ + Injected/). Extends Resonator/Awwdio; the Elements.* and Renderite.Shared references are the consumer's builds. Native-backed code moves out behind NativeServices strategies the Runner injects (ArmAgedon docs/native-separation.md).",
+  "extends": "Resonator/Awwdio",
+  "exclude_refs": [
+    "Elements.Core",
+    "Elements.Assets",
+    "Renderite.Shared",
+    "CSCore"
+  ]
+}

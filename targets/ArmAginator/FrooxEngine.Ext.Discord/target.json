@@ -1,0 +1,18 @@
+{
+  "name": "FrooxEngine.Ext.Discord",
+  "description": "Split target: Discord feature of the engine. Extends Flatweave/FrooxEngine (same shipped dll, flatten); only the listed types are decompiled. The ArmAgedon csproj compiles generated/ + Injected/DiscordPlugin.cs and binds the core FrooxEngine.dll. No gate: acceptance = the live Runner session.",
+  "extends": "Flatweave/FrooxEngine",
+  "select_types": [
+    "FrooxEngine.Interfacing.DiscordConnector",
+    "FrooxEngine.Interfacing.DiscordConnectorLogger"
+  ],
+  "exclude_refs": [
+    "Renderite.Shared",
+    "YellowDogMan.Cloudtoid.Interprocess",
+    "Elements.Core",
+    "Elements.Assets",
+    "Awwdio",
+    "CSCore",
+    "Steamworks.NET"
+  ]
+}

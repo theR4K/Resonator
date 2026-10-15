@@ -1,0 +1,6 @@
+{
+  "name": "SRAnipalSharp",
+  "description": "Managed wrapper over a bundled native library (SRanipal): plain recompile of the shipped dll.",
+  "assembly": "SRAnipalSharp.dll",
+  "weave": "none"
+}

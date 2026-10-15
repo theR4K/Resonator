@@ -1,0 +1,17 @@
+{
+  "name": "FrooxEngine.Ext.Vive",
+  "description": "Split target: Vive eye/lip tracking feature of the engine. Extends Flatweave/FrooxEngine (same shipped dll, flatten); only the listed types are decompiled. The ArmAgedon csproj compiles generated/ + Injected/VivePlugin.cs and binds the core FrooxEngine.dll. Acceptance = the live Runner session.",
+  "extends": "Flatweave/FrooxEngine",
+  "select_types": [
+    "ViveProEyeTrackingDriver"
+  ],
+  "exclude_refs": [
+    "Renderite.Shared",
+    "YellowDogMan.Cloudtoid.Interprocess",
+    "Elements.Core",
+    "Elements.Assets",
+    "Awwdio",
+    "CSCore",
+    "Steamworks.NET"
+  ]
+}

@@ -1,0 +1,13 @@
+--- a/FrooxEngine/RadiantDash.cs
++++ b/FrooxEngine/RadiantDash.cs
+@@ -734,8 +734,8 @@
+ 		borderThickness = MathX.Lerp(BORDER_THICKNESS * 2f, BORDER_THICKNESS, borderThickness);
+ 		Rect borderRect = new Rect(float2.Zero, resolution * new float2(lerp, 1f));
+ 		Rect paddedRect = borderRect.AddPadding(borderThickness);
++		borderRect /= resolution;
++		paddedRect /= resolution;
+-		borderRect /= ref resolution;
+-		paddedRect /= ref resolution;
+ 		borderMaterial.Rect.Value = paddedRect;
+ 		borderMaterial.ClipRect.Value = borderRect;
+ 	}

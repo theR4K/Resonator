@@ -1,0 +1,98 @@
+--- a/FrooxEngine/WebsocketClient.cs
++++ b/FrooxEngine/WebsocketClient.cs
+@@ -178,7 +178,9 @@
+ 			MaxDegreeOfParallelism = 1,
+ 			EnsureOrdered = true
+ 		}));
++		List<byte[]> accumulatedBuffers = default;
++		byte[] receiveBuffer = default;
++		int bufferData = 0;
+-		_003C_003Ec__DisplayClass29_1 CS_0024_003C_003E8__locals24 = default;
+ 		do
+ 		{
+ 			await CleanUpClient();
+@@ -213,12 +215,12 @@
+ 					}
+ 				});
+ 				Connected?.Invoke(this);
++				accumulatedBuffers = new List<byte[]>();
++				receiveBuffer = new byte[32768];
++				bufferData = 0;
+-				CS_0024_003C_003E8__locals24._accumulatedBuffers = new List<byte[]>();
+-				CS_0024_003C_003E8__locals24.buffer = new byte[32768];
+-				CS_0024_003C_003E8__locals24.bufferData = 0;
+ 				while (client.State == WebSocketState.Open)
+ 				{
++					ArraySegment<byte> segment = new ArraySegment<byte>(receiveBuffer, bufferData, receiveBuffer.Length - bufferData);
+-					ArraySegment<byte> segment = new ArraySegment<byte>(CS_0024_003C_003E8__locals24.buffer, CS_0024_003C_003E8__locals24.bufferData, CS_0024_003C_003E8__locals24.buffer.Length - CS_0024_003C_003E8__locals24.bufferData);
+ 					WebSocketReceiveResult data;
+ 					try
+ 					{
+@@ -245,7 +247,7 @@
+ 						}
+ 						break;
+ 					}
++					bufferData += data.Count;
+-					CS_0024_003C_003E8__locals24.bufferData += data.Count;
+ 					if (data.EndOfMessage)
+ 					{
+ 						switch (data.MessageType)
+@@ -253,9 +255,9 @@
+ 						case WebSocketMessageType.Text:
+ 						{
+ 							string decodedString;
++							if (accumulatedBuffers.Count == 0)
+-							if (CS_0024_003C_003E8__locals24._accumulatedBuffers.Count == 0)
+ 							{
++								decodedString = Encoding.UTF8.GetString(receiveBuffer, 0, bufferData);
+-								decodedString = Encoding.UTF8.GetString(CS_0024_003C_003E8__locals24.buffer, 0, CS_0024_003C_003E8__locals24.bufferData);
+ 								ClearBuffers();
+ 							}
+ 							else
+@@ -275,14 +277,16 @@
+ 							throw new NotImplementedException("Unsupported message type: " + data.MessageType);
+ 						}
+ 					}
++					else if (bufferData == receiveBuffer.Length)
+-					else if (CS_0024_003C_003E8__locals24.bufferData == CS_0024_003C_003E8__locals24.buffer.Length)
+ 					{
++						accumulatedBuffers.Add(receiveBuffer);
++						receiveBuffer = new byte[32768];
++						bufferData = 0;
+-						CS_0024_003C_003E8__locals24._accumulatedBuffers.Add(CS_0024_003C_003E8__locals24.buffer);
+-						CS_0024_003C_003E8__locals24.buffer = new byte[32768];
+-						CS_0024_003C_003E8__locals24.bufferData = 0;
+ 					}
+ 				}
++				accumulatedBuffers = default;
++				receiveBuffer = default;
++				bufferData = 0;
+-				CS_0024_003C_003E8__locals24 = default;
+ 			}
+ 			else
+ 			{
+@@ -295,19 +299,19 @@
+ 			}
+ 			void ClearBuffers()
+ 			{
++				accumulatedBuffers.Clear();
++				bufferData = 0;
+-				CS_0024_003C_003E8__locals24._accumulatedBuffers.Clear();
+-				CS_0024_003C_003E8__locals24.bufferData = 0;
+ 			}
+ 			byte[] GetFullData()
+ 			{
++				byte[] data2 = new byte[bufferData + accumulatedBuffers.Count * 32768];
+-				byte[] data2 = new byte[CS_0024_003C_003E8__locals24.bufferData + CS_0024_003C_003E8__locals24._accumulatedBuffers.Count * 32768];
+ 				int accumulatedOffset = 0;
++				foreach (byte[] accumulatedBuffer in accumulatedBuffers)
+-				foreach (byte[] accumulatedBuffer in CS_0024_003C_003E8__locals24._accumulatedBuffers)
+ 				{
+ 					Array.Copy(accumulatedBuffer, 0, data2, accumulatedOffset, accumulatedBuffer.Length);
+ 					accumulatedOffset += accumulatedBuffer.Length;
+ 				}
++				Array.Copy(receiveBuffer, 0, data2, accumulatedOffset, bufferData);
+-				Array.Copy(CS_0024_003C_003E8__locals24.buffer, 0, data2, accumulatedOffset, CS_0024_003C_003E8__locals24.bufferData);
+ 				ClearBuffers();
+ 				return data2;
+ 			}

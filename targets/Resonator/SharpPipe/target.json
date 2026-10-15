@@ -1,0 +1,6 @@
+{
+  "name": "SharpPipe",
+  "description": "Managed wrapper over a bundled native library (libsoundpipe): plain recompile of the shipped dll.",
+  "assembly": "SharpPipe.dll",
+  "weave": "none"
+}

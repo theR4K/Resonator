@@ -1,0 +1,6 @@
+{
+  "name": "ApplicationLoopback.NET",
+  "description": "Managed wrapper over a bundled native library (ApplicationLoopback): plain recompile of the shipped dll.",
+  "assembly": "ApplicationLoopback.NET.dll",
+  "weave": "none"
+}

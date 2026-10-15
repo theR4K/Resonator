@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="CONTRIBUTING.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs/cli.md" />
+    <File Path="docs/flatweave.md" />
+    <File Path="docs/getting-started.md" />
+    <File Path="docs/patches.md" />
+    <File Path="docs/pipeline.md" />
+    <File Path="docs/shaders.md" />
+    <File Path="docs/target-sets.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Resonator.Deweaver/Resonator.Deweaver.csproj" />
+    <Project Path="src/Resonator.PatchGenerator/Resonator.PatchGenerator.csproj" />
+    <Project Path="src/Resonator.Pipeline/Resonator.Pipeline.csproj" />
+    <Project Path="src/Resonator.ProjectBuilder/Resonator.ProjectBuilder.csproj" />
+    <Project Path="src/Resonator.ShadersReferenceBuilder/Resonator.ShadersReferenceBuilder.csproj" />
+    <Project Path="src/Resonator.Weaver/Resonator.Weaver.csproj" />
+  </Folder>
+</Solution>

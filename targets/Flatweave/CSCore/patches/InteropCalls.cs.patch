@@ -1,0 +1,11 @@
+--- a/CoreAudioAPI/InteropCalls.cs
++++ b/CoreAudioAPI/InteropCalls.cs
+@@ -79,7 +79,7 @@
+         [CSCalli]
+         internal static unsafe int CallI(void* _basePtr, AudioClientShareMode shareMode,
+             AudioClientStreamFlags streamFlags, long hnsBufferDuration, long hnsPeriodicity, void* p1,
++            Guid* audioSessionGuid, void* p2)
+-            Guid audioSessionGuid, void* p2)
+         {
+             throw new NotImplementedException();
+         }

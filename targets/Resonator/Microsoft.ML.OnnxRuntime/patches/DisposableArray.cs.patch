@@ -1,0 +1,22 @@
+--- a/Microsoft/ML/OnnxRuntime/DisposableArray.cs
++++ b/Microsoft/ML/OnnxRuntime/DisposableArray.cs
+@@ -15,18 +15,7 @@
+ 	{
+ 		for (int num = Span.Length - 1; num >= 0; num--)
+ 		{
++			Span[num]?.Dispose();
+-			ref T reference = ref Span[num];
+-			T val = default;
+-			if (val == null)
+-			{
+-				val = reference;
+-				reference = ref val;
+-				if (val == null)
+-				{
+-					continue;
+-				}
+-			}
+-			reference.Dispose();
+ 		}
+ 	}
+ }

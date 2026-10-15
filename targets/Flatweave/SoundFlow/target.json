@@ -1,0 +1,9 @@
+{
+  "name": "SoundFlow",
+  "description": "Official NuGet SoundFlow (LSXPrime) instead of the shipped 1.2.1.",
+  "assembly": "SoundFlow.dll",
+  "package": {
+    "id": "SoundFlow",
+    "version": "1.4.1"
+  }
+}

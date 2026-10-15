@@ -1,0 +1,11 @@
+--- a/FrooxEngine/PlatformInterface.cs
++++ b/FrooxEngine/PlatformInterface.cs
+@@ -7,7 +7,7 @@
+ 
+ namespace FrooxEngine;
+ 
++public partial class PlatformInterface : IDisposable // ArmAgedon seam: RegisterConnector in Injected
+-public class PlatformInterface : IDisposable
+ {
+ 	private static Type[] __connectorTypes;
+ 

@@ -1,0 +1,35 @@
+--- a/FrooxEngine/MaterialUpdateWriter.cs
++++ b/FrooxEngine/MaterialUpdateWriter.cs
+@@ -84,14 +84,30 @@
+ 		WriteValue(ref float4x4buffer, ref float4x4Index, value);
+ 	}
+ 
++	// NOTE: inlined from AllocateArray<T> because returning the result of a call
++	// with byref args pointing at `this` fields is rejected by Roslyn 4.14+ (CS8170/CS8347).
+ 	private Span<float> AllocateFloatArray(int length)
+ 	{
++		WriteInt(length);
++		if (floatBuffer.Length - floatIndex < length)
++		{
++			AllocateNextBuffer(ref floatBuffer, ref floatIndex, length);
++		}
++		Span<float> result = floatBuffer.Slice(floatIndex, length);
++		floatIndex += length;
++		return result;
+-		return AllocateArray(ref floatBuffer, ref floatIndex, length);
+ 	}
+ 
+ 	private Span<float4> AllocateFloat4Array(int length)
+ 	{
++		WriteInt(length);
++		if (float4Buffer.Length - float4Index < length)
++		{
++			AllocateNextBuffer(ref float4Buffer, ref float4Index, length);
++		}
++		Span<float4> result = float4Buffer.Slice(float4Index, length);
++		float4Index += length;
++		return result;
+-		return AllocateArray(ref float4Buffer, ref float4Index, length);
+ 	}
+ 
+ 	private void WriteFloatArray(Span<float> values)

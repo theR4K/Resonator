@@ -1,0 +1,6 @@
+{
+  "name": "Awwdio",
+  "description": "Consumer of native wrappers (SharpPipe, SteamAudio.NET): plain recompile of the shipped dll, so it can be rebuilt against replacement wrappers.",
+  "assembly": "Awwdio.dll",
+  "weave": "none"
+}

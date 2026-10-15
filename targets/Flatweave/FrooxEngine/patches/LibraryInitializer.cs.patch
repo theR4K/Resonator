@@ -1,0 +1,67 @@
+--- a/FrooxEngine/LibraryInitializer.cs
++++ b/FrooxEngine/LibraryInitializer.cs
+@@ -17,6 +17,55 @@
+ public static class LibraryInitializer
+ {
+ 	private static bool initialized;
++
++	// Flatweave: Renderite.Host.deps.json lists only the shipped assemblies, so one the rebuild adds (Concentus)
++	// is never probed for. Resolve a missing assembly from the dll next to the engine.
++	// The official SteamAudio.NET / Brotli.NET import native names that do not load on Linux: "phonon.dll"
++	// (shipped as runtimes/<rid>/native/libphonon.so) and "libdl.so" (glibc ships libdl.so.2).
++	[System.Runtime.CompilerServices.ModuleInitializer]
++	internal static void ResolveFlatweaveLibraries()
++	{
++		string dir = Path.GetDirectoryName(typeof(LibraryInitializer).Assembly.Location);
++		System.Runtime.Loader.AssemblyLoadContext.Default.Resolving += (context, name) =>
++		{
++			string dll = Path.Combine(dir, name.Name + ".dll");
++			return File.Exists(dll) ? context.LoadFromAssemblyPath(dll) : null;
++		};
++		if (OperatingSystem.IsWindows())
++		{
++			return;
++		}
++		AppDomain.CurrentDomain.AssemblyLoad += (_, e) => MapLinuxNativeNames(e.LoadedAssembly);
++		foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
++		{
++			MapLinuxNativeNames(assembly);
++		}
++	}
++
++	private static void MapLinuxNativeNames(Assembly assembly)
++	{
++		if (assembly.GetName().Name is not ("SteamAudio.NET" or "Brotli.Core"))
++		{
++			return;
++		}
++		try
++		{
++			System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(assembly, (name, owner, searchPath) =>
++			{
++				string mapped = name switch
++				{
++					"phonon.dll" => "phonon",
++					"libdl.so" => "libdl.so.2",
++					_ => null
++				};
++				return mapped != null && System.Runtime.InteropServices.NativeLibrary.TryLoad(mapped, owner, searchPath, out IntPtr handle) ? handle : IntPtr.Zero;
++			});
++		}
++		catch (InvalidOperationException)
++		{
++			// already set: the load event and the initial scan both saw the assembly
++		}
++	}
+ 
+ 	public static void Initialize(Engine engine)
+ 	{
+@@ -48,7 +97,7 @@
+ 		TextureDecoder.PrintInitInfo();
+ 		UniLog.Log("BepuPhysics Version: " + typeof(Simulation).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
+ 		UniLog.Log("FreeType Version: " + FreeTypeFont.FreeTypeVersion);
++		UniLog.Log("Opus Version: " + "Concentus " + typeof(Concentus.OpusCodecFactory).Assembly.GetName().Version); // Flatweave: Concentus
+-		UniLog.Log("Opus Version: " + Opus.Version);
+ 		try
+ 		{
+ 			TextureDecoder.Decode("null.xyz", false);

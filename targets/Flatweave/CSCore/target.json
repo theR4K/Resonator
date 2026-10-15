@@ -1,0 +1,25 @@
+{
+  "name": "CSCore",
+  "description": "Official source: filoe/cscore master (its NuGet 1.2.1.2 dates from 2017 and lacks CodecFactory.GetCodec(Stream, string)). Library patches: Yellow Dog Man's WasapiOut/MMDevice additions the engine's WASAPI driver uses (update events, actual output format, padding, ComputeLatency, AbortOnZeroData, cross-process session, session GUID), ILUtils on System.Runtime.CompilerServices.Unsafe (upstream compiles '#if IL' segments with an ildasm/ilasm tool) and the session GUID passed by pointer (LPCGUID). [CSCalli] stubs are woven into calli after compiling (\"calli\").",
+  "assembly": "CSCore.dll",
+  "source": {
+    "git": "https://github.com/filoe/cscore",
+    "ref": "74ccb4d7e1211690876b20c816181f4d811f48aa",
+    "dir": "CSCore",
+    "exclude": [
+      "Properties/"
+    ]
+  },
+  "calli": {
+    "attribute": "CSCalliAttribute",
+    "remove_type_attribute": "RemoveObjAttribute"
+  },
+  "packages": {
+    "System.DirectoryServices": "10.0.0",
+    "System.Configuration.ConfigurationManager": "10.0.0",
+    "System.Drawing.Common": "10.0.0"
+  },
+  "properties": {
+    "NoWarn": "$(NoWarn);CS1591;CS0618;CS0649;CS0169;CS0414;CS0108;CS0114;CS0659;CS0661;CS8981;SYSLIB0050;CA1416"
+  }
+}

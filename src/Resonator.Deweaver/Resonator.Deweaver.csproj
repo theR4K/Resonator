@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- the command line over Resonator.Weaver: deweave, verify, known, syncmembers, reweave, diff, pdbcheck -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Resonator.Weaver\Resonator.Weaver.csproj" />
+  </ItemGroup>
+</Project>

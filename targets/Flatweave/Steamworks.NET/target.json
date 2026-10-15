@@ -1,0 +1,9 @@
+{
+  "name": "Steamworks.NET",
+  "description": "Official NuGet Steamworks.NET (rlabrecque) instead of YDM's fork.",
+  "assembly": "Steamworks.NET.dll",
+  "package": {
+    "id": "Steamworks.NET",
+    "version": "2024.8.0"
+  }
+}

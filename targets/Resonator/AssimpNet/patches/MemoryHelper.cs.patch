@@ -1,0 +1,65 @@
+--- a/Assimp/MemoryHelper.cs
++++ b/Assimp/MemoryHelper.cs
+@@ -306,7 +306,7 @@
+ 
+ 	public static T CastToEnum<V, T>(V value) where V : unmanaged where T : Enum
+ 	{
++		return Unsafe.As<V, T>(ref value);
+-		return (T)value;
+ 	}
+ 
+ 	public unsafe static IntPtr AllocateMemory(int sizeInBytes, int alignment = 16)
+@@ -423,7 +423,7 @@
+ 	public unsafe static void ClearMemory(IntPtr memoryPtr, byte clearValue, int sizeInBytesToClear)
+ 	{
+ 		// IL initblk instruction
++		Unsafe.InitBlockUnaligned((void*)memoryPtr, clearValue, (uint)sizeInBytesToClear);
+-		Unsafe.InitBlockUnaligned((void*)memoryPtr, clearValue, sizeInBytesToClear);
+ 	}
+ 
+ 	public static int SizeOf<T>() where T : struct
+@@ -438,7 +438,7 @@
+ 
+ 	public unsafe static IntPtr AsPointerReadonly<T>(in T src) where T : struct
+ 	{
++		return (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in src));
+-		return (nint)Unsafe.AsPointer(ref src);
+ 	}
+ 
+ 	public unsafe static ref T AsRef<T>(IntPtr pSrc) where T : struct
+@@ -453,7 +453,7 @@
+ 
+ 	public static ref readonly TTo AsReadonly<TFrom, TTo>(in TFrom src) where TFrom : struct where TTo : struct
+ 	{
++		return ref Unsafe.As<TFrom, TTo>(ref Unsafe.AsRef(in src));
+-		return ref Unsafe.As<TFrom, TTo>(ref src);
+ 	}
+ 
+ 	public static int SizeOf<T>(T[] array) where T : struct
+@@ -473,7 +473,7 @@
+ 	public unsafe static void CopyMemory(IntPtr pDest, IntPtr pSrc, int sizeInBytesToCopy)
+ 	{
+ 		// IL cpblk instruction
++		Unsafe.CopyBlockUnaligned((void*)pDest, (void*)pSrc, (uint)sizeInBytesToCopy);
+-		Unsafe.CopyBlockUnaligned((void*)pDest, (void*)pSrc, sizeInBytesToCopy);
+ 	}
+ 
+ 	public static int Count<T>(IEnumerable<T> source)
+@@ -568,7 +568,7 @@
+ 		fixed (T* ptr = &data[startIndexInArray])
+ 		{
+ 			// IL cpblk instruction
++			Unsafe.CopyBlockUnaligned(ptr, (void*)pSrc, (uint)(Unsafe.SizeOf<T>() * count));
+-			Unsafe.CopyBlockUnaligned(ptr, pSrc, Unsafe.SizeOf<T>() * count);
+ 		}
+ 	}
+ 
+@@ -587,7 +587,7 @@
+ 		fixed (T* ptr = &data[startIndexInArray])
+ 		{
+ 			// IL cpblk instruction
++			Unsafe.CopyBlockUnaligned((void*)pDest, ptr, (uint)(Unsafe.SizeOf<T>() * count));
+-			Unsafe.CopyBlockUnaligned(pDest, ptr, Unsafe.SizeOf<T>() * count);
+ 		}
+ 	}
+ 

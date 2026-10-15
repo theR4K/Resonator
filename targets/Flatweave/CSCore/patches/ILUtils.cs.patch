@@ -1,0 +1,171 @@
+--- a/Utils/ILUtils.cs
++++ b/Utils/ILUtils.cs
+@@ -1,28 +1,23 @@
+ using System;
++using System.Runtime.CompilerServices;
+ 
+ namespace CSCore.Utils
+ {
++	// Implemented with System.Runtime.CompilerServices.Unsafe instead of "#if IL"
++	// segments: Unsafe's methods ARE these opcodes (sizeof, cpobj, cpblk, ldobj,
++	// initblk), so the result is the same as the InlineILCompiler output, without
++	// the ildasm/ilasm round trip (the .NET Framework 4.8 ilasm can no longer
++	// reassemble what the current C# compiler emits).
+ 	internal static class ILUtils
+ 	{
+ 		public static int SizeOf<T>() where T : struct
+ 		{
++			return Unsafe.SizeOf<T>();
+-#if IL
+-			sizeof !!T
+-			ret
+-#endif
+-			throw new NotImplementedException();
+ 		}
+ 
++		public static unsafe void WriteToMemory<T>(IntPtr dest, ref T data) where T : struct
+-		public static void WriteToMemory<T>(IntPtr dest, ref T data) where T : struct
+ 		{
++			Unsafe.Copy(dest.ToPointer(), ref data); // cpobj
+-#if IL
+-			ldarg.0
+-			call void* [mscorlib]System.IntPtr::op_Explicit(native int)
+-			ldarg.1
+-			cpobj !!T
+-			ret
+-#endif
+-			throw new NotImplementedException();
+ 		}
+ 
+ 	    public static unsafe IntPtr WriteToMemory<T>(IntPtr dest, T[] data, int offset, int count) where T : struct
+@@ -32,80 +27,33 @@
+ 
+ 	    public unsafe static void* WriteToMemory<T>(void* dest, T[] data, int offset, int count) where T : struct
+ 		{
++			int byteCount = Unsafe.SizeOf<T>() * count;
++			// unaligned. cpblk from &data[offset]; a managed ref keeps the array from moving.
++			Unsafe.CopyBlockUnaligned(ref Unsafe.AsRef<byte>(dest), ref Unsafe.As<T, byte>(ref data[offset]), (uint) byteCount);
++			return (byte*) dest + byteCount;
+-#if IL
+-			.maxstack 4
+-			.locals init([0] int32, [1] !!T& pinned)
+-
+-			ldarg.0
+-			ldarg.1
+-			ldarg.2     //offset
+-			ldelema !!T //push the address of a specified array index (offset -> ldarg.2) onto the stack
+-			stloc.1     //save the value on top of the stack to index 1 (see !!T& pinned)
+-			ldloc.1     //push the previously stored value (index 1 of the local variables) onto the stack
+-			sizeof !!T  //sizeof(T)
+-			conv.i4     //cast the sizeof(T) to int -> (int)sizeof(T)
+-			ldarg.3     //count
+-			mul         //count * (int)sizeof(T)
+-			stloc.0     //save the result to index 0 of the local variables
+-			ldloc.0     //push the just calculated value onto the stack again
+-			unaligned. 1 
+-			cpblk       //copy the specified number of bytes (see the count * sizeof(T)) from a source to a dst address
+-			ldloc.0     //push the local variable of index 0 onto the stack
+-			conv.i      //convert the value to native int
+-			ldarg.0     //dest
+-			add         
+-			ret         //return
+-
+-#endif
+-
+-			throw new NotImplementedException();
+ 		}
+ 
++		public static unsafe T Read<T>(IntPtr src) where T : struct
+-		public static T Read<T>(IntPtr src) where T : struct
+ 		{
++			return Unsafe.Read<T>(src.ToPointer()); // ldobj
+-#if IL
+-			ldarg.0
+-			call void* [mscorlib]System.IntPtr::op_Explicit(native int)
+-			ldobj !!T
+-			ret
+-#endif
+-			throw new NotImplementedException();
+ 		}
+ 
+ 		public static T CastUnsafe<T>(ref T ptr) where T : struct
+ 		{
++			// The IL version returned the managed reference itself reinterpreted as a T,
++			// which C# cannot express. Unused within CSCore.
++			throw new NotSupportedException("ILUtils.CastUnsafe is not supported");
+-#if IL
+-			.maxstack 1
+-
+-			ldarg.0
+-			ret
+-#endif
+-
+-			throw new NotImplementedException();
+ 		}
+ 
++		public static TDest[] CastArrayUnsafe<TSource, TDest>(TSource[] array)
+-		public static TDest[] CastArrayUnsafe<TSource, TDest>(TSource[] array) 
+ 			where TSource : struct where TDest : struct
+ 		{
++			return Unsafe.As<TDest[]>(array);
+-#if IL
+-			ldarg.0
+-			ret
+-#endif
+-
+-			throw new NotImplementedException();
+ 		}
+ 
+ 		public unsafe static void MemoryCopy(void* dest, void* src, int byteCount)
+ 		{
++			Unsafe.CopyBlockUnaligned(dest, src, (uint) byteCount); // unaligned. cpblk
+-#if IL
+-			ldarg.0
+-			ldarg.1
+-			ldarg.2
+-			unaligned. 1
+-			cpblk
+-			ret
+-#endif
+-			throw new NotImplementedException();
+ 		}
+ 
+ 		public unsafe static void MemoryCopy(IntPtr dest, IntPtr src, int byteCount)
+@@ -115,34 +63,13 @@
+ 
+ 		public static void MemoryCopy<TSource, TDest>(TDest[] dest, TSource[] src, int byteCount)
+ 		{
++			// cpblk from &src[0] to &dest[0]
++			Unsafe.CopyBlock(ref Unsafe.As<TDest, byte>(ref dest[0]), ref Unsafe.As<TSource, byte>(ref src[0]), (uint) byteCount);
+-#if IL
+-			ldarg dest
+-			ldc.i4 0
+-			ldelema !!TDest
+-
+-			ldarg src
+-			ldc.i4 0
+-			ldelema !!TSource
+-
+-			ldarg byteCount
+-
+-			cpblk
+-			ret
+-#endif
+-			throw new NotImplementedException();
+ 		}
+ 
+ 		public static unsafe void MemSet(IntPtr dest, byte value, int count)
+ 		{
++			Unsafe.InitBlockUnaligned(dest.ToPointer(), value, (uint) count); // unaligned. initblk
+-#if IL
+-			ldarg.0
+-			ldarg.1
+-			ldarg.2
+-			unaligned. 1
+-			initblk
+-			ret
+-#endif
+-			throw new NotImplementedException();
+ 		}
+ 	}
+ }

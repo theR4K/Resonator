@@ -1,0 +1,13 @@
+{
+  "name": "RNNoise.NET",
+  "description": "Yellow Dog Man's own library, no package: source at YDM git HEAD.",
+  "assembly": "RNNoise.NET.dll",
+  "source": {
+    "git": "https://github.com/Yellow-Dog-Man/RNNoise.Net",
+    "ref": "73189a685823d2db25a6c94edd7b69265309c0db",
+    "dir": "RNNoise.NET",
+    "exclude": [
+      "Properties/"
+    ]
+  }
+}

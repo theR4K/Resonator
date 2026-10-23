@@ -41,9 +41,13 @@ public static class CalliWeaver
             }
         }
 
+        int attributes = 0;
         foreach (var method in types.SelectMany(t => t.Methods))
             foreach (var attr in method.CustomAttributes.Where(c => c.AttributeType.Name == calliAttribute).ToList())
+            {
                 method.CustomAttributes.Remove(attr);
+                attributes++;
+            }
 
         var helpers = removeTypeAttribute == null ? [] : types.Where(t => HasAttribute(t, removeTypeAttribute)).ToList();
         foreach (var t in helpers)
@@ -52,6 +56,14 @@ public static class CalliWeaver
             else module.Types.Remove(t);
         }
 
+        // already woven (the build step runs after every CoreCompile, also a skipped one): left untouched, so an up-to-date
+        // build does not get a new dll to copy into every dependent
+        if (replaced == 0 && attributes == 0 && helpers.Count == 0)
+        {
+            assembly.Dispose();
+            log.WriteLine($"calli: already woven, unchanged ({Path.GetFileName(path)})");
+            return 0;
+        }
         AssemblyFile.ReplaceInPlace(assembly, path);
         log.WriteLine($"calli: {replaced} call(s) -> calli, {helpers.Count} helper type(s) removed ({Path.GetFileName(path)})");
         return replaced;

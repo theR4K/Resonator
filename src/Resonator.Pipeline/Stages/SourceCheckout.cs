@@ -64,13 +64,24 @@ internal static class SourceCheckout
         string dir = Path.Combine(target.Settings.WorkDir, "sources", target.Name + "-" + key);
         string complete = dir + ".done";
         if (Directory.Exists(dir) && File.Exists(complete)) return dir;
-        if (Directory.Exists(dir)) Directory.Delete(dir, recursive: true);
+        if (Directory.Exists(dir)) DeleteCheckout(dir);
         Directory.CreateDirectory(dir);
 
         if (source.Git != null) FetchGit(dir, source.Git, source.Ref);
         else FetchArchive(dir, source.Archive!);
         File.WriteAllText(complete, source.ToString());
         return dir;
+    }
+
+    /// <summary>
+    /// An incomplete fetch, deleted before the next one. Git leaves its object and pack files read-only, and on Windows
+    /// Directory.Delete refuses those ("Access to the path '...' is denied"), so the attribute is cleared first.
+    /// </summary>
+    static void DeleteCheckout(string dir)
+    {
+        foreach (string file in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
+            File.SetAttributes(file, FileAttributes.Normal);
+        Directory.Delete(dir, recursive: true);
     }
 
     /// <summary>A shallow fetch of exactly the pinned ref (a tag, branch or full commit hash).</summary>

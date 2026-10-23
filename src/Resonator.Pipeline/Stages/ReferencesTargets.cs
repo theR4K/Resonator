@@ -13,7 +13,7 @@ namespace Resonator.Pipeline.Stages;
 /// The machine-generated half of a project: &lt;project&gt;/references.targets, imported by the csproj
 /// (the deployed template, or a consumer's own). It holds:
 ///   - the compiler settings decompiled source needs
-///   - the spec's properties, defines and extra NuGet packages (copied to bin)
+///   - the spec's properties, defines and extra NuGet packages (copied to bin, csproj mode only)
 ///   - the references: the shipped assembly's declared references, closed transitively (the
 ///     compiler must resolve the API surface of every referenced assembly), plus spec "refs".
 ///     Each is the install's dll - or, when a package / source target of the set provides it,
@@ -43,11 +43,14 @@ public static class ReferencesTargets
             project.Add(new XElement("PropertyGroup", spec.Properties.Select(kv => new XElement(kv.Key, kv.Value))));
         if (spec.Defines.Length > 0)
             project.Add(new XElement("PropertyGroup", new XElement("DefineConstants", "$(DefineConstants);" + string.Join(';', spec.Defines))));
-        // a class library leaves its packages out of bin; the deployed build must carry them
-        // (Flatweave/FrooxEngine -> Concentus, which the install does not ship)
+        // a class library leaves its packages out of bin; publish collects the bins, so they must carry them
+        // (Flatweave/FrooxEngine -> Concentus, which the install does not ship). A --no-csproj consumer has its own
+        // output: there every importing library would copy all package assets (ONNX Runtime's natives for every
+        // platform, ~240 MB) into its bin, which its exe gets through the references anyway.
         if (packages.Count > 0)
         {
-            project.Add(new XElement("PropertyGroup", new XElement("CopyLocalLockFileAssemblies", "True")));
+            if (!target.Settings.NoCsproj)
+                project.Add(new XElement("PropertyGroup", new XElement("CopyLocalLockFileAssemblies", "True")));
             project.Add(new XElement("ItemGroup", packages.Select(kv =>
                 new XElement("PackageReference", new XAttribute("Include", kv.Key), new XAttribute("Version", kv.Value)))));
         }

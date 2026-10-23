@@ -1,0 +1,6 @@
+{
+  "name": "PhotonDust",
+  "description": "The particle simulation (a data-model assembly with a compatibility hash of its own, not weaver-processed): plain recompile of the shipped dll, so it can be patched.",
+  "assembly": "PhotonDust.dll",
+  "weave": "none"
+}

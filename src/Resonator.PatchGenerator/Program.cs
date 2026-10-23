@@ -18,9 +18,10 @@ namespace Resonator.PatchGenerator;
 internal static class Program
 {
     static readonly string Usage = $"""
-        Resonator.PatchGenerator <project-dir> [options]
+        Resonator.PatchGenerator <project-dir> [options] [--no-csproj]
         {PipelineSettings.OptionsUsage}
         <project-dir>: the output dir of a ProjectBuilder run (same set and target selection), edited.
+        --no-csproj: that run was --no-csproj (its layout leaves out the referenced source targets).
 
         Patches are written only into the set being worked on: the edits of an inherited target
         become a new layer here (a spec that extends the inherited one).
@@ -36,6 +37,10 @@ internal static class Program
         try
         {
             var settings = PipelineSettings.Parse(args[0], args[1..], out var rest);
+            // the ProjectBuilder run's --no-csproj: it leaves out the referenced source targets, so a single target's tree
+            // is the dir itself (without it, a target with source references was looked for in <dir>/<target>/ and every
+            // file read as deleted)
+            if (rest.Remove("--no-csproj")) settings = settings with { NoCsproj = true };
             if (rest.Count > 0) throw new ArgumentException($"unknown option '{rest[0]}'\n\n{Usage}");
 
             var targets = settings.Set.Select(settings.TargetFilter);

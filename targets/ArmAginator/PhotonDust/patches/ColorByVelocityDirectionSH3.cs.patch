@@ -1,0 +1,11 @@
+--- a/PhotonDust/ColorByVelocityDirectionSH3.cs
++++ b/PhotonDust/ColorByVelocityDirectionSH3.cs
+@@ -20,7 +20,7 @@
+ 			Span<color> computeColors = System.RenderColors.Slice(offset, count);
+ 			for (int i = 0; i < count; i++)
+ 			{
++				color c = UnboxedSH.Evaluate(SH, velocities[i].Normalized); // ArmAgedon seam: SH.Evaluate boxed SH (ISphericalHarmonics<T>) per particle
+-				color c = SH.Evaluate(velocities[i].Normalized);
+ 				computeColors[i] = sourceColors[i] * c;
+ 			}
+ 		}

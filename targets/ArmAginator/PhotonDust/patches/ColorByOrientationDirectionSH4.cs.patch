@@ -1,0 +1,11 @@
+--- a/PhotonDust/ColorByOrientationDirectionSH4.cs
++++ b/PhotonDust/ColorByOrientationDirectionSH4.cs
+@@ -19,7 +19,7 @@
+ 		for (int i = 0; i < count; i++)
+ 		{
+ 			float3 dir = rotations[i] * ILSpyHelper_AsRefReadOnly(float3.Forward);
++			color c = UnboxedSH.Evaluate(SH, dir); // ArmAgedon seam: SH.Evaluate boxed SH (ISphericalHarmonics<T>) per particle
+-			color c = SH.Evaluate(dir);
+ 			computeColors[i] = sourceColors[i] * c;
+ 		}
+ 		static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)

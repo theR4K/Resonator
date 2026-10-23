@@ -9,6 +9,7 @@
     "uTouchInjection.DebugMode"
   ],
   "exclude_refs": [
+    "PhotonDust",
     "Renderite.Shared",
     "YellowDogMan.Cloudtoid.Interprocess",
     "Elements.Core",

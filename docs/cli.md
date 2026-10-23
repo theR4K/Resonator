@@ -56,9 +56,11 @@ Edits of a built project → the target set's patches. See [Patches](patches.md)
 
 ```
 Resonator.PatchGenerator <project-dir> [pipeline options]
+  [--no-csproj]                                 the ProjectBuilder run was --no-csproj
 ```
 
-`<project-dir>` is the output dir of a ProjectBuilder run with the same set and target selection, edited. Patches
+`<project-dir>` is the output dir of a ProjectBuilder run with the same set and target selection, edited. Pass
+`--no-csproj` when that run had it: it leaves out the referenced source targets, so the tree is `<project-dir>` itself. Patches
 are written only into the set being worked on: the edits of an inherited target become a new layer there. Package
 targets are skipped.
 

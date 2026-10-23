@@ -1,0 +1,10 @@
+{
+  "name": "PhotonDust",
+  "description": "PhotonDust built from source by ArmAgedon (generated/ + Injected/). Extends Resonator/PhotonDust; the Elements.* and Renderite.Shared references are the consumer's builds.",
+  "extends": "Resonator/PhotonDust",
+  "exclude_refs": [
+    "Elements.Core",
+    "Elements.Assets",
+    "Renderite.Shared"
+  ]
+}

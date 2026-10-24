@@ -1,0 +1,19 @@
+--- a/Elements/Assets/AudioX.cs
++++ b/Elements/Assets/AudioX.cs
+@@ -6,7 +6,7 @@
+ 
+ namespace Elements.Assets;
+ 
++public partial class AudioX : IDisposable // ArmAgedon seam: Injected/AudioX.Contention.cs
+-public class AudioX : IDisposable
+ {
+ 	private readonly ref struct SourceData<S>(Span<S> data, BufferBlock block = null) where S : unmanaged, IAudioSample<S>
+ 	{
+@@ -271,6 +271,7 @@
+ 					long decoderPosition = (long)position * (long)Channels.ChannelCount();
+ 					if (sampleDecoder.Position != decoderPosition)
+ 					{
++						NoteSeek(); // ArmAgedon seam: a clip that keeps seeking is decoded fully in the background (Injected/AudioX.Contention.cs)
+ 						sampleDecoder.Position = decoderPosition;
+ 					}
+ 					int toRead = MathX.Min(bufferSamplesLength, SampleCount - position);

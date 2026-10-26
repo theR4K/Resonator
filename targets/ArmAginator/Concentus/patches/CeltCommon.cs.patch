@@ -1,0 +1,61 @@
+--- a/Celt/CeltCommon.cs
++++ b/Celt/CeltCommon.cs
+@@ -174,7 +174,8 @@
+             int tf_max;
+             int len2;
+             tf_chan = 0;
++            using var armaScratch1 = global::Concentus.TemporaryArray<int>.Rent(len); // ArmAgedon seam
++            tmp = armaScratch1.Array;
+-            tmp = new int[len];
+ 
+             len2 = len / 2;
+             for (c = 0; c < C; c++)
+@@ -284,7 +285,8 @@
+         {
+             int i, c;
+             int mean_diff = 0;
++            using var armaScratch2 = global::Concentus.TemporaryArray<int>.Rent(26); // ArmAgedon seam
++            int[] spread_old = armaScratch2.Array;
+-            int[] spread_old = new int[26];
+             /* Apply an aggressive (-6 dB/Bark) spreading function to the old frame to
+                avoid false detection caused by irrelevant bands */
+             if (C == 1)
+@@ -499,19 +501,24 @@
+             int[] tmp;
+             int[] tmp_1;
+             int sel;
++            using var armaScratch3 = global::Concentus.TemporaryArray<int>.Rent(2); // ArmAgedon seam
++            int[] selcost = armaScratch3.Array;
+-            int[] selcost = new int[2];
+             int tf_select = 0;
+             int bias;
+ 
+ 
+             bias = Inlines.MULT16_16_Q14(((short)(0.5 + (.04f) * (((int)1) << (15))))/*Inlines.QCONST16(.04f, 15)*/, Inlines.MAX16((short)(0 - ((short)(0.5 + (.25f) * (((int)1) << (14))))/*Inlines.QCONST16(.25f, 14)*/), (((short)(0.5 + (.5f) * (((int)1) << (14))))/*Inlines.QCONST16(.5f, 14)*/ - tf_estimate)));
+             /*printf("%f ", bias);*/
++
++            using var armaScratch4 = global::Concentus.TemporaryArray<int>.Rent(len); // ArmAgedon seam
+ 
++            metric = armaScratch4.Array;
+-            metric = new int[len];
+             tmp = new int[(m.eBands[len] - m.eBands[len - 1]) << LM];
+             tmp_1 = new int[(m.eBands[len] - m.eBands[len - 1]) << LM];
++            using var armaScratch5 = global::Concentus.TemporaryArray<int>.Rent(len); // ArmAgedon seam
++            path0 = armaScratch5.Array;
++            using var armaScratch6 = global::Concentus.TemporaryArray<int>.Rent(len); // ArmAgedon seam
++            path1 = armaScratch6.Array;
+-            path0 = new int[len];
+-            path1 = new int[len];
+ 
+             tf_sum = 0;
+             for (i = 0; i < len; i++)
+@@ -879,7 +886,8 @@
+             int tot_boost = 0;
+             int maxDepth;
+             int[][] follower = Arrays.InitTwoDimensionalArray<int>(2, nbEBands);
++            using var armaScratch7 = global::Concentus.TemporaryArray<int>.Rent(C * nbEBands); // ArmAgedon seam
++            int[] noise_floor = armaScratch7.Array; // opt: partitioned array
+-            int[] noise_floor = new int[C * nbEBands]; // opt: partitioned array
+ 
+             Arrays.MemSetInt(offsets, 0, nbEBands);
+             /* Dynamic allocation code */

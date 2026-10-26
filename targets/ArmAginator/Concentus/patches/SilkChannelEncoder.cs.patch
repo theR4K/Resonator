@@ -1,0 +1,34 @@
+--- a/Silk/Structs/SilkChannelEncoder.cs
++++ b/Silk/Structs/SilkChannelEncoder.cs
+@@ -926,8 +926,10 @@
+                 short[] res_pitch;
+                 byte[] ec_buf_copy;
+                 int res_pitch_frame;
++
++                using var armaScratch1 = global::Concentus.TemporaryArray<short>.Rent(this.la_pitch + this.frame_length + this.ltp_mem_length); // ArmAgedon seam
+ 
++                res_pitch = armaScratch1.Array;
+-                res_pitch = new short[this.la_pitch + this.frame_length + this.ltp_mem_length];
+                 /* start of pitch LPC residual frame */
+                 res_pitch_frame = this.ltp_mem_length;
+ 
+@@ -954,7 +956,8 @@
+                 /*****************************************/
+                 /* Prefiltering for noise shaper         */
+                 /*****************************************/
++                using var armaScratch2 = global::Concentus.TemporaryArray<int>.Rent(this.frame_length); // ArmAgedon seam
++                xfw_Q3 = armaScratch2.Array;
+-                xfw_Q3 = new int[this.frame_length];
+                 Filters.silk_prefilter(this, sEncCtrl, xfw_Q3, this.x_buf, x_frame);
+ 
+                 /****************************************/
+@@ -976,7 +979,8 @@
+                 seed_copy = this.indices.Seed;
+                 ec_prevLagIndex_copy = this.ec_prevLagIndex;
+                 ec_prevSignalType_copy = this.ec_prevSignalType;
++                using var armaScratch3 = global::Concentus.TemporaryArray<byte>.Rent(1275); // ArmAgedon seam
++                ec_buf_copy = armaScratch3.Array; // fixme: this size might be optimized to the actual size
+-                ec_buf_copy = new byte[1275]; // fixme: this size might be optimized to the actual size
+                 for (iter = 0; ; iter++)
+                 {
+                     if (gainsID == gainsID_lower)

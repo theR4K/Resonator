@@ -1,0 +1,36 @@
+--- a/Opus/Structs/OpusEncoder.cs
++++ b/Opus/Structs/OpusEncoder.cs
+@@ -874,8 +874,10 @@
+             data_ptr += 1;
+ 
+             enc.enc_init((uint)(max_data_bytes - 1));
++
++            using var armaScratch1 = global::Concentus.TemporaryArray<short>.Rent((total_buffer + frame_size) * this.channels); // ArmAgedon seam
+ 
++            pcm_buf = armaScratch1.Array;
+-            pcm_buf = new short[(total_buffer + frame_size) * this.channels];
+             Arrays.MemCopy(this.delay_buffer, ((this.encoder_buffer - total_buffer) * this.channels), pcm_buf, 0, total_buffer * this.channels);
+ 
+             if (this.mode == OpusMode.MODE_CELT_ONLY)
+@@ -902,7 +904,8 @@
+             if (this.mode != OpusMode.MODE_CELT_ONLY)
+             {
+                 int total_bitRate, celt_rate;
++                using var armaScratch2 = global::Concentus.TemporaryArray<short>.Rent(this.channels * frame_size); // ArmAgedon seam
++                short[] pcm_silk = armaScratch2.Array;
+-                short[] pcm_silk = new short[this.channels * frame_size];
+ 
+                 /* Distribute bits between SILK and CELT */
+                 total_bitRate = 8 * bytes_target * frame_rate;
+@@ -1566,8 +1569,10 @@
+                     "Not enough samples provided in input signal: Expected {0} samples, found {1}",
+                     internal_frame_size, in_pcm.Length));
+             }
++
++            using var armaScratch3 = global::Concentus.TemporaryArray<short>.Rent(internal_frame_size * this.channels); // ArmAgedon seam
+ 
++            input = armaScratch3.Array;
+-            input = new short[internal_frame_size * this.channels];
+ 
+             for (i = 0; i < internal_frame_size * this.channels; i++)
+                 input[i] = Inlines.FLOAT2INT16(in_pcm[i]);

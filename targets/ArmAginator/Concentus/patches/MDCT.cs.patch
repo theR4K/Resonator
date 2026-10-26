@@ -1,0 +1,17 @@
+--- a/Celt/MDCT.cs
++++ b/Celt/MDCT.cs
+@@ -70,9 +70,12 @@
+             }
+             N2 = N >> 1;
+             N4 = N >> 2;
++
++            using var armaScratch1 = global::Concentus.TemporaryArray<int>.Rent(N2); // ArmAgedon seam
+ 
++            f = armaScratch1.Array;
++            using var armaScratch2 = global::Concentus.TemporaryArray<int>.Rent(N4 * 2); // ArmAgedon seam
++            f2 = armaScratch2.Array;
+-            f = new int[N2];
+-            f2 = new int[N4 * 2];
+ 
+             /* Consider the input to be composed of four blocks: [a, b, c, d] */
+             /* Window, shuffle, fold */

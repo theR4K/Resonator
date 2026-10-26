@@ -1,0 +1,11 @@
+﻿{
+  "name": "Concentus",
+  "description": "Concentus 2.2.2 managed Opus codec. Exact upstream revision plus scoped scratch-array seams; consumer supplies Injected/TemporaryArray.cs. No native codec required.",
+  "assembly": "Concentus.dll",
+  "source": {
+    "git": "https://github.com/lostromb/concentus",
+    "ref": "6c2328dc19044601e33a9c11628b8d60e1f3011c",
+    "dir": "CSharp/Concentus",
+    "exclude": ["AssemblyInfo.cs"]
+  }
+}

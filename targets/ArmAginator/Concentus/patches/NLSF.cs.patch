@@ -1,0 +1,16 @@
+--- a/Silk/NLSF.cs
++++ b/Silk/NLSF.cs
+@@ -399,10 +399,11 @@
+             int pred_Q10, diff_Q10, out0_Q10, out1_Q10, rate0_Q5, rate1_Q5;
+             int RD_tmp_Q25, min_Q25, min_max_Q25, max_min_Q25, pred_coef_Q16;
+             Span<int> ind_sort = stackalloc int[SilkConstants.NLSF_QUANT_DEL_DEC_STATES];
++            using var armaInd = global::Concentus.TemporaryMatrix<sbyte>.Rent(SilkConstants.NLSF_QUANT_DEL_DEC_STATES, SilkConstants.MAX_LPC_ORDER); // ArmAgedon seam
++            sbyte[][] ind = armaInd.Array;
+-            sbyte[][] ind = new sbyte[SilkConstants.NLSF_QUANT_DEL_DEC_STATES][];
+             for (i = 0; i < SilkConstants.NLSF_QUANT_DEL_DEC_STATES; i++)
+             {
++                // ArmAgedon seam: rows supplied by armaInd.
+-                ind[i] = new sbyte[SilkConstants.MAX_LPC_ORDER];
+             }
+ 
+             Span<short> prev_out_Q10 = stackalloc short[2 * SilkConstants.NLSF_QUANT_DEL_DEC_STATES];

@@ -1,0 +1,14 @@
+--- a/FrooxEngine/StaticAssetProvider.cs
++++ b/FrooxEngine/StaticAssetProvider.cs
+@@ -131,9 +131,10 @@
+ 		_cancellation?.Cancel();
+ 		_cancellation = new CancellationTokenSource();
+ 		CancellationToken _token = _cancellation.Token;
++		var armWork = ArmAssetWork.Begin(this, World); // ArmAgedon seam: metadata/variant request lifetime
+ 		StartTask(async () =>
+ 		{
+-			await UpdateAssetAsync(_token).ConfigureAwait(continueOnCapturedContext: false);
++			await ArmAssetWork.Observe(armWork, () => UpdateAssetAsync(_token)).ConfigureAwait(continueOnCapturedContext: false); // ArmAgedon seam
+ 		});
+ 	}
+ 

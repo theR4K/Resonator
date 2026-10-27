@@ -1,0 +1,11 @@
+--- a/FrooxEngine/SessionThumbnailData.cs
++++ b/FrooxEngine/SessionThumbnailData.cs
+@@ -179,7 +179,7 @@
+ 			if (result.IsOK)
+ 			{
+ 				Uri thumbnailUrl = Engine.Cloud.Assets.ThumbnailToHttp(result.Entity);
+-				await Engine.LocalDB.StoreCacheRecordAsync(thumbnailUrl, LocalThumbnailPath).ConfigureAwait(continueOnCapturedContext: false);
++				await ThumbnailAliases.RegisterAsync(Engine.LocalDB, thumbnailUrl, _lastUpload).ConfigureAwait(continueOnCapturedContext: false); // ArmAgedon seam: retain local thumbnail ownership
+ 				if (!cancellationToken.IsCancellationRequested)
+ 				{
+ 					UploadTime = DateTime.UtcNow;

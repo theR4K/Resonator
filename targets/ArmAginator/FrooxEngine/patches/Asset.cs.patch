@@ -1,0 +1,11 @@
+--- a/FrooxEngine/Asset.cs
++++ b/FrooxEngine/Asset.cs
+@@ -608,7 +608,7 @@
+ 		if (!runningUpdate)
+ 		{
+ 			runningUpdate = true;
+-			Task.Run((Func<Task?>)ProcessUpdate);
++			ArmAssetWork.Run(this, ProcessUpdate); // ArmAgedon seam: track the current variant task
+ 		}
+ 	}
+ 

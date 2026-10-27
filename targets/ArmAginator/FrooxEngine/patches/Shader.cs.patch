@@ -1,0 +1,27 @@
+--- a/FrooxEngine/Shader.cs
++++ b/FrooxEngine/Shader.cs
+@@ -8,7 +8,7 @@
+ 
+ namespace FrooxEngine;
+ 
+-public class Shader : RendererAsset<Shader, ShaderVariantDescriptor>, IAssetRequester
++public partial class Shader : RendererAsset<Shader, ShaderVariantDescriptor>, IAssetRequester
+ {
+ 	private static string[] AndroidBlockedShaders = new string[14]
+ 	{
+@@ -116,6 +116,7 @@
+ 		{
+ 			if (variantRequestCount.Increment(variant) == 1)
+ 			{
++				ArmAssetWork.Changed(this); // ArmAgedon seam: shader dependency generation
+ 				VariantManager.RequestAsset(this, new ShaderVariantDescriptor(variant, ShaderPlatform));
+ 			}
+ 			if (variants.TryGetValue(variant, out Shader shader) && shader.LoadState == AssetLoadState.FullyLoaded)
+@@ -136,6 +137,7 @@
+ 		{
+ 			if (variantRequestCount.Decrement(variant) == 0)
+ 			{
++				ArmAssetWork.Changed(this); // ArmAgedon seam: shader dependency generation
+ 				variants[variant].RemoveRequest(this);
+ 				variants.Remove(variant);
+ 				variantAvailableCallbacks.RemoveList(variant);

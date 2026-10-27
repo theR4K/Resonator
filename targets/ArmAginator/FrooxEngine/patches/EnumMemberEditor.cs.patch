@@ -1,0 +1,9 @@
+--- a/FrooxEngine/EnumMemberEditor.cs
++++ b/FrooxEngine/EnumMemberEditor.cs
+@@ -63,5 +63,5 @@
+ 			if (value != null)
+ 			{
+-				str = Enums.GetName(value.GetType(), value) ?? value.ToString();
++				str = GraphicsSettingsUi.EnumLabel(value.GetType(), value) ?? value.ToString(); // ArmAgedon seam: readable graphics option values
+ 			}
+ 			_textDrive.Target.Value = str;

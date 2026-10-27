@@ -1,0 +1,9 @@
+--- a/FrooxEngine/MultiValueTextFormatDriver.cs
++++ b/FrooxEngine/MultiValueTextFormatDriver.cs
+@@ -34,5 +34,5 @@
+ 				if ((object)type != null && type.IsEnum)
+ 				{
+-					args[i] = Enums.GetName(type, args[i]);
++					args[i] = GraphicsSettingsUi.EnumLabel(type, args[i]); // ArmAgedon seam: readable graphics option values
+ 				}
+ 			}

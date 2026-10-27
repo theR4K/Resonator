@@ -1,0 +1,19 @@
+--- a/FrooxEngine/SettingsDataFeed.cs
++++ b/FrooxEngine/SettingsDataFeed.cs
+@@ -324,6 +324,7 @@
+ 		LocaleString name = ((setting.NameOverride == null) ? identity.LocaleKeyBase.AsLocaleKey() : ((LocaleString)setting.NameOverride));
+ 		LocaleString description = ((setting.DescriptionOverride == null) ? (identity.LocaleKeyBase + ".Description").AsLocaleKey() : ((LocaleString)setting.DescriptionOverride));
+ 		item.InitBase(key, path, grouping, name, description, setting.Icon);
++		GraphicsSettingsUi.Describe(item); // ArmAgedon seam: renderer-specific labels and supported controls
+ 		if (setting.OrderOffset != 0L)
+ 		{
+ 			item.InitSorting(setting.OrderOffset);
+@@ -473,7 +474,7 @@
+ 					});
+ 				}
+ 				yield return group;
+-				foreach (DataFeedItem item in EnumerateSettingProperties(type, path))
++				foreach (DataFeedItem item in GraphicsSettingsUi.WithRendererOptions(EnumerateSettingProperties(type, path), type, path, World.IsUserspace())) // ArmAgedon seam: live local graphics controls
+ 				{
+ 					yield return item;
+ 				}

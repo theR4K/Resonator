@@ -1,0 +1,9 @@
+--- a/FrooxEngine/EnumFeed.cs
++++ b/FrooxEngine/EnumFeed.cs
+@@ -85,5 +85,5 @@
+ 				DataFeedEnum<E> item = new DataFeedEnum<E>();
+ 				E _value = value;
+-				item.InitBase(valueStr, null, null, value.GetName() ?? valueStr);
++				item.InitBase(valueStr, null, null, GraphicsSettingsUi.EnumLabel(typeof(E), value) ?? valueStr); // ArmAgedon seam: readable graphics option values
+ 				item.InitSetupValue((IField<E> f) =>
+ 				{

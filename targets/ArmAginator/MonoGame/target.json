@@ -1,6 +1,6 @@
 {
   "name": "MonoGame",
-  "description": "MonoGame at the commit of the 3.8.5.1 NuGet packages, as a tree for ArmAgedon's own build: the native runtime (mgruntime, Vulkan and DX12 flavors, built with CMake) and the content pipeline with the effect compiler (the content builder the Vulkan shaders compile with). The managed MonoGame.Framework of the renderers stays the stock package.",
+  "description": "MonoGame at the commit of the 3.8.5.1 NuGet packages, as a tree for ArmAgedon's own build: the native runtime (mgruntime, Vulkan and DX12 flavors, built with CMake) the managed MonoGame.Framework of the native backends (MonoGame.Framework.Native.csproj, used instead of the NuGet package) and the content pipeline with the effect compiler (the content builder the Vulkan shaders compile with).",
   "tree": true,
   "source": {
     "git": "https://github.com/MonoGame/MonoGame",

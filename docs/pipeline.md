@@ -27,7 +27,11 @@ flowchart LR
 ```
 
 Source targets (official upstream code) run first, since dependents reference their projects. Package targets
-skip every stage.
+skip every stage. A tree target (`"tree": true`: a source for the consumer's own build, native code included) is checked
+out and patched, nothing more.
+
+A full run generates each project in a staging copy first and then writes into the output only the files that changed
+(see [CLI](cli.md#resonatorprojectbuilder)): a regeneration no longer makes every file look new to the consumer's build.
 
 ## 1. Prepare
 

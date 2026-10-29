@@ -1,0 +1,27 @@
+--- a/MonoGame.Framework/Graphics/Effect/Effect.cs
++++ b/MonoGame.Framework/Graphics/Effect/Effect.cs
+@@ -216,6 +216,15 @@
+ 
+             // Take a reference to the original shader list.
+             _shaders = cloneSource._shaders;
++
++            WireConstantBuffers();
++        }
++
++        // ArmAgedon: each parameter learns the constant buffers that hold it (ConstantBuffer.Update copies only changed ones)
++        private void WireConstantBuffers()
++        {
++            for (var c = 0; c < ConstantBuffers.Length; c++)
++                ConstantBuffers[c].WireParameters(Parameters);
+         }
+ 
+         /// <summary>
+@@ -328,6 +337,8 @@
+             }
+ 
+             Techniques = new EffectTechniqueCollection(techniques);
++
++            WireConstantBuffers();
+ 
+             CurrentTechnique = Techniques[0];
+         }

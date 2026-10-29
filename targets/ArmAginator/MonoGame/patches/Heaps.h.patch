@@ -1,0 +1,25 @@
+--- a/native/monogame/directx12/Heaps.h
++++ b/native/monogame/directx12/Heaps.h
+@@ -64,6 +64,7 @@
+         std::unique_ptr<ShaderVisibleDescHeap> m_samplerShaderHeap[MAX_BACK_BUFFER_COUNT];
+         size_t m_samplerShaderHeapPos = 0;
+         uint32_t m_samplerSlotUsed = 0;
++        D3D12_CPU_DESCRIPTOR_HANDLE m_nullSrv = {}; // ArmAgedon
+ 
+     public:
+         Heaps(ID3D12Device* device, int backBufferCount);
+@@ -81,7 +82,14 @@
+         void CopySRVUAVToShader(const D3D12_CPU_DESCRIPTOR_HANDLE srv, uint32_t slot);
+         D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHandleAtSlot(uint32_t slot);
+         D3D12_GPU_DESCRIPTOR_HANDLE ApplySRVsToShader();
++        // ArmAgedon: whether this frame's shader-visible heaps still hold another table of `slots` descriptors
++        bool HasSRVRoom(uint32_t slots) const { return m_srvShaderHeapPos + slots <= m_srvShaderHeap[m_idx]->Size(); }
++        bool HasSamplerRoom(uint32_t slots) const { return m_samplerShaderHeapPos + slots <= m_samplerShaderHeap[m_idx]->Size(); }
+         ID3D12DescriptorHeap* GetSRVShaderHeap() { return m_srvShaderHeap[m_idx]->Heap(); }
++
++        // ArmAgedon: written into table slots without a texture, which the stock code left as whatever the heap held there
++        // (uninitialized in a fresh part of the heap: garbage reads)
++        D3D12_CPU_DESCRIPTOR_HANDLE NullSRV() const { return m_nullSrv; }
+ 
+         D3D12_CPU_DESCRIPTOR_HANDLE CreateSamplerHandle() { return m_samplerHeap->AllocCpuHandle(); }
+         void CopySamplerToShader(const D3D12_CPU_DESCRIPTOR_HANDLE srv, uint32_t slot);

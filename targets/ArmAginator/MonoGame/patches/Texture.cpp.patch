@@ -1,0 +1,13 @@
+--- a/native/monogame/directx12/Texture.cpp
++++ b/native/monogame/directx12/Texture.cpp
+@@ -103,7 +103,9 @@
+     optimizedClearValue.Format = impl->m_desc.Format;
+     
+     if (impl->m_depthFormat != MGDepthFormat::None) {
++        // the float formats are ArmAgedon's reversed-Z scene depth, cleared to 0
++        const bool reversed = impl->m_depthFormat == MGDepthFormat::Depth32FloatStencil8 || impl->m_depthFormat == MGDepthFormat::Depth32Float;
++        optimizedClearValue.DepthStencil.Depth = reversed ? 0.0f : 1.0f;
+-        optimizedClearValue.DepthStencil.Depth = 1.0f;
+         optimizedClearValue.DepthStencil.Stencil = 0u;
+     } else {
+         memcpy(optimizedClearValue.Color, impl->m_clearColor, sizeof(FLOAT) * 4);

@@ -10,7 +10,8 @@ namespace Resonator.Pipeline.Stages;
 /// <summary>
 /// Stage 3: make the source tree compile. Writes references.targets, repairs the decompiler's
 /// mechanical artifacts, then applies the target's patch layers. Official source (a source
-/// target) has no decompiler artifacts: only the patches.
+/// target) has no decompiler artifacts: only the patches. A tree target (no C# project of
+/// Resonator's) gets no references.targets either.
 /// </summary>
 public static class FixupStage
 {
@@ -24,10 +25,11 @@ public static class FixupStage
 
     public static void Run(Target target)
     {
-        var files = SourceTree.CsFiles(target.SrcDir).ToList();
+        var files = SourceTree.Files(target.SrcDir, target.Spec.FilePatterns).ToList();
         if (files.Count == 0) throw new Exception($"no source files - run stage 'decompile' first ({target.SrcDir})");
 
         if (target.SkipReferences) Log.Info("references: skipped (baseline mode)");
+        else if (target.Spec.Tree) Log.Info("references: none (tree target: the consumer's own build)");
         else ReferencesTargets.Write(target);
 
         if (target.Spec.Kind == TargetKind.Source)

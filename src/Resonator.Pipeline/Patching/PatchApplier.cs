@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace Resonator.Pipeline.Patching;
 
@@ -29,8 +30,25 @@ public static class PatchApplier
         }
         if (!File.Exists(file)) throw new Exception("patch target missing: " + file);
 
-        string text = File.ReadAllText(file);
+        byte[] bytes = File.ReadAllBytes(file);
+        bool bom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+        string text = new UTF8Encoding(false).GetString(bytes, bom ? 3 : 0, bytes.Length - (bom ? 3 : 0));
         var lines = TextLines.Split(text);
+        if (ApplyLines(lines, patch) == 0) return PatchResult.AlreadyApplied;
+
+        string eol = TextLines.DetectEol(text);
+        bool finalNewline = text.EndsWith('\n') || text.EndsWith('\r');
+        // the file's own encoding: a UTF-8 BOM stays (it used to be dropped)
+        File.WriteAllText(file, string.Join(eol, lines) + (finalNewline ? eol : ""), new UTF8Encoding(bom));
+        return PatchResult.Applied;
+    }
+
+    /// <summary>
+    /// Applies the hunks to <paramref name="lines"/> in place; returns how many applied (0: the patch was applied already).
+    /// Throws when a hunk matches neither its before nor its after image.
+    /// </summary>
+    public static int ApplyLines(List<string> lines, Patch patch)
+    {
         int applied = 0, unmatched = 0;
         foreach (var hunk in patch.Hunks)
         {
@@ -40,14 +58,8 @@ public static class PatchApplier
                 case null: unmatched++; break;
             }
         }
-
         if (unmatched > 0) throw new Exception($"{unmatched} hunk(s) did not match (and were not already applied)");
-        if (applied == 0) return PatchResult.AlreadyApplied;
-
-        string eol = TextLines.DetectEol(text);
-        bool finalNewline = text.EndsWith('\n') || text.EndsWith('\r');
-        File.WriteAllText(file, string.Join(eol, lines) + (finalNewline ? eol : ""));
-        return PatchResult.Applied;
+        return applied;
     }
 
     /// <summary>true = applied, false = already applied, null = neither image found.</summary>

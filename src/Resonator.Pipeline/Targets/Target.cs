@@ -40,7 +40,8 @@ public sealed record Target(PipelineSettings Settings, TargetSpec Spec, string P
 
     public string PreparedDir => Path.Combine(Settings.WorkDir, Spec.Weave == WeaveMode.Flatten ? "flattened" : "deweaved");
 
-    public string? Csproj => Settings.NoCsproj ? null : Path.Combine(ProjectDir, Spec.OutName + ".csproj");
+    /// <summary>null: the consumer builds the source (--no-csproj), or it is no C# project of Resonator's (a tree target).</summary>
+    public string? Csproj => Settings.NoCsproj || Spec.Tree ? null : Path.Combine(ProjectDir, Spec.OutName + ".csproj");
 
     public string? OutDll => Csproj == null ? null : Path.Combine(ProjectDir, "bin", "Release", Spec.Tfm, Spec.OutName + ".dll");
 

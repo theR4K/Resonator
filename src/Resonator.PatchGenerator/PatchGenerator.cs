@@ -32,7 +32,7 @@ internal static class PatchGenerator
     public static void Run(Target target)
     {
         string working = target.SrcDir;
-        if (!Directory.Exists(working) || !SourceTree.CsFiles(working).Any())
+        if (!Directory.Exists(working) || !SourceTree.Files(working, target.Spec.FilePatterns).Any())
             throw new Exception($"working source missing/empty: {working}\n  build the project first (Resonator.ProjectBuilder)");
 
         var baseline = target with
@@ -54,8 +54,8 @@ internal static class PatchGenerator
     {
         string patchDir = target.Spec.PatchDir;
         Directory.CreateDirectory(patchDir);
-        var baseFiles = RelativeFiles(baseline);
-        var workFiles = RelativeFiles(working, target.Spec.KeepDirs);   // keep dirs (Injected/) are hand-written by design: no patches, no injection warnings
+        var baseFiles = RelativeFiles(baseline, target.Spec.FilePatterns);
+        var workFiles = RelativeFiles(working, target.Spec.FilePatterns, target.Spec.KeepDirs);   // keep dirs (Injected/) are hand-written by design: no patches, no injection warnings
         // every existing patch is stale until this run writes it again
         var stale = Directory.EnumerateFiles(patchDir, "*.patch").ToHashSet(StringComparer.OrdinalIgnoreCase);
         // patches/ is flat: a file name shared by several source files (FrooxEngine/Slider.cs and
@@ -71,7 +71,7 @@ internal static class PatchGenerator
             if (workFiles.TryGetValue(rel, out var workFile))
             {
                 string before = File.ReadAllText(baseFile), after = File.ReadAllText(workFile);
-                diff = before == after ? "" : UnifiedDiff.Content(rel, TextLines.Split(before), TextLines.Split(after));
+                diff = before == after ? "" : ExactDiff(rel, TextLines.Split(before), TextLines.Split(after));
                 name = leaf + ".patch";
                 if (diff.Length == 0)
                 {
@@ -116,8 +116,29 @@ internal static class PatchGenerator
 
     static string PatchLeaf(string rel) => Path.GetFileName(rel);
 
-    static Dictionary<string, string> RelativeFiles(string root, IEnumerable<string>? keepDirs = null) =>
-        SourceTree.GeneratedFiles(root, keepDirs ?? []).ToDictionary(f => Path.GetRelativePath(root, f), StringComparer.Ordinal);
+    /// <summary>
+    /// A diff that the applier turns back into exactly <paramref name="after"/>. The applier finds a hunk by its content, so
+    /// identical code in several places (three draw calls with the same lines around the same change) makes identical hunks,
+    /// and one could be taken for another that is already applied; more context sets them apart. Up to the whole file.
+    /// </summary>
+    static string ExactDiff(string rel, List<string> before, List<string> after)
+    {
+        for (int context = UnifiedDiff.DefaultContext; ; context *= 2)
+        {
+            string diff = UnifiedDiff.Content(rel, before, after, context);
+            var lines = new List<string>(before);
+            bool exact;
+            try { exact = PatchApplier.ApplyLines(lines, Patch.Parse(diff)) > 0 && lines.SequenceEqual(after, StringComparer.Ordinal); }
+            catch (Exception) { exact = false; }
+            if (exact) return diff;
+            if (context > Math.Max(before.Count, after.Count))
+                throw new Exception($"{rel}: no diff reproduces the working file, even with the whole file as context");
+            Log.Info($"  {rel}: hunks with {context} lines of context are ambiguous, trying {context * 2}");
+        }
+    }
+
+    static Dictionary<string, string> RelativeFiles(string root, IReadOnlyList<string> globs, IEnumerable<string>? keepDirs = null) =>
+        SourceTree.GeneratedFiles(root, keepDirs ?? [], globs).ToDictionary(f => Path.GetRelativePath(root, f), StringComparer.Ordinal);
 
     /// <summary>The file is unmodified again: its patch (content or deletion) goes.</summary>
     static void DropStale(string patchDir, HashSet<string> stale, string leaf)

@@ -39,6 +39,12 @@ one the pipeline reads). It holds what the run changes: each target's dll + pdb,
 assemblies they bring (Concentus), and replaced natives under `runtimes/` - nothing identical to the install, no
 differing copy of a game file the run does not own. `publish.txt` lists each file with its target.
 
+A full run (all stages) generates into a staging copy of the output layout under the work dir, then updates the output
+with only what changed: a file with the same bytes is not written (it keeps its timestamp, so the consumer's build
+recompiles only what a patch or a new revision changed), and a file a previous run generated that this one does not is
+deleted. What a run generated is listed in each project dir's `.resonator-generated`; nothing else there is touched
+(keep dirs, a csproj, `bin/`, `obj/`). A one-stage run (`--stage`) works in place, as before.
+
 One target in the run → its project goes straight into `<output-dir>`; several → `<output-dir>/<target>/`.
 A `--target` run also builds the source targets it references (they are its projects' siblings), so e.g.
 `--set Flatweave --target Elements.Assets` builds CSCore, FreeImageNET, RNNoise.NET and SharpFont first and puts

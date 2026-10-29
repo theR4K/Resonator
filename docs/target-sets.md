@@ -112,14 +112,15 @@ replaces each with its official release, using one of two target kinds:
 | Key | Meaning |
 |---|---|
 | `name` | the target's name (used by `--target`) |
-| `assembly` | the shipped dll (`FrooxEngine.dll`) |
+| `assembly` | the shipped dll (`FrooxEngine.dll`); not for a `tree` target |
 | `extends` | `"<Set>/<Target>"`: inherit a target of another set |
 | `weave` | `deweave` (default) \| `flatten` \| `none` |
 | `select_types` | decompile only these types (split targets) |
 | `exclude_types` | decompile everything except these |
 | `exclude_refs` / `refs` | drop / add assembly references in `references.targets` |
 | `package` | `{"id", "version"}`: a NuGet package target |
-| `source` | `{"git" \| "archive", "ref", "dir", "exclude"}`: a source target; `ref` is a pinned tag or commit, `exclude` takes files or `dir/` prefixes |
+| `source` | `{"git" \| "archive", "ref", "dir", "exclude", "files", "submodules"}`: a source target; `ref` is a pinned tag or commit, `exclude` takes files or `dir/` prefixes, `files` the globs of what a checkout takes (default `["**/*.cs"]`; `**` any folders, `*` within a name), `submodules` the repo's submodules fetched with it (shallow, recursive) |
+| `tree` | `true`: the source is a tree for the consumer's own build (native code, a repo's own projects), not a C# project of Resonator's: checked out and patched only - no `assembly`, `references.targets`, csproj or build. Patches can be on any text file |
 | `packages` | `{"<id>": "<version>"}`: extra NuGet references of any target |
 | `properties`, `defines` | MSBuild properties / extra `DefineConstants` in `references.targets` |
 | `calli` | `{"attribute", "remove_type_attribute"}`: weave `[attribute]` stubs into `calli` right after compiling (CSCore) |
@@ -155,6 +156,24 @@ A source target (`Flatweave/SharpFont`):
     "ref": "26454a8b5b53733ff7a10de2322469b64cb75ee8",
     "dir": "Source/SharpFont",
     "exclude": [ "Properties/" ]
+  }
+}
+```
+
+A tree target (`ArmAginator/MonoGame`, abridged): the repo with the submodules the consumer's CMake and MSBuild builds
+need, every file but the excluded folders. Its patches are per file like any other (`MGG_Vulkan.cpp.patch`):
+
+```json
+{
+  "name": "MonoGame",
+  "tree": true,
+  "source": {
+    "git": "https://github.com/MonoGame/MonoGame",
+    "ref": "5e9fe9b100ffa67026dff97cc8adffae1414534e",
+    "dir": "",
+    "files": ["**"],
+    "exclude": ["Tests/", "Templates/", "external/MonoGame.Templates/"],
+    "submodules": ["native/monogame/external/sdl2", "external/stb"]
   }
 }
 ```

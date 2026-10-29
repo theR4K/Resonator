@@ -1,0 +1,13 @@
+--- a/native/monogame/include/api_enums.h
++++ b/native/monogame/include/api_enums.h
+@@ -81,6 +81,10 @@
+     Depth16 = 1,
+     Depth24 = 2,
+     Depth24Stencil8 = 3,
++    // ArmAgedon: 32-bit float depth (+ 8-bit stencil), for reversed-Z scene views as Unity's and Renderide's; the managed
++    // DepthFormat passes them through as (DepthFormat)4 and (DepthFormat)5
++    Depth32FloatStencil8 = 4,
++    Depth32Float = 5,
+ };
+ 
+ enum class MGClearOptions : mgint

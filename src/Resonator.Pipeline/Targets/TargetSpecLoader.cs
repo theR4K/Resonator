@@ -29,6 +29,7 @@ public static class TargetSpecLoader
         string name = Path.GetFileName(targetDir);
         string? assembly = null, outAssembly = null, weave = null, tfm = null;
         string? weaverCheck = FrooxEngineWeaver;
+        bool tree = false;
         string[] selectTypes = [];
         PackageSpec? package = null;
         SourceSpec? source = null;
@@ -45,6 +46,7 @@ public static class TargetSpecLoader
             outAssembly = String(spec, "out_assembly") ?? outAssembly;
             weave = String(spec, "weave") ?? weave;
             tfm = String(spec, "tfm") ?? tfm;
+            if (spec["tree"] is JsonNode t) tree = t.GetValue<bool>();
             if (spec.TryGetPropertyValue("weaver_check", out var check)) weaverCheck = check?.GetValue<string>();   // null disables it
             if (Has(spec, "select_types")) selectTypes = Strings(spec, "select_types");
             foreach (var (key, list) in lists) list.AddRange(Strings(spec, key));
@@ -57,7 +59,7 @@ public static class TargetSpecLoader
             if (spec["source"] is JsonObject s)
             {
                 source = new SourceSpec(String(s, "git"), String(s, "archive"), String(s, "ref") ?? "", String(s, "dir") ?? "",
-                    s["exclude"]?.AsArray().Select(x => x!.GetValue<string>()).ToArray() ?? []);
+                    Strings(s, "exclude"), Has(s, "files") ? Strings(s, "files") : SourceSpec.CsFiles, Strings(s, "submodules"));
                 package = null;
             }
             if (spec["calli"] is JsonObject c)
@@ -70,7 +72,8 @@ public static class TargetSpecLoader
         string[] Accumulated(string key) => lists[key].Distinct(StringComparer.Ordinal).ToArray();
         var keepDirs = Accumulated("keep_dirs");
 
-        if (string.IsNullOrEmpty(assembly)) throw new ArgumentException($"spec for '{name}' has no assembly");
+        if (tree && source == null) throw new ArgumentException($"spec for '{name}': a tree target needs a \"source\"");
+        if (string.IsNullOrEmpty(assembly) && !tree) throw new ArgumentException($"spec for '{name}' has no assembly");
         if (source != null && (source.Git == null) == (source.Archive == null))
             throw new ArgumentException($"spec for '{name}': source needs exactly one of \"git\" / \"archive\"");
         if (source?.Git != null && source.Ref == "")
@@ -80,12 +83,13 @@ public static class TargetSpecLoader
         {
             Name = name,
             Dir = targetDir,
-            Assembly = assembly,
+            Assembly = assembly ?? "",
+            Tree = tree,
             OutAssembly = outAssembly,
             Tfm = tfm ?? "net10.0",
             Weave = ParseWeave(weave, name),
             // the engine's own weaver is always checked; elsewhere "weaver_check": null switches it off
-            WeaverCheck = weaverCheck ?? (assembly.Equals("FrooxEngine.dll", StringComparison.OrdinalIgnoreCase) ? FrooxEngineWeaver : null),
+            WeaverCheck = weaverCheck ?? (assembly?.Equals("FrooxEngine.dll", StringComparison.OrdinalIgnoreCase) == true ? FrooxEngineWeaver : null),
             Package = package,
             Source = source,
             Calli = calli,

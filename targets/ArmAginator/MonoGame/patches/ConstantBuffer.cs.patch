@@ -1,0 +1,101 @@
+--- a/MonoGame.Framework/Graphics/Shader/ConstantBuffer.cs
++++ b/MonoGame.Framework/Graphics/Shader/ConstantBuffer.cs
+@@ -17,6 +17,27 @@
+         private readonly string _name;
+ 
+         private ulong _stateKey;
++
++        // ArmAgedon: the parameters (indexes into _parameters) set since the last Update (EffectParameter.Changed); _all: every
++        // one (a new or cloned buffer, before its first Update)
++        private int[] _changed;
++        private bool[] _isChanged;
++        private int _changedCount;
++        private bool _all = true;
++
++        internal void WireParameters(EffectParameterCollection parameters)
++        {
++            for (var p = 0; p < _parameters.Length; p++)
++                parameters[_parameters[p]].AddOwner(this, p);
++        }
++
++        internal void MarkChanged(int slot)
++        {
++            if (_all || _isChanged[slot])
++                return;
++            _isChanged[slot] = true;
++            _changed[_changedCount++] = slot;
++        }
+ 
+         private bool _dirty;
+         private bool Dirty
+@@ -32,6 +53,8 @@
+             _name = cloneSource._name;
+             _parameters = cloneSource._parameters;
+             _offsets = cloneSource._offsets;
++            _changed = new int[_parameters.Length];
++            _isChanged = new bool[_parameters.Length];
+ 
+             // Clone the mutable types.
+             _buffer = (byte[])cloneSource._buffer.Clone();
+@@ -50,6 +73,8 @@
+ 
+             _parameters = parameterIndexes;
+             _offsets = parameterOffsets;
++            _changed = new int[_parameters.Length];
++            _isChanged = new bool[_parameters.Length];
+ 
+             _name = name;
+ 
+@@ -143,35 +168,27 @@
+ 
+         public void Update(EffectParameterCollection parameters)
+         {
++            // ArmAgedon: only the parameters set since the last Update (EffectParameter.Changed tells their buffers); the stock
++            // code checked the state key of every parameter of the buffer at every pass Apply.
++            if (_all)
+-            // TODO:  We should be doing some sort of dirty state 
+-            // testing here.
+-            //
+-            // It should let us skip all parameter updates if
+-            // nothing has changed.  It should not be per-parameter
+-            // as that is why you should use multiple constant
+-            // buffers.
+-
+-            // If our state key becomes larger than the 
+-            // next state key then the keys have rolled 
+-            // over and we need to reset.
+-            if (_stateKey > EffectParameter.NextStateKey)
+-                _stateKey = 0;
+-            
+-            for (var p = 0; p < _parameters.Length; p++)
+             {
++                _all = false;
++                for (var p = 0; p < _parameters.Length; p++)
++                    SetParameter(_offsets[p], parameters[_parameters[p]]);
+-                var index = _parameters[p];
+-                var param = parameters[index];
+-
+-                if (param.StateKey < _stateKey)
+-                    continue;
+-
+-                var offset = _offsets[p];
+                 _dirty = true;
++                _changedCount = 0;
++                return;
++            }
+ 
++            for (var k = 0; k < _changedCount; k++)
++            {
++                var p = _changed[k];
++                _isChanged[p] = false;
++                SetParameter(_offsets[p], parameters[_parameters[p]]);
+-                SetParameter(offset, param);
+             }
++            if (_changedCount > 0)
++                _dirty = true;
++            _changedCount = 0;
+-
+-            _stateKey = EffectParameter.NextStateKey;
+         }
+     }
+ }

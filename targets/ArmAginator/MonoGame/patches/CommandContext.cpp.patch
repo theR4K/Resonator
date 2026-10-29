@@ -1,0 +1,20 @@
+--- a/native/monogame/directx12/CommandContext.cpp
++++ b/native/monogame/directx12/CommandContext.cpp
+@@ -181,6 +181,8 @@
+ 
+     DXGI_FORMAT resolveFormat = dest->GetFormat();
+     if (resolveFormat == DXGI_FORMAT_D24_UNORM_S8_UINT) resolveFormat = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
++    if (resolveFormat == DXGI_FORMAT_D32_FLOAT_S8X24_UINT) resolveFormat = DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
++    if (resolveFormat == DXGI_FORMAT_D32_FLOAT) resolveFormat = DXGI_FORMAT_R32_FLOAT;
+     cmdResolve->Get()->ResolveSubresource(dest->Get(), 0, source->Get(), 0, resolveFormat);
+ 
+     if (!cmd) cmdResolve->Close(true);
+@@ -295,7 +297,7 @@
+ 
+         D3D12_CLEAR_FLAGS flags = (D3D12_CLEAR_FLAGS)0;
+         if (clearDepth) flags |= D3D12_CLEAR_FLAG_DEPTH;
++        if (clearStencil && m_currentDepthStencil->GetFormat() != DXGI_FORMAT_D32_FLOAT) flags |= D3D12_CLEAR_FLAG_STENCIL;
+-        if (clearStencil) flags |= D3D12_CLEAR_FLAG_STENCIL;
+         cmdList->ClearDepthStencilView(dsvDescriptor, flags, depth, stencil, 0, nullptr);
+     }
+ 

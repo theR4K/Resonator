@@ -111,7 +111,7 @@ public sealed class TargetSet
             TargetSpec spec;
             try { spec = Spec(target); }
             catch (Exception) { continue; }   // a broken spec is reported when the target itself runs
-            if (spec.Kind != TargetKind.Decompile)
+            if (spec.Kind != TargetKind.Decompile && !spec.Tree)   // a tree builds no assembly of the set's
                 providers[spec.BaseName] = new Provider(spec.Name, spec.Kind, spec.OutName, spec.Package);
         }
         return providers;

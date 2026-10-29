@@ -4,6 +4,10 @@
 //
 // A target's project: the source tree (decompiled, fixed, patched), references.targets (the
 // generated reference set) and <name>.csproj (the template - unless --no-csproj).
+//
+// A full run generates into a staging copy of the output layout and then updates the output with
+// only the files that changed (OutputMirror): unchanged files keep their timestamps, so the
+// consumer's build recompiles only what changed.
 
 using System;
 using System.Collections.Generic;
@@ -77,6 +81,9 @@ internal static class Program
         Log.Info($"  stage   : {stage.ToString().ToLowerInvariant()}   pdb: {(settings.UsePdb ? "on" : "off")}   csproj: {(settings.NoCsproj ? "off" : "on")}");
 
         bool Runs(Stage s) => stage == Stage.All || stage == s;
+        // a full run generates here first (the same layout, so relative paths between targets hold), then mirrors
+        var staging = settings with { OutputDir = StagingDir(settings) };
+        if (stage == Stage.All && Directory.Exists(staging.OutputDir)) Directory.Delete(staging.OutputDir, recursive: true);
         var failed = new List<string>();
         var built = new List<Target>();
         foreach (string name in targets)
@@ -93,9 +100,20 @@ internal static class Program
                 string from = target.Spec.Kind == TargetKind.Source ? "source" : "weave: " + target.Spec.Weave.ToString().ToLowerInvariant();
                 Log.Info($"=== {target.Name}  ->  {target.ProjectDir}   ({from}, patch layers: {target.Spec.PatchDirs.Count})");
 
-                if (Runs(Stage.Prepare) || Runs(Stage.Decompile)) PrepareStage.Run(target);   // decompile needs it; cached
-                if (Runs(Stage.Decompile)) DecompileStage.Run(target);
-                if (Runs(Stage.Fixup)) FixupStage.Run(target);
+                if (stage == Stage.All)
+                {
+                    var staged = Target.InRun(staging, name, targets.Count);
+                    PrepareStage.Run(staged);
+                    DecompileStage.Run(staged);
+                    FixupStage.Run(staged);
+                    Mirror(staged, target);
+                }
+                else
+                {
+                    if (Runs(Stage.Prepare) || Runs(Stage.Decompile)) PrepareStage.Run(target);   // decompile needs it; cached
+                    if (Runs(Stage.Decompile)) DecompileStage.Run(target);
+                    if (Runs(Stage.Fixup)) FixupStage.Run(target);
+                }
                 if (Runs(Stage.Build)) BuildStage.Run(target);
                 if (Runs(Stage.Build) && target.OutDll != null && File.Exists(target.OutDll)) built.Add(target);
             }
@@ -120,6 +138,25 @@ internal static class Program
         Log.Info();
         Log.Info("PIPELINE OK");
         return 0;
+    }
+
+    /// <summary>The staging root of a full run: per output dir, under the work dir.</summary>
+    static string StagingDir(PipelineSettings settings)
+    {
+        string key = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(settings.OutputDir.ToLowerInvariant())))[..12].ToLowerInvariant();
+        return Path.Combine(settings.WorkDir, "staging", key);
+    }
+
+    /// <summary>The staged project into the real one: only changed files are written, files no longer generated deleted.</summary>
+    static void Mirror(Target staged, Target target)
+    {
+        // a project generated before the manifest existed: what a regeneration owned then
+        var owned = SourceTree.GeneratedFiles(target.SrcDir, target.Spec.KeepDirs, target.Spec.FilePatterns);
+        if (File.Exists(target.ReferencesTargets)) owned.Add(Path.GetFullPath(target.ReferencesTargets));
+        var result = OutputMirror.Run(staged.ProjectDir, target.ProjectDir, owned);
+        Log.Info();
+        Log.Info($"=== OUTPUT {target.ProjectDir}: {result.Written} written, {result.Unchanged} unchanged, {result.Deleted} deleted");
     }
 
     /// <returns>Publish: the --publish dir, "" for --no-publish, null for the default</returns>

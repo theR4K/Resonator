@@ -1,0 +1,128 @@
+--- a/native/monogame/directx12/MGG_DX12.cpp
++++ b/native/monogame/directx12/MGG_DX12.cpp
+@@ -189,6 +189,10 @@
+ 	bool texturesDirty = false;
+ 
+ 	std::map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> samplerSetHandles;
++	// ArmAgedon: the last texture / sampler table per stage, kept bound when the frame's heap is full
++	D3D12_GPU_DESCRIPTOR_HANDLE lastTextureTable[2] = {};
++	D3D12_GPU_DESCRIPTOR_HANDLE lastSamplerTable[2] = {};
++	bool heapFullLogged = false;
+ 	std::map<uint32_t, MGG_SamplerState*> samplerStates;
+ 	MGG_SamplerState* samplers[2][MAX_TEXTURE_SLOTS];
+ 	bool samplersDirty = false;
+@@ -665,6 +669,8 @@
+ 	memset(device->textures, 0, sizeof(device->textures));
+ 	device->texturesDirty = true;
+ 	device->samplerSetHandles.clear();
++	device->lastTextureTable[0] = device->lastTextureTable[1] = {};
++	device->lastSamplerTable[0] = device->lastSamplerTable[1] = {};
+ 	memset(device->samplers, 0, sizeof(device->samplers));
+ 	device->samplersDirty = true;
+ 	device->viewportDirty = true;
+@@ -1099,9 +1105,12 @@
+ 				continue;
+ 			}
+ 
++			// ArmAgedon: VertexBufferBinding.VertexOffset is in vertices (MonoGame validates it against the vertex count); the
++			// stock code used it as bytes
++			UINT offsetBytes = device->vertexOffsets[i] * (UINT)device->layout->streamStrides[i];
++			vbv.BufferLocation = buffer->GpuAddress() + offsetBytes;
+-			vbv.BufferLocation = buffer->GpuAddress() + device->vertexOffsets[i];
+ 			vbv.StrideInBytes = device->layout->streamStrides[i];
++			vbv.SizeInBytes = buffer->dataSize > (int)offsetBytes ? buffer->dataSize - offsetBytes : 0;
+-			vbv.SizeInBytes = buffer->dataSize;
+ 
+ 			cl->IASetVertexBuffers(i, 1, &vbv);
+ 
+@@ -1138,12 +1147,30 @@
+ 		for (int s = 0; s < 2; s++)
+ 		{
+ 			mgint maxSlot = device->currentShader[s]->maxTextureSlot;
++			UINT tableIndex = s == (int)MGShaderStage::Pixel ? 3 : 2;
++
++			// ArmAgedon: a full heap keeps the last table bound instead of throwing ("Offset outside of the
++			// ShaderVisibleDescHeap", a C++ exception that ended the app's draw loop on a large world)
++			if (maxSlot > -1 && !heaps->HasSRVRoom((uint32_t)maxSlot + 1))
++			{
++				if (!device->heapFullLogged)
++				{
++					device->heapFullLogged = true;
++					fprintf(stderr, "[mgruntime] D3D12 shader-visible texture heap full this frame: later draws keep the last textures\n");
++				}
++				if (device->lastTextureTable[s].ptr != 0)
++					cl->SetGraphicsRootDescriptorTable(tableIndex, device->lastTextureTable[s]);
++				continue;
++			}
+ 
+ 			for (int i = 0; i <= maxSlot; i++)
+ 			{
+ 				auto tex = device->textures[s][i];
+ 				if (tex == nullptr)
++				{
++					heaps->CopySRVUAVToShader(heaps->NullSRV(), i); // ArmAgedon: not the heap's leftover
+ 					continue;
++				}
+ 
+ 				heaps->CopySRVUAVToShader(tex->texture->GetSRV(), i);
+ 				tex->frame = currentFrame;
+@@ -1151,8 +1178,8 @@
+ 
+ 			if (maxSlot > -1)
+ 			{
+-				UINT tableIndex = s == (int)MGShaderStage::Pixel ? 3 : 2;
+ 				D3D12_GPU_DESCRIPTOR_HANDLE handle = heaps->ApplySRVsToShader();
++				device->lastTextureTable[s] = handle; // ArmAgedon
+ 				cl->SetGraphicsRootDescriptorTable(tableIndex, handle);
+ 			}
+ 		}
+@@ -1176,7 +1203,21 @@
+ 			if (iter != device->samplerSetHandles.end())
+ 			{
+ 				UINT tableIndex = s == (int)MGShaderStage::Pixel ? 5 : 4;
++				device->lastSamplerTable[s] = iter->second; // ArmAgedon
+ 				cl->SetGraphicsRootDescriptorTable(tableIndex, iter->second);
++				continue;
++			}
++
++			// ArmAgedon: a full sampler heap (2,048 per frame, D3D12's limit) keeps the last table bound instead of throwing
++			if (!heaps->HasSamplerRoom((uint32_t)maxSlot + 1))
++			{
++				if (!device->heapFullLogged)
++				{
++					device->heapFullLogged = true;
++					fprintf(stderr, "[mgruntime] D3D12 shader-visible sampler heap full this frame: later draws keep the last samplers\n");
++				}
++				if (device->lastSamplerTable[s].ptr != 0)
++					cl->SetGraphicsRootDescriptorTable(s == (int)MGShaderStage::Pixel ? 5 : 4, device->lastSamplerTable[s]);
+ 				continue;
+ 			}
+ 
+@@ -1198,6 +1239,7 @@
+ 
+ 			D3D12_GPU_DESCRIPTOR_HANDLE handle = heaps->ApplySamplersToShader();
+ 			device->samplerSetHandles[hash] = handle;
++			device->lastSamplerTable[s] = handle; // ArmAgedon
+ 
+ 			UINT tableIndex = s == (int)MGShaderStage::Pixel ? 5 : 4;
+ 			cl->SetGraphicsRootDescriptorTable(tableIndex, handle);
+@@ -2364,4 +2406,19 @@
+ 	query->buffer->Unmap(0, nullptr);
+ 
+ 	return true;
++}
++
++// ArmAgedon: graphics-thread benchmark/resize diagnostics; no GPU work.
++MG_EXPORT mgint MGDX_GetBackbufferState(MGG_GraphicsDevice* device, mgint* values, mgint count)
++{
++    if (device == nullptr || device->resources == nullptr || values == nullptr || count < 6) return 0;
++    auto backbuffer = device->resources->GetMainTarget();
++    if (backbuffer == nullptr) return 0;
++    values[0] = (mgint)backbuffer->GetWidth();
++    values[1] = (mgint)backbuffer->GetHeight();
++    values[2] = (mgint)device->viewport.Width;
++    values[3] = (mgint)device->viewport.Height;
++    values[4] = (mgint)(device->scissor.right - device->scissor.left);
++    values[5] = (mgint)(device->scissor.bottom - device->scissor.top);
++    return 6;
+ }

@@ -1,0 +1,23 @@
+{
+  "name": "MonoGame",
+  "description": "MonoGame at the commit of the 3.8.5.1 NuGet packages, as a tree for ArmAgedon's own build: the native runtime (mgruntime, Vulkan and DX12 flavors, built with CMake) and the content pipeline with the effect compiler (the content builder the Vulkan shaders compile with). The managed MonoGame.Framework of the renderers stays the stock package.",
+  "tree": true,
+  "source": {
+    "git": "https://github.com/MonoGame/MonoGame",
+    "ref": "5e9fe9b100ffa67026dff97cc8adffae1414534e",
+    "dir": "",
+    "files": ["**"],
+    "exclude": ["Tests/", "Templates/", "Images/", "scripts/", "build/", "src/", ".github/", "external/MonoGame.Templates/", "ThirdParty/SDL_GameControllerDB/"],
+    "submodules": [
+      "native/monogame/external/sdl2",
+      "native/monogame/external/vulkan-headers",
+      "native/monogame/external/volk",
+      "native/monogame/external/vma",
+      "native/monogame/external/faudio",
+      "external/stb",
+      "external/CppNet",
+      "ThirdParty/StbImageSharp",
+      "ThirdParty/StbImageWriteSharp"
+    ]
+  }
+}

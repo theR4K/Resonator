@@ -1,0 +1,61 @@
+--- a/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.Vulkan.cs
++++ b/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.Vulkan.cs
+@@ -244,23 +244,22 @@
+                 var shaderData = new ShaderData(isVertexShader, effect.Shaders.Count, bytecode);
+                 var samplers = new List<ShaderData.Sampler>();
+ 
+-                int cbCount = 0;
+                 var cbufferIndex = new List<int>();
++                // ArmAgedon: several constant buffers, each at the binding of its register (b0, b1, ...): the shader's k-th
++                // constant buffer (EffectPass binds them by that order) is its k-th uniform binding in ascending order, which
++                // is also Vulkan's order of the dynamic offsets. The stock code refused a second cbuffer.
++                var cbufferBindings = new List<uint>();
+ 
+                 // we could have multiple descriptor sets in here, but we don't currently handle that
++                var withDescriptorSet = reflectionInfo.Variables.Where(v => v.DescriptorSet.HasValue)
++                    .OrderBy(v => v.Pointer.PointerType.Type == SpirvType.Struct ? 0 : 1)
++                    .ThenBy(v => v.Pointer.PointerType.Type == SpirvType.Struct ? v.BindingSlot ?? 0 : 0)
++                    .ToList();
+-                var withDescriptorSet = reflectionInfo.Variables.Where(v => v.DescriptorSet.HasValue);
+ 
+                 foreach (SpirvVariable variable in withDescriptorSet)
+                 {
+                     if (variable.Pointer.PointerType.Type == SpirvType.Struct)
+                     {
+-                        // TODO: Look into multiple cbuffer support.
+-                        if (cbCount > 0)
+-                        {
+-                            errorsAndWarnings += "Building effects for Vulkan currently doesn't support more than one constant buffer (cbuffer) structures. Please consider refactoring your HLSL code.";
+-                            throw new ShaderCompilerException();
+-                        }
+-
+                         SpirvTypeStruct constantBuffer = variable.Pointer.PointerType as SpirvTypeStruct;
+                         ConstantBufferData cbuffer = ConstantBufferData.BuildFromSpirvStruct(constantBuffer);
+ 
+@@ -275,9 +274,8 @@
+                             }
+                             else
+                                 cbufferIndex.Add(match);
++                            cbufferBindings.Add(variable.BindingSlot ?? 0);
+                         }
+-
+-                        cbCount++;
+                     }
+                     else if (variable.Pointer.PointerType.Type == SpirvType.Image)
+                     {
+@@ -521,11 +519,11 @@
+                     uint samplerSlots = 0;
+                     var textureTypes = new uint[16];
+ 
++                    // ArmAgedon: every cbuffer at its own binding, in ascending order (see cbufferBindings)
++                    for (var k = 0; k < cbufferIndex.Count; k++)
+-                    // We just have one cbuffer at 0 right now.
+-                    if (cbufferIndex.Count > 0)
+                     {
++                        uniformSlots |= 1u << (int)cbufferBindings[k];
++                        binding.binding = cbufferBindings[k];
+-                        uniformSlots |= 1 << 0;
+-                        binding.binding = 0;
+                         binding.descriptorType = VkDescriptorType.UNIFORM_BUFFER_DYNAMIC;
+                         bindings.Add(binding);
+                     }

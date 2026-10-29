@@ -5,7 +5,13 @@
 ## How patches apply
 
 Every `*.patch` in a target's `patches/` is applied as a unified diff, with paths relative to the source root.
-Hunks are located by context, so line drift is tolerated.
+Hunks are located by context, so line drift is tolerated. Any text file can be patched (a tree target's C++ sources,
+headers, CMake files); a patched file keeps its UTF-8 BOM and its line endings.
+
+`Resonator.PatchGenerator` checks each patch it writes: applied to the baseline it must give exactly the working file.
+Identical code in several places (three draw calls with the same lines around the same change) makes identical hunks, and
+the applier could take one for another that is already applied; such a file's patch is written with more context
+(6, 12, ... lines) until it reproduces the file.
 
 Layers are **cumulative**: the root ancestor's patches first, the target's own last.
 

@@ -14,10 +14,10 @@ namespace Resonator.Pipeline.Stages;
 
 /// <summary>
 /// A source target: the library's official source instead of a decompile of the shipped dll.
-///   fetch     the spec's git repo at a pinned ref (shallow), or an archive (.zip / .tar.gz),
-///             cached under &lt;workdir&gt;/sources/&lt;target&gt;-&lt;hash of url+ref&gt;/
-///   checkout  every .cs under the spec's "dir" (minus "exclude") into the source root, relative
-///             paths kept; keep dirs survive, stale files are dropped
+///   fetch     the spec's git repo at a pinned ref (shallow, with its listed "submodules"), or an archive
+///             (.zip / .tar.gz), cached under &lt;workdir&gt;/sources/&lt;target&gt;-&lt;hash of url+ref+submodules&gt;/
+///   checkout  the spec's "files" (every .cs by default) under its "dir" (minus "exclude") into the source
+///             root, relative paths kept; keep dirs survive, stale files are dropped
 /// Fixup then applies the layered patches as for a decompiled target, and sync diffs against a
 /// fresh checkout - a source target is patched and synced like any other.
 /// </summary>
@@ -30,7 +30,7 @@ internal static class SourceCheckout
         string from = Path.GetFullPath(Path.Combine(root, source.Dir.Replace('/', Path.DirectorySeparatorChar)));
         if (!Directory.Exists(from)) throw new Exception($"source dir '{source.Dir}' not found in {root}");
 
-        var previous = SourceTree.GeneratedFiles(target.SrcDir, target.Spec.KeepDirs);
+        var previous = SourceTree.GeneratedFiles(target.SrcDir, target.Spec.KeepDirs, target.Spec.FilePatterns);
         Directory.CreateDirectory(target.SrcDir);
 
         var exclude = source.Exclude.Select(e => e.Replace('\\', '/').TrimStart('/')).ToArray();
@@ -40,7 +40,7 @@ internal static class SourceCheckout
 
         var copied = new List<string>();
         int skipped = 0;
-        foreach (string file in SourceTree.CsFiles(from))
+        foreach (string file in SourceTree.Files(from, source.Files))
         {
             string rel = Path.GetRelativePath(from, file).Replace('\\', '/');
             if (Excluded(rel)) { skipped++; continue; }
@@ -60,14 +60,16 @@ internal static class SourceCheckout
     /// <summary>The fetched tree, from the cache when it is complete.</summary>
     static string Fetch(Target target, SourceSpec source)
     {
-        string key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((source.Git ?? source.Archive) + "|" + source.Ref)))[..12].ToLowerInvariant();
+        // the submodules are part of the fetch: another list is another cache entry (none keeps the old key)
+        string submodules = source.Submodules.Length == 0 ? "" : "|" + string.Join(",", source.Submodules);
+        string key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((source.Git ?? source.Archive) + "|" + source.Ref + submodules)))[..12].ToLowerInvariant();
         string dir = Path.Combine(target.Settings.WorkDir, "sources", target.Name + "-" + key);
         string complete = dir + ".done";
         if (Directory.Exists(dir) && File.Exists(complete)) return dir;
         if (Directory.Exists(dir)) DeleteCheckout(dir);
         Directory.CreateDirectory(dir);
 
-        if (source.Git != null) FetchGit(dir, source.Git, source.Ref);
+        if (source.Git != null) FetchGit(dir, source.Git, source.Ref, source.Submodules);
         else FetchArchive(dir, source.Archive!);
         File.WriteAllText(complete, source.ToString());
         return dir;
@@ -84,13 +86,18 @@ internal static class SourceCheckout
         Directory.Delete(dir, recursive: true);
     }
 
-    /// <summary>A shallow fetch of exactly the pinned ref (a tag, branch or full commit hash).</summary>
-    static void FetchGit(string dir, string url, string gitRef)
+    /// <summary>
+    /// A shallow fetch of exactly the pinned ref (a tag, branch or full commit hash), then the listed submodules at the commits
+    /// that ref pins (shallow, recursive).
+    /// </summary>
+    static void FetchGit(string dir, string url, string gitRef, string[] submodules)
     {
         Git(dir, "init", "-q");
         Git(dir, "remote", "add", "origin", url);
         Git(dir, "fetch", "-q", "--depth", "1", "origin", gitRef);
         Git(dir, "-c", "advice.detachedHead=false", "checkout", "-q", "FETCH_HEAD");
+        if (submodules.Length > 0)
+            Git(dir, ["submodule", "update", "-q", "--init", "--depth", "1", "--recursive", "--", .. submodules]);
     }
 
     static void Git(string dir, params string[] args)

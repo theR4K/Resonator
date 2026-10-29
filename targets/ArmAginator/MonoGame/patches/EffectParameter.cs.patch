@@ -1,0 +1,242 @@
+--- a/MonoGame.Framework/Graphics/Effect/EffectParameter.cs
++++ b/MonoGame.Framework/Graphics/Effect/EffectParameter.cs
+@@ -143,12 +143,33 @@
+ 
+         /// <summary>
+         /// The current state key which is used to detect
+ 		/// if the parameter value has been changed.
+         /// </summary>
+         internal ulong StateKey { get; private set; }
++
++        // ArmAgedon: the constant buffers holding this parameter (and its index in each), told when it changes, so a buffer's
++        // Update copies only the changed parameters instead of checking every one of them at every pass Apply.
++        private ConstantBuffer[] _owners = Array.Empty<ConstantBuffer>();
++        private int[] _ownerSlots = Array.Empty<int>();
++
++        internal void AddOwner(ConstantBuffer buffer, int slot)
++        {
++            var n = _owners.Length;
++            Array.Resize(ref _owners, n + 1);
++            Array.Resize(ref _ownerSlots, n + 1);
++            _owners[n] = buffer;
++            _ownerSlots[n] = slot;
++        }
++
++        private void Changed()
++        {
++            StateKey = unchecked(NextStateKey++);
++            for (var i = 0; i < _owners.Length; i++)
++                _owners[i].MarkChanged(_ownerSlots[i]);
++        }
+ 
+         /// <summary>
+         /// Property referenced by the DebuggerDisplayAttribute.
+         /// </summary>
+         private string DebugDisplayString
+         {
+@@ -604,13 +625,13 @@
+             // MojoShader encodes even booleans into a float.
+             ((float[])Data)[0] = value ? 1 : 0;
+ #else
+             ((int[])Data)[0] = value ? 1 : 0;
+ #endif
+ 
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /*
+         /// <inheritdoc cref="SetValue(bool)"/>
+ 		public void SetValue (bool[] value)
+ 		{
+@@ -633,22 +654,22 @@
+ #if OPENGL
+             // MojoShader encodes integers into a float.
+             ((float[])Data)[0] = value;
+ #else
+             ((int[])Data)[0] = value;
+ #endif
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+         public void SetValue(int[] value)
+         {
+             for (var i = 0; i < value.Length; i++)
+                 Elements[i].SetValue(value[i]);
+ 
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+         }
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+         public void SetValue(Matrix value)
+         {
+             if (ParameterClass != EffectParameterClass.Matrix || ParameterType != EffectParameterType.Single)
+@@ -759,13 +780,13 @@
+ 
+                 fData[3] = value.M12;
+                 fData[4] = value.M22;
+                 fData[5] = value.M32;
+             }
+ 
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+         }
+ 
+         /// <summary>
+         /// Sets the value of the <see cref="EffectParameter"/> to the transpose of a <see cref="Matrix"/>.
+         /// </summary>
+         /// <remarks>
+@@ -885,13 +906,13 @@
+ 
+                 fData[3] = value.M21;
+                 fData[4] = value.M22;
+                 fData[5] = value.M23;
+             }
+ 
++			Changed();
+-			StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+         public void SetValue (Matrix[] value)
+ 		{
+             if (ParameterClass != EffectParameterClass.Matrix || ParameterType != EffectParameterType.Single)
+@@ -1018,13 +1039,13 @@
+                     fData[3] = value[i].M12;
+                     fData[4] = value[i].M22;
+                     fData[5] = value[i].M32;
+                 }
+             }
+ 
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+         public void SetValue (Quaternion value)
+ 		{
+             if (ParameterClass != EffectParameterClass.Vector || ParameterType != EffectParameterType.Single)
+@@ -1032,13 +1053,13 @@
+ 
+             var fData = (float[])Data;
+             fData[0] = value.X;
+             fData[1] = value.Y;
+             fData[2] = value.Z;
+             fData[3] = value.W;
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /*
+         /// <inheritdoc cref="SetValue(bool)"/>
+ 		public void SetValue (Quaternion[] value)
+ 		{
+@@ -1049,22 +1070,22 @@
+         /// <inheritdoc cref="SetValue(bool)"/>
+         public void SetValue (Single value)
+ 		{
+             if (ParameterType != EffectParameterType.Single)
+                 throw new InvalidCastException();
+ 			((float[])Data)[0] = value;
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+         public void SetValue (Single[] value)
+ 		{
+ 			for (var i=0; i<value.Length; i++)
+ 				Elements[i].SetValue (value[i]);
+ 
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /*
+         /// <inheritdoc cref="SetValue(bool)"/>
+ 		public void SetValue (string value)
+ 		{
+@@ -1082,54 +1103,54 @@
+                 this.ParameterType != EffectParameterType.TextureCube) 
+             {
+                 throw new InvalidCastException();
+             }
+ 
+ 			Data = value;
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+         public void SetValue (Vector2 value)
+ 		{
+             if (ParameterClass != EffectParameterClass.Vector || ParameterType != EffectParameterType.Single)
+                 throw new InvalidCastException();
+ 
+             var fData = (float[])Data;
+             fData[0] = value.X;
+             fData[1] = value.Y;
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+         public void SetValue (Vector2[] value)
+ 		{
+             for (var i = 0; i < value.Length; i++)
+ 				Elements[i].SetValue (value[i]);
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+ 		public void SetValue (Vector3 value)
+ 		{
+             if (ParameterClass != EffectParameterClass.Vector || ParameterType != EffectParameterType.Single)
+                 throw new InvalidCastException();
+ 
+             var fData = (float[])Data;
+             fData[0] = value.X;
+             fData[1] = value.Y;
+             fData[2] = value.Z;
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+ 		public void SetValue (Vector3[] value)
+ 		{
+             for (var i = 0; i < value.Length; i++)
+ 				Elements[i].SetValue (value[i]);
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+ 		public void SetValue (Vector4 value)
+ 		{
+             if (ParameterClass != EffectParameterClass.Vector || ParameterType != EffectParameterType.Single)
+@@ -1137,18 +1158,18 @@
+ 
+ 			var fData = (float[])Data;
+             fData[0] = value.X;
+             fData[1] = value.Y;
+             fData[2] = value.Z;
+             fData[3] = value.W;
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 
+         /// <inheritdoc cref="SetValue(bool)"/>
+ 		public void SetValue (Vector4[] value)
+ 		{
+             for (var i = 0; i < value.Length; i++)
+ 				Elements[i].SetValue (value[i]);
++            Changed();
+-            StateKey = unchecked(NextStateKey++);
+ 		}
+ 	}    
+ }

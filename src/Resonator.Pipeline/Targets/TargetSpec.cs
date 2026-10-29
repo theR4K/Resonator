@@ -28,8 +28,13 @@ public enum WeaveMode
 
 public sealed record PackageSpec(string Id, string Version);
 
-public sealed record SourceSpec(string? Git, string? Archive, string Ref, string Dir, string[] Exclude)
+/// <param name="Files">The files of "dir" a checkout takes, as globs relative to it ("**" any folders, "*" any name part):
+/// <c>**/*.cs</c> unless the spec says otherwise (a tree target takes headers, CMake files, ...).</param>
+/// <param name="Submodules">git submodules of the repo fetched with it (shallow, recursive), paths relative to the repo.</param>
+public sealed record SourceSpec(string? Git, string? Archive, string Ref, string Dir, string[] Exclude, string[] Files, string[] Submodules)
 {
+    public static readonly string[] CsFiles = ["**/*.cs"];
+
     public override string ToString() => Git != null ? $"{Git} @ {Ref}" : Archive!;
 }
 
@@ -73,11 +78,20 @@ public sealed record TargetSpec
     /// <summary>MSBuild properties, e.g. ImplicitUsings of an official source.</summary>
     public IReadOnlyDictionary<string, string> Properties { get; init; } = new Dictionary<string, string>();
 
+    /// <summary>
+    /// A source tree for a build that is not a C# project of Resonator's (spec "tree": native code built with CMake, a
+    /// repo's own projects): checked out and patched only - no references.targets, csproj or build, no assembly it
+    /// provides to the set.
+    /// </summary>
+    public bool Tree { get; init; }
+
     /// <summary>The patch layers, root ancestor first, this target's own last.</summary>
     public IReadOnlyList<string> PatchDirs { get; init; } = [];
 
     public TargetKind Kind => Package != null ? TargetKind.Package : Source != null ? TargetKind.Source : TargetKind.Decompile;
     public string BaseName => Path.GetFileNameWithoutExtension(Assembly);
+    /// <summary>The files the target's source tree is made of (globs relative to it): a source's "files", else every .cs.</summary>
+    public string[] FilePatterns => Source?.Files ?? SourceSpec.CsFiles;
     public string OutName => OutAssembly ?? BaseName;
     /// <summary>This target's own patch layer.</summary>
     public string PatchDir => Path.Combine(Dir, "patches");

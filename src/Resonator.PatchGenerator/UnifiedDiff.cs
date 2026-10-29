@@ -7,13 +7,13 @@ namespace Resonator.PatchGenerator;
 
 /// <summary>
 /// Unified diffs in exactly the shapes the pipeline's patch applier reads:
-///   content   --- a/&lt;path&gt;  +++ b/&lt;path&gt;  @@ hunks with 3 lines of context
+///   content   --- a/&lt;path&gt;  +++ b/&lt;path&gt;  @@ hunks with 3 lines of context (more on request)
 ///   deletion  --- a/&lt;path&gt;  +++ /dev/null   every line removed
 /// LCS-based, so minimal and exact.
 /// </summary>
 internal static class UnifiedDiff
 {
-    const int Context = 3;
+    public const int DefaultContext = 3;
 
     readonly record struct Edit(char Tag, string Line)   // ' ' keep, '-' remove, '+' add
     {
@@ -22,10 +22,10 @@ internal static class UnifiedDiff
     }
 
     /// <summary>The diff of <paramref name="before"/> -> <paramref name="after"/>; empty when they are equal.</summary>
-    public static string Content(string relativePath, List<string> before, List<string> after)
+    public static string Content(string relativePath, List<string> before, List<string> after, int context = DefaultContext)
     {
         var edits = Edits(before, after);
-        var hunks = HunkRanges(edits);
+        var hunks = HunkRanges(edits, context);
         if (hunks.Count == 0) return "";
 
         string path = relativePath.Replace('\\', '/');
@@ -47,14 +47,14 @@ internal static class UnifiedDiff
         return sb.ToString();
     }
 
-    /// <summary>Every change with <see cref="Context"/> edits around it; overlapping or touching ranges merge.</summary>
-    static List<(int Start, int End)> HunkRanges(List<Edit> edits)
+    /// <summary>Every change with <paramref name="context"/> edits around it; overlapping or touching ranges merge.</summary>
+    static List<(int Start, int End)> HunkRanges(List<Edit> edits, int context)
     {
         var ranges = new List<(int Start, int End)>();
         for (int k = 0; k < edits.Count; k++)
         {
             if (edits[k].Tag == ' ') continue;
-            int start = Math.Max(0, k - Context), end = Math.Min(edits.Count - 1, k + Context);
+            int start = Math.Max(0, k - context), end = Math.Min(edits.Count - 1, k + context);
             if (ranges.Count > 0 && start <= ranges[^1].End + 1) ranges[^1] = (ranges[^1].Start, Math.Max(ranges[^1].End, end));
             else ranges.Add((start, end));
         }

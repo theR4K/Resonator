@@ -1,0 +1,22 @@
+--- a/native/monogame/directx12/GraphicsEnums.h
++++ b/native/monogame/directx12/GraphicsEnums.h
+@@ -50,7 +50,9 @@
+     DXGI_FORMAT_UNKNOWN,
+     DXGI_FORMAT_D16_UNORM,
+     DXGI_FORMAT_D24_UNORM_S8_UINT,  // stencil still present
++    DXGI_FORMAT_D24_UNORM_S8_UINT,
++    DXGI_FORMAT_D32_FLOAT_S8X24_UINT,  // ArmAgedon: Depth32FloatStencil8
++    DXGI_FORMAT_D32_FLOAT,  // ArmAgedon: Depth32Float
+-    DXGI_FORMAT_D24_UNORM_S8_UINT
+ };
+ 
+ static constexpr DXGI_FORMAT DepthFormatToSRV[] = {
+@@ -58,6 +60,8 @@
+     DXGI_FORMAT_R16_UNORM,
+     DXGI_FORMAT_R24_UNORM_X8_TYPELESS,  // There is no 24bit only format for depth.
+     DXGI_FORMAT_R24_UNORM_X8_TYPELESS,
++    DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS,
++    DXGI_FORMAT_R32_FLOAT,
+ };
+ 
+ static constexpr D3D_PRIMITIVE_TOPOLOGY PrimitiveTypeToD3D_PRIMITIVE_TOPOLOGY[] = {

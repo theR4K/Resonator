@@ -191,7 +191,7 @@
  	VkImage image,
  	VkImageLayout oldLayout,
  	VkImageLayout newLayout,
-@@ -511,12 +543,75 @@
+@@ -511,12 +543,126 @@
  	uint32_t baseArrayLayer = 0,
  	uint32_t layerCount = 1);
  static void MGVK_FlushCommands(MGG_GraphicsDevice* device, MGVK_Frame& frame);
@@ -233,11 +233,21 @@
 +	double tBindVertex = 0;      // of tDriver: vkCmdBindVertexBuffers
 +	double tBindIndex = 0;       // of tDriver: vkCmdBindIndexBuffer
 +	uint64_t indexBinds = 0;     // vkCmdBindIndexBuffer calls
-+	uint64_t indexRebinds = 0;   // of those, the same buffer and type as the previous bind in this command buffer
++	uint64_t indexRebinds = 0;   // of those, skipped: the same buffer and type as bound in this command buffer already
 +	uint64_t vertexBinds = 0;    // vkCmdBindVertexBuffers calls
 +	uint64_t setBinds = 0;       // vkCmdBindDescriptorSets calls
++	uint64_t drawsAfterBind = 0; // draws with a pipeline, descriptor, vertex or index bind or a render pass since the last one
++	double tDrawCmd = 0;         // of tDriver: vkCmdDraw / vkCmdDrawIndexed
++	double tDrawCmdAfterBind = 0; // of tDrawCmd: the drawsAfterBind ones (a driver that emits bound state at the draw)
++	bool boundSinceDraw = true;
 +};
 +static MGVK_Perf g_mgvkPerf;
++
++// ArmAgedon: the index buffer bound in the command buffer being recorded (MGVK_BindIndexBuffer); MGVK_BeginCommandBuffer
++// forgets it, the frames' command buffers are recorded again
++static VkCommandBuffer g_mgvkIndexCommands = VK_NULL_HANDLE;
++static VkBuffer g_mgvkIndexBuffer = VK_NULL_HANDLE;
++static VkIndexType g_mgvkIndexType = VK_INDEX_TYPE_UINT16;
 +
 +static double MGVK_PerfNow()
 +{
@@ -261,13 +271,54 @@
 +	MGVK_PerfTimer(double& to) : to(to), start(g_mgvkPerf.enabled ? MGVK_PerfNow() : 0.0) {}
 +	~MGVK_PerfTimer() { if (g_mgvkPerf.enabled) to += MGVK_PerfNow() - start; }
 +};
++
++/// <summary>Times the driver's draw command (tDrawCmd), split by whether anything was bound since the previous draw.</summary>
++struct MGVK_PerfDrawTimer
++{
++	double start;
++	MGVK_PerfDrawTimer() : start(g_mgvkPerf.enabled ? MGVK_PerfNow() : 0.0) {}
++	~MGVK_PerfDrawTimer()
++	{
++		if (!g_mgvkPerf.enabled)
++			return;
++		double t = MGVK_PerfNow() - start;
++		g_mgvkPerf.tDrawCmd += t;
++		if (g_mgvkPerf.boundSinceDraw)
++		{
++			g_mgvkPerf.tDrawCmdAfterBind += t;
++			g_mgvkPerf.drawsAfterBind++;
++		}
++		g_mgvkPerf.boundSinceDraw = false;
++	}
++};
++
++// ArmAgedon: binds the index buffer unless this command buffer has it bound already. The stock code bound it at every
++// draw ("TODO: Detect if we need to rebind the same index buffer?"): on the Cloud Home 54% of the binds were the same one.
++static void MGVK_BindIndexBuffer(VkCommandBuffer commandBuffer, VkBuffer buffer, MGIndexElementSize size)
++{
++	auto type = size == MGIndexElementSize::SixteenBits ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
++	if (g_mgvkPerf.enabled)
++		g_mgvkPerf.indexBinds++;
++	if (g_mgvkIndexCommands == commandBuffer && g_mgvkIndexBuffer == buffer && g_mgvkIndexType == type)
++	{
++		if (g_mgvkPerf.enabled)
++			g_mgvkPerf.indexRebinds++;
++		return;
++	}
++	g_mgvkIndexCommands = commandBuffer;
++	g_mgvkIndexBuffer = buffer;
++	g_mgvkIndexType = type;
++	g_mgvkPerf.boundSinceDraw = true;
++	MGVK_PerfTimer perfBindIndex(g_mgvkPerf.tBindIndex);
++	vkCmdBindIndexBuffer(commandBuffer, buffer, 0, type);
++}
  
  
  static VkSampleCountFlagBits ToVkSampleCount(mgint multiSampleCount)
  {
      switch (multiSampleCount)
      {
-@@ -561,13 +656,13 @@
+@@ -561,13 +707,13 @@
  		return VK_FORMAT_BC3_UNORM_BLOCK;
  	case MGSurfaceFormat::NormalizedByte2:
  		return VK_FORMAT_R8G8_UNORM;
@@ -282,7 +333,7 @@
  		return VK_FORMAT_R16G16B16A16_UNORM;
  	case MGSurfaceFormat::Alpha8:
  		return VK_FORMAT_R8_UNORM;
-@@ -618,12 +713,16 @@
+@@ -618,12 +764,16 @@
  	case MGDepthFormat::Depth24Stencil8:
  #if defined(__APPLE__)
  		return VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
@@ -299,7 +350,7 @@
  }
  
  static VkFormat ToVkFormat(MGVertexElementFormat format)
-@@ -772,12 +871,36 @@
+@@ -772,12 +922,36 @@
  	{
  		if (strcmp(extension.extensionName, extensionName) == 0)
  			return true;
@@ -336,7 +387,7 @@
  {
  #ifndef __APPLE__
  	printf("Initializing volk.\n");
-@@ -911,12 +1034,14 @@
+@@ -911,12 +1085,14 @@
  			enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
  			printf("Validation layers are enabled (performances will be drastically impacted). To run without validation layers, please use a RELEASE build or uninstall the Vulkan SDK.\n");
  		}
@@ -351,7 +402,7 @@
  	instance_create_info.enabledExtensionCount = instanceExtensions.size();
  	instance_create_info.ppEnabledExtensionNames = instanceExtensions.data();
  	instance_create_info.enabledLayerCount = enabledLayers.size();
-@@ -1127,13 +1252,13 @@
+@@ -1127,13 +1303,13 @@
  			texture->image,
  			VK_IMAGE_LAYOUT_UNDEFINED,
  			optimalLayout,
@@ -366,7 +417,7 @@
      texture->optimal_layout = optimalLayout;
  
  	texture->writeFrame = -1;
-@@ -1196,12 +1321,18 @@
+@@ -1196,12 +1372,18 @@
  	VkSubmitInfo submitInfo = {};
  	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
  	submitInfo.commandBufferCount = 1;
@@ -385,7 +436,7 @@
  	vkDestroyFence(device->device, renderFence, nullptr);
  }
  
-@@ -1286,20 +1417,67 @@
+@@ -1286,20 +1468,67 @@
  
  	vkWaitForFences(device->device, 1, &renderFence, VK_TRUE, UINT64_MAX);
  	vkDestroyFence(device->device, renderFence, nullptr);
@@ -453,7 +504,7 @@
  	device->deviceFeatures = adapter->features;
  	device->deviceProperties = adapter->properties;
  
-@@ -1443,12 +1621,14 @@
+@@ -1443,12 +1672,14 @@
  		deviceFeatures2.features = enabledFeatures;
  		deviceFeatures2.pNext = lastFeature;
  
@@ -468,7 +519,7 @@
  
  	auto res = vkCreateDevice(device->physicalDevice, &deviceCreateInfo, NULL, &device->device);
  	VK_CHECK_RESULT(res);
-@@ -1576,13 +1756,14 @@
+@@ -1576,13 +1807,14 @@
  			{
  				auto& view = targetSetCache->arraySlicesViews[i];
  				if (view.has_value()) {
@@ -484,7 +535,7 @@
  			// Erase the element and get an iterator to the next one.
  			itr = cache.erase(itr);
  		}
-@@ -1640,23 +1821,37 @@
+@@ -1640,23 +1872,37 @@
  	// Prevents some exceptions while shutting down.
  	vkDeviceWaitIdle(device->device);
  
@@ -522,7 +573,7 @@
  
  	for (size_t i = 0; i < device->swapchainCount; i++)
  	{
-@@ -1744,12 +1939,15 @@
+@@ -1744,12 +1990,15 @@
  			return;
  		}
  		VK_SET_OBJECT_NAME(device->device, (uint64_t)device->surface, VK_OBJECT_TYPE_SURFACE_KHR, "MGG_GraphicsDevice.surface");
@@ -538,7 +589,7 @@
  	int wx, wy;
  	SDL_GetWindowPosition(device->window, &wx, &wy);
  	SDL_SetWindowPosition(device->window, wx+1, wy);
-@@ -1796,14 +1994,19 @@
+@@ -1796,14 +2045,19 @@
  			maxMultisampleCount = 2;
  
  		multiSampleCount = std::clamp(multiSampleCount, 1, maxMultisampleCount);
@@ -560,7 +611,7 @@
  
  	// Check if the requested color format is supported, and fallback to another one otherwise.
  	VkFormat surface_format = VK_FORMAT_UNDEFINED;
-@@ -1812,12 +2015,27 @@
+@@ -1812,12 +2066,27 @@
  		res = vkGetPhysicalDeviceSurfaceFormatsKHR(device->physicalDevice, device->surface, &format_count, nullptr);
  		VK_CHECK_RESULT(res);
  
@@ -588,7 +639,7 @@
  		for (const auto& surfFormat : surfFormats)
  		{
  			if (surfFormat.colorSpace != VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-@@ -1942,14 +2160,16 @@
+@@ -1942,14 +2211,16 @@
  			{
  				// TODO: Should we wait for fences here or is vkDeviceWaitIdle enough?
  
@@ -607,7 +658,7 @@
  				vkDestroySemaphore(device->device, swap.renderCompleteSemaphore, nullptr);
  			}
  
-@@ -2096,17 +2316,22 @@
+@@ -2096,17 +2367,22 @@
  		printf("Cannot recreate swapchain: window is null!\n");
  		fflush(stdout);
  
@@ -632,7 +683,7 @@
  		device->syncInterval);
  
      MGG_GraphicsDevice_SetRenderTargets(device, nullptr, nullptr, 0);
-@@ -2125,16 +2350,16 @@
+@@ -2125,16 +2401,16 @@
  	assert(device);
  
  	// There is no zero... always at least 1.
@@ -652,10 +703,14 @@
  
  	auto vkColor = ToVkFormat(color);
  	auto vkDepth = ToVkFormat(depth);
-@@ -2191,37 +2416,91 @@
+@@ -2188,40 +2464,95 @@
+ 	};
+ 
+ 	auto res = vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
  	VK_CHECK_RESULT(res);
  	res = vkBeginCommandBuffer(commandBuffer, &beginInfo);
  	VK_CHECK_RESULT(res);
++	g_mgvkIndexCommands = VK_NULL_HANDLE; // ArmAgedon: nothing is bound in it now (MGVK_BindIndexBuffer)
  
  	//vkCmdSetDepthClampEnableEXT(commandBuffer, VK_TRUE);
  }
@@ -744,7 +799,7 @@
  	auto& frame = device->frames[device->frameIndex];
  
  	// This is only here for the first frame or for after the
-@@ -2234,19 +2513,25 @@
+@@ -2234,19 +2565,25 @@
  	// MGVK_DestroyFrameResources uses currentFrame and device->freeFrames to calculate age.
  	// We should pass the device->frame rather than swapchain_image_index.
  	// Otherwise age calculation will underflow.
@@ -771,7 +826,7 @@
  
  	frame.is_recording = true;
  }
-@@ -2349,13 +2634,14 @@
+@@ -2349,13 +2686,14 @@
                  auto& view = itr->second->arraySlicesViews[i];
                  if (view.has_value()) {
                      vkDestroyImageView(device->device, view.value(), nullptr);
@@ -787,7 +842,7 @@
  	}
  
  	device->pipelineState.targets = nullptr;
-@@ -2555,83 +2841,101 @@
+@@ -2555,83 +2893,101 @@
  	}
  }
  
@@ -899,7 +954,7 @@
  	// Move the pending buffers to the free list 
  	// for reuse on the next frame.
  	if (device->pending != nullptr)
-@@ -2652,21 +2956,27 @@
+@@ -2652,21 +3008,27 @@
  	// Buffers discarded this frame can be moved
  	// into the pending list for a future frame.
  	device->pending = device->discarded;
@@ -927,7 +982,7 @@
  void MGG_GraphicsDevice_SetBlendState(MGG_GraphicsDevice* device, MGG_BlendState* state, mgfloat factorR, mgfloat factorG, mgfloat factorB, mgfloat factorA)
  {
  	assert(device != nullptr);
-@@ -2789,26 +3099,42 @@
+@@ -2789,26 +3151,42 @@
  
  		device->targets.numTargets = count;
  	}
@@ -975,7 +1030,7 @@
  	{
  		if (buffer->dirty)		
  			device->uniformsDirty |= 1 << (int)stage;
-@@ -2818,22 +3144,26 @@
+@@ -2818,22 +3196,26 @@
  void MGG_GraphicsDevice_SetTexture(MGG_GraphicsDevice* device, MGShaderStage stage, mgint slot, MGG_Texture* texture)
  {
  	assert(device != nullptr);
@@ -1002,7 +1057,7 @@
  
  void MGG_GraphicsDevice_SetIndexBuffer(MGG_GraphicsDevice* device, MGIndexElementSize size, MGG_Buffer* buffer)
  {
-@@ -3345,15 +3675,16 @@
+@@ -3345,15 +3727,16 @@
  			target->layouts[0] = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
  	}
  
@@ -1022,7 +1077,7 @@
  	render_area.offset.x = 0;
  	render_area.offset.y = 0;
  	render_area.extent.width = cached->width;
-@@ -3377,59 +3708,112 @@
+@@ -3377,59 +3760,113 @@
  		{
  			vkCmdResetQueryPool(commandBuffer, query->queryPool, 0, 1);
  			query->gpuHasBegun = true;
@@ -1031,6 +1086,7 @@
  
 +	if (g_mgvkPerf.enabled)
 +		g_mgvkPerf.passes++; // ArmAgedon: ARMA_VK_PERF
++		g_mgvkPerf.boundSinceDraw = true;
  	vkCmdBeginRenderPass(commandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
  
  	for (auto query : device->deferredOcclusionQueries)
@@ -1147,7 +1203,7 @@
  	// needs to be updated before we draw.
  
  	MGVK_DescriptorInfo* info;
-@@ -3469,17 +3853,20 @@
+@@ -3469,17 +3906,20 @@
  	// wrong buffer if the descriptor is retrieved from the cache (and will
  	// result in flickers/broken rendering).
  	// 
@@ -1168,7 +1224,7 @@
  		{
  			// Allocate more cache if empty.
  			MGVK_FillDescriptorSetCache(device, shader);
-@@ -3490,20 +3877,21 @@
+@@ -3490,20 +3930,21 @@
  		info = shader->freeSets.front();
  		shader->freeSets.pop();
  
@@ -1191,7 +1247,7 @@
  			else if (w.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
  			{
  				int slot = w.dstBinding - 32;
-@@ -3530,28 +3918,54 @@
+@@ -3530,28 +3971,54 @@
  				// This should never happen!
  				assert(0);
  			}
@@ -1251,7 +1307,7 @@
  					assert(0);
  				}
  
-@@ -3600,25 +4014,92 @@
+@@ -3600,25 +4067,92 @@
  	VK_CHECK_RESULT(res);
  	VK_SET_OBJECT_NAME(device->device, program->layout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, "MGVK_Program.layout (id: %llu)", programId);
  
@@ -1345,7 +1401,7 @@
  	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
  
  	// We set the viewport and scissor dynamically.
-@@ -3716,18 +4197,19 @@
+@@ -3716,18 +4250,19 @@
  		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
  		multisampling.sampleShadingEnable = VK_FALSE;
  		multisampling.minSampleShading = 1.0f;
@@ -1366,7 +1422,7 @@
  	VK_SET_OBJECT_NAME(device->device, pipeline.cache, VK_OBJECT_TYPE_PIPELINE, "MGVK_PipelineCache.cache (hash: %u)", hash);
  
  	device->pipelines[hash] = pipeline;
-@@ -3766,22 +4248,24 @@
+@@ -3766,22 +4301,25 @@
  	// First update the pipeline if we need to.
  	if (device->pipelineStateDirty)
  	{
@@ -1375,6 +1431,7 @@
  		auto pipeline = MGVK_CreatePipeline(device);
 +		MGVK_PerfTimer perfPipeline(g_mgvkPerf.tPipeline); // ArmAgedon: ARMA_VK_PERF; its rare pipeline creations count here too
  		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
++		g_mgvkPerf.boundSinceDraw = true;
 +		if (g_mgvkPerf.enabled)
 +			g_mgvkPerf.pipelineBinds++;
  
@@ -1393,7 +1450,7 @@
  		// We need to re-apply the viewport too.
  		vkCmdSetViewport(commandBuffer, 0, 1, &device->viewport);
  	}
-@@ -3828,27 +4312,37 @@
+@@ -3828,27 +4366,38 @@
  		if (program->vertex->bindings.size() == 0)
  			setOffset++;
  		else
@@ -1425,6 +1482,7 @@
  		// Bind the new descriptor sets.		
 +		MGVK_PerfTimer perfBind(g_mgvkPerf.tDriver); // ArmAgedon: ARMA_VK_PERF
 +		MGVK_PerfTimer perfBindSets(g_mgvkPerf.tBindSets);
++		g_mgvkPerf.boundSinceDraw = true;
 +		if (g_mgvkPerf.enabled)
 +			g_mgvkPerf.setBinds++;
  		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -1433,7 +1491,7 @@
  		// Clear all the dirty flags.
  		device->uniformsDirty = 0;
  		device->textureSamplerDirty = 0;
-@@ -3860,25 +4354,38 @@
+@@ -3860,25 +4409,39 @@
  
  		int count = 0;
  		VkDeviceSize offsets[8];
@@ -1463,6 +1521,7 @@
 +		{
 +			MGVK_PerfTimer perfBind(g_mgvkPerf.tDriver); // ArmAgedon: ARMA_VK_PERF
 +			MGVK_PerfTimer perfBindVertex(g_mgvkPerf.tBindVertex);
++			g_mgvkPerf.boundSinceDraw = true;
 +			if (g_mgvkPerf.enabled)
 +				g_mgvkPerf.vertexBinds++;
 +			vkCmdBindVertexBuffers(commandBuffer, 0, count, buffers, offsets);
@@ -1474,7 +1533,7 @@
  }
  
  static int MGVK_GetIndexCount(MGPrimitiveType primitiveType, mgint primitiveCount)
-@@ -3898,49 +4405,62 @@
+@@ -3898,49 +4461,63 @@
  		return primitiveCount;
  	}
  }
@@ -1509,6 +1568,7 @@
  	MGVK_UpdatePipeline(device, frame.commandBuffer, device->frame);
  
 +	MGVK_PerfTimer perfDriver(g_mgvkPerf.tDriver); // ArmAgedon: ARMA_VK_PERF
++	MGVK_PerfDrawTimer perfDrawCmd;
  	vkCmdDraw(frame.commandBuffer, vertexCount, 1, vertexStart, 0);
  }
  
@@ -1539,38 +1599,26 @@
  	{
  		device->pipelineStateDirty = true;
  		device->pipelineState.topology = topology;
-@@ -3949,13 +4469,29 @@
+@@ -3948,57 +4525,66 @@
+ 
  	MGVK_UpdatePipeline(device, frame.commandBuffer, device->frame);
  
  	auto indexBuffer = device->indexBuffer;
  	assert(indexBuffer != nullptr);
  
- 	// TODO: Detect if we need to rebind the same index buffer?
 +	MGVK_PerfTimer perfDriver(g_mgvkPerf.tDriver); // ArmAgedon: ARMA_VK_PERF
-+	if (g_mgvkPerf.enabled) // ArmAgedon: ARMA_VK_PERF
-+	{
-+		static VkCommandBuffer lastCommands = VK_NULL_HANDLE;
-+		static VkBuffer lastIndex = VK_NULL_HANDLE;
-+		static MGIndexElementSize lastSize = MGIndexElementSize::SixteenBits;
-+		g_mgvkPerf.indexBinds++;
-+		if (lastCommands == frame.commandBuffer && lastIndex == indexBuffer->buffer && lastSize == device->indexBufferSize)
-+			g_mgvkPerf.indexRebinds++;
-+		lastCommands = frame.commandBuffer;
-+		lastIndex = indexBuffer->buffer;
-+		lastSize = device->indexBufferSize;
-+	}
-+	{
-+		MGVK_PerfTimer perfBindIndex(g_mgvkPerf.tBindIndex);
-+		vkCmdBindIndexBuffer(frame.commandBuffer, indexBuffer->buffer, 0, device->indexBufferSize == MGIndexElementSize::SixteenBits ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
-+	}
++	MGVK_BindIndexBuffer(frame.commandBuffer, indexBuffer->buffer, device->indexBufferSize); // ArmAgedon
+-	// TODO: Detect if we need to rebind the same index buffer?
 -	vkCmdBindIndexBuffer(frame.commandBuffer, indexBuffer->buffer, 0, device->indexBufferSize == MGIndexElementSize::SixteenBits ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
  
  	auto indexCount = MGVK_GetIndexCount(primitiveType, primitiveCount);
  
++	MGVK_PerfDrawTimer perfDrawCmd; // ArmAgedon: ARMA_VK_PERF
  	vkCmdDrawIndexed(frame.commandBuffer, indexCount, 1, indexStart, vertexStart, 0);
  }
  
-@@ -3964,38 +4500,60 @@
+ void MGG_GraphicsDevice_DrawIndexedInstanced(
+ 	MGG_GraphicsDevice* device,
  	MGPrimitiveType primitiveType,
  	mgint primitiveCount,
  	mgint indexStart,
@@ -1610,30 +1658,19 @@
  	auto indexBuffer = device->indexBuffer;
  	assert(indexBuffer != nullptr);
 +	MGVK_PerfTimer perfDriver(g_mgvkPerf.tDriver); // ArmAgedon: ARMA_VK_PERF
-+	if (g_mgvkPerf.enabled) // ArmAgedon: ARMA_VK_PERF
-+	{
-+		static VkCommandBuffer lastCommands = VK_NULL_HANDLE;
-+		static VkBuffer lastIndex = VK_NULL_HANDLE;
-+		static MGIndexElementSize lastSize = MGIndexElementSize::SixteenBits;
-+		g_mgvkPerf.indexBinds++;
-+		if (lastCommands == frame.commandBuffer && lastIndex == indexBuffer->buffer && lastSize == device->indexBufferSize)
-+			g_mgvkPerf.indexRebinds++;
-+		lastCommands = frame.commandBuffer;
-+		lastIndex = indexBuffer->buffer;
-+		lastSize = device->indexBufferSize;
-+	}
-+	{
-+		MGVK_PerfTimer perfBindIndex(g_mgvkPerf.tBindIndex);
-+		vkCmdBindIndexBuffer(frame.commandBuffer, indexBuffer->buffer, 0, device->indexBufferSize == MGIndexElementSize::SixteenBits ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
-+	}
++	MGVK_BindIndexBuffer(frame.commandBuffer, indexBuffer->buffer, device->indexBufferSize); // ArmAgedon
 -	vkCmdBindIndexBuffer(frame.commandBuffer, indexBuffer->buffer, 0, device->indexBufferSize == MGIndexElementSize::SixteenBits ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
  
  	auto indexCount = MGVK_GetIndexCount(primitiveType, primitiveCount);
  
++	MGVK_PerfDrawTimer perfDrawCmd; // ArmAgedon: ARMA_VK_PERF
  	vkCmdDrawIndexed(
  		frame.commandBuffer,
  		indexCount,       
-@@ -4226,20 +4784,25 @@
+ 		instanceCount,    
+ 		indexStart,       
+ 		vertexStart,      
+@@ -4226,20 +4812,25 @@
  	assert(frame.is_recording);
  
  	MGVK_EndRenderPass(device, frame.commandBuffer);
@@ -1663,7 +1700,7 @@
  	VkFence flushFence;
  	VkFenceCreateInfo fenceInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
  	vkCreateFence(device->device, &fenceInfo, nullptr, &flushFence);
-@@ -4631,13 +5194,14 @@
+@@ -4631,13 +5222,14 @@
  	rasterizer.flags = 0; // Reserved for future use.
  	rasterizer.depthClampEnable = !info->depthClipEnable;
  	rasterizer.rasterizerDiscardEnable = VK_FALSE;
@@ -1679,7 +1716,7 @@
  	rasterizer.lineWidth = 1.0f;
  
  	// These don't fit this structure, so we
-@@ -4995,12 +5559,24 @@
+@@ -4995,12 +5587,24 @@
  	assert(buffer != nullptr);
  	assert(data != nullptr);
  	assert(offset >= 0);
@@ -1704,7 +1741,7 @@
  	// If this is a push buffer we don't need to
  	// do anything other than copy over the content.
  	// We can safely ignore the discard.
-@@ -5036,17 +5612,20 @@
+@@ -5036,17 +5640,20 @@
  
  		switch (buffer->type)
  		{
@@ -1729,7 +1766,7 @@
  		case MGBufferType::Vertex:
  			for (int i = 0; i < 8; i++)
  			{
-@@ -5159,13 +5738,13 @@
+@@ -5159,13 +5766,13 @@
  
  		cmd = MGVK_BeginNewCommandBuffer(device, device->transferPool);
  		MGVK_CmdTransitionImageLayout(cmd, texture->image,
@@ -1744,7 +1781,7 @@
  
  	return texture;
  }
-@@ -5275,13 +5854,13 @@
+@@ -5275,13 +5882,13 @@
  				0,
  				mipmaps,
  				0,
@@ -1759,7 +1796,7 @@
  			texture->layouts[i] = startLayout;
  		texture->optimal_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
  	}
-@@ -5536,12 +6115,14 @@
+@@ -5536,12 +6143,14 @@
  
  	// We store the pre-generated bindings info at the top of the shader bytecode data.
  	int uniformCount = 0;
@@ -1774,7 +1811,7 @@
  
  		memcpy(shader->textureTypes, bytecode, sizeof(MGTextureType) * MAX_TEXTURE_SLOTS);
  		bytecode += sizeof(MGTextureType) * MAX_TEXTURE_SLOTS;
-@@ -5602,29 +6183,27 @@
+@@ -5602,29 +6211,27 @@
  		VkDescriptorPoolSize* pool_sizes = new VkDescriptorPoolSize[layoutBindings.size()];
  
  		for (int i = 0; i < layoutBindings.size(); i++)
@@ -1809,7 +1846,7 @@
  	VkDescriptorBufferInfo* bufferInfo = shader->bufferInfo = new VkDescriptorBufferInfo[uniformCount];
  	VkDescriptorImageInfo* imageInfo = shader->imageInfo =  new VkDescriptorImageInfo[layoutBindings.size() - uniformCount];
  	for (int i = 0; i < layoutBindings.size(); i++)
-@@ -5724,12 +6303,14 @@
+@@ -5724,12 +6331,14 @@
  		delete free;
  	}
  
@@ -1824,7 +1861,7 @@
  		delete shader->poolInfo;
  	}
  
-@@ -5871,8 +6452,433 @@
+@@ -5871,8 +6480,436 @@
  	else
  	{
  		// An error occurred.
@@ -2128,12 +2165,15 @@
 +		seconds[8] = g_mgvkPerf.tBindSets;
 +		seconds[9] = g_mgvkPerf.tBindVertex;
 +		seconds[10] = g_mgvkPerf.tBindIndex;
++		seconds[11] = g_mgvkPerf.tDrawCmd;
++		seconds[12] = g_mgvkPerf.tDrawCmdAfterBind;
 +	}
 +	const uint64_t values[] = {
 +		g_mgvkPerf.sets, g_mgvkPerf.setFills, g_mgvkPerf.setWrites, g_mgvkPerf.setAllocs,
 +		g_mgvkPerf.ubCopies, g_mgvkPerf.ubBytes, g_mgvkPerf.pipelineBinds, g_mgvkPerf.passes,
 +		g_mgvkPerf.textureSets, g_mgvkPerf.bufferSets, g_mgvkPerf.bufferBytes, g_mgvkPerf.draws,
 +		g_mgvkPerf.indexBinds, g_mgvkPerf.indexRebinds, g_mgvkPerf.vertexBinds, g_mgvkPerf.setBinds,
++		g_mgvkPerf.drawsAfterBind,
 +	};
 +	mgint count = (mgint)std::min<size_t>((size_t)maxCounters, sizeof(values) / sizeof(values[0]));
 +	for (mgint i = 0; i < count; i++)

@@ -1861,7 +1861,7 @@
  		delete shader->poolInfo;
  	}
  
-@@ -5871,8 +6480,436 @@
+@@ -5871,8 +6480,476 @@
  	else
  	{
  		// An error occurred.
@@ -2148,6 +2148,46 @@
 +// ArmAgedon: the runtime's own per-draw work (see MGVK_Perf), read and reset by the renderer's [perf] line: `seconds` gets
 +// the four times (the descriptor update, its fill, its constant buffer copies, the pipeline binds) and `counters` the
 +// counts, both in the order of MGVK_Perf's fields. Returns their number, 0 when ARMA_VK_PERF is off.
++// ArmAgedon: where the runtime's GPU memory goes (the renderer's [gpu-res] line): VMA's device memory blocks and the
++// allocations in them (a block is allocated whole, so blocks - allocations is reserved and unused), the frames' uniform
++// rings, and VMA's view of the heaps (usage and budget, summed over the device-local heaps). values: block bytes, block
++// count, allocation bytes, allocation count, uniform ring bytes, uniform ring count, heap usage, heap budget. Returns
++// how many it wrote.
++MG_EXPORT mgint MGVK_ReadMemory(MGG_GraphicsDevice* device, uint64_t* values, mgint count)
++{
++	if (device == nullptr || device->allocator == VK_NULL_HANDLE || values == nullptr)
++		return 0;
++	VmaTotalStatistics stats;
++	vmaCalculateStatistics(device->allocator, &stats);
++	uint64_t ringBytes = 0, rings = 0;
++	for (auto& frame : device->frames)
++		for (auto* ring : frame.uniformChain)
++		{
++			ringBytes += (uint64_t)ring->dataSize;
++			rings++;
++		}
++	const VkPhysicalDeviceMemoryProperties* props = nullptr;
++	vmaGetMemoryProperties(device->allocator, &props);
++	VmaBudget budgets[VK_MAX_MEMORY_HEAPS];
++	vmaGetHeapBudgets(device->allocator, budgets);
++	uint64_t usage = 0, budget = 0;
++	for (uint32_t h = 0; props != nullptr && h < props->memoryHeapCount; h++)
++		if (props->memoryHeaps[h].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
++		{
++			usage += budgets[h].usage;
++			budget += budgets[h].budget;
++		}
++	const uint64_t all[] = {
++		stats.total.statistics.blockBytes, stats.total.statistics.blockCount,
++		stats.total.statistics.allocationBytes, stats.total.statistics.allocationCount,
++		ringBytes, rings, usage, budget,
++	};
++	mgint n = (mgint)std::min<size_t>((size_t)count, sizeof(all) / sizeof(all[0]));
++	for (mgint i = 0; i < n; i++)
++		values[i] = all[i];
++	return n;
++}
++
 +MG_EXPORT mgint MGVK_ReadPerf(double* seconds, uint64_t* counters, mgint maxCounters)
 +{
 +	if (!g_mgvkPerf.enabled)

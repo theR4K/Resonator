@@ -18,3 +18,28 @@
          cmdList->ClearDepthStencilView(dsvDescriptor, flags, depth, stencil, 0, nullptr);
      }
  
+@@ -343,15 +345,22 @@
+     DescRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, -1, 0); // s0-unbounded
+     DescRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, -1, 0); // s0-unbounded
+ 
++    // ArmAgedon: b1..b4 per stage after the six stock parameters (MGG_DX12.cpp UniformRootParameter), for effects with
++    // several constant buffers; 10 root CBVs + 4 tables = 24 of the 64 root DWORDs
++    const int uniformSlots = 5;
++    CD3DX12_ROOT_PARAMETER RP[6 + 2 * (uniformSlots - 1)];
+-    CD3DX12_ROOT_PARAMETER RP[6];
+     RP[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_VERTEX); // b0
+     RP[1].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_PIXEL); // b0
++    for (int stage = 0; stage < 2; stage++)
++        for (int slot = 1; slot < uniformSlots; slot++)
++            RP[6 + stage * (uniformSlots - 1) + (slot - 1)].InitAsConstantBufferView(slot, 0,
++                stage == 0 ? D3D12_SHADER_VISIBILITY_VERTEX : D3D12_SHADER_VISIBILITY_PIXEL);
+     RP[2].InitAsDescriptorTable(1, &DescRange[0], D3D12_SHADER_VISIBILITY_VERTEX); // t0-unbounded
+     RP[3].InitAsDescriptorTable(1, &DescRange[1], D3D12_SHADER_VISIBILITY_PIXEL); // t0-unbounded
+     RP[4].InitAsDescriptorTable(1, &DescRange[2], D3D12_SHADER_VISIBILITY_VERTEX); // s0-unbounded
+     RP[5].InitAsDescriptorTable(1, &DescRange[3], D3D12_SHADER_VISIBILITY_PIXEL); // s0-unbounded
+ 
++    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC RootSig(_countof(RP), RP, 0, nullptr, flags);
+-    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC RootSig(6, RP, 0, nullptr, flags);
+     ID3DBlob* pSerializedRootSig = nullptr;
+     ID3DBlob* pErrorBlob = nullptr;
+     D3D12SerializeVersionedRootSignature(&RootSig, &pSerializedRootSig, &pErrorBlob);

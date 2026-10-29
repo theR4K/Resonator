@@ -1,0 +1,42 @@
+--- a/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.DirectX12.cs
++++ b/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.DirectX12.cs
+@@ -43,6 +43,8 @@
+         }
+ 
+         private static readonly Regex CBufferParam = new Regex(@";[\W]+(?:column_major)?(?:row_major)?[\W]+(?<ParamType>[^\r\n\t\f\v} ]+)[\W]+(?<ParamName>[\S]+);[\W]+; Offset:[\W]+(?<ParamOffset>[\d]*)", RegexOptions.Compiled);
++        // ArmAgedon: a line of the "; Resource Bindings:" table for a constant buffer: its name and its register (cbN)
++        private static readonly Regex CBufferBinding = new Regex(@"^;\s+(?<Name>\S+)\s+cbuffer\s+\S+\s+\S+\s+CB\d+\s+cb(?<Register>\d+)", RegexOptions.Compiled);
+         private static readonly Regex CBufferStruct = new Regex(@";[\W]+(?<CBufferName>[^\r\n\t\f\v} ]+);[\W]+; Offset:[\W]+(?<ParamOffset>[\d]*) Size:[\W]+(?<Size>[\d]*)", RegexOptions.Compiled);
+         private static readonly Regex ResourceSampler = new Regex(@";[\W]+(?<ResName>[\S]+)[\W]+sampler[\W]+(?<ResFormat>[\S]+)[\W]+(?<ResDim>[\S]+)[\W]+[\S]+[\W]+s(?<ResBind>[\d]*)[\W]+(?<ResCount>[\d]*)", RegexOptions.Compiled);
+         private static readonly Regex ResourceTexture = new Regex(@";[\W]+(?<ResName>[\S]+)[\W]+texture[\W]+(?<ResFormat>[\S]+)[\W]+(?<ResDim>[\S]+)[\W]+[\S]+[\W]+t(?<ResBind>[\d]*)[\W]+(?<ResCount>[\d]*)", RegexOptions.Compiled);
+@@ -276,6 +278,30 @@
+                     cbufferIndex.Add(match);
+             }
+             shaderData._cbuffers = cbufferIndex.ToArray();
++
++            // ArmAgedon: the native D3D12 runtime binds a shader's k-th constant buffer at register b<k> (MGG_DX12.cpp), so the
++            // registers must be b0, b1, ... in the order listed. Refuse a shader that is not (an explicit register skipping one).
++            {
++                var registers = new Dictionary<string, int>();
++                foreach (var line in reflectionData.Split('\n'))
++                {
++                    var bind = CBufferBinding.Match(line.TrimEnd('\r'));
++                    if (bind.Success)
++                        registers[bind.Groups["Name"].Value] = int.Parse(bind.Groups["Register"].Value);
++                }
++                int slot = 0;
++                foreach (var cbuffer in cbuffers)
++                {
++                    if (cbuffer.Size == 0)
++                        continue;
++                    if (registers.TryGetValue(cbuffer.Name, out int register) && register != slot)
++                    {
++                        errorsAndWarnings += $"constant buffer {cbuffer.Name} is the shader's #{slot} but at register b{register}: D3D12 binds the k-th at b<k> (leave the registers to the compiler)\n";
++                        throw new ShaderCompilerException();
++                    }
++                    slot++;
++                }
++            }
+ 
+             // Go thru the sampler resources gathering their name and slot index.
+             var samplerDescriptions = new List<ShaderData.Sampler>();

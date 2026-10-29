@@ -1,0 +1,41 @@
+--- a/Elements/Core/UniLog.cs
++++ b/Elements/Core/UniLog.cs
+@@ -25,6 +25,11 @@
+ 	{
+ 		OnFlush?.Invoke();
+ 	}
++
++	// ArmAginator: Environment.StackTrace walks and symbolizes the whole stack (tens of ms on a weak ARM CPU), and the
++	// engine asks for one on every Error and on warnings such as a write to a driven field, many a frame while a world
++	// loads. Only with ARMA_LOG_STACKTRACES=1; exceptions logged with their own stack keep it.
++	public static readonly bool CaptureStackTraces = Environment.GetEnvironmentVariable("ARMA_LOG_STACKTRACES") == "1";
+ 
+ 	public static void Log(object obj, bool stackTrace = false)
+ 	{
+@@ -37,7 +42,7 @@
+ 		{
+ 			message = MessagePrefix() + message;
+ 		}
++		if (stackTrace && CaptureStackTraces)
+-		if (stackTrace)
+ 		{
+ 			message = message + "\n\n" + Environment.StackTrace;
+ 		}
+@@ -60,7 +65,7 @@
+ 		{
+ 			message = MessagePrefix() + message;
+ 		}
++		if (stackTrace && CaptureStackTraces)
+-		if (stackTrace)
+ 		{
+ 			message = message + "\n\n" + Environment.StackTrace;
+ 		}
+@@ -83,7 +88,7 @@
+ 		{
+ 			message = MessagePrefix() + message;
+ 		}
++		if (stackTrace && CaptureStackTraces)
+-		if (stackTrace)
+ 		{
+ 			message = message + "\n\n" + Environment.StackTrace;
+ 		}

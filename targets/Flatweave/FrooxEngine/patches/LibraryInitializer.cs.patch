@@ -56,12 +56,12 @@
  
  	public static void Initialize(Engine engine)
  	{
-@@ -48,7 +97,7 @@
+@@ -39,7 +88,7 @@
  		TextureDecoder.PrintInitInfo();
  		UniLog.Log("BepuPhysics Version: " + typeof(Simulation).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
  		UniLog.Log("FreeType Version: " + FreeTypeFont.FreeTypeVersion);
 +		UniLog.Log("Opus Version: " + "Concentus " + typeof(Concentus.OpusCodecFactory).Assembly.GetName().Version); // Flatweave: Concentus
 -		UniLog.Log("Opus Version: " + Opus.Version);
- 		try
+ 		TextureDecoder.OnErrorMessage += (string msg) =>
  		{
- 			TextureDecoder.Decode("null.xyz", false);
+ 			UniLog.Error(msg);

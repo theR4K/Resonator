@@ -38,17 +38,19 @@ public static class PrepareStage
         }
         if (File.Exists(stampFile)) File.Delete(stampFile);
 
-        if (target.Spec.WeaverCheck != null) RequireKnownWeaver(target);
-        if (weave == WeaveMode.Flatten) Flatten(target);
-        else Deweave(target);
+        // without a weaver check, the weaver of the time (it rewrote CoderAOT.Dummy)
+        bool rewritesCoderAot = target.Spec.WeaverCheck == null || RequireKnownWeaver(target);
+        if (weave == WeaveMode.Flatten) Flatten(target, rewritesCoderAot);
+        else Deweave(target, rewritesCoderAot);
         File.WriteAllText(stampFile, stamp);
     }
 
     /// <summary>
     /// Both modes rely on the shape of ONE specific weaver: deweave is its exact inverse, flatten's
     /// fixes assume its output. An unknown weaver is refused rather than risk a silently wrong dll.
+    /// Returns whether it rewrites CoderAOT.Dummy (see <see cref="KnownWeaverCheck"/>).
     /// </summary>
-    static void RequireKnownWeaver(Target target)
+    static bool RequireKnownWeaver(Target target)
     {
         string weaver = target.Spec.WeaverCheck!;
         Log.Banner($"KNOWN-WEAVER CHECK ({weaver})");
@@ -58,12 +60,13 @@ public static class PrepareStage
             throw new Exception(
                 $"shipped weaver is NOT a known FrooxEngine.Weaver — the {Name(target.Spec.Weave)} may not match it. " +
                 "Refusing. (Update Resonator.Weaver for this weaver version, or point 'weaver_check' at a known weaver.)");
+        return report.RewritesCoderAot;
     }
 
-    static void Deweave(Target target)
+    static void Deweave(Target target, bool blankAotDummy)
     {
         Log.Banner("DEWEAVE");
-        var report = Deweaver.Deweave(target.ShippedDll, new DeweaveOptions { OutputDir = target.PreparedDir });
+        var report = Deweaver.Deweave(target.ShippedDll, new DeweaveOptions { OutputDir = target.PreparedDir, BlankAotDummy = blankAotDummy });
         Log.Info(report.ToString());
         if (report.Error != null) throw new Exception("deweave failed: " + report.Error);
         if (!report.WasWeaved) throw new Exception("deweave: input was not weaved (no FROOXENGINE_WEAVED marker) — nothing to revert");
@@ -72,10 +75,10 @@ public static class PrepareStage
         if (ResidueCheck.Run(target.SourceDll, Console.Out) != 0) throw new Exception("deweaved dll failed the residue verify");
     }
 
-    static void Flatten(Target target)
+    static void Flatten(Target target, bool blankAotDummy)
     {
         Log.Banner("FLATTEN (keep the weave; fix C#-inexpressible IL)");
-        var report = Flattener.Flatten(target.ShippedDll, target.PreparedDir);
+        var report = Flattener.Flatten(target.ShippedDll, target.PreparedDir, blankAotDummy);
         Log.Info(report.ToString());
         if (report.Error != null) throw new Exception("flatten failed: " + report.Error);
         if (!report.WasWeaved) throw new Exception("flatten: input was not weaved (no FROOXENGINE_WEAVED marker) — use weave: none");

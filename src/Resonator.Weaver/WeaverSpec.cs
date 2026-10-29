@@ -18,7 +18,7 @@ namespace Resonator.Weaver;
 ///   add 3 methods to every Worker subclass      RemoveWorkerMethods
 ///   sync field private -> protected             RevertFieldVisibility
 ///   add [SyncMethod(typeof(Delegate), null)]    RemoveSyncMethodAttributes
-///   rewrite the CoderAOT.Dummy body             BlankCoderAotDummy
+///   rewrite the CoderAOT.Dummy body             BlankCoderAotDummy (weavers before Resonite 2026.10.27)
 ///   stamp a timestamp version                   ResetVersion
 ///
 /// The weaver adds no fields.
@@ -75,14 +75,18 @@ public static class WeaverSpec
 
     /// <summary>
     /// The weaver's "ShouldProcessField": a readonly sync-member field (a type implementing
-    /// ISyncMember, or a generic parameter constrained to one), not a compiler backing field.
+    /// ISyncMember, or a generic parameter constrained to one), not a compiler backing field. A field
+    /// of an interface or abstract type is not one (the weaver cannot construct it).
     /// </summary>
     public static bool IsSyncMemberField(FieldDefinition field)
     {
         if (field.Name.Contains("__BackingField") || !field.IsInitOnly) return false;
         if (field.FieldType is GenericParameter gp)
             return gp.HasConstraints && gp.Constraints.Any(c => ImplementsISyncMember(c.ConstraintType));
-        return ImplementsISyncMember(field.FieldType);
+        TypeDefinition? type;
+        try { type = field.FieldType.Resolve(); }
+        catch { return false; }
+        return type is { IsInterface: false, IsAbstract: false } && ImplementsISyncMember(field.FieldType);
     }
 
     public static bool ImplementsISyncMember(TypeReference type)

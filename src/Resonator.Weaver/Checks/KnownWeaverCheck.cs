@@ -16,7 +16,10 @@ namespace Resonator.Weaver.Checks;
 ///   [1] Fody entry point: FrooxEngine.Weaver.AssemblyPostProcessor.Process(string, object, string)
 ///   [2] the "FROOXENGINE_WEAVED" marker label is embedded       (RemoveProcessedAttribute)
 ///   [3] the added method names are embedded                     (RemoveWorkerMethods, ...)
-///   [4] the "CoderAOT" / "Dummy" rewrite strings are embedded    (BlankCoderAotDummy)
+///   [4] the "CoderAOT" / "Dummy" rewrite strings: whether this weaver rewrites CoderAOT.Dummy
+///       (BlankCoderAotDummy). Not a requirement: the weaver of Resonite 2026.10.27 no longer does (its
+///       Process does the other five modifications only), and FrooxEngine ships the Dummy body as source.
+///       <see cref="KnownWeaverReport.RewritesCoderAot"/> tells the flattener and the deweaver whether to blank it.
 ///
 /// [2]-[4] are byte scans: a weaver that performs a modification carries its names in IL or metadata.
 /// </summary>
@@ -47,7 +50,10 @@ public static class KnownWeaverCheck
         report.Check(Embeds(WeaverSpec.ProcessedLabel), "processed marker label (RemoveProcessedAttribute)");
         report.Check(Embeds("InitializeSyncMembers", "GetSyncMember", "__New"),
             "worker machinery names InitializeSyncMembers/GetSyncMember/__New (RemoveWorkerMethods)");
-        report.Check(Embeds("CoderAOT", "Dummy"), "CoderAOT.Dummy rewrite strings (BlankCoderAotDummy)");
+        report.RewritesCoderAot = Embeds("CoderAOT", "Dummy");
+        report.Checks.Add(report.RewritesCoderAot
+            ? "[ok]  CoderAOT.Dummy rewrite strings (BlankCoderAotDummy)"
+            : "[ok]  no CoderAOT.Dummy rewrite (the shipped Dummy body is source and is kept)");
 
         report.Known = report.Checks.All(c => c.StartsWith("[ok]"));
         return report;
@@ -76,6 +82,8 @@ public sealed class KnownWeaverReport
 {
     public string Path = "";
     public bool Known;
+    /// <summary>The weaver rewrites CoderAOT.Dummy's body, so the prepared dll gets the original empty one back.</summary>
+    public bool RewritesCoderAot;
     /// <summary>Human-readable, one line per check.</summary>
     public List<string> Checks = new();
 

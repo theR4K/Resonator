@@ -21,13 +21,14 @@ namespace Resonator.Weaver.Flattening;
 ///       Flatweave patches make those checks read "InitOnly or marked".
 ///   [2] the private -> protected flip is undone where the field type is less accessible than the
 ///       field (CS0052): such a field cannot have been protected in the original source.
-///   [3] CoderAOT.Dummy() is emptied: the generated body has no C# form and never runs under the
-///       JIT. The original was empty.
+///   [3] CoderAOT.Dummy() is emptied when the weaver rewrote it: the generated body has no C# form and
+///       never runs under the JIT, and the original was empty. A weaver that does not rewrite it
+///       (Resonite 2026.10.27 on) leaves the shipped body, which is source: kept.
 /// </summary>
 public static class Flattener
 {
     /// <summary>Bump when the flattened output changes: part of the pipeline's prepare cache key.</summary>
-    public const int Version = 2;
+    public const int Version = 3;
 
     /// <summary>
     /// Full name of the marker attribute. Engine-side checks compare by name, so every flattened
@@ -35,7 +36,7 @@ public static class Flattener
     /// </summary>
     public const string InitOnlyMarker = "Resonator.FlattenedInitOnlyAttribute";
 
-    public static FlattenReport Flatten(string path, string outputDir)
+    public static FlattenReport Flatten(string path, string outputDir, bool blankAotDummy = true)
     {
         path = Path.GetFullPath(path);
         var report = new FlattenReport { Path = path };
@@ -59,7 +60,7 @@ public static class Flattener
             report.ClearedInitOnly++;
         }
 
-        report.BlankAotDummy = BlankCoderAotDummy.Blank(module);
+        report.BlankAotDummy = blankAotDummy && BlankCoderAotDummy.Blank(module);
 
         Directory.CreateDirectory(outputDir);
         try { AssemblyFile.Write(assembly, Path.Combine(outputDir, Path.GetFileName(path)), withSymbols: hasPdb); }

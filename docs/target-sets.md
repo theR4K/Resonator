@@ -73,7 +73,8 @@ also differ in the Fody marker `.ctor`.
 - **`deweave`** (default): revert the FrooxEngine.Weaver modifications exactly, proven by round trip:
   `weaver(deweave(shipped)) ≡ shipped`. The rebuilt dll must be reweaved to run.
 - **`flatten`**: keep the weave; fix only IL that C# cannot express (sync fields lose `readonly`, protected flips
-  with inaccessible field types revert to private, `CoderAOT.Dummy` emptied). The engine reads `readonly` by
+  with inaccessible field types revert to private, `CoderAOT.Dummy` emptied when the weaver rewrote it: the weaver of
+  Resonite 2026.10.27 no longer does, and its shipped body is kept). The engine reads `readonly` by
   reflection (`WorkerInitializer` picks sync members by it, `AssemblyTypeRegistry` builds the compatibility hash
   from it), so each cleared field gets `[Resonator.FlattenedInitOnly]` (defined in the flattened assembly) and the
   `Flatweave/FrooxEngine` patches make those checks read "readonly or marked". The compatibility hash of the

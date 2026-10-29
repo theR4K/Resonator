@@ -83,7 +83,7 @@ Resonator.Deweaver [options] <file-or-dir>...    revert the weave
 |---|---|
 | `--out <dir>` | write reverted copies into `<dir>` (default: in place) |
 | `--dry-run` | report what would change, write nothing |
-| `--no-blank-aot` | keep the generated `CoderAOT.Dummy()` body (default: blank it) |
+| `--no-blank-aot` | keep the generated `CoderAOT.Dummy()` body (default: blank it; the pipeline blanks it only for a weaver that rewrites it, before Resonite 2026.10.27) |
 | `--empty-methods` | empty the weaver-added methods instead of removing them |
 | `--keep-version` | keep the weaver's timestamp version |
 | `--version <v>` | the version to reset to (default `1.0.0.0`) |

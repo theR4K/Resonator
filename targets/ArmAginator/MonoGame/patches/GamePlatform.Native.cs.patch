@@ -1,0 +1,78 @@
+--- a/MonoGame.Framework/Platform/Native/GamePlatform.Native.cs
++++ b/MonoGame.Framework/Platform/Native/GamePlatform.Native.cs
+@@ -72,15 +72,54 @@
+     public override unsafe void Exit()
+     {
+         Interlocked.Increment(ref _isExiting);
++    }
++
++    // ArmAgedon: frames while the window is dragged or resized. Windows' modal move / resize loop runs inside the event poll,
++    // which then does not return; SDL's expose events from inside it call ModalTick, which runs a frame once the poll has been
++    // stuck for ModalStallMs (a plain repaint during a short poll does not). A frame's exception is rethrown after the poll.
++    private const double ModalStallMs = 50.0;
++    private static NativeGamePlatform _modalPlatform;
++    private bool _inPoll;
++    private long _pollStart;
++    private Exception _modalError;
++
++    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
++    private delegate void ModalTickCallback();
++    private static readonly ModalTickCallback _modalTickCallback = ModalTick; // kept: native code holds its pointer
++
++    private static void ModalTick()
++    {
++        var p = _modalPlatform;
++        if (p == null || !p._inPoll || p._modalError != null
++            || (System.Diagnostics.Stopwatch.GetTimestamp() - p._pollStart) * 1000.0 / System.Diagnostics.Stopwatch.Frequency < ModalStallMs)
++            return;
++        try
++        {
++            p.Game.Tick();
++        }
++        catch (Exception e)
++        {
++            p._modalError = e;
++        }
+     }
+ 
+     public override unsafe void RunLoop()
+     {
+         _window.Show(true);
++        if (Environment.GetEnvironmentVariable("ARMA_MODAL_TICK") != "0") // ArmAgedon: 0 = no frames while moving the window
++        {
++            _modalPlatform = this;
++            MGP.Platform_SetModalTick(Handle, Marshal.GetFunctionPointerForDelegate(_modalTickCallback));
++        }
+ 
+         while (true)
+         {
+             PollEvents();
++            if (_modalError is Exception modalError)
++            {
++                _modalError = null;
++                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw(modalError);
++            }
+ 
+             Game.Tick();
+ 
+@@ -94,6 +133,20 @@
+     }
+ 
+     private unsafe void PollEvents()
++    {
++        _pollStart = System.Diagnostics.Stopwatch.GetTimestamp();
++        _inPoll = true;
++        try
++        {
++            PollEventsCore();
++        }
++        finally
++        {
++            _inPoll = false;
++        }
++    }
++
++    private unsafe void PollEventsCore()
+     {
+         MGP_Event event_;
+         while (MGP.Platform_PollEvent(Handle, out event_) != 0)

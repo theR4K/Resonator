@@ -1,0 +1,35 @@
+--- a/native/monogame/sdl/MGP_sdl.cpp
++++ b/native/monogame/sdl/MGP_sdl.cpp
+@@ -401,7 +401,32 @@
+         return MGControllerInput::LeftTrigger;
+     case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
+         return MGControllerInput::RightTrigger;
++    }
++}
++
++// ArmAgedon: while the user drags or resizes the window, Windows runs a modal loop inside SDL_PollEvent and the game loop
++// stops; SDL sends an expose event on a timer from inside that loop (WM_TIMER, SDL_OnWindowLiveResizeUpdate). An event watch
++// runs synchronously there, so it can let the managed side draw a frame (it decides whether the poll is stuck that long).
++typedef void (*MGP_ModalTick)();
++static MGP_ModalTick g_modalTick = nullptr;
++static bool g_inModalTick = false;
++
++static int SDLCALL MGP_ModalWatch(void* userdata, SDL_Event* ev)
++{
++    if (g_modalTick != nullptr && !g_inModalTick && ev->type == SDL_WINDOWEVENT && ev->window.event == SDL_WINDOWEVENT_EXPOSED)
++    {
++        g_inModalTick = true;
++        g_modalTick();
++        g_inModalTick = false;
+     }
++    return 1;
++}
++
++MG_EXPORT void MGP_Platform_SetModalTick(MGP_Platform* platform, MGP_ModalTick tick)
++{
++    if (g_modalTick == nullptr && tick != nullptr)
++        SDL_AddEventWatch(MGP_ModalWatch, nullptr);
++    g_modalTick = tick;
+ }
+ 
+ mgbyte MGP_Platform_PollEvent(MGP_Platform* platform, MGP_Event& event_)

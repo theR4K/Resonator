@@ -1,0 +1,13 @@
+--- a/MonoGame.Framework/Platform/Native/Platform.Interop.cs
++++ b/MonoGame.Framework/Platform/Native/Platform.Interop.cs
+@@ -232,6 +232,10 @@
+ 
+     [DllImport(MonoGameNativeDLL, EntryPoint = "MGP_Platform_PollEvent", ExactSpelling = true)]
+     public static extern byte Platform_PollEvent(MGP_Platform* platform, out MGP_Event event_);
++
++    /// <summary>ArmAgedon: a callback for frames while a modal move / resize loop holds the event poll (MGP_sdl.cpp).</summary>
++    [DllImport(MonoGameNativeDLL, EntryPoint = "MGP_Platform_SetModalTick", ExactSpelling = true)]
++    public static extern void Platform_SetModalTick(MGP_Platform* platform, IntPtr tick);
+ 
+     [DllImport(MonoGameNativeDLL, EntryPoint = "MGP_Platform_StartRunLoop", ExactSpelling = true)]
+     public static extern void Platform_StartRunLoop(MGP_Platform* platform);

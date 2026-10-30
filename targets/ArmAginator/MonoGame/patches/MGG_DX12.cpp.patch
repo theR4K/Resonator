@@ -1,6 +1,20 @@
 --- a/native/monogame/directx12/MGG_DX12.cpp
 +++ b/native/monogame/directx12/MGG_DX12.cpp
-@@ -152,6 +152,9 @@
+@@ -37,10 +37,13 @@
+ bool MGG_EnableDebugLayer = false;
+ 
+ typedef mguint FrameCounter;
++struct MGDX_BufferPage; // ArmAgedon: MGDX_PoolAllocate
+ 
+ static void MGDX_DestroyFrameResources(MGG_GraphicsDevice* device, FrameCounter currentFrame, mgbool free_all);
+ static void MGDX_PrepareNextFrame(MGG_GraphicsDevice* device);
+ static MGG_Buffer* MGDX_Buffer_Create(MGG_GraphicsDevice* device, size_t sizeInBytes, D3D12_HEAP_TYPE heap, D3D12_RESOURCE_STATES state);
++static void MGDX_PoolFree(MGG_GraphicsDevice* device, MGG_Buffer* buffer); // ArmAgedon
++static MGG_Buffer* MGDX_PoolCreate(MGG_GraphicsDevice* device, int sizeInBytes, D3D12_RESOURCE_STATES typeState);
+ 
+ template<class T>
+ T MG_AlignUp(T value, const T alignment)
+@@ -152,6 +155,9 @@
  };
  
  const int MAX_TEXTURE_SLOTS = 16;
@@ -10,7 +24,7 @@
  
  struct MGG_GraphicsDevice
  {
-@@ -171,8 +174,10 @@
+@@ -171,8 +177,10 @@
  
  	MGG_InputLayout* layout = nullptr;
  
@@ -23,7 +37,7 @@
  	uint32_t uniformsDirty = 0xFFFFFFFF;
  
  	uint64_t vertexBuffersDirty = 0xFFFFFFFF;
-@@ -189,6 +194,10 @@
+@@ -189,6 +197,10 @@
  	bool texturesDirty = false;
  
  	std::map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> samplerSetHandles;
@@ -34,7 +48,15 @@
  	std::map<uint32_t, MGG_SamplerState*> samplerStates;
  	MGG_SamplerState* samplers[2][MAX_TEXTURE_SLOTS];
  	bool samplersDirty = false;
-@@ -216,6 +225,9 @@
+@@ -207,6 +219,7 @@
+ 	std::queue<MGG_OcclusionQuery*> destroyQuery;
+ 
+ 	std::vector<MGG_Buffer*> discarded;
++	std::vector<MGDX_BufferPage*> bufferPages; // ArmAgedon: MGDX_PoolAllocate
+ 	std::vector<MGG_Buffer*> pending;
+ 	std::vector<MGG_Buffer*> free;
+ };
+@@ -216,6 +229,9 @@
  	FrameCounter frame = 0;
  	uint8_t* push = nullptr;
  	bool dirty = false;
@@ -44,7 +66,51 @@
  
  	D3D12_HEAP_TYPE heapType;
  	size_t dataSize = 0;
-@@ -665,8 +677,11 @@
+@@ -225,8 +241,26 @@
+ 
+ 	Microsoft::WRL::ComPtr<D3D12MA::Allocation> m_alloc;
+ 	Microsoft::WRL::ComPtr<ID3D12Resource> m_res;
++
++	// ArmAgedon: a small vertex / index buffer is a range of a shared upload page (MGDX_PoolAllocate): m_res is the page's
++	// resource, the buffer starts at poolOffset in it
++	struct MGDX_BufferPage* page = nullptr;
++	UINT64 poolOffset = 0;
++	D3D12MA::VirtualAllocation range = {};
++
++	inline D3D12_GPU_VIRTUAL_ADDRESS GpuAddress() { return m_res->GetGPUVirtualAddress() + poolOffset; }
++};
++
++// ArmAgedon: a shared upload page of small vertex / index buffers (one 8 MB resource, persistently mapped, its ranges
++// handed out by a D3D12MA virtual block): each buffer stops paying D3D12's 64 KB placement and its own resource
++struct MGDX_BufferPage
++{
++	Microsoft::WRL::ComPtr<D3D12MA::Allocation> alloc;
++	Microsoft::WRL::ComPtr<ID3D12Resource> res;
++	uint8_t* mapped = nullptr;
++	D3D12MA::VirtualBlock* block = nullptr;
++	int ranges = 0;
++	UINT64 used = 0;
+-	
+-	inline D3D12_GPU_VIRTUAL_ADDRESS GpuAddress() { return m_res->GetGPUVirtualAddress(); }
+ };
+ 
+ struct MGG_Texture
+@@ -553,6 +587,14 @@
+ 	for (auto freeBuffer : device->free)
+ 		delete freeBuffer;
+ 	device->free.clear();
++
++	for (auto* page : device->bufferPages) // ArmAgedon: buffers still alive are the engine's to destroy; their pages go here
++	{
++		page->block->Release();
++		page->res->Unmap(0, nullptr);
++		delete page;
++	}
++	device->bufferPages.clear();
+ 
+ 	for (auto& ringBuffer : device->ringBuffer)
+ 	{
+@@ -665,8 +707,11 @@
  	memset(device->textures, 0, sizeof(device->textures));
  	device->texturesDirty = true;
  	device->samplerSetHandles.clear();
@@ -56,7 +122,55 @@
  	device->viewportDirty = true;
  	device->scissorDirty = true;
  
-@@ -915,6 +930,7 @@
+@@ -713,6 +758,8 @@
+ 
+ 			device->destroyBuffers.pop();
+ 
++			if (buffer->page)
++				MGDX_PoolFree(device, buffer); // ArmAgedon
+ 			delete buffer;
+ 		}
+ 
+@@ -774,8 +821,38 @@
+ 
+ 		// Move the pending buffers to the free list 
+ 		// for reuse on the next frame.
++		for (auto pendingBuffer : device->pending)
++			pendingBuffer->frame = device->frame; // ArmAgedon: when it became free (trimmed below)
+ 		device->free.insert(device->free.end(), device->pending.begin(), device->pending.end());
+ 		device->pending.clear();
++
++		// ArmAgedon: the free list kept every staging / readback / discarded buffer ever made (a texture upload's staging
++		// buffer is its size): the ones no SetData took again for MGDX_FREE_KEEP_FRAMES go. They passed the pending list,
++		// so the GPU is done with them.
++		const FrameCounter MGDX_FREE_KEEP_FRAMES = 120;
++		for (size_t i = 0; i < device->free.size();)
++		{
++			if (device->frame - device->free[i]->frame > MGDX_FREE_KEEP_FRAMES)
++			{
++				// a binding left from before its discard must not point at it once it is gone
++				for (auto& vb : device->vertexBuffers)
++					if (vb == device->free[i])
++					{
++						vb = nullptr;
++						device->vertexBuffersDirty = 0xFFFFFFFF;
++					}
++				if (device->indexBuffer == device->free[i])
++				{
++					device->indexBuffer = nullptr;
++					device->indexBufferDirty = true;
++				}
++				delete device->free[i];
++				device->free[i] = device->free.back();
++				device->free.pop_back();
++			}
++			else
++				i++;
++		}
+ 
+ 		// Buffers discarded this frame can be moved
+ 		// into the pending list for a future frame.
+@@ -915,6 +992,7 @@
  		device->vertexBuffersDirty = 0xFFFFFFFF;
  		device->texturesDirty = true;
  		device->samplersDirty = true;
@@ -64,7 +178,7 @@
  		device->viewportDirty = true;
  		device->scissorDirty = true;
  	}
-@@ -925,19 +941,19 @@
+@@ -925,19 +1003,19 @@
  	assert(device != nullptr);
  	assert(buffer != nullptr);
  
@@ -94,7 +208,7 @@
  	}
  }
  
-@@ -1099,9 +1115,12 @@
+@@ -1099,9 +1177,12 @@
  				continue;
  			}
  
@@ -109,7 +223,7 @@
  
  			cl->IASetVertexBuffers(i, 1, &vbv);
  
-@@ -1117,17 +1136,21 @@
+@@ -1117,17 +1198,21 @@
  
  		for (int i = 0; i < 2; i++)
  		{
@@ -140,7 +254,7 @@
  		}
  
  		device->uniformsDirty = 0;
-@@ -1138,12 +1161,30 @@
+@@ -1138,12 +1223,30 @@
  		for (int s = 0; s < 2; s++)
  		{
  			mgint maxSlot = device->currentShader[s]->maxTextureSlot;
@@ -171,7 +285,7 @@
  
  				heaps->CopySRVUAVToShader(tex->texture->GetSRV(), i);
  				tex->frame = currentFrame;
-@@ -1151,8 +1192,8 @@
+@@ -1151,8 +1254,8 @@
  
  			if (maxSlot > -1)
  			{
@@ -181,7 +295,7 @@
  				cl->SetGraphicsRootDescriptorTable(tableIndex, handle);
  			}
  		}
-@@ -1176,7 +1217,21 @@
+@@ -1176,7 +1279,21 @@
  			if (iter != device->samplerSetHandles.end())
  			{
  				UINT tableIndex = s == (int)MGShaderStage::Pixel ? 5 : 4;
@@ -203,7 +317,7 @@
  				continue;
  			}
  
-@@ -1198,6 +1253,7 @@
+@@ -1198,6 +1315,7 @@
  
  			D3D12_GPU_DESCRIPTOR_HANDLE handle = heaps->ApplySamplersToShader();
  			device->samplerSetHandles[hash] = handle;
@@ -211,7 +325,142 @@
  
  			UINT tableIndex = s == (int)MGShaderStage::Pixel ? 5 : 4;
  			cl->SetGraphicsRootDescriptorTable(tableIndex, handle);
-@@ -1595,6 +1651,13 @@
+@@ -1519,6 +1637,20 @@
+ 
+ static MGG_Buffer* MGDX_BufferDiscard(MGG_GraphicsDevice* device, MGG_Buffer* buffer)
+ {
++	if (buffer->page)
++	{
++		// ArmAgedon: a pooled buffer is never put on the free lists (their users read m_res from offset 0)
++		if (auto fresh = MGDX_PoolCreate(device, (int)buffer->actualSize, buffer->m_typeState))
++		{
++			fresh->dataSize = buffer->dataSize;
++			std::lock_guard lock(device->resourceMutex);
++			buffer->frame = device->frame;
++			device->destroyBuffers.push(buffer);
++			return fresh;
++		}
++		return buffer; // no page: written in place
++	}
++
+ 	std::lock_guard lock(device->resourceMutex);
+ 
+ 	// Get the info we need to find/allocate a new buffer.
+@@ -1555,7 +1687,99 @@
+ 		buffer->m_alloc.ReleaseAndGetAddressOf(),
+ 		IID_GRAPHICS_PPV_ARGS(buffer->m_res.ReleaseAndGetAddressOf()));
+ 	DX::ThrowIfFailed(hr);
++
++	return buffer;
++}
++
++// ArmAgedon: vertex and index buffers up to MGDX_POOL_MAX_BYTES are ranges of shared upload pages (MGDX_BufferPage), as the
++// Vulkan runtime's (MGVK_PoolAllocate); written in place like the Vulkan ones. ARMA_DX12_BUFFER_POOL=0: one resource each again
++static const UINT64 MGDX_POOL_PAGE_BYTES = 8ull * 1024 * 1024;
++static const int MGDX_POOL_MAX_BYTES = 256 * 1024;
++static const UINT64 MGDX_POOL_ALIGNMENT = 256;
++static const bool g_mgdxBufferPool = []() { const char* v = getenv("ARMA_DX12_BUFFER_POOL"); return v == nullptr || strcmp(v, "0") != 0; }();
++
++static bool MGDX_PoolAllocate(MGG_GraphicsDevice* device, int sizeInBytes, MGG_Buffer* buffer)
++{
++	D3D12MA::VIRTUAL_ALLOCATION_DESC range = {};
++	range.Size = (UINT64)sizeInBytes;
++	range.Alignment = MGDX_POOL_ALIGNMENT;
++	std::lock_guard lock(device->resourceMutex);
++	for (int attempt = 0; attempt < 2; attempt++)
++	{
++		for (auto* page : device->bufferPages)
++		{
++			if (MGDX_POOL_PAGE_BYTES - page->used < range.Size)
++				continue;
++			UINT64 offset = 0;
++			if (SUCCEEDED(page->block->Allocate(&range, &buffer->range, &offset)))
++			{
++				page->ranges++;
++				page->used += range.Size;
++				buffer->page = page;
++				buffer->poolOffset = offset;
++				buffer->m_res = page->res;
++				return true;
++			}
++		}
++		if (attempt > 0)
++			break;
++		auto* page = new MGDX_BufferPage();
++		auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(MGDX_POOL_PAGE_BYTES);
++		D3D12MA::ALLOCATION_DESC allocDesc = {};
++		allocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
++		if (FAILED(device->resources->GetAllocator()->CreateResource(&allocDesc, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
++			nullptr, page->alloc.ReleaseAndGetAddressOf(), IID_GRAPHICS_PPV_ARGS(page->res.ReleaseAndGetAddressOf())))
++			|| FAILED(page->res->Map(0, nullptr, (void**)&page->mapped)))
++		{
++			delete page;
++			return false;
++		}
++		D3D12MA::VIRTUAL_BLOCK_DESC blockDesc = {};
++		blockDesc.Size = MGDX_POOL_PAGE_BYTES;
++		if (FAILED(D3D12MA::CreateVirtualBlock(&blockDesc, &page->block)))
++		{
++			page->res->Unmap(0, nullptr);
++			delete page;
++			return false;
++		}
++		device->bufferPages.push_back(page);
++	}
++	return false;
++}
++
++/// ArmAgedon: gives a pooled buffer's range back (once the GPU is done with it, from the destroy queue); an empty page goes.
++static void MGDX_PoolFree(MGG_GraphicsDevice* device, MGG_Buffer* buffer)
++{
++	auto* page = buffer->page;
++	D3D12MA::VIRTUAL_ALLOCATION_INFO info = {};
++	page->block->GetAllocationInfo(buffer->range, &info);
++	page->block->FreeAllocation(buffer->range);
++	page->ranges--;
++	page->used -= info.Size;
++	buffer->page = nullptr;
++	buffer->m_res.Reset();
++	if (page->ranges == 0)
++	{
++		device->bufferPages.erase(std::remove(device->bufferPages.begin(), device->bufferPages.end(), page), device->bufferPages.end());
++		page->block->Release();
++		page->res->Unmap(0, nullptr);
++		delete page;
++	}
++}
+ 
++/// ArmAgedon: a new pooled buffer like <paramref name="buffer"/> (a discard: the old range stays until the GPU is done with it).
++static MGG_Buffer* MGDX_PoolCreate(MGG_GraphicsDevice* device, int sizeInBytes, D3D12_RESOURCE_STATES typeState)
++{
++	auto buffer = new MGG_Buffer();
++	if (!MGDX_PoolAllocate(device, sizeInBytes, buffer))
++	{
++		delete buffer;
++		return nullptr;
++	}
++	buffer->actualSize = buffer->dataSize = sizeInBytes;
++	buffer->heapType = D3D12_HEAP_TYPE_UPLOAD;
++	buffer->m_currentState = D3D12_RESOURCE_STATE_GENERIC_READ;
++	buffer->m_typeState = typeState;
+ 	return buffer;
+ }
+ 
+@@ -1571,6 +1795,13 @@
+ 		buffer->actualSize = buffer->dataSize = sizeInBytes;
+ 		buffer->push = new uint8_t[sizeInBytes];
+ 		return buffer;
++	}
++
++	if (g_mgdxBufferPool && sizeInBytes <= MGDX_POOL_MAX_BYTES)
++	{
++		auto typeState = type == MGBufferType::Vertex ? D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER : D3D12_RESOURCE_STATE_INDEX_BUFFER;
++		if (auto pooled = MGDX_PoolCreate(device, sizeInBytes, typeState)) // ArmAgedon
++			return pooled;
+ 	}
+ 
+ 	if (dynamic)
+@@ -1595,6 +1826,13 @@
  
  	if (buffer->push)
  		delete [] buffer->push;
@@ -225,7 +474,18 @@
  
  	// Queue the buffer for later destruction.
  	std::lock_guard lock(device->resourceMutex);
-@@ -1670,6 +1733,7 @@
+@@ -1607,7 +1845,10 @@
+ 	size_t readBytes = std::min<size_t>(buffer->dataSize - offset, dataStride * dataCount);
+ 
+ 	if (buffer->heapType == D3D12_HEAP_TYPE_UPLOAD)
++	{
++		offset += (mgint)buffer->poolOffset; // ArmAgedon: 0 unless pooled
+ 		return buffer->m_res;
++	}
+ 
+ 	MGG_Buffer* readback = MGDX_FindFreeBuffer(device, readBytes, D3D12_HEAP_TYPE_READBACK);
+ 	ComPtr<ID3D12Resource> intermediateBuffer = readback->m_res;
+@@ -1670,6 +1911,7 @@
  		}
  
  		buffer->dirty = true;
@@ -233,7 +493,33 @@
  		return;
  	}
  
-@@ -2140,6 +2204,7 @@
+@@ -1711,7 +1953,10 @@
+ 		UINT8* pVertexDataBegin;
+ 		CD3DX12_RANGE readRange(0, 0);
+ 
++		if (buffer->page)
++			pVertexDataBegin = buffer->page->mapped + buffer->poolOffset; // ArmAgedon: the page stays mapped
++		else
++			DX::ThrowIfFailed(buffer->m_res->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+-		DX::ThrowIfFailed(buffer->m_res->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+ 
+ 		pVertexDataBegin += offset;
+ 		if (vertexStride == elementSizeInBytes)
+@@ -1724,8 +1969,11 @@
+ 			length = vertexStride * (elementCount - 1) + elementSizeInBytes;
+ 		}
+ 
++		if (!buffer->page)
++		{
++			CD3DX12_RANGE writeRange(offset, offset + length);
++			buffer->m_res->Unmap(0, &writeRange);
++		}
+-		CD3DX12_RANGE writeRange(offset, offset + length);
+-		buffer->m_res->Unmap(0, &writeRange);
+ 	}
+ 	else
+ 	{
+@@ -2140,6 +2388,7 @@
  		device->vertexBuffersDirty = 0xFFFFFFFF;
  		device->texturesDirty = true;
  		device->samplersDirty = true;
@@ -241,7 +527,7 @@
  		device->viewportDirty = true;
  		device->scissorDirty = true;
  	}
-@@ -2364,4 +2429,19 @@
+@@ -2364,4 +2613,19 @@
  	query->buffer->Unmap(0, nullptr);
  
  	return true;

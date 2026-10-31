@@ -7,8 +7,8 @@
 +		var armWork = ArmAssetWork.Begin(this, World); // ArmAgedon seam: metadata/variant request lifetime
  		StartTask(async () =>
  		{
--			await UpdateAssetAsync(_token).ConfigureAwait(continueOnCapturedContext: false);
 +			await ArmAssetWork.Observe(armWork, () => UpdateAssetAsync(_token)).ConfigureAwait(continueOnCapturedContext: false); // ArmAgedon seam
+-			await UpdateAssetAsync(_token).ConfigureAwait(continueOnCapturedContext: false);
  		});
  	}
  

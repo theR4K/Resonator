@@ -4,8 +4,8 @@
  		if (!runningUpdate)
  		{
  			runningUpdate = true;
--			Task.Run((Func<Task?>)ProcessUpdate);
 +			ArmAssetWork.Run(this, ProcessUpdate); // ArmAgedon seam: track the current variant task
+-			Task.Run((Func<Task?>)ProcessUpdate);
  		}
  	}
  

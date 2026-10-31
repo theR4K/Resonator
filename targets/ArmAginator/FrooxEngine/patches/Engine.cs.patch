@@ -1,6 +1,6 @@
 --- a/FrooxEngine/Engine.cs
 +++ b/FrooxEngine/Engine.cs
-@@ -239,6 +239,8 @@
+@@ -218,6 +218,8 @@
  	public string InitSubphase { get; internal set; }
  
  	public string AppPath { get; private set; }
@@ -9,7 +9,7 @@
  
  	public string DataPath { get; private set; }
  
-@@ -669,6 +671,7 @@
+@@ -638,6 +640,7 @@
  		UniqueSessionID = Guid.NewGuid();
  		InitProgress?.SetFixedPhase("Initializing Runtime Parameters...");
  		AppPath = appPath;
@@ -17,7 +17,7 @@
  		DataPath = Path.GetFullPath(Environment.ExpandEnvironmentVariables(options.DataDirectory));
  		CachePath = Path.GetFullPath(Environment.ExpandEnvironmentVariables(options.CacheDirectory));
  		if (string.IsNullOrWhiteSpace(options.LocaleDirectory))
-@@ -1005,20 +1008,14 @@
+@@ -970,10 +973,7 @@
  		}
  		InputInterface.RegisterPostInputStateTask(() =>
  		{
@@ -29,6 +29,8 @@
  			if (OmniceptTrackingDriver.ShouldRegister(InputInterface))
  			{
  				InputInterface.RegisterInputDriver(new OmniceptTrackingDriver());
+@@ -984,11 +984,8 @@
+ 				InputInterface.RegisterInputDriver(new BabbleOSC_Driver());
  			}
  		});
 +		// Leap Motion driver is provided by the optional FrooxEngine.Ext.Leap plugin.
@@ -40,8 +42,8 @@
 -		InputInterface.RegisterInputDriver(new BHapticsDriver());
  		InputInterface.RegisterInputDriver(new OWO_Driver());
  		InputInterface.RegisterInputDriver(new GiggleTechDriver());
- 		if (options.ForceBabble || BabbleOSC_Driver.ShouldInitialize)
-@@ -1206,6 +1203,7 @@
+ 	}
+@@ -1174,6 +1171,7 @@
  	private async Task FinishInitialization(LaunchOptions options)
  	{
  		InitProgress?.SetFixedPhase("Finalizing initialization");

@@ -1,6 +1,6 @@
 --- a/native/monogame/directx12/MGG_DX12.cpp
 +++ b/native/monogame/directx12/MGG_DX12.cpp
-@@ -37,10 +37,13 @@
+@@ -37,10 +37,17 @@
  bool MGG_EnableDebugLayer = false;
  
  typedef mguint FrameCounter;
@@ -11,10 +11,14 @@
  static MGG_Buffer* MGDX_Buffer_Create(MGG_GraphicsDevice* device, size_t sizeInBytes, D3D12_HEAP_TYPE heap, D3D12_RESOURCE_STATES state);
 +static void MGDX_PoolFree(MGG_GraphicsDevice* device, MGG_Buffer* buffer); // ArmAgedon
 +static MGG_Buffer* MGDX_PoolCreate(MGG_GraphicsDevice* device, int sizeInBytes, D3D12_RESOURCE_STATES typeState);
++static void MGDX_ProfileBeginFrame(MGG_GraphicsDevice* device); // ArmAgedon: timestamps / ARMA_GPU_DRAW_PROFILE
++static void MGDX_ProfileEndFrame(MGG_GraphicsDevice* device);
++static bool MGDX_DrawProfileBegin(MGG_GraphicsDevice* device);
++static void MGDX_DrawProfileEnd(MGG_GraphicsDevice* device);
  
  template<class T>
  T MG_AlignUp(T value, const T alignment)
-@@ -152,6 +155,9 @@
+@@ -152,6 +159,9 @@
  };
  
  const int MAX_TEXTURE_SLOTS = 16;
@@ -24,7 +28,7 @@
  
  struct MGG_GraphicsDevice
  {
-@@ -171,8 +177,10 @@
+@@ -171,8 +181,10 @@
  
  	MGG_InputLayout* layout = nullptr;
  
@@ -37,7 +41,7 @@
  	uint32_t uniformsDirty = 0xFFFFFFFF;
  
  	uint64_t vertexBuffersDirty = 0xFFFFFFFF;
-@@ -189,6 +197,10 @@
+@@ -189,6 +201,10 @@
  	bool texturesDirty = false;
  
  	std::map<uint32_t, D3D12_GPU_DESCRIPTOR_HANDLE> samplerSetHandles;
@@ -48,7 +52,7 @@
  	std::map<uint32_t, MGG_SamplerState*> samplerStates;
  	MGG_SamplerState* samplers[2][MAX_TEXTURE_SLOTS];
  	bool samplersDirty = false;
-@@ -207,6 +219,7 @@
+@@ -207,6 +223,7 @@
  	std::queue<MGG_OcclusionQuery*> destroyQuery;
  
  	std::vector<MGG_Buffer*> discarded;
@@ -56,7 +60,7 @@
  	std::vector<MGG_Buffer*> pending;
  	std::vector<MGG_Buffer*> free;
  };
-@@ -216,6 +229,9 @@
+@@ -216,6 +233,9 @@
  	FrameCounter frame = 0;
  	uint8_t* push = nullptr;
  	bool dirty = false;
@@ -66,7 +70,7 @@
  
  	D3D12_HEAP_TYPE heapType;
  	size_t dataSize = 0;
-@@ -225,8 +241,26 @@
+@@ -225,8 +245,26 @@
  
  	Microsoft::WRL::ComPtr<D3D12MA::Allocation> m_alloc;
  	Microsoft::WRL::ComPtr<ID3D12Resource> m_res;
@@ -95,7 +99,7 @@
  };
  
  struct MGG_Texture
-@@ -553,6 +587,14 @@
+@@ -553,6 +591,14 @@
  	for (auto freeBuffer : device->free)
  		delete freeBuffer;
  	device->free.clear();
@@ -110,7 +114,7 @@
  
  	for (auto& ringBuffer : device->ringBuffer)
  	{
-@@ -665,8 +707,11 @@
+@@ -665,14 +711,18 @@
  	memset(device->textures, 0, sizeof(device->textures));
  	device->texturesDirty = true;
  	device->samplerSetHandles.clear();
@@ -122,7 +126,14 @@
  	device->viewportDirty = true;
  	device->scissorDirty = true;
  
-@@ -713,6 +758,8 @@
+ 	device->ringBuffer[device->context->m_backBufferIndex].Reset(device->resources);
+ 
+ 	device->is_recording = true;
++	MGDX_ProfileBeginFrame(device); // ArmAgedon
+ }
+ 
+ mgint MGG_GraphicsDevice_BeginFrame(MGG_GraphicsDevice* device)
+@@ -713,6 +763,8 @@
  
  			device->destroyBuffers.pop();
  
@@ -131,7 +142,16 @@
  			delete buffer;
  		}
  
-@@ -774,8 +821,38 @@
+@@ -759,6 +811,8 @@
+ 	assert(syncInterval >= 0);
+ 	assert(currentFrame >= 0);
+ 	assert(device->is_recording);
++
++	MGDX_ProfileEndFrame(device); // ArmAgedon: resolve the frame's queries before the list closes
+ 
+ #if !defined(_GAMING_XBOX)
+ 	device->resources->Present(syncInterval, device->vsync);
+@@ -774,8 +828,38 @@
  
  		// Move the pending buffers to the free list 
  		// for reuse on the next frame.
@@ -170,7 +190,7 @@
  
  		// Buffers discarded this frame can be moved
  		// into the pending list for a future frame.
-@@ -915,6 +992,7 @@
+@@ -915,6 +999,7 @@
  		device->vertexBuffersDirty = 0xFFFFFFFF;
  		device->texturesDirty = true;
  		device->samplersDirty = true;
@@ -178,7 +198,7 @@
  		device->viewportDirty = true;
  		device->scissorDirty = true;
  	}
-@@ -925,19 +1003,19 @@
+@@ -925,19 +1010,19 @@
  	assert(device != nullptr);
  	assert(buffer != nullptr);
  
@@ -208,7 +228,7 @@
  	}
  }
  
-@@ -1099,9 +1177,12 @@
+@@ -1099,9 +1184,12 @@
  				continue;
  			}
  
@@ -223,7 +243,7 @@
  
  			cl->IASetVertexBuffers(i, 1, &vbv);
  
-@@ -1117,17 +1198,21 @@
+@@ -1117,17 +1205,21 @@
  
  		for (int i = 0; i < 2; i++)
  		{
@@ -254,7 +274,7 @@
  		}
  
  		device->uniformsDirty = 0;
-@@ -1138,12 +1223,30 @@
+@@ -1138,12 +1230,30 @@
  		for (int s = 0; s < 2; s++)
  		{
  			mgint maxSlot = device->currentShader[s]->maxTextureSlot;
@@ -285,7 +305,7 @@
  
  				heaps->CopySRVUAVToShader(tex->texture->GetSRV(), i);
  				tex->frame = currentFrame;
-@@ -1151,8 +1254,8 @@
+@@ -1151,8 +1261,8 @@
  
  			if (maxSlot > -1)
  			{
@@ -295,7 +315,7 @@
  				cl->SetGraphicsRootDescriptorTable(tableIndex, handle);
  			}
  		}
-@@ -1176,7 +1279,21 @@
+@@ -1176,7 +1286,21 @@
  			if (iter != device->samplerSetHandles.end())
  			{
  				UINT tableIndex = s == (int)MGShaderStage::Pixel ? 5 : 4;
@@ -317,7 +337,7 @@
  				continue;
  			}
  
-@@ -1198,6 +1315,7 @@
+@@ -1198,6 +1322,7 @@
  
  			D3D12_GPU_DESCRIPTOR_HANDLE handle = heaps->ApplySamplersToShader();
  			device->samplerSetHandles[hash] = handle;
@@ -325,7 +345,40 @@
  
  			UINT tableIndex = s == (int)MGShaderStage::Pixel ? 5 : 4;
  			cl->SetGraphicsRootDescriptorTable(tableIndex, handle);
-@@ -1519,6 +1637,20 @@
+@@ -1240,7 +1365,10 @@
+ 
+ 	cl->IASetPrimitiveTopology(PrimitiveTypeToD3D_PRIMITIVE_TOPOLOGY[(int)primitiveType]);
+ 
++	bool profiled = MGDX_DrawProfileBegin(device); // ArmAgedon: ARMA_GPU_DRAW_PROFILE
+ 	cl->DrawInstanced(vertexCount, 1, vertexStart, 0);
++	if (profiled)
++		MGDX_DrawProfileEnd(device);
+ }
+ 
+ void MGG_GraphicsDevice_DrawIndexed(MGG_GraphicsDevice* device, MGPrimitiveType primitiveType, mgint primitiveCount, mgint indexStart, mgint vertexStart)
+@@ -1261,7 +1389,10 @@
+ 
+ 	auto indexCount = MGDX_GetIndexCount(primitiveType, primitiveCount);
+ 
++	bool profiled = MGDX_DrawProfileBegin(device); // ArmAgedon: ARMA_GPU_DRAW_PROFILE
+ 	cl->DrawIndexedInstanced(indexCount, 1, indexStart, vertexStart, 0);
++	if (profiled)
++		MGDX_DrawProfileEnd(device);
+ }
+ 
+ void MGG_GraphicsDevice_DrawIndexedInstanced(MGG_GraphicsDevice* device, MGPrimitiveType primitiveType, mgint primitiveCount, mgint indexStart, mgint vertexStart, mgint instanceCount)
+@@ -1285,7 +1416,10 @@
+ 
+ 	auto indexCount = MGDX_GetIndexCount(primitiveType, primitiveCount);
+ 
++	bool profiled = MGDX_DrawProfileBegin(device); // ArmAgedon: ARMA_GPU_DRAW_PROFILE
+ 	cl->DrawIndexedInstanced(indexCount, instanceCount, indexStart, vertexStart, 0);
++	if (profiled)
++		MGDX_DrawProfileEnd(device);
+ }
+ 
+ 
+@@ -1519,6 +1653,20 @@
  
  static MGG_Buffer* MGDX_BufferDiscard(MGG_GraphicsDevice* device, MGG_Buffer* buffer)
  {
@@ -346,7 +399,7 @@
  	std::lock_guard lock(device->resourceMutex);
  
  	// Get the info we need to find/allocate a new buffer.
-@@ -1555,7 +1687,99 @@
+@@ -1555,7 +1703,99 @@
  		buffer->m_alloc.ReleaseAndGetAddressOf(),
  		IID_GRAPHICS_PPV_ARGS(buffer->m_res.ReleaseAndGetAddressOf()));
  	DX::ThrowIfFailed(hr);
@@ -446,7 +499,7 @@
  	return buffer;
  }
  
-@@ -1571,6 +1795,13 @@
+@@ -1571,6 +1811,13 @@
  		buffer->actualSize = buffer->dataSize = sizeInBytes;
  		buffer->push = new uint8_t[sizeInBytes];
  		return buffer;
@@ -460,7 +513,7 @@
  	}
  
  	if (dynamic)
-@@ -1595,6 +1826,13 @@
+@@ -1595,6 +1842,13 @@
  
  	if (buffer->push)
  		delete [] buffer->push;
@@ -474,7 +527,7 @@
  
  	// Queue the buffer for later destruction.
  	std::lock_guard lock(device->resourceMutex);
-@@ -1607,7 +1845,10 @@
+@@ -1607,7 +1861,10 @@
  	size_t readBytes = std::min<size_t>(buffer->dataSize - offset, dataStride * dataCount);
  
  	if (buffer->heapType == D3D12_HEAP_TYPE_UPLOAD)
@@ -485,7 +538,7 @@
  
  	MGG_Buffer* readback = MGDX_FindFreeBuffer(device, readBytes, D3D12_HEAP_TYPE_READBACK);
  	ComPtr<ID3D12Resource> intermediateBuffer = readback->m_res;
-@@ -1670,6 +1911,7 @@
+@@ -1670,6 +1927,7 @@
  		}
  
  		buffer->dirty = true;
@@ -493,7 +546,7 @@
  		return;
  	}
  
-@@ -1711,7 +1953,10 @@
+@@ -1711,7 +1969,10 @@
  		UINT8* pVertexDataBegin;
  		CD3DX12_RANGE readRange(0, 0);
  
@@ -505,7 +558,7 @@
  
  		pVertexDataBegin += offset;
  		if (vertexStride == elementSizeInBytes)
-@@ -1724,8 +1969,11 @@
+@@ -1724,8 +1985,11 @@
  			length = vertexStride * (elementCount - 1) + elementSizeInBytes;
  		}
  
@@ -519,7 +572,7 @@
  	}
  	else
  	{
-@@ -2140,6 +2388,7 @@
+@@ -2140,6 +2404,7 @@
  		device->vertexBuffersDirty = 0xFFFFFFFF;
  		device->texturesDirty = true;
  		device->samplersDirty = true;
@@ -527,10 +580,12 @@
  		device->viewportDirty = true;
  		device->scissorDirty = true;
  	}
-@@ -2364,4 +2613,19 @@
+@@ -2362,6 +2627,310 @@
+ 	query->buffer->Map(0, &range, (void**)&pValue);
+ 	pixelCount = *pValue;
  	query->buffer->Unmap(0, nullptr);
- 
- 	return true;
++
++	return true;
 +}
 +
 +// ArmAgedon: graphics-thread benchmark/resize diagnostics; no GPU work.
@@ -546,4 +601,293 @@
 +    values[4] = (mgint)(device->scissor.right - device->scissor.left);
 +    values[5] = (mgint)(device->scissor.bottom - device->scissor.top);
 +    return 6;
++}
++
++// ---------------------------------------------------------------------------------------------------------------------
++// ArmAgedon: GPU timestamps (ARMA_PASS_TIMES) and the per-draw profile (ARMA_GPU_DRAW_PROFILE=1) for D3D12, the Vulkan
++// runtime's MGVK_WriteTimestamp / MGVK_ReadTimestamps / MGVK_SetDrawTag / MGVK_DrawProfileCount / MGVK_ReadDrawProfile
++// with the same contracts under MGDX_ names. Each back buffer slot has a timestamp heap, a pipeline statistics heap and a
++// readback buffer; the frame's queries are resolved into it before Present closes the command list, and copied out when
++// the slot is next prepared (DeviceResources::Prepare waited for its fence by then).
++// ---------------------------------------------------------------------------------------------------------------------
++
++static const UINT MGDX_MAX_TIMESTAMPS = 128;
++static const UINT MGDX_MAX_PROFILED_DRAWS = 8192;
++
++struct MGDX_ProfileSlot
++{
++	Microsoft::WRL::ComPtr<ID3D12QueryHeap> times;     // MGDX_MAX_TIMESTAMPS pass timestamps
++	Microsoft::WRL::ComPtr<ID3D12QueryHeap> drawTimes; // MGDX_MAX_PROFILED_DRAWS + 1
++	Microsoft::WRL::ComPtr<ID3D12QueryHeap> stats;     // MGDX_MAX_PROFILED_DRAWS
++	Microsoft::WRL::ComPtr<ID3D12Resource> readback;   // pass timestamps, then draw timestamps, then statistics
++	UINT timeCount = 0;
++	UINT drawCount = 0;
++	bool resolved = false;
++	FrameCounter frame = 0;
++	std::vector<int32_t> tags;
++};
++
++struct MGDX_ProfileState
++{
++	bool timestamps = false; // on from the first MGDX_WriteTimestamp
++	bool failed = false;
++	int32_t tag = 0;
++	double nsPerTick = 0.0;
++	std::vector<MGDX_ProfileSlot> slots;
++	std::vector<uint64_t> lastTimes;
++	FrameCounter lastTimesFrame = 0;
++	std::vector<int32_t> lastTags;
++	std::vector<uint64_t> lastStats;
++	std::vector<uint64_t> lastDrawTimes;
++	FrameCounter lastDrawFrame = 0;
++};
++
++static std::map<MGG_GraphicsDevice*, MGDX_ProfileState> s_dxProfiles;
++
++static bool MGDX_DrawProfileRequested()
++{
++	static int on = -1;
++	if (on < 0)
++	{
++		const char* v = getenv("ARMA_GPU_DRAW_PROFILE");
++		on = v != nullptr && v[0] == '1' ? 1 : 0;
++	}
++	return on == 1;
++}
++
++static const UINT64 MGDX_READBACK_TIMES = 0;
++static const UINT64 MGDX_READBACK_DRAW_TIMES = MGDX_MAX_TIMESTAMPS * sizeof(uint64_t);
++static const UINT64 MGDX_READBACK_STATS = MGDX_READBACK_DRAW_TIMES + (MGDX_MAX_PROFILED_DRAWS + 1) * sizeof(uint64_t);
++static const UINT64 MGDX_READBACK_BYTES = MGDX_READBACK_STATS + MGDX_MAX_PROFILED_DRAWS * sizeof(D3D12_QUERY_DATA_PIPELINE_STATISTICS);
++
++static bool MGDX_ProfileCreateSlot(MGG_GraphicsDevice* device, MGDX_ProfileSlot& slot)
++{
++	auto d3d = device->resources->GetD3DDevice();
++	D3D12_QUERY_HEAP_DESC desc = {};
++	desc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
++	desc.Count = MGDX_MAX_TIMESTAMPS;
++	if (FAILED(d3d->CreateQueryHeap(&desc, IID_PPV_ARGS(&slot.times))))
++		return false;
++	desc.Count = MGDX_MAX_PROFILED_DRAWS + 1;
++	if (FAILED(d3d->CreateQueryHeap(&desc, IID_PPV_ARGS(&slot.drawTimes))))
++		return false;
++	desc.Type = D3D12_QUERY_HEAP_TYPE_PIPELINE_STATISTICS;
++	desc.Count = MGDX_MAX_PROFILED_DRAWS;
++	if (FAILED(d3d->CreateQueryHeap(&desc, IID_PPV_ARGS(&slot.stats))))
++		return false;
++	CD3DX12_HEAP_PROPERTIES heap(D3D12_HEAP_TYPE_READBACK);
++	auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(MGDX_READBACK_BYTES);
++	return SUCCEEDED(d3d->CreateCommittedResource(&heap, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_COPY_DEST,
++		nullptr, IID_PPV_ARGS(&slot.readback)));
++}
++
++// After DeviceResources::Prepare: the slot's previous results are complete; copy them out and start this frame's.
++static void MGDX_ProfileBeginFrame(MGG_GraphicsDevice* device)
++{
++	auto it = s_dxProfiles.find(device);
++	bool draws = MGDX_DrawProfileRequested();
++	if (it == s_dxProfiles.end() && !draws)
++		return;
++	auto& state = s_dxProfiles[device];
++	if (state.failed || (!state.timestamps && !draws) || device->begin_frame_index < 0)
++		return;
++	if (state.nsPerTick == 0.0)
++	{
++		UINT64 frequency = 0;
++		if (FAILED(device->resources->GetCommandQueue()->Get()->GetTimestampFrequency(&frequency)) || frequency == 0)
++		{
++			state.failed = true;
++			return;
++		}
++		state.nsPerTick = 1e9 / (double)frequency;
++	}
++	size_t index = (size_t)device->begin_frame_index;
++	if (state.slots.size() <= index)
++		state.slots.resize(index + 1);
++	auto& slot = state.slots[index];
++	if (slot.readback == nullptr)
++	{
++		if (!MGDX_ProfileCreateSlot(device, slot))
++		{
++			state.failed = true;
++			return;
++		}
++	}
++	else if (slot.resolved)
++	{
++		uint8_t* data = nullptr;
++		D3D12_RANGE range = { 0, (SIZE_T)MGDX_READBACK_BYTES };
++		if (SUCCEEDED(slot.readback->Map(0, &range, (void**)&data)))
++		{
++			if (slot.timeCount > 0)
++			{
++				auto t = (const uint64_t*)(data + MGDX_READBACK_TIMES);
++				state.lastTimes.assign(t, t + slot.timeCount);
++				state.lastTimesFrame = slot.frame;
++			}
++			if (slot.drawCount > 0)
++			{
++				auto t = (const uint64_t*)(data + MGDX_READBACK_DRAW_TIMES);
++				state.lastDrawTimes.assign(t, t + slot.drawCount + 1);
++				auto s = (const D3D12_QUERY_DATA_PIPELINE_STATISTICS*)(data + MGDX_READBACK_STATS);
++				state.lastStats.resize((size_t)slot.drawCount * 3);
++				for (UINT i = 0; i < slot.drawCount; i++)
++				{
++					state.lastStats[(size_t)i * 3] = s[i].VSInvocations;
++					state.lastStats[(size_t)i * 3 + 1] = s[i].CPrimitives;
++					state.lastStats[(size_t)i * 3 + 2] = s[i].PSInvocations;
++				}
++				state.lastTags = slot.tags;
++				state.lastDrawFrame = slot.frame;
++			}
++			D3D12_RANGE none = { 0, 0 };
++			slot.readback->Unmap(0, &none);
++		}
++	}
++	slot.timeCount = 0;
++	slot.drawCount = 0;
++	slot.resolved = false;
++	slot.frame = device->frame;
++	slot.tags.clear();
++	if (draws)
++		device->context->GetCommandList()->EndQuery(slot.drawTimes.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
++}
++
++static MGDX_ProfileSlot* MGDX_ProfileSlotForFrame(MGG_GraphicsDevice* device, MGDX_ProfileState** stateOut = nullptr)
++{
++	auto it = s_dxProfiles.find(device);
++	if (it == s_dxProfiles.end() || it->second.failed || device->begin_frame_index < 0
++		|| (size_t)device->begin_frame_index >= it->second.slots.size())
++		return nullptr;
++	auto& slot = it->second.slots[device->begin_frame_index];
++	if (slot.readback == nullptr || slot.frame != device->frame || slot.resolved || !device->is_recording)
++		return nullptr;
++	if (stateOut != nullptr)
++		*stateOut = &it->second;
++	return &slot;
++}
++
++// Before Present closes the command list: the frame's queries into the readback buffer.
++static void MGDX_ProfileEndFrame(MGG_GraphicsDevice* device)
++{
++	auto slot = MGDX_ProfileSlotForFrame(device);
++	if (slot == nullptr)
++		return;
++	auto cl = device->context->GetCommandList();
++	if (slot->timeCount > 0)
++		cl->ResolveQueryData(slot->times.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, slot->timeCount, slot->readback.Get(), MGDX_READBACK_TIMES);
++	if (MGDX_DrawProfileRequested())
++	{
++		cl->ResolveQueryData(slot->drawTimes.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, slot->drawCount + 1, slot->readback.Get(), MGDX_READBACK_DRAW_TIMES);
++		if (slot->drawCount > 0)
++			cl->ResolveQueryData(slot->stats.Get(), D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0, slot->drawCount, slot->readback.Get(), MGDX_READBACK_STATS);
++	}
++	slot->resolved = true;
++}
+ 
++static bool MGDX_DrawProfileBegin(MGG_GraphicsDevice* device)
++{
++	if (!MGDX_DrawProfileRequested())
++		return false;
++	auto slot = MGDX_ProfileSlotForFrame(device);
++	if (slot == nullptr || slot->drawCount >= MGDX_MAX_PROFILED_DRAWS)
++		return false;
++	device->context->GetCommandList()->BeginQuery(slot->stats.Get(), D3D12_QUERY_TYPE_PIPELINE_STATISTICS, slot->drawCount);
+ 	return true;
++}
++
++static void MGDX_DrawProfileEnd(MGG_GraphicsDevice* device)
++{
++	MGDX_ProfileState* state = nullptr;
++	auto slot = MGDX_ProfileSlotForFrame(device, &state);
++	if (slot == nullptr)
++		return;
++	auto cl = device->context->GetCommandList();
++	cl->EndQuery(slot->stats.Get(), D3D12_QUERY_TYPE_PIPELINE_STATISTICS, slot->drawCount);
++	cl->EndQuery(slot->drawTimes.Get(), D3D12_QUERY_TYPE_TIMESTAMP, slot->drawCount + 1);
++	slot->tags.push_back(state->tag);
++	slot->drawCount++;
++}
++
++/// Writes a GPU timestamp after the commands recorded so far; its index in this frame, or -1 (timestamps start with the
++/// frame after the first call).
++MG_EXPORT mgint MGDX_WriteTimestamp(MGG_GraphicsDevice* device)
++{
++	assert(device != nullptr);
++	auto& state = s_dxProfiles[device];
++	if (!state.timestamps)
++	{
++		state.timestamps = true;
++		return -1;
++	}
++	auto slot = MGDX_ProfileSlotForFrame(device);
++	if (slot == nullptr || slot->timeCount >= MGDX_MAX_TIMESTAMPS)
++		return -1;
++	device->context->GetCommandList()->EndQuery(slot->times.Get(), D3D12_QUERY_TYPE_TIMESTAMP, slot->timeCount);
++	return (mgint)slot->timeCount++;
++}
++
++/// The frame being recorded (MGDX_ReadTimestamps reports which frame its values are from).
++MG_EXPORT uint64_t MGDX_CurrentFrame(MGG_GraphicsDevice* device)
++{
++	assert(device != nullptr);
++	return device->frame;
++}
++
++/// The timestamps of the last frame whose results came back (each once): how many were copied into values (up to max),
++/// the frame they were written in, and the nanoseconds per timestamp tick.
++MG_EXPORT mgint MGDX_ReadTimestamps(MGG_GraphicsDevice* device, uint64_t* frame, uint64_t* values, mgint max, float* nsPerTick)
++{
++	assert(device != nullptr);
++	auto it = s_dxProfiles.find(device);
++	*nsPerTick = it != s_dxProfiles.end() ? (float)it->second.nsPerTick : 0.0f;
++	if (it == s_dxProfiles.end())
++		return 0;
++	auto& state = it->second;
++	mgint count = (mgint)std::min<size_t>((size_t)max, state.lastTimes.size());
++	for (mgint i = 0; i < count; i++)
++		values[i] = state.lastTimes[i];
++	*frame = state.lastTimesFrame;
++	state.lastTimes.clear();
++	return count;
++}
++
++/// The tag the next draws are recorded with (ARMA_GPU_DRAW_PROFILE); the renderer maps it to its name.
++MG_EXPORT void MGDX_SetDrawTag(MGG_GraphicsDevice* device, mgint tag)
++{
++	if (MGDX_DrawProfileRequested())
++		s_dxProfiles[device].tag = tag;
++}
++
++/// The draws profiled so far in the frame being recorded (the renderer's section boundaries).
++MG_EXPORT mgint MGDX_DrawProfileCount(MGG_GraphicsDevice* device)
++{
++	auto slot = MGDX_ProfileSlotForFrame(device);
++	return slot != nullptr ? (mgint)slot->drawCount : 0;
++}
++
++/// The last frame whose profile came back (each once): its draw count (up to max), the frame it was recorded in, each
++/// draw's tag, its three statistics (vertex shader invocations, clipped primitives, pixel shader invocations) and
++/// count + 1 timestamps (times[0]: the frame's start; times must hold max + 1), and the nanoseconds per timestamp tick.
++MG_EXPORT mgint MGDX_ReadDrawProfile(MGG_GraphicsDevice* device, uint64_t* frame, int32_t* tags, uint64_t* stats,
++	uint64_t* times, mgint max, float* nsPerTick)
++{
++	auto it = s_dxProfiles.find(device);
++	*nsPerTick = it != s_dxProfiles.end() ? (float)it->second.nsPerTick : 0.0f;
++	if (it == s_dxProfiles.end() || it->second.lastTags.empty())
++		return 0;
++	auto& state = it->second;
++	mgint count = (mgint)std::min<size_t>((size_t)max, state.lastTags.size());
++	for (mgint i = 0; i < count; i++)
++	{
++		tags[i] = state.lastTags[i];
++		stats[i * 3] = state.lastStats[(size_t)i * 3];
++		stats[i * 3 + 1] = state.lastStats[(size_t)i * 3 + 1];
++		stats[i * 3 + 2] = state.lastStats[(size_t)i * 3 + 2];
++	}
++	for (mgint i = 0; i <= count; i++)
++		times[i] = state.lastDrawTimes[i];
++	*frame = state.lastDrawFrame;
++	state.lastTags.clear();
++	return count;
  }

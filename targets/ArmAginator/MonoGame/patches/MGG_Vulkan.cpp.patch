@@ -65,7 +65,19 @@
  {
  	MGG_Texture* texture = nullptr;
  	VkSemaphore renderCompleteSemaphore = VK_NULL_HANDLE;
-@@ -215,17 +225,40 @@
+@@ -205,27 +215,52 @@
+ 	std::vector<MGG_DisplayMode> modes;
+ };
+ 
+ struct MGG_Buffer
+ {
+ 	FrameCounter frame = 0;
++	// ArmAgedon: the frame that discarded it (MGVK_BufferDiscard); reused only once that frame's GPU work is done
++	FrameCounter discardFrame = 0;
+ 
+ 	MGG_Buffer* next = nullptr;
+ 
+ 	MGBufferType type = MGBufferType::Vertex;
  
  	int dataSize = 0;
  	int actualSize = 0;
@@ -106,7 +118,7 @@
  {
  	MGG_Texture* owner;
  	VkCommandBuffer cmd;
-@@ -253,12 +286,15 @@
+@@ -253,12 +288,15 @@
  	VkQueue queue = VK_NULL_HANDLE;
  	VkCommandPool cmdPool = VK_NULL_HANDLE;
  
@@ -122,7 +134,7 @@
  	FrameCounter frame = 0;
  	FrameCounter frameIndex = 0;
  	FrameCounter freeFrames = 0;
-@@ -266,12 +302,14 @@
+@@ -266,12 +304,14 @@
  
  	std::vector<MGVK_Frame> frames;
  	std::vector<MGVK_Swapchain> swapchains;
@@ -137,7 +149,22 @@
  
  	bool inRenderPass = false;
  	bool renderTargetDirty = false;
-@@ -311,12 +349,14 @@
+@@ -285,12 +325,14 @@
+ #else
+ #error Not Implemented
+ #endif
+ 	VkSurfaceKHR surface = VK_NULL_HANDLE;
+ 	VkSwapchainKHR swapchain = VK_NULL_HANDLE;
+ 	int syncInterval = 0;
++	// ArmAgedon: MGVK_SetWindowPresent. Off: frames neither acquire nor present a window image (XR with no desktop mirror).
++	bool windowPresent = true;
+ 
+ 	uint64_t vertexBuffersDirty = 0xFFFFFFFF;
+ 	MGG_Buffer* vertexBuffers[8] = { 0 };
+ 	uint32_t vertexOffsets[8] = { 0 };
+ 
+ 	MGG_Buffer* indexBuffer = nullptr;
+@@ -311,12 +353,14 @@
  	bool shaderDirty = false;
  	std::map<uint64_t, MGVK_Program*> shader_programs;
  	std::vector<MGG_Shader*> all_shaders;
@@ -152,7 +179,7 @@
  	std::map<uint32_t, MGG_DepthStencilState*> depthStencilStates;
  
  	MGVK_TargetSet targets;
-@@ -324,22 +364,25 @@
+@@ -324,22 +368,25 @@
  
  
  	//
@@ -180,7 +207,7 @@
  	std::queue<MGG_DepthStencilState*> destroyDepthStencilStates;
  	std::queue<MGG_SamplerState*> destroySamplers;
  
-@@ -421,18 +464,24 @@
+@@ -421,18 +468,24 @@
  	VkDescriptorImageInfo* imageInfo;
  	MGTextureType textureTypes[MAX_TEXTURE_SLOTS];
  
@@ -205,7 +232,7 @@
  {
  	VkDescriptorType type;
  	mguint slot;
-@@ -496,12 +545,14 @@
+@@ -496,12 +549,14 @@
  static MGG_Buffer* MGVK_Buffer_Create(MGG_GraphicsDevice* device, MGBufferType type, mgint sizeInBytes, bool no_push);
  static void MGVK_DestroyPipelines(MGG_GraphicsDevice* device, std::function<bool(const MGVK_PipelineState&)> compare);
  static void MGVK_DestroyFrameResources(MGG_GraphicsDevice* device, FrameCounter currentFrame, mgbyte free_all);
@@ -220,7 +247,7 @@
  	VkImage image,
  	VkImageLayout oldLayout,
  	VkImageLayout newLayout,
-@@ -511,12 +562,128 @@
+@@ -511,12 +566,128 @@
  	uint32_t baseArrayLayer = 0,
  	uint32_t layerCount = 1);
  static void MGVK_FlushCommands(MGG_GraphicsDevice* device, MGVK_Frame& frame);
@@ -349,7 +376,7 @@
  {
      switch (multiSampleCount)
      {
-@@ -561,13 +728,13 @@
+@@ -561,13 +732,13 @@
  		return VK_FORMAT_BC3_UNORM_BLOCK;
  	case MGSurfaceFormat::NormalizedByte2:
  		return VK_FORMAT_R8G8_UNORM;
@@ -364,7 +391,7 @@
  		return VK_FORMAT_R16G16B16A16_UNORM;
  	case MGSurfaceFormat::Alpha8:
  		return VK_FORMAT_R8_UNORM;
-@@ -618,12 +785,16 @@
+@@ -618,12 +789,16 @@
  	case MGDepthFormat::Depth24Stencil8:
  #if defined(__APPLE__)
  		return VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
@@ -381,7 +408,7 @@
  }
  
  static VkFormat ToVkFormat(MGVertexElementFormat format)
-@@ -772,12 +943,36 @@
+@@ -772,12 +947,36 @@
  	{
  		if (strcmp(extension.extensionName, extensionName) == 0)
  			return true;
@@ -418,7 +445,7 @@
  {
  #ifndef __APPLE__
  	printf("Initializing volk.\n");
-@@ -911,12 +1106,14 @@
+@@ -911,12 +1110,14 @@
  			enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
  			printf("Validation layers are enabled (performances will be drastically impacted). To run without validation layers, please use a RELEASE build or uninstall the Vulkan SDK.\n");
  		}
@@ -433,7 +460,7 @@
  	instance_create_info.enabledExtensionCount = instanceExtensions.size();
  	instance_create_info.ppEnabledExtensionNames = instanceExtensions.data();
  	instance_create_info.enabledLayerCount = enabledLayers.size();
-@@ -1127,13 +1324,13 @@
+@@ -1127,13 +1328,13 @@
  			texture->image,
  			VK_IMAGE_LAYOUT_UNDEFINED,
  			optimalLayout,
@@ -448,7 +475,7 @@
      texture->optimal_layout = optimalLayout;
  
  	texture->writeFrame = -1;
-@@ -1196,12 +1393,18 @@
+@@ -1196,12 +1397,18 @@
  	VkSubmitInfo submitInfo = {};
  	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
  	submitInfo.commandBufferCount = 1;
@@ -467,7 +494,7 @@
  	vkDestroyFence(device->device, renderFence, nullptr);
  }
  
-@@ -1215,12 +1418,89 @@
+@@ -1215,12 +1422,91 @@
  	VmaAllocationCreateInfo allocInfo = {};
  	allocInfo.usage = flags;
  
@@ -481,6 +508,8 @@
 +static const VkDeviceSize MGVK_POOL_PAGE_BYTES = 8ull * 1024 * 1024;
 +static const int MGVK_POOL_MAX_BYTES = 256 * 1024;
 +static const VkDeviceSize MGVK_POOL_ALIGNMENT = 256;
++static bool MGVK_DrawProfileRequested(); // ArmAgedon: ARMA_GPU_DRAW_PROFILE
++static bool MGVK_PipelineStatsRequested(); // ArmAgedon: ARMA_PIPELINE_STATS
 +static const bool g_mgvkBufferPool = []() { const char* v = getenv("ARMA_VK_BUFFER_POOL"); return v == nullptr || strcmp(v, "0") != 0; }();
 +
 +static bool MGVK_PoolAllocate(MGG_GraphicsDevice* device, int sizeInBytes, MGG_Buffer* buffer)
@@ -557,7 +586,7 @@
  {
  	VkBufferUsageFlags usage;
  	switch (type)
-@@ -1286,20 +1566,67 @@
+@@ -1286,20 +1572,67 @@
  
  	vkWaitForFences(device->device, 1, &renderFence, VK_TRUE, UINT64_MAX);
  	vkDestroyFence(device->device, renderFence, nullptr);
@@ -625,7 +654,46 @@
  	device->deviceFeatures = adapter->features;
  	device->deviceProperties = adapter->properties;
  
-@@ -1443,12 +1770,14 @@
+@@ -1398,12 +1731,16 @@
+ 	{
+ 		enabledFeatures.occlusionQueryPrecise = VK_TRUE;
+ 	}
+ 	if (device->deviceFeatures.samplerAnisotropy)
+ 	{
+ 		enabledFeatures.samplerAnisotropy = VK_TRUE;
++	}
++	if (device->deviceFeatures.pipelineStatisticsQuery && MGVK_DrawProfileRequested()) // ArmAgedon: ARMA_GPU_DRAW_PROFILE
++	{
++		enabledFeatures.pipelineStatisticsQuery = VK_TRUE;
+ 	}
+ 
+ 	VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+ 	deviceCreateInfo.queueCreateInfoCount = 1;
+ 	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+ 	deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
+@@ -1428,12 +1765,21 @@
+ 	if (scalarBlockLayoutSupported)
+ 	{
+ 		extensions.push_back(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME);
+ 		scalarFeatures.scalarBlockLayout = VK_TRUE;
+ 		scalarFeatures.pNext = lastFeature;
+ 		lastFeature = &scalarFeatures;
++	}
++	// ArmAgedon: ARMA_PIPELINE_STATS=1: per-pipeline compiler statistics (instructions, registers, waves) at creation
++	VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR executableFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_EXECUTABLE_PROPERTIES_FEATURES_KHR };
++	if (MGVK_PipelineStatsRequested())
++	{
++		extensions.push_back(VK_KHR_PIPELINE_EXECUTABLE_PROPERTIES_EXTENSION_NAME);
++		executableFeatures.pipelineExecutableInfo = VK_TRUE;
++		executableFeatures.pNext = lastFeature;
++		lastFeature = &executableFeatures;
+ 	}
+ 	if (hlslFunctionalitySupported)
+ 		extensions.push_back(VK_GOOGLE_HLSL_FUNCTIONALITY1_EXTENSION_NAME);
+ 	if (userTypeSupported)
+ 		extensions.push_back(VK_GOOGLE_USER_TYPE_EXTENSION_NAME);
+ 
+@@ -1443,12 +1789,14 @@
  		deviceFeatures2.features = enabledFeatures;
  		deviceFeatures2.pNext = lastFeature;
  
@@ -640,7 +708,7 @@
  
  	auto res = vkCreateDevice(device->physicalDevice, &deviceCreateInfo, NULL, &device->device);
  	VK_CHECK_RESULT(res);
-@@ -1456,12 +1785,19 @@
+@@ -1456,12 +1804,19 @@
  	VK_SET_OBJECT_NAME(device->device, device->physicalDevice, VK_OBJECT_TYPE_PHYSICAL_DEVICE, "MGG_GraphicsDevice.physicalDevice");
  
  	VmaAllocatorCreateInfo allocatorInfo = {};
@@ -660,7 +728,7 @@
  
  	VkCommandPoolCreateInfo cmdPoolInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
  	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-@@ -1576,13 +1912,14 @@
+@@ -1576,13 +1931,14 @@
  			{
  				auto& view = targetSetCache->arraySlicesViews[i];
  				if (view.has_value()) {
@@ -676,7 +744,7 @@
  			// Erase the element and get an iterator to the next one.
  			itr = cache.erase(itr);
  		}
-@@ -1640,23 +1977,37 @@
+@@ -1640,23 +1996,37 @@
  	// Prevents some exceptions while shutting down.
  	vkDeviceWaitIdle(device->device);
  
@@ -714,7 +782,7 @@
  
  	for (size_t i = 0; i < device->swapchainCount; i++)
  	{
-@@ -1744,12 +2095,15 @@
+@@ -1744,12 +2114,15 @@
  			return;
  		}
  		VK_SET_OBJECT_NAME(device->device, (uint64_t)device->surface, VK_OBJECT_TYPE_SURFACE_KHR, "MGG_GraphicsDevice.surface");
@@ -730,7 +798,7 @@
  	int wx, wy;
  	SDL_GetWindowPosition(device->window, &wx, &wy);
  	SDL_SetWindowPosition(device->window, wx+1, wy);
-@@ -1796,14 +2150,19 @@
+@@ -1796,14 +2169,19 @@
  			maxMultisampleCount = 2;
  
  		multiSampleCount = std::clamp(multiSampleCount, 1, maxMultisampleCount);
@@ -752,7 +820,7 @@
  
  	// Check if the requested color format is supported, and fallback to another one otherwise.
  	VkFormat surface_format = VK_FORMAT_UNDEFINED;
-@@ -1812,12 +2171,27 @@
+@@ -1812,12 +2190,27 @@
  		res = vkGetPhysicalDeviceSurfaceFormatsKHR(device->physicalDevice, device->surface, &format_count, nullptr);
  		VK_CHECK_RESULT(res);
  
@@ -780,7 +848,22 @@
  		for (const auto& surfFormat : surfFormats)
  		{
  			if (surfFormat.colorSpace != VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-@@ -1942,14 +2316,16 @@
+@@ -1900,12 +2293,14 @@
+ 		{
+ 			selectedPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+ 			break;
+ 		}
+ 	}
+ 
++	printf("[vk] swapchain present mode %d (0 immediate, 1 mailbox, 2 fifo, 3 fifo relaxed), syncInterval %d\n", (int)selectedPresentMode, (int)device->syncInterval); // ArmAgedon
++	fflush(stdout);
+ 	VkSwapchainCreateInfoKHR create_info = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
+ 	create_info.surface = device->surface;
+ 	create_info.imageFormat = surface_format;
+ 	create_info.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+ 	create_info.imageExtent = extent;
+ 	create_info.imageArrayLayers = 1;
+@@ -1942,14 +2337,16 @@
  			{
  				// TODO: Should we wait for fences here or is vkDeviceWaitIdle enough?
  
@@ -799,7 +882,7 @@
  				vkDestroySemaphore(device->device, swap.renderCompleteSemaphore, nullptr);
  			}
  
-@@ -2096,17 +2472,22 @@
+@@ -2096,17 +2493,22 @@
  		printf("Cannot recreate swapchain: window is null!\n");
  		fflush(stdout);
  
@@ -824,7 +907,7 @@
  		device->syncInterval);
  
      MGG_GraphicsDevice_SetRenderTargets(device, nullptr, nullptr, 0);
-@@ -2125,16 +2506,16 @@
+@@ -2125,16 +2527,16 @@
  	assert(device);
  
  	// There is no zero... always at least 1.
@@ -844,7 +927,7 @@
  
  	auto vkColor = ToVkFormat(color);
  	auto vkDepth = ToVkFormat(depth);
-@@ -2188,40 +2569,95 @@
+@@ -2188,40 +2590,100 @@
  	};
  
  	auto res = vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -920,7 +1003,8 @@
 +	frame.waitedCreates.clear();
  
  	// Do we need to get the next swapchain image?
- 	if (device->swapchain != VK_NULL_HANDLE && frame.image_index == -1)
++	if (device->swapchain != VK_NULL_HANDLE && frame.image_index == -1 && device->windowPresent) // ArmAgedon: windowPresent
+-	if (device->swapchain != VK_NULL_HANDLE && frame.image_index == -1)
  	{
 +		ArmaPresentSpan timing(10, armaPresent.nextPrepare);
  		res = vkAcquireNextImageKHR(device->device, device->swapchain, UINT64_MAX,
@@ -934,13 +1018,18 @@
  }
 +
 +static void MGVK_TimestampsBeginFrame(MGG_GraphicsDevice* device, VkCommandBuffer commandBuffer); // ArmAgedon
++static void MGVK_DrawProfileBeginFrame(MGG_GraphicsDevice* device, VkCommandBuffer commandBuffer);
++static bool MGVK_DrawProfileBegin(MGG_GraphicsDevice* device, VkCommandBuffer commandBuffer);
++static void MGVK_DrawProfileEnd(MGG_GraphicsDevice* device, VkCommandBuffer commandBuffer);
++static bool MGVK_PipelineStatsRequested(); // ArmAgedon: ARMA_PIPELINE_STATS
++static void MGVK_PrintPipelineStats(MGG_GraphicsDevice* device, VkPipeline pipeline, uint32_t hash);
  
  void MGVK_PrepareFrame(MGG_GraphicsDevice* device)
  {
  	auto& frame = device->frames[device->frameIndex];
  
  	// This is only here for the first frame or for after the
-@@ -2234,19 +2670,26 @@
+@@ -2234,19 +2696,27 @@
  	// MGVK_DestroyFrameResources uses currentFrame and device->freeFrames to calculate age.
  	// We should pass the device->frame rather than swapchain_image_index.
  	// Otherwise age calculation will underflow.
@@ -963,13 +1052,14 @@
  
  	MGVK_BeginCommandBuffer(frame.commandBuffer);
 +	MGVK_TimestampsBeginFrame(device, frame.commandBuffer); // ArmAgedon
++	MGVK_DrawProfileBeginFrame(device, frame.commandBuffer); // ArmAgedon
  
  	//device->dynamicOffsets[0] = 0;
  	//device->dynamicOffsets[1] = 0;
  
  	frame.is_recording = true;
  }
-@@ -2349,13 +2792,14 @@
+@@ -2349,13 +2819,14 @@
                  auto& view = itr->second->arraySlicesViews[i];
                  if (view.has_value()) {
                      vkDestroyImageView(device->device, view.value(), nullptr);
@@ -985,7 +1075,7 @@
  	}
  
  	device->pipelineState.targets = nullptr;
-@@ -2389,13 +2833,16 @@
+@@ -2389,13 +2860,16 @@
  			auto buffer = device->destroyBuffers.front();
  			auto diff = currentFrame - buffer->frame;
  			if (!free_all && diff < device->freeFrames)
@@ -1003,7 +1093,7 @@
  		while (!device->destroyTextures.empty())
  		{
  			auto texture = device->destroyTextures.front();
-@@ -2555,83 +3002,101 @@
+@@ -2555,118 +3029,157 @@
  	}
  }
  
@@ -1020,7 +1110,10 @@
  
  	auto& frame = device->frames[device->frameIndex];
  	assert(frame.is_recording);
- 	auto& swap = device->swapchains[frame.image_index];
++	// ArmAgedon: no window image this frame (MGVK_SetWindowPresent off): submit the frame's commands, present nothing
++	bool presenting = frame.image_index != (uint32_t)-1;
++	MGVK_Swapchain* swap = presenting ? &device->swapchains[frame.image_index] : nullptr;
+-	auto& swap = device->swapchains[frame.image_index];
  
 +	{ ArmaPresentSpan timing(2); MGVK_EndRenderPass(device, frame.commandBuffer); }
 -	MGVK_EndRenderPass(device, frame.commandBuffer);
@@ -1037,8 +1130,13 @@
  		VK_CHECK_RESULT(res);
  		frame.is_recording = false;
  
-+		std::vector<VkSemaphore> waits = { frame.imageAcquiredSemaphore };
-+		std::vector<VkPipelineStageFlags> waitFlags = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
++		std::vector<VkSemaphore> waits;
++		std::vector<VkPipelineStageFlags> waitFlags;
++		if (presenting)
++		{
++			waits.push_back(frame.imageAcquiredSemaphore);
++			waitFlags.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
++		}
 +		MGVK_WaitCreations(device, frame, waits, waitFlags);
 -		VkSemaphore waits[] = { frame.imageAcquiredSemaphore };
 -		VkPipelineStageFlags waitFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -1053,19 +1151,30 @@
 -		submitInfo.pWaitDstStageMask = waitFlags;
  		submitInfo.commandBufferCount = 1;
  		submitInfo.pCommandBuffers = &frame.commandBuffer;
- 		submitInfo.signalSemaphoreCount = 1;
- 		submitInfo.pSignalSemaphores = &swap.renderCompleteSemaphore;
++		submitInfo.signalSemaphoreCount = presenting ? 1 : 0;
++		submitInfo.pSignalSemaphores = presenting ? &swap->renderCompleteSemaphore : nullptr;
 +		commandTiming.Stop();
 +		{ ArmaPresentSpan timing(3); res = vkQueueSubmit(device->queue, 1, &submitInfo, frame.completedFence); }
+-		submitInfo.signalSemaphoreCount = 1;
+-		submitInfo.pSignalSemaphores = &swap.renderCompleteSemaphore;
 -		res = vkQueueSubmit(device->queue, 1, &submitInfo, frame.completedFence);
  
- 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
- 		presentInfo.waitSemaphoreCount = 1;
- 		presentInfo.pWaitSemaphores = &swap.renderCompleteSemaphore;
- 		presentInfo.swapchainCount = 1;
- 		presentInfo.pSwapchains = &device->swapchain;
- 		presentInfo.pImageIndices = &frame.image_index;
-+		{ ArmaPresentSpan timing(4); res = vkQueuePresentKHR(device->queue, &presentInfo); }
++		if (presenting)
++		{
++			VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
++			presentInfo.waitSemaphoreCount = 1;
++			presentInfo.pWaitSemaphores = &swap->renderCompleteSemaphore;
++			presentInfo.swapchainCount = 1;
++			presentInfo.pSwapchains = &device->swapchain;
++			presentInfo.pImageIndices = &frame.image_index;
++			{ ArmaPresentSpan timing(4); res = vkQueuePresentKHR(device->queue, &presentInfo); }
++		}
+-		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
+-		presentInfo.waitSemaphoreCount = 1;
+-		presentInfo.pWaitSemaphores = &swap.renderCompleteSemaphore;
+-		presentInfo.swapchainCount = 1;
+-		presentInfo.pSwapchains = &device->swapchain;
+-		presentInfo.pImageIndices = &frame.image_index;
 -		res = vkQueuePresentKHR(device->queue, &presentInfo);
  	}
  
@@ -1084,7 +1193,7 @@
 +	SDL_Vulkan_GetDrawableSize(device->window, &drawableWidth, &drawableHeight);
 +	bool drawableChanged = drawableWidth > 0 && drawableHeight > 0 &&
 +		(drawableWidth != device->lastDrawableWidth || drawableHeight != device->lastDrawableHeight);
-+	if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR || (res == VK_SUCCESS && drawableChanged))
++	if (presenting && (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR || (res == VK_SUCCESS && drawableChanged))) // ArmAgedon: presenting
 -	if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR)
  	{
  		// This will happen if the window is minimized too.
@@ -1112,14 +1221,49 @@
  	frame.image_index = -1;
  	frame.is_rendering = true;
  
- 	// Move the pending buffers to the free list 
- 	// for reuse on the next frame.
- 	if (device->pending != nullptr)
-@@ -2652,21 +3117,27 @@
- 	// Buffers discarded this frame can be moved
- 	// into the pending list for a future frame.
- 	device->pending = device->discarded;
- 	device->discarded = nullptr;
++	// ArmAgedon: a discarded buffer goes back to the free list only after freeFrames frames, like every other resource
++	// here (MGVK_DestroyFrameResources). It used to after two presents: with three swapchain images frame N+2 rewrote a
++	// buffer frame N was still reading on the GPU, and dynamic meshes (per-frame UIX) lost triangles for that frame.
++	if (device->discarded != nullptr)
++	{
++		auto last = device->discarded;
++		while (last->next != nullptr)
++			last = last->next;
++		last->next = device->pending;
++		device->pending = device->discarded;
++		device->discarded = nullptr;
++	}
++	for (MGG_Buffer** curr = &device->pending; *curr != nullptr; )
+-	// Move the pending buffers to the free list 
+-	// for reuse on the next frame.
+-	if (device->pending != nullptr)
+ 	{
++		MGG_Buffer* buffer = *curr;
++		if (device->frame - buffer->discardFrame >= device->freeFrames)
++		{
++			*curr = buffer->next;
++			buffer->next = device->free;
++			device->free = buffer;
++		}
++		else
+-		auto last = device->pending;
+-		while (true)
+ 		{
++			curr = &buffer->next;
+-			if (last->next == nullptr)
+-				break;
+-			last = last->next;
+ 		}
+-
+-		last->next = device->free;
+-		device->free = device->pending;
+-		device->pending = nullptr;
+ 	}
+-
+-	// Buffers discarded this frame can be moved
+-	// into the pending list for a future frame.
+-	device->pending = device->discarded;
+-	device->discarded = nullptr;
  
  	{
 +		recycleTiming.Stop();
@@ -1143,7 +1287,7 @@
  void MGG_GraphicsDevice_SetBlendState(MGG_GraphicsDevice* device, MGG_BlendState* state, mgfloat factorR, mgfloat factorG, mgfloat factorB, mgfloat factorA)
  {
  	assert(device != nullptr);
-@@ -2789,26 +3260,42 @@
+@@ -2789,26 +3302,42 @@
  
  		device->targets.numTargets = count;
  	}
@@ -1191,7 +1335,7 @@
  	{
  		if (buffer->dirty)		
  			device->uniformsDirty |= 1 << (int)stage;
-@@ -2818,22 +3305,26 @@
+@@ -2818,22 +3347,26 @@
  void MGG_GraphicsDevice_SetTexture(MGG_GraphicsDevice* device, MGShaderStage stage, mgint slot, MGG_Texture* texture)
  {
  	assert(device != nullptr);
@@ -1218,7 +1362,7 @@
  
  void MGG_GraphicsDevice_SetIndexBuffer(MGG_GraphicsDevice* device, MGIndexElementSize size, MGG_Buffer* buffer)
  {
-@@ -3345,15 +3836,16 @@
+@@ -3345,15 +3878,16 @@
  			target->layouts[0] = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
  	}
  
@@ -1238,7 +1382,7 @@
  	render_area.offset.x = 0;
  	render_area.offset.y = 0;
  	render_area.extent.width = cached->width;
-@@ -3377,59 +3869,113 @@
+@@ -3377,59 +3911,113 @@
  		{
  			vkCmdResetQueryPool(commandBuffer, query->queryPool, 0, 1);
  			query->gpuHasBegun = true;
@@ -1364,7 +1508,7 @@
  	// needs to be updated before we draw.
  
  	MGVK_DescriptorInfo* info;
-@@ -3469,17 +4015,20 @@
+@@ -3469,17 +4057,20 @@
  	// wrong buffer if the descriptor is retrieved from the cache (and will
  	// result in flickers/broken rendering).
  	// 
@@ -1385,7 +1529,7 @@
  		{
  			// Allocate more cache if empty.
  			MGVK_FillDescriptorSetCache(device, shader);
-@@ -3490,20 +4039,21 @@
+@@ -3490,20 +4081,21 @@
  		info = shader->freeSets.front();
  		shader->freeSets.pop();
  
@@ -1408,7 +1552,7 @@
  			else if (w.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
  			{
  				int slot = w.dstBinding - 32;
-@@ -3530,28 +4080,54 @@
+@@ -3530,28 +4122,54 @@
  				// This should never happen!
  				assert(0);
  			}
@@ -1468,7 +1612,7 @@
  					assert(0);
  				}
  
-@@ -3600,25 +4176,92 @@
+@@ -3600,25 +4218,92 @@
  	VK_CHECK_RESULT(res);
  	VK_SET_OBJECT_NAME(device->device, program->layout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, "MGVK_Program.layout (id: %llu)", programId);
  
@@ -1562,7 +1706,7 @@
  	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
  
  	// We set the viewport and scissor dynamically.
-@@ -3716,18 +4359,19 @@
+@@ -3716,21 +4401,26 @@
  		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
  		multisampling.sampleShadingEnable = VK_FALSE;
  		multisampling.minSampleShading = 1.0f;
@@ -1578,12 +1722,19 @@
  	pipeline.state = device->pipelineState;
 +	pipeline.state.targets = nullptr; // ArmAgedon: not tied to the targets (see the key above)
  
++	if (MGVK_PipelineStatsRequested())
++		pipelineInfo.flags |= VK_PIPELINE_CREATE_CAPTURE_STATISTICS_BIT_KHR; // ArmAgedon: ARMA_PIPELINE_STATS
  	VkResult res = vkCreateGraphicsPipelines(device->device, device->pipelineCache, 1, &pipelineInfo, nullptr, &pipeline.cache);
  	VK_CHECK_RESULT(res);
++	if (MGVK_PipelineStatsRequested())
++		MGVK_PrintPipelineStats(device, pipeline.cache, hash);
  	VK_SET_OBJECT_NAME(device->device, pipeline.cache, VK_OBJECT_TYPE_PIPELINE, "MGVK_PipelineCache.cache (hash: %u)", hash);
  
  	device->pipelines[hash] = pipeline;
-@@ -3766,22 +4410,25 @@
+ 
+ 	return pipeline.cache;
+ }
+@@ -3766,22 +4456,25 @@
  	// First update the pipeline if we need to.
  	if (device->pipelineStateDirty)
  	{
@@ -1611,7 +1762,7 @@
  		// We need to re-apply the viewport too.
  		vkCmdSetViewport(commandBuffer, 0, 1, &device->viewport);
  	}
-@@ -3828,27 +4475,38 @@
+@@ -3828,27 +4521,38 @@
  		if (program->vertex->bindings.size() == 0)
  			setOffset++;
  		else
@@ -1652,7 +1803,7 @@
  		// Clear all the dirty flags.
  		device->uniformsDirty = 0;
  		device->textureSamplerDirty = 0;
-@@ -3860,25 +4518,40 @@
+@@ -3860,25 +4564,40 @@
  
  		int count = 0;
  		VkDeviceSize offsets[8];
@@ -1695,7 +1846,7 @@
  }
  
  static int MGVK_GetIndexCount(MGPrimitiveType primitiveType, mgint primitiveCount)
-@@ -3898,49 +4571,63 @@
+@@ -3898,49 +4617,66 @@
  		return primitiveCount;
  	}
  }
@@ -1731,7 +1882,10 @@
  
 +	MGVK_PerfTimer perfDriver(g_mgvkPerf.tDriver); // ArmAgedon: ARMA_VK_PERF
 +	MGVK_PerfDrawTimer perfDrawCmd;
++	bool profiled = MGVK_DrawProfileBegin(device, frame.commandBuffer); // ArmAgedon: ARMA_GPU_DRAW_PROFILE
  	vkCmdDraw(frame.commandBuffer, vertexCount, 1, vertexStart, 0);
++	if (profiled)
++		MGVK_DrawProfileEnd(device, frame.commandBuffer);
  }
  
  void MGG_GraphicsDevice_DrawIndexed(MGG_GraphicsDevice* device, MGPrimitiveType primitiveType, mgint primitiveCount, mgint indexStart, mgint vertexStart)
@@ -1761,7 +1915,7 @@
  	{
  		device->pipelineStateDirty = true;
  		device->pipelineState.topology = topology;
-@@ -3948,57 +4635,66 @@
+@@ -3948,64 +4684,79 @@
  
  	MGVK_UpdatePipeline(device, frame.commandBuffer, device->frame);
  
@@ -1776,7 +1930,10 @@
  	auto indexCount = MGVK_GetIndexCount(primitiveType, primitiveCount);
  
 +	MGVK_PerfDrawTimer perfDrawCmd; // ArmAgedon: ARMA_VK_PERF
++	bool profiled = MGVK_DrawProfileBegin(device, frame.commandBuffer); // ArmAgedon: ARMA_GPU_DRAW_PROFILE
  	vkCmdDrawIndexed(frame.commandBuffer, indexCount, 1, indexStart, vertexStart, 0);
++	if (profiled)
++		MGVK_DrawProfileEnd(device, frame.commandBuffer);
  }
  
  void MGG_GraphicsDevice_DrawIndexedInstanced(
@@ -1826,14 +1983,31 @@
  	auto indexCount = MGVK_GetIndexCount(primitiveType, primitiveCount);
  
 +	MGVK_PerfDrawTimer perfDrawCmd; // ArmAgedon: ARMA_VK_PERF
++	bool profiled = MGVK_DrawProfileBegin(device, frame.commandBuffer); // ArmAgedon: ARMA_GPU_DRAW_PROFILE
  	vkCmdDrawIndexed(
  		frame.commandBuffer,
  		indexCount,       
  		instanceCount,    
  		indexStart,       
  		vertexStart,      
-@@ -4226,20 +4922,25 @@
+ 		0);               
++	if (profiled)
++		MGVK_DrawProfileEnd(device, frame.commandBuffer);
+ }
+ 
+ inline mgint getMipScalar(mgint level, mgint value)
+ {
+ 	value = value >> level;
+ 	return value < 1 ? 1 : value;
+@@ -4221,25 +4972,32 @@
+ 	assert(data != nullptr);
+ 	assert(count > 0);
+ 	assert(dataBytes > 0);
+ 
+ 	auto& frame = device->frames[device->frameIndex];
  	assert(frame.is_recording);
++	if (frame.image_index == (uint32_t)-1)
++		return; // ArmAgedon: no window image this frame (MGVK_SetWindowPresent off): nothing to read
  
  	MGVK_EndRenderPass(device, frame.commandBuffer);
  
@@ -1862,7 +2036,7 @@
  	VkFence flushFence;
  	VkFenceCreateInfo fenceInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
  	vkCreateFence(device->device, &fenceInfo, nullptr, &flushFence);
-@@ -4631,13 +5332,14 @@
+@@ -4631,13 +5389,14 @@
  	rasterizer.flags = 0; // Reserved for future use.
  	rasterizer.depthClampEnable = !info->depthClipEnable;
  	rasterizer.rasterizerDiscardEnable = VK_FALSE;
@@ -1878,7 +2052,21 @@
  	rasterizer.lineWidth = 1.0f;
  
  	// These don't fit this structure, so we
-@@ -4894,12 +5596,19 @@
+@@ -4816,12 +5575,13 @@
+ 	// Get the info we need to find/allocate a new buffer.
+ 	auto dataSize = buffer->dataSize;
+ 	auto type = buffer->type;
+ 
+ 	// Discard the current buffer.
+ 	assert(buffer->next == nullptr);
++	buffer->discardFrame = device->frame; // ArmAgedon: see the recycling at present
+ 	buffer->next = device->discarded;
+ 	device->discarded = buffer;
+ 	buffer = nullptr;
+ 
+ 	// Search for the best fit from the free list.	
+ 	MGG_Buffer** curr = &device->free;
+@@ -4894,12 +5654,19 @@
  			break;
  		case MGBufferType::Constant:
  			usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
@@ -1898,7 +2086,7 @@
  
  		// TODO: We could lazy map on first write/read... then
  		// unmap it if we haven't accessed it in a while.  This
-@@ -4978,13 +5687,13 @@
+@@ -4978,13 +5745,13 @@
  		delete [] buffer->push;
  		delete buffer;
  		return;
@@ -1913,7 +2101,7 @@
  	device->destroyBuffers.push(buffer);
  }
  
-@@ -4995,12 +5704,24 @@
+@@ -4995,12 +5762,24 @@
  	assert(buffer != nullptr);
  	assert(data != nullptr);
  	assert(offset >= 0);
@@ -1938,7 +2126,7 @@
  	// If this is a push buffer we don't need to
  	// do anything other than copy over the content.
  	// We can safely ignore the discard.
-@@ -5036,17 +5757,20 @@
+@@ -5036,17 +5815,20 @@
  
  		switch (buffer->type)
  		{
@@ -1963,7 +2151,7 @@
  		case MGBufferType::Vertex:
  			for (int i = 0; i < 8; i++)
  			{
-@@ -5159,13 +5883,13 @@
+@@ -5159,13 +5941,13 @@
  
  		cmd = MGVK_BeginNewCommandBuffer(device, device->transferPool);
  		MGVK_CmdTransitionImageLayout(cmd, texture->image,
@@ -1978,7 +2166,7 @@
  
  	return texture;
  }
-@@ -5275,13 +5999,13 @@
+@@ -5275,13 +6057,13 @@
  				0,
  				mipmaps,
  				0,
@@ -1993,7 +2181,7 @@
  			texture->layouts[i] = startLayout;
  		texture->optimal_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
  	}
-@@ -5536,12 +6260,14 @@
+@@ -5536,12 +6318,14 @@
  
  	// We store the pre-generated bindings info at the top of the shader bytecode data.
  	int uniformCount = 0;
@@ -2008,7 +2196,7 @@
  
  		memcpy(shader->textureTypes, bytecode, sizeof(MGTextureType) * MAX_TEXTURE_SLOTS);
  		bytecode += sizeof(MGTextureType) * MAX_TEXTURE_SLOTS;
-@@ -5602,29 +6328,27 @@
+@@ -5602,29 +6386,27 @@
  		VkDescriptorPoolSize* pool_sizes = new VkDescriptorPoolSize[layoutBindings.size()];
  
  		for (int i = 0; i < layoutBindings.size(); i++)
@@ -2043,7 +2231,7 @@
  	VkDescriptorBufferInfo* bufferInfo = shader->bufferInfo = new VkDescriptorBufferInfo[uniformCount];
  	VkDescriptorImageInfo* imageInfo = shader->imageInfo =  new VkDescriptorImageInfo[layoutBindings.size() - uniformCount];
  	for (int i = 0; i < layoutBindings.size(); i++)
-@@ -5724,12 +6448,14 @@
+@@ -5724,12 +6506,14 @@
  		delete free;
  	}
  
@@ -2058,7 +2246,7 @@
  		delete shader->poolInfo;
  	}
  
-@@ -5871,8 +6597,483 @@
+@@ -5871,8 +6655,792 @@
  	else
  	{
  		// An error occurred.
@@ -2231,6 +2419,94 @@
 +	return 0;
 +}
 +
++/// ArmAgedon: whether frames acquire and present a window image. Off (XR with no desktop mirror): the window is neither
++/// acquired nor presented, which on a compositor such as gamescope saves the present and acquire calls' CPU time every
++/// frame; the frame's commands are still submitted at present with its fence. Takes effect with the next frame.
++MG_EXPORT void MGVK_SetWindowPresent(MGG_GraphicsDevice* device, mgbool enabled)
++{
++	assert(device != nullptr);
++	device->windowPresent = enabled != 0;
++}
++
++/// ArmAgedon: MGVK_CopyToExternalImage without its two waits: the copy is recorded into the frame's command buffer (the
++/// render pass in progress is ended; the next draw starts another), so it reaches the queue with the frame at present.
++/// OpenXR only needs the commands writing a swapchain image submitted before xrReleaseSwapchainImage, so the caller
++/// releases the image (and ends the XR frame) after present. Same layouts and copy/blit choice as the synchronous copy.
++MG_EXPORT mgint MGVK_RecordCopyToExternalImage(MGG_GraphicsDevice* device, MGG_Texture* source, uint64_t externalImage, mgint externalFormat, mgint width, mgint height, mgbool flipY)
++{
++	assert(device != nullptr);
++	if (source == nullptr || externalImage == 0 || source->image == VK_NULL_HANDLE)
++		return -1;
++	auto& frame = device->frames[device->frameIndex];
++	if (!frame.is_recording)
++		return -2;
++	VkCommandBuffer cmd = frame.commandBuffer;
++	MGVK_EndRenderPass(device, cmd);
++
++	VkImage src = source->image;
++	VkImage dst = (VkImage)externalImage;
++	VkImageLayout srcLayout = source->layouts[0];
++	if (srcLayout == VK_IMAGE_LAYOUT_UNDEFINED)
++		srcLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
++
++	VkImageMemoryBarrier barriers[2] = {};
++	for (auto& b : barriers)
++	{
++		b.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
++		b.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
++		b.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
++		b.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
++	}
++	barriers[0].image = src;
++	barriers[0].oldLayout = srcLayout;
++	barriers[0].newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
++	barriers[0].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
++	barriers[0].dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
++	barriers[1].image = dst;
++	barriers[1].oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
++	barriers[1].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
++	barriers[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
++	barriers[1].dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
++	vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
++		VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 2, barriers);
++
++	int32_t sw = (int32_t)source->info.extent.width, sh = (int32_t)source->info.extent.height;
++	bool rgba8Pair = (source->info.format == VK_FORMAT_R8G8B8A8_UNORM || source->info.format == VK_FORMAT_R8G8B8A8_SRGB)
++		&& (externalFormat == VK_FORMAT_R8G8B8A8_UNORM || externalFormat == VK_FORMAT_R8G8B8A8_SRGB);
++	if (!flipY && sw == width && sh == height && (rgba8Pair || (mgint)source->info.format == externalFormat))
++	{
++		VkImageCopy region = {};
++		region.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
++		region.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
++		region.extent = { (uint32_t)width, (uint32_t)height, 1 };
++		vkCmdCopyImage(cmd, src, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
++	}
++	else
++	{
++		VkImageBlit blit = {};
++		blit.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
++		blit.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
++		blit.srcOffsets[0] = { 0, 0, 0 };
++		blit.srcOffsets[1] = { sw, sh, 1 };
++		blit.dstOffsets[0] = { 0, flipY ? height : 0, 0 };
++		blit.dstOffsets[1] = { width, flipY ? 0 : height, 1 };
++		vkCmdBlitImage(cmd, src, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
++	}
++
++	barriers[0].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
++	barriers[0].newLayout = srcLayout;
++	barriers[0].srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
++	barriers[0].dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
++	barriers[1].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
++	barriers[1].newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
++	barriers[1].srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
++	barriers[1].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
++	vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
++		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, nullptr, 0, nullptr, 2, barriers);
++	source->layouts[0] = srcLayout;
++	return 0;
++}
++
 +// ---------------------------------------------------------------------------------------------------------------------
 +// ArmAgedon: GPU timestamps for frame timings. Off until MGVK_WriteTimestamp is first called. Each frame in flight has a
 +// query pool, reset when that frame begins recording; the results of the frame that used it before are copied out first
@@ -2315,6 +2591,227 @@
 +		return -1;
 +	vkCmdWriteTimestamp(frame.commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, slot.pool, slot.count);
 +	return (mgint)slot.count++;
++}
++
++// ArmAgedon: ARMA_GPU_DRAW_PROFILE=1: every draw gets a pipeline statistics query (vertex shader invocations, primitives
++// after clipping, fragment shader invocations) and a timestamp after it, with the tag the renderer set last
++// (MGVK_SetDrawTag). Timestamp 0 is written when the frame begins, so draw i took times[i + 1] - times[i]: its own work
++// plus whatever ran between it and the previous draw (clears, resolves, copies, render pass changes). The results of a
++// frame are copied out when its slot is reused (its fence was waited for by then) and read with MGVK_ReadDrawProfile.
++// Under GMEM (tiled) rendering a timestamp inside a render pass is the last tile's: profile with TU_DEBUG=sysmem.
++
++static const uint32_t MGVK_MAX_PROFILED_DRAWS = 8192;
++
++struct MGVK_DrawProfileSlot
++{
++	VkQueryPool stats = VK_NULL_HANDLE;
++	VkQueryPool times = VK_NULL_HANDLE;
++	uint32_t count = 0;
++	FrameCounter frame = 0;
++	std::vector<int32_t> tags;
++};
++
++struct MGVK_DrawProfileState
++{
++	bool failed = false;
++	int32_t tag = 0;
++	std::vector<MGVK_DrawProfileSlot> slots;
++	std::vector<int32_t> lastTags;
++	std::vector<uint64_t> lastStats;
++	std::vector<uint64_t> lastTimes;
++	FrameCounter lastFrame = 0;
++};
++
++static std::unordered_map<MGG_GraphicsDevice*, MGVK_DrawProfileState> s_drawProfiles;
++
++static bool MGVK_DrawProfileRequested()
++{
++	static int on = -1;
++	if (on < 0)
++	{
++		const char* v = getenv("ARMA_GPU_DRAW_PROFILE");
++		on = v != nullptr && v[0] == '1' ? 1 : 0;
++	}
++	return on == 1;
++}
++
++static void MGVK_DrawProfileBeginFrame(MGG_GraphicsDevice* device, VkCommandBuffer commandBuffer)
++{
++	if (!MGVK_DrawProfileRequested() || !device->deviceFeatures.pipelineStatisticsQuery
++		|| !device->deviceProperties.limits.timestampComputeAndGraphics)
++		return;
++	auto& state = s_drawProfiles[device];
++	if (state.failed)
++		return;
++	if (state.slots.size() < device->swapchainCount)
++		state.slots.resize(device->swapchainCount);
++	auto& slot = state.slots[device->frameIndex];
++	if (slot.stats == VK_NULL_HANDLE)
++	{
++		VkQueryPoolCreateInfo statsInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
++		statsInfo.queryType = VK_QUERY_TYPE_PIPELINE_STATISTICS;
++		statsInfo.queryCount = MGVK_MAX_PROFILED_DRAWS;
++		statsInfo.pipelineStatistics = VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT
++			| VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT | VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT;
++		VkQueryPoolCreateInfo timesInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
++		timesInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
++		timesInfo.queryCount = MGVK_MAX_PROFILED_DRAWS + 1;
++		if (vkCreateQueryPool(device->device, &statsInfo, nullptr, &slot.stats) != VK_SUCCESS
++			|| vkCreateQueryPool(device->device, &timesInfo, nullptr, &slot.times) != VK_SUCCESS)
++		{
++			state.failed = true;
++			return;
++		}
++	}
++	else if (slot.count > 0)
++	{
++		state.lastStats.assign((size_t)slot.count * 3, 0);
++		state.lastTimes.assign((size_t)slot.count + 1, 0);
++		VkResult a = vkGetQueryPoolResults(device->device, slot.stats, 0, slot.count, sizeof(uint64_t) * 3 * slot.count,
++			state.lastStats.data(), sizeof(uint64_t) * 3, VK_QUERY_RESULT_64_BIT);
++		VkResult b = vkGetQueryPoolResults(device->device, slot.times, 0, slot.count + 1, sizeof(uint64_t) * (slot.count + 1),
++			state.lastTimes.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
++		if (a == VK_SUCCESS && b == VK_SUCCESS)
++		{
++			state.lastTags = slot.tags;
++			state.lastFrame = slot.frame;
++		}
++		else
++		{
++			state.lastTags.clear();
++		}
++	}
++	vkCmdResetQueryPool(commandBuffer, slot.stats, 0, MGVK_MAX_PROFILED_DRAWS);
++	vkCmdResetQueryPool(commandBuffer, slot.times, 0, MGVK_MAX_PROFILED_DRAWS + 1);
++	vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, slot.times, 0);
++	slot.count = 0;
++	slot.frame = device->frame;
++	slot.tags.clear();
++}
++
++static bool MGVK_DrawProfileBegin(MGG_GraphicsDevice* device, VkCommandBuffer commandBuffer)
++{
++	if (!MGVK_DrawProfileRequested())
++		return false;
++	auto it = s_drawProfiles.find(device);
++	if (it == s_drawProfiles.end() || it->second.failed || device->frameIndex >= it->second.slots.size())
++		return false;
++	auto& slot = it->second.slots[device->frameIndex];
++	if (slot.stats == VK_NULL_HANDLE || slot.frame != device->frame || slot.count >= MGVK_MAX_PROFILED_DRAWS)
++		return false;
++	vkCmdBeginQuery(commandBuffer, slot.stats, slot.count, 0);
++	return true;
++}
++
++static void MGVK_DrawProfileEnd(MGG_GraphicsDevice* device, VkCommandBuffer commandBuffer)
++{
++	auto& state = s_drawProfiles[device];
++	auto& slot = state.slots[device->frameIndex];
++	vkCmdEndQuery(commandBuffer, slot.stats, slot.count);
++	vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, slot.times, slot.count + 1);
++	slot.tags.push_back(state.tag);
++	slot.count++;
++}
++
++// ArmAgedon: ARMA_PIPELINE_STATS=1: every new pipeline's compiler statistics per stage (VK_KHR_pipeline_executable_properties),
++// one [pipe-stats] line each, with the draw tag current when the pipeline was created (the draw that needed it; the
++// renderer logs the tag names, ARMA_GPU_DRAW_PROFILE=1).
++static bool MGVK_PipelineStatsRequested()
++{
++	static int on = -1;
++	if (on < 0)
++	{
++		const char* v = getenv("ARMA_PIPELINE_STATS");
++		on = v != nullptr && v[0] == '1' ? 1 : 0;
++	}
++	return on == 1;
++}
++
++static void MGVK_PrintPipelineStats(MGG_GraphicsDevice* device, VkPipeline pipeline, uint32_t hash)
++{
++	if (vkGetPipelineExecutablePropertiesKHR == nullptr || vkGetPipelineExecutableStatisticsKHR == nullptr)
++		return;
++	auto it = s_drawProfiles.find(device);
++	int tag = it != s_drawProfiles.end() ? it->second.tag : -1;
++	VkPipelineInfoKHR info = { VK_STRUCTURE_TYPE_PIPELINE_INFO_KHR };
++	info.pipeline = pipeline;
++	uint32_t count = 0;
++	if (vkGetPipelineExecutablePropertiesKHR(device->device, &info, &count, nullptr) != VK_SUCCESS || count == 0)
++		return;
++	std::vector<VkPipelineExecutablePropertiesKHR> props(count, { VK_STRUCTURE_TYPE_PIPELINE_EXECUTABLE_PROPERTIES_KHR });
++	vkGetPipelineExecutablePropertiesKHR(device->device, &info, &count, props.data());
++	for (uint32_t e = 0; e < count; e++)
++	{
++		VkPipelineExecutableInfoKHR exec = { VK_STRUCTURE_TYPE_PIPELINE_EXECUTABLE_INFO_KHR };
++		exec.pipeline = pipeline;
++		exec.executableIndex = e;
++		uint32_t n = 0;
++		if (vkGetPipelineExecutableStatisticsKHR(device->device, &exec, &n, nullptr) != VK_SUCCESS || n == 0)
++			continue;
++		std::vector<VkPipelineExecutableStatisticKHR> stats(n, { VK_STRUCTURE_TYPE_PIPELINE_EXECUTABLE_STATISTIC_KHR });
++		vkGetPipelineExecutableStatisticsKHR(device->device, &exec, &n, stats.data());
++		std::string line = "[pipe-stats] tag=" + std::to_string(tag) + " pipeline=" + std::to_string(hash) + " stage=" + props[e].name + ":";
++		for (auto& st : stats)
++		{
++			line += " ";
++			line += st.name;
++			line += "=";
++			switch (st.format)
++			{
++			case VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_BOOL32_KHR: line += st.value.b32 ? "1" : "0"; break;
++			case VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_INT64_KHR: line += std::to_string(st.value.i64); break;
++			case VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR: line += std::to_string(st.value.u64); break;
++			case VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_FLOAT64_KHR: line += std::to_string(st.value.f64); break;
++			default: line += "?"; break;
++			}
++			line += ";";
++		}
++		printf("%s\n", line.c_str());
++	}
++	fflush(stdout);
++}
++
++/// The tag the next draws are recorded with (ARMA_GPU_DRAW_PROFILE); the renderer maps it to its name.
++MG_EXPORT void MGVK_SetDrawTag(MGG_GraphicsDevice* device, mgint tag)
++{
++	if (MGVK_DrawProfileRequested())
++		s_drawProfiles[device].tag = tag;
++}
++
++/// The draws profiled so far in the frame being recorded (the renderer's section boundaries).
++MG_EXPORT mgint MGVK_DrawProfileCount(MGG_GraphicsDevice* device)
++{
++	auto it = s_drawProfiles.find(device);
++	if (it == s_drawProfiles.end() || device->frameIndex >= it->second.slots.size())
++		return 0;
++	auto& slot = it->second.slots[device->frameIndex];
++	return slot.frame == device->frame ? (mgint)slot.count : 0;
++}
++
++/// The last frame whose profile came back (each once): its draw count (up to max), the frame it was recorded in, each
++/// draw's tag, its three statistics (vertex shader invocations, clipped primitives, fragment shader invocations) and
++/// count + 1 timestamps (times[0]: the frame's start; times must hold max + 1), and the nanoseconds per timestamp tick.
++MG_EXPORT mgint MGVK_ReadDrawProfile(MGG_GraphicsDevice* device, uint64_t* frame, int32_t* tags, uint64_t* stats,
++	uint64_t* times, mgint max, float* nsPerTick)
++{
++	*nsPerTick = device->deviceProperties.limits.timestampPeriod;
++	auto it = s_drawProfiles.find(device);
++	if (it == s_drawProfiles.end() || it->second.lastTags.empty())
++		return 0;
++	auto& state = it->second;
++	mgint count = (mgint)std::min<size_t>((size_t)max, state.lastTags.size());
++	for (mgint i = 0; i < count; i++)
++	{
++		tags[i] = state.lastTags[i];
++		stats[i * 3] = state.lastStats[(size_t)i * 3];
++		stats[i * 3 + 1] = state.lastStats[(size_t)i * 3 + 1];
++		stats[i * 3 + 2] = state.lastStats[(size_t)i * 3 + 2];
++	}
++	for (mgint i = 0; i <= count; i++)
++		times[i] = state.lastTimes[i];
++	*frame = state.lastFrame;
++	state.lastTags.clear();
++	return count;
 +}
 +
 +/// The frame being recorded (MGVK_ReadTimestamps reports which frame its values are from).

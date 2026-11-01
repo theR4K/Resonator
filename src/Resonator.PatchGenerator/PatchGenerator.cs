@@ -43,6 +43,10 @@ internal static class PatchGenerator
         };
         PrepareStage.Run(target);   // cached by the working run
         Log.Banner($"BASELINE (fresh decompile, {baseline.Spec.PatchDirs.Count} ancestor patch layer(s)) -> {baseline.SrcDir}");
+        // This scratch directory is reused between runs. Remove previously generated sources so a
+        // helper/marker removed from the pipeline cannot survive and become a spurious deletion patch.
+        foreach (string file in SourceTree.GeneratedFiles(baseline.SrcDir, baseline.Spec.KeepDirs, baseline.Spec.FilePatterns))
+            File.Delete(file);
         DecompileStage.Run(baseline);
         FixupStage.Run(baseline);
 

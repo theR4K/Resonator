@@ -31,11 +31,11 @@ public sealed record PackageSpec(string Id, string Version);
 /// <param name="Files">The files of "dir" a checkout takes, as globs relative to it ("**" any folders, "*" any name part):
 /// <c>**/*.cs</c> unless the spec says otherwise (a tree target takes headers, CMake files, ...).</param>
 /// <param name="Submodules">git submodules of the repo fetched with it (shallow, recursive), paths relative to the repo.</param>
-public sealed record SourceSpec(string? Git, string? Archive, string Ref, string Dir, string[] Exclude, string[] Files, string[] Submodules)
+public sealed record SourceSpec(string? Git, string? Archive, string Ref, string Dir, string[] Exclude, string[] Files, string[] Submodules, string? Local = null)
 {
     public static readonly string[] CsFiles = ["**/*.cs"];
 
-    public override string ToString() => Git != null ? $"{Git} @ {Ref}" : Archive!;
+    public override string ToString() => Local != null ? $"local {Local}" : Git != null ? $"{Git} @ {Ref}" : Archive!;
 }
 
 /// <summary>Post-compile [CSCalli] stubs -> calli (CSCore).</summary>

@@ -115,7 +115,12 @@ Assert(spec.ApiRemaps.Count == 2 && spec.ApiRemaps[0].EndsWith("base.json") && s
 Assert((spec with { PatchDirs = spec.PatchDirs.SkipLast(1).ToArray() }).ApiRemaps.Count == 2, "patch baseline lost own mapping");
 Console.WriteLine("PASS target inheritance and patch baseline mapping retention");
 RemapReviewChecks.Run();
-
+AdapterChecks.Run();
+#if HAS_ASSIMP
+AssimpCompatibilityTests.Run();
+#else
+Console.WriteLine("SKIP Assimp differential tests: install not supplied via ResoniteDir");
+#endif
 
 static void Assert(bool condition, string message) { if (!condition) throw new Exception(message); }
 static void ExpectFailure(Action action, string text)

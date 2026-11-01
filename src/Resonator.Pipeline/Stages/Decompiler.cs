@@ -70,6 +70,7 @@ internal static class Decompiler
         var pe = new PEFile(target.SourceDll);
         var resolver = new UniversalAssemblyResolver(target.SourceDll, throwOnError: false, targetFramework: pe.DetectTargetFrameworkId());
         resolver.AddSearchDirectory(target.Settings.ResoniteDir);
+        resolver.AddSearchDirectory(AppContext.BaseDirectory);   // the shared Flatweave marker is a tool dependency
         return (pe, resolver, target.Settings.UsePdb ? TryLoadPdb(target.SourceDll) : null);
     }
 

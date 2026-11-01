@@ -61,7 +61,8 @@ public static class TargetSpecLoader
             if (spec["source"] is JsonObject s)
             {
                 source = new SourceSpec(String(s, "git"), String(s, "archive"), String(s, "ref") ?? "", String(s, "dir") ?? "",
-                    Strings(s, "exclude"), Has(s, "files") ? Strings(s, "files") : SourceSpec.CsFiles, Strings(s, "submodules"));
+                    Strings(s, "exclude"), Has(s, "files") ? Strings(s, "files") : SourceSpec.CsFiles, Strings(s, "submodules"),
+                    String(s, "local") is { } local ? Path.GetFullPath(Path.Combine(dir, local)) : null);
                 package = null;
             }
             if (spec["calli"] is JsonObject c)
@@ -77,8 +78,8 @@ public static class TargetSpecLoader
 
         if (tree && source == null) throw new ArgumentException($"spec for '{name}': a tree target needs a \"source\"");
         if (string.IsNullOrEmpty(assembly) && !tree) throw new ArgumentException($"spec for '{name}' has no assembly");
-        if (source != null && (source.Git == null) == (source.Archive == null))
-            throw new ArgumentException($"spec for '{name}': source needs exactly one of \"git\" / \"archive\"");
+        if (source != null && new[] { source.Git, source.Archive, source.Local }.Count(v => v != null) != 1)
+            throw new ArgumentException($"spec for '{name}': source needs exactly one of \"git\" / \"archive\" / \"local\"");
         if (source?.Git != null && source.Ref == "")
             throw new ArgumentException($"spec for '{name}': a git source needs a pinned \"ref\" (tag or commit)");
 

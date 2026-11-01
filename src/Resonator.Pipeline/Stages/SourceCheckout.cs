@@ -29,6 +29,13 @@ internal static class SourceCheckout
         string root = Fetch(target, source);
         string from = Path.GetFullPath(Path.Combine(root, source.Dir.Replace('/', Path.DirectorySeparatorChar)));
         if (!Directory.Exists(from)) throw new Exception($"source dir '{source.Dir}' not found in {root}");
+        if (source.Local != null)
+        {
+            string input = from.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            string output = Path.GetFullPath(target.SrcDir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            if (input.StartsWith(output, StringComparison.OrdinalIgnoreCase) || output.StartsWith(input, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("local source and generated output must not overlap");
+        }
 
         var previous = SourceTree.GeneratedFiles(target.SrcDir, target.Spec.KeepDirs, target.Spec.FilePatterns);
         Directory.CreateDirectory(target.SrcDir);
@@ -60,6 +67,12 @@ internal static class SourceCheckout
     /// <summary>The fetched tree, from the cache when it is complete.</summary>
     static string Fetch(Target target, SourceSpec source)
     {
+        // Local sources are owned by this repo, not fetched or cached. Each run sees current edits.
+        if (source.Local != null)
+        {
+            if (!Directory.Exists(source.Local)) throw new DirectoryNotFoundException("local source missing: " + source.Local);
+            return source.Local;
+        }
         // the submodules are part of the fetch: another list is another cache entry (none keeps the old key)
         string submodules = source.Submodules.Length == 0 ? "" : "|" + string.Join(",", source.Submodules);
         string key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((source.Git ?? source.Archive) + "|" + source.Ref + submodules)))[..12].ToLowerInvariant();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Resonator.Pipeline.Targets;
 
 namespace Resonator.Pipeline;
@@ -49,12 +50,14 @@ public sealed record PipelineSettings
                 default: rest.Add(args[i]); break;
             }
         }
+        var targetSet = TargetSet.Open(targets, set);
+        bool localOnly = targetSet.Select(filter).All(name => targetSet.Spec(name).Source?.Local != null);
         return new PipelineSettings
         {
             OutputDir = Path.GetFullPath(outputDir),
-            Set = TargetSet.Open(targets, set),
+            Set = targetSet,
             TargetFilter = filter,
-            ResoniteDir = resonite ?? DefaultResoniteDir(),
+            ResoniteDir = resonite ?? DefaultResoniteDir(localOnly),
             UsePdb = usePdb,
         };
     }
@@ -62,10 +65,10 @@ public sealed record PipelineSettings
     const string SteamResoniteDir = @"C:\Program Files (x86)\Steam\steamapps\common\Resonite";
 
     /// <summary>%RESONITE_DIR%, else the default Steam path - which must exist (Linux, other drives: set the variable).</summary>
-    static string DefaultResoniteDir()
+    static string DefaultResoniteDir(bool allowMissing = false)
     {
         if (Environment.GetEnvironmentVariable("RESONITE_DIR") is { Length: > 0 } dir) return dir;
-        if (Directory.Exists(SteamResoniteDir)) return SteamResoniteDir;
+        if (allowMissing || Directory.Exists(SteamResoniteDir)) return SteamResoniteDir;
         throw new ArgumentException($"Resonite install not found at the default {SteamResoniteDir}; set RESONITE_DIR or pass --resonite <dir>");
     }
 }

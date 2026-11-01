@@ -1,5 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Executable regression checks for symbol-based API remapping. -->
-  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
-  <ItemGroup><ProjectReference Include="../../src/Resonator.Pipeline/Resonator.Pipeline.csproj" /></ItemGroup>
+  <!-- Executable assertions for remapping and Assimp adapters. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <DefineConstants Condition="Exists('$(ResoniteDir)/AssimpNet.dll')">$(DefineConstants);HAS_ASSIMP</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Resonator.Pipeline/Resonator.Pipeline.csproj" />
+    <ProjectReference Include="../../src/Flatweave.Adapter/Flatweave.Adapter.csproj" />
+    <Reference Include="AssimpNet" HintPath="$(ResoniteDir)/AssimpNet.dll" Aliases="legacy" Condition="Exists('$(ResoniteDir)/AssimpNet.dll')" />
+  </ItemGroup>
 </Project>

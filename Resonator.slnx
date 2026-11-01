@@ -8,6 +8,7 @@
     <File Path="docs/api-remapping.md" />
     <File Path="docs/cli.md" />
     <File Path="docs/flatweave.md" />
+    <File Path="docs/flatweave-adapter.md" />
     <File Path="docs/getting-started.md" />
     <File Path="docs/patches.md" />
     <File Path="docs/pipeline.md" />

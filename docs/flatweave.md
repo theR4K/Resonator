@@ -39,6 +39,7 @@ References resolve from the dll's own directory and `%RESONITE_DIR%`.
 ## Why it works
 
 Flattening clears `readonly` from sync fields (C# cannot assign them otherwise) and marks each one with
-`[Resonator.FlattenedInitOnly]`. The `Flatweave/FrooxEngine` patches make the engine's reflection checks read
+`[Resonator.FlattenedInitOnly]` from the shared [Flatweave.Adapter](flatweave-adapter.md) assembly.
+The `Flatweave/FrooxEngine` patches call its reflection helper to read
 "readonly or marked", so the compatibility hash of the rebuilt engine equals the shipped one. See
 [Weave modes](target-sets.md#weave-modes).

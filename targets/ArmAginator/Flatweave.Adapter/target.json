@@ -1,0 +1,8 @@
+{
+  "name": "Flatweave.Adapter",
+  "description": "Same standalone adapter sources, built against ArmAginator's pinned Concentus source target instead of the stock package.",
+  "assembly": "Flatweave.Adapter.dll",
+  "source": { "local": "../../../src/Flatweave.Adapter" },
+  "refs": ["Concentus"],
+  "properties": { "GenerateAssemblyInfo": "true", "Nullable": "enable" }
+}

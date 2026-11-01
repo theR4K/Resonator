@@ -1,0 +1,8 @@
+{
+  "name": "Flatweave.Adapter",
+  "description": "Standalone managed compatibility library: shared flattening marker/reflection, Assimp math and Opus adapters. No Resonite assembly dependency.",
+  "assembly": "Flatweave.Adapter.dll",
+  "source": { "local": "../../../src/Flatweave.Adapter" },
+  "packages": { "Concentus": "2.2.2" },
+  "properties": { "GenerateAssemblyInfo": "true", "Nullable": "enable" }
+}

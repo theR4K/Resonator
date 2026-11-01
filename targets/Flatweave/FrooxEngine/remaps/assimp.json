@@ -1,0 +1,244 @@
+{
+  "files": [
+    "FrooxEngine/AssimpExtensions.cs",
+    "FrooxEngine/ModelImporter.cs"
+  ],
+  "types": [
+    {
+      "assembly": "AssimpNet",
+      "from": "Assimp.Vector2D",
+      "to": "System.Numerics.Vector2"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "Assimp.Vector3D",
+      "to": "System.Numerics.Vector3"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "Assimp.Color3D",
+      "to": "System.Numerics.Vector3"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "Assimp.Color4D",
+      "to": "System.Numerics.Vector4"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "Assimp.Quaternion",
+      "to": "System.Numerics.Quaternion"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "Assimp.Matrix4x4",
+      "to": "System.Numerics.Matrix4x4"
+    }
+  ],
+  "members": [
+    {
+      "assembly": "AssimpNet",
+      "from": "M:Assimp.Matrix4x4.op_Multiply(Assimp.Matrix4x4,Assimp.Matrix4x4)",
+      "to": "global::Flatweave.Adapters.AssimpMath.Multiply",
+      "kind": "operator"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Color3D.R",
+      "to": "X",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Color3D.G",
+      "to": "Y",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Color3D.B",
+      "to": "Z",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Color4D.R",
+      "to": "X",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Color4D.G",
+      "to": "Y",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Color4D.B",
+      "to": "Z",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Color4D.A",
+      "to": "W",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.A1",
+      "to": "M11",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.A2",
+      "to": "M12",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.A3",
+      "to": "M13",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.A4",
+      "to": "M14",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.B1",
+      "to": "M21",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.B2",
+      "to": "M22",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.B3",
+      "to": "M23",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.B4",
+      "to": "M24",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.C1",
+      "to": "M31",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.C2",
+      "to": "M32",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.C3",
+      "to": "M33",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.C4",
+      "to": "M34",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.D1",
+      "to": "M41",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.D2",
+      "to": "M42",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.D3",
+      "to": "M43",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "F:Assimp.Matrix4x4.D4",
+      "to": "M44",
+      "kind": "member"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "M:Assimp.Matrix4x4.FromScaling(Assimp.Vector3D)",
+      "to": "global::System.Numerics.Matrix4x4.CreateScale",
+      "kind": "call",
+      "receiver": "none"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "M:Assimp.Matrix4x4.FromTranslation(Assimp.Vector3D)",
+      "to": "global::Flatweave.Adapters.AssimpMath.Translation",
+      "kind": "call",
+      "receiver": "none"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "M:Assimp.Quaternion.GetMatrix",
+      "to": "global::Flatweave.Adapters.AssimpMath.Rotation",
+      "kind": "call",
+      "receiver": "value"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "M:Assimp.Matrix4x4.Inverse",
+      "to": "global::Flatweave.Adapters.AssimpMath.Inverse",
+      "kind": "call",
+      "receiver": "ref"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "M:Assimp.Matrix4x4.Decompose(Assimp.Vector3D@,Assimp.Quaternion@,Assimp.Vector3D@)",
+      "to": "global::Flatweave.Adapters.AssimpMath.Decompose",
+      "kind": "call",
+      "receiver": "value"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "M:Assimp.Matrix4x4.DecomposeNoScaling(Assimp.Quaternion@,Assimp.Vector3D@)",
+      "to": "global::Flatweave.Adapters.AssimpMath.DecomposeNoScaling",
+      "kind": "call",
+      "receiver": "value"
+    },
+    {
+      "assembly": "AssimpNet",
+      "from": "M:Assimp.Quaternion.#ctor(System.Single,System.Single,System.Single,System.Single)",
+      "to": "global::System.Numerics.Quaternion",
+      "kind": "constructor",
+      "argument_names": [
+        "w",
+        "x",
+        "y",
+        "z"
+      ]
+    },
+    {
+      "assembly": "$target",
+      "from": "M:FrooxEngine.AssimpExtensions.ToEngine(Assimp.Color3D)",
+      "to": "ToEngineRGB",
+      "kind": "rename"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "files": ["FrooxEngine/OpusStream.cs"],
+  "types": [
+    { "assembly": "POpusCodec", "from": "POpusCodec.OpusEncoder", "to": "Flatweave.Adapters.OpusEncoder" },
+    { "assembly": "POpusCodec", "from": "POpusCodec.OpusDecoder", "to": "Flatweave.Adapters.OpusDecoder" }
+  ]
+}

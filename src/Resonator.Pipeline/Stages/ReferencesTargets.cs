@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using Resonator.Pipeline.Infrastructure;
 using Resonator.Pipeline.Targets;
 using Resonator.Weaver.Cecil;
+using Resonator.Weaver.Flattening;
 
 namespace Resonator.Pipeline.Stages;
 
@@ -75,14 +76,20 @@ public static class ReferencesTargets
     public static List<string> WithSourceTargets(PipelineSettings settings, List<string> selected)
     {
         if (settings.NoCsproj) return selected;
-        var all = new HashSet<string>(selected, StringComparer.OrdinalIgnoreCase);
-        var queue = new Queue<string>(selected);
-        while (queue.Count > 0)
-            foreach (string source in SourceTargets(Target.InRun(settings, queue.Dequeue(), 1)))
-                if (all.Add(source)) queue.Enqueue(source);
-        if (all.Count == selected.Count) return selected;
-        var sources = all.Except(selected, StringComparer.OrdinalIgnoreCase).OrderBy(t => t, StringComparer.Ordinal);
-        return sources.Concat(selected).ToList();
+        var result = new List<string>();
+        var done = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var visiting = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        void Visit(string name)
+        {
+            if (done.Contains(name)) return;
+            if (!visiting.Add(name)) throw new ArgumentException("source target dependency cycle at " + name);
+            foreach (string source in SourceTargets(Target.InRun(settings, name, 1))) Visit(source);
+            visiting.Remove(name);
+            done.Add(name);
+            result.Add(name);
+        }
+        foreach (string name in selected) Visit(name);
+        return result;
     }
 
     /// <summary>The source targets of the set that <paramref name="target"/> references (built as its siblings).</summary>
@@ -99,6 +106,12 @@ public static class ReferencesTargets
         var spec = target.Spec;
         var closure = ReferenceClosure(target.ShippedDll, name => Path.Combine(target.Settings.ResoniteDir, name + ".dll"));
         closure.UnionWith(spec.Refs);
+        if (spec.Weave == WeaveMode.Flatten)
+        {
+            if (!target.Settings.Set.Providers.ContainsKey(Flattener.AdapterAssembly))
+                throw new ArgumentException($"flattened target '{target.Name}' needs the '{Flattener.AdapterAssembly}' source target");
+            closure.Add(Flattener.AdapterAssembly);
+        }
         var dropped = new HashSet<string>(spec.ExcludeRefs, StringComparer.OrdinalIgnoreCase) { spec.BaseName, spec.OutName };
         return (closure, closure.Where(n => !dropped.Contains(n)).OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList());
     }

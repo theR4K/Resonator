@@ -76,7 +76,7 @@ also differ in the Fody marker `.ctor`.
   with inaccessible field types revert to private, `CoderAOT.Dummy` emptied when the weaver rewrote it: the weaver of
   Resonite 2026.10.27 no longer does, and its shipped body is kept). The engine reads `readonly` by
   reflection (`WorkerInitializer` picks sync members by it, `AssemblyTypeRegistry` builds the compatibility hash
-  from it), so each cleared field gets `[Resonator.FlattenedInitOnly]` (defined in the flattened assembly) and the
+  from it), so each cleared field gets `[Resonator.FlattenedInitOnly]` (defined in `Flatweave.Adapter`) and the
   `Flatweave/FrooxEngine` patches make those checks read "readonly or marked". The compatibility hash of the
   rebuilt engine equals the shipped one, and the rebuilt dll is a drop-in for the shipped one. Every flatten build
   runs the `syncmembers` check; code you add must follow [the Flatweave rules](flatweave.md).
@@ -104,7 +104,8 @@ replaces each with its official release, using one of two target kinds:
 | SharpFont | source Robmaister/SharpFont master | the NuGet package is net45-only |
 | CSCore | source filoe/cscore master + patches | YDM's `WasapiOut`/`MMDevice` additions the WASAPI driver uses; `ILUtils` on `Unsafe`; session GUID by pointer; `calli` post-compile step. Engine patch: codec choice + OGG (NVorbis) in `CSCoreSampleDecoder` |
 | FreeImageNET | source: the FreeImage 3.18.0 release's wrapper | engine patch: raw EXIF cleared directly |
-| POpusCodec | source jasl8r/P-Opus, **Enums only** | the data-model enums `OpusStream` syncs; the codec is Concentus (managed, NuGet) behind adapters in `OpusStream.cs` |
+| POpusCodec | source jasl8r/P-Opus, **Enums only** | the data-model enums `OpusStream` syncs; the managed codec adapters live in `Flatweave.Adapter` |
+| Flatweave.Adapter | local `src/Flatweave.Adapter` | standalone shared marker, reflection, Assimp and Opus helpers; Concentus package in Flatweave, pinned source dependency in ArmAginator |
 | OpenLipSync.Inference | source KyuubiYoru/OpenLipSync | |
 | RNNoise.NET, ApplicationLoopback.NET | source at YDM git HEAD | YDM's own, no package |
 | LeapSharp, SRAnipalSharp, YellowDogMan.Cloudtoid.Interprocess, Renderite.Shared | decompiled (inherited) | not public / Resonite's own |
@@ -120,9 +121,9 @@ replaces each with its official release, using one of two target kinds:
 | `select_types` | decompile only these types (split targets) |
 | `exclude_types` | decompile everything except these |
 | `exclude_refs` / `refs` | drop / add assembly references in `references.targets` |
-| `api_remaps` | paths to [API mapping profiles](api-remapping.md), relative to the declaring target; inherited root first, applied before patches |
 | `package` | `{"id", "version"}`: a NuGet package target |
-| `source` | `{"git" \| "archive", "ref", "dir", "exclude", "files", "submodules"}`: a source target; `ref` is a pinned tag or commit, `exclude` takes files or `dir/` prefixes, `files` the globs of what a checkout takes (default `["**/*.cs"]`; `**` any folders, `*` within a name), `submodules` the repo's submodules fetched with it (shallow, recursive) |
+| `source` | `{"git" \| "archive" \| "local", "ref", "dir", "exclude", "files", "submodules"}`: a source target; `local` is relative to the declaring target directory and bypasses fetching/caching; `ref` is a pinned tag or commit, `exclude` takes files or `dir/` prefixes, `files` the globs of what a checkout takes (default `["**/*.cs"]`; `**` any folders, `*` within a name), `submodules` the repo's submodules fetched with it (shallow, recursive) |
+| `api_remaps` | paths to [API mapping profiles](api-remapping.md), relative to the declaring target; inherited root first, applied before patches |
 | `tree` | `true`: the source is a tree for the consumer's own build (native code, a repo's own projects), not a C# project of Resonator's: checked out and patched only - no `assembly`, `references.targets`, csproj or build. Patches can be on any text file |
 | `packages` | `{"<id>": "<version>"}`: extra NuGet references of any target |
 | `properties`, `defines` | MSBuild properties / extra `DefineConstants` in `references.targets` |
@@ -144,7 +145,7 @@ A decompiled target layered on its base (`Flatweave/FrooxEngine`):
   "name": "FrooxEngine",
   "extends": "Resonator/FrooxEngine",
   "weave": "flatten",
-  "packages": { "Concentus": "2.2.2" }
+  "api_remaps": ["remaps/assimp.json", "remaps/opus.json"]
 }
 ```
 

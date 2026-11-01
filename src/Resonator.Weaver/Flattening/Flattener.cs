@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 using Resonator.Weaver.Cecil;
 using Resonator.Weaver.Deweaving.Operations;
 
@@ -28,13 +27,13 @@ namespace Resonator.Weaver.Flattening;
 public static class Flattener
 {
     /// <summary>Bump when the flattened output changes: part of the pipeline's prepare cache key.</summary>
-    public const int Version = 3;
+    public const int Version = 4;
 
     /// <summary>
-    /// Full name of the marker attribute. Engine-side checks compare by name, so every flattened
-    /// assembly defines its own copy.
+    /// Full name of the shared marker attribute, defined once in Flatweave.Adapter.
     /// </summary>
     public const string InitOnlyMarker = "Resonator.FlattenedInitOnlyAttribute";
+    public const string AdapterAssembly = "Flatweave.Adapter";
 
     public static FlattenReport Flatten(string path, string outputDir, bool blankAotDummy = true)
     {
@@ -47,7 +46,7 @@ public static class Flattener
         report.WasWeaved = WeaverSpec.IsWeaved(module);
         if (!report.WasWeaved) return report;
 
-        var marker = DefineInitOnlyMarker(module);
+        var marker = module.ImportReference(typeof(Resonator.FlattenedInitOnlyAttribute).GetConstructor(Type.EmptyTypes)!);
         foreach (var field in WeaverSpec.CollectWorkers(module).SelectMany(w => w.Fields).Where(WeaverSpec.IsSyncMemberField))
         {
             if ((field.Attributes & FieldAttributes.FieldAccessMask) == FieldAttributes.Family && !IsPubliclyNameable(field.FieldType))
@@ -66,40 +65,6 @@ public static class Flattener
         try { AssemblyFile.Write(assembly, Path.Combine(outputDir, Path.GetFileName(path)), withSymbols: hasPdb); }
         catch (Exception ex) { report.Error = "write: " + ex.Message; }
         return report;
-    }
-
-    /// <summary>
-    /// Adds <c>[AttributeUsage(AttributeTargets.Field)] public sealed class Resonator.FlattenedInitOnlyAttribute : Attribute</c>
-    /// and returns its constructor.
-    /// </summary>
-    static MethodReference DefineInitOnlyMarker(ModuleDefinition module)
-    {
-        var corlib = module.TypeSystem.CoreLibrary;
-        var attribute = new TypeReference("System", "Attribute", module, corlib);
-        var usage = new TypeReference("System", "AttributeUsageAttribute", module, corlib);
-        var targets = new TypeReference("System", "AttributeTargets", module, corlib, valueType: true);
-
-        int dot = InitOnlyMarker.LastIndexOf('.');
-        var type = new TypeDefinition(InitOnlyMarker[..dot], InitOnlyMarker[(dot + 1)..],
-            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit | TypeAttributes.Class, attribute);
-
-        var ctor = new MethodDefinition(".ctor",
-            MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-            module.TypeSystem.Void);
-        var il = ctor.Body.GetILProcessor();
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Call, new MethodReference(".ctor", module.TypeSystem.Void, attribute) { HasThis = true });
-        il.Emit(OpCodes.Ret);
-        type.Methods.Add(ctor);
-
-        var usageCtor = new MethodReference(".ctor", module.TypeSystem.Void, usage) { HasThis = true };
-        usageCtor.Parameters.Add(new ParameterDefinition(targets));
-        var usageAttribute = new CustomAttribute(usageCtor);
-        usageAttribute.ConstructorArguments.Add(new CustomAttributeArgument(targets, (int)AttributeTargets.Field));
-        type.CustomAttributes.Add(usageAttribute);
-
-        module.Types.Add(type);
-        return ctor;
     }
 
     /// <summary>True if every type the reference names is visible outside its assembly (CS0052 for a protected member otherwise).</summary>

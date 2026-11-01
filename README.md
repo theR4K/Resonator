@@ -73,7 +73,7 @@ More in **[Getting started](docs/getting-started.md)**.
 
 | Project | Kind | Purpose |
 |---|---|---|
-| [`Flatweave.Adapter`](src/Flatweave.Adapter) | lib | standalone shared marker/reflection, Assimp math and Opus runtime helpers |
+| [`Flatweave.Adapter`](src/Flatweave.Adapter) | lib | standalone shared runtime helpers for flattened engine builds ([docs](docs/flatweave-adapter.md)) |
 | [`Resonator.ProjectBuilder`](src/Resonator.ProjectBuilder) | CLI | shipped dll → buildable C# project |
 | [`Resonator.PatchGenerator`](src/Resonator.PatchGenerator) | CLI | edited project → the target set's patches |
 | [`Resonator.Deweaver`](src/Resonator.Deweaver) | CLI | deweave, `verify`, `known`, `syncmembers`, `reweave`, `diff`, `pdbcheck` |

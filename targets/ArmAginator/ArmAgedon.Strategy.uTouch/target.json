@@ -1,6 +1,6 @@
 {
-  "name": "FrooxEngine.Ext.uTouch",
-  "description": "Split target: uTouch hand-tracking feature of the engine. Extends Flatweave/FrooxEngine (same shipped dll, flatten); only the listed types are decompiled. The ArmAgedon csproj compiles generated/ + Injected/uTouchPlugin.cs and binds the core FrooxEngine.dll. Acceptance = the live Runner session.",
+  "name": "ArmAgedon.Strategy.uTouch",
+  "description": "Split target: uTouch hand-tracking feature of the engine. Extends Flatweave/FrooxEngine (same shipped dll, flatten); only the listed types are decompiled. The ArmAgedon csproj compiles generated/ + Injected/UtouchModule.cs and binds the core FrooxEngine.dll. Acceptance = the live Runner session.",
   "extends": "Flatweave/FrooxEngine",
   "select_types": [
     "FrooxEngine.WindowsInputInjector",

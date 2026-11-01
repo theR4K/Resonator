@@ -42,7 +42,7 @@ internal static class Decompiler
     /// <summary>
     /// Only the spec's select_types, one file each, in the same namespace-folder layout as the
     /// whole-project decompile (so patches written for one apply to the other). This is how a
-    /// split-out assembly (e.g. FrooxEngine.Ext.Discord) gets its source from the shared shipped dll.
+    /// split-out assembly (e.g. ArmAgedon.Strategy.Discord) gets its source from the shared shipped dll.
     /// </summary>
     public static void Types(Target target)
     {

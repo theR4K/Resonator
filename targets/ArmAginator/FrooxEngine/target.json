@@ -1,6 +1,6 @@
 {
   "name": "FrooxEngine",
-  "description": "Main target. Extends Flatweave/FrooxEngine (weave: flatten - the weaver's output is kept as source, no reweave): decompiles the whole assembly EXCEPT the types claimed by the FrooxEngine.Ext.* split targets (exclude_types = union of their select_types + the Fody marker), applies the Resonator patches, then this layer's ARM/platform patches. Built by the consumer's own csproj (generated/ + Injected/). Consumer code that adds Workers or sync-delegate targets must follow the Flatweave rules (README) - check with 'Resonator.Deweaver syncmembers'.",
+  "description": "Main target. Extends Flatweave/FrooxEngine (weave: flatten - the weaver's output is kept as source, no reweave): decompiles the whole assembly EXCEPT the types claimed by the ArmAgedon.Strategy.* split targets (exclude_types = union of their select_types + the Fody marker), applies the Resonator patches, then this layer's ARM/platform patches. Built by the consumer's own csproj (generated/ + Injected/). Consumer code that adds Workers or sync-delegate targets must follow the Flatweave rules (README) - check with 'Resonator.Deweaver syncmembers'.",
   "extends": "Flatweave/FrooxEngine",
   "exclude_types": [
     "FrooxEngine.Interfacing.DiscordConnector",

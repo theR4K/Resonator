@@ -21,7 +21,7 @@
  		}
  		InputInterface.RegisterPostInputStateTask(() =>
  		{
-+			// VIVE eye/lip tracking driver is provided by the optional FrooxEngine.Ext.Vive plugin.
++			// VIVE eye/lip tracking driver is provided by the optional ArmAgedon.Strategy.Vive strategy.
 -			if (ViveProEyeTrackingDriver.ShouldRegister(options, InputInterface))
 -			{
 -				InputInterface.RegisterInputDriver(new ViveProEyeTrackingDriver());
@@ -33,7 +33,7 @@
  				InputInterface.RegisterInputDriver(new BabbleOSC_Driver());
  			}
  		});
-+		// Leap Motion driver is provided by the optional FrooxEngine.Ext.Leap plugin.
++		// Leap Motion driver is provided by the optional ArmAgedon.Strategy.Leap strategy.
 +		// bHaptics driver is provided by the optional bHaptics strategy (a module).
 -		if (LeapMotionDriver.IsSupported(this))
 -		{

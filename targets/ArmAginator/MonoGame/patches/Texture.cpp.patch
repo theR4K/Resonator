@@ -11,3 +11,47 @@
          optimizedClearValue.DepthStencil.Stencil = 0u;
      } else {
          memcpy(optimizedClearValue.Color, impl->m_clearColor, sizeof(FLOAT) * 4);
+@@ -157,6 +159,15 @@
+         impl->m_res->SetName(L"Unnamed SwapChainRenderTarget");
+         impl->m_alloc->SetName(L"Unnamed SwapChainRenderTarget Alloc");
+         break;
++    }
++
++    // ArmAgedon: a new render / depth target is discarded before anything else uses it (InitializeIfNeeded)
++    if (impl->m_type == SurfaceType::RenderTarget && (resDesc.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)) != 0)
++    {
++        impl->m_needsInit = true;
++        auto initCmd = device->BeginCommandList();
++        InitializeIfNeeded(initCmd->Get());
++        initCmd->Close(false);
+     }
+ 
+     if (!createViews)
+@@ -594,6 +605,27 @@
+     batch.push_back(CD3DX12_RESOURCE_BARRIER::Transition(
+         impl->m_res.Get(), oldState, newState, subresource
+     ));
++}
++
++void Texture::InitializeIfNeeded(ID3D12GraphicsCommandList* commandList) {
++    if (!impl->m_needsInit)
++        return;
++    impl->m_needsInit = false;
++
++    // DiscardResource wants the render target / depth write state; the tracked state is left as it was
++    const D3D12_RESOURCE_STATES discardState = impl->m_depthFormat != MGDepthFormat::None ? D3D12_RESOURCE_STATE_DEPTH_WRITE : D3D12_RESOURCE_STATE_RENDER_TARGET;
++    const D3D12_RESOURCE_STATES state = impl->m_currentState;
++    if (state != discardState)
++    {
++        const D3D12_RESOURCE_BARRIER toDiscard = CD3DX12_RESOURCE_BARRIER::Transition(impl->m_res.Get(), state, discardState);
++        commandList->ResourceBarrier(1, &toDiscard);
++    }
++    commandList->DiscardResource(impl->m_res.Get(), nullptr);
++    if (state != discardState)
++    {
++        const D3D12_RESOURCE_BARRIER back = CD3DX12_RESOURCE_BARRIER::Transition(impl->m_res.Get(), discardState, state);
++        commandList->ResourceBarrier(1, &back);
++    }
+ }
+ 
+ void Texture::SendTransitionBatch(std::vector<D3D12_RESOURCE_BARRIER>& batch, ID3D12GraphicsCommandList* commandList) {

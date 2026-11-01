@@ -1,0 +1,22 @@
+--- a/native/monogame/directx12/Texture.h
++++ b/native/monogame/directx12/Texture.h
+@@ -43,6 +43,11 @@
+ 
+     // shorthand for TransitionBatched() + SendTransitionBatch(), used when you are sure you want to add only a single barrier
+     void Transition(std::vector<D3D12_RESOURCE_BARRIER>& batch, ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES newState);
++
++    // ArmAgedon: a render or depth target in a placed or not-zeroed allocation must see a Discard, Clear or Copy before any
++    // other use (D3D12 EXECUTION ERROR #1422; undefined contents and compression metadata otherwise). Create discards a new one
++    // on a command list of its own, submitted at once, so it runs before every later use of the target (SetData's copies too).
++    void InitializeIfNeeded(ID3D12GraphicsCommandList* commandList);
+ 
+     bool CheckMSAA(ID3D12Device* device);
+     void AllowUAV();
+@@ -120,6 +125,7 @@
+         int m_levels;
+         FLOAT m_clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+         bool m_allowUAV = false;
++        bool m_needsInit = false; // ArmAgedon: InitializeIfNeeded
+ 
+         Microsoft::WRL::ComPtr<D3D12MA::Allocation> m_alloc;
+         Microsoft::WRL::ComPtr<ID3D12Resource> m_res;

@@ -1,0 +1,20 @@
+--- a/native/monogame/directx12/DeviceResources.cpp
++++ b/native/monogame/directx12/DeviceResources.cpp
+@@ -487,6 +487,17 @@
+             ThrowIfFailed(hr);
+             return false;
+         }
++
++        // ArmAgedon: why the device went (a hang, a page fault, a driver reset...), the one place it is still known
++        const HRESULT reason = m_d3dDevice ? m_d3dDevice->GetDeviceRemovedReason() : hr;
++        fprintf(stderr, "**ERROR** D3D12 device lost (%08X), removed reason %08X\n", static_cast<unsigned int>(hr), static_cast<unsigned int>(reason));
++        fflush(stderr);
++
++        // ArmAgedon: nothing calls SetDeviceResetCallback, so the stock call below was a null function pointer (an access
++        // violation in Present). Without a reset handler a lost device fails like any other HRESULT, as an exception the
++        // managed side reports.
++        if (!m_lostCbk)
++            throw com_exception(hr);
+ 
+         m_lostCbk(); // let the C# dictate the order of reset
+         return true;

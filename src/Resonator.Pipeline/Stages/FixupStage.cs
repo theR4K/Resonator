@@ -9,8 +9,8 @@ namespace Resonator.Pipeline.Stages;
 
 /// <summary>
 /// Stage 3: make the source tree compile. Writes references.targets, repairs the decompiler's
-/// mechanical artifacts, then applies the target's patch layers. Official source (a source
-/// target) has no decompiler artifacts: only the patches. A tree target (no C# project of
+/// mechanical artifacts, remaps configured APIs, then applies the target's patch layers. Official source
+/// has no decompiler artifacts: only remapping and patches. A tree target (no C# project of
 /// Resonator's) gets no references.targets either.
 /// </summary>
 public static class FixupStage
@@ -34,11 +34,13 @@ public static class FixupStage
 
         if (target.Spec.Kind == TargetKind.Source)
         {
+            ApiRemapStage.Run(target);
             PatchLayers.Apply(target);
             Log.Info("fixup done (source target: patches only)");
             return;
         }
         var counts = DecompilerFixes.Select(fix => $"{fix.Name}={fix.Apply(files)}").ToList();
+        ApiRemapStage.Run(target);
         PatchLayers.Apply(target);
         Log.Info("fixup done: " + string.Join(" ", counts));
     }

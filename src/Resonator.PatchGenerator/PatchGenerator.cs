@@ -37,6 +37,7 @@ internal static class PatchGenerator
 
         var baseline = target with
         {
+            // Own remapping profiles stay in the baseline: only hand-written patches are diffed out.
             Spec = target.Spec with { PatchDirs = target.Spec.PatchDirs.SkipLast(1).ToList(), WeaverCheck = null },   // checked by the working run
             SourceRootOverride = Path.Combine(target.Settings.WorkDir, target.Name + "-baseline"),
             SkipReferences = true,

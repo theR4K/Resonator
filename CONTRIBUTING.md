@@ -3,6 +3,7 @@
 ## Before you commit
 
 - [ ] `dotnet build Resonator.slnx -c Release` succeeds.
+- [ ] `dotnet run --project tests/Resonator.Remapping.Tests -c Release` passes.
 - [ ] For a changed target set: a clean `Resonator.ProjectBuilder` build, then `Resonator.PatchGenerator` over it,
       leaves `git status` of the set clean ([Patches](docs/patches.md)).
 - [ ] For a Flatweave / ArmAginator target: the build's `syncmembers` check passes ([rules](docs/flatweave.md)).

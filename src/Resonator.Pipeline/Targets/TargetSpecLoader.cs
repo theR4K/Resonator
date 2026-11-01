@@ -14,6 +14,7 @@ namespace Resonator.Pipeline.Targets;
 ///   exclude_types, exclude_refs, refs, fix_ctor_types, keep_dirs, defines
 ///                        accumulate down the chain
 ///   packages, properties merge by key
+///   api_remaps           profile paths accumulate root first (relative to each declaring directory)
 ///   package / source     the last one wins (a target has one kind)
 ///   patches/             every layer's dir, applied parent first
 /// </summary>
@@ -38,6 +39,7 @@ public static class TargetSpecLoader
         var packages = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var patchDirs = new List<string>();
+        var apiRemaps = new List<string>();
 
         foreach (var (dir, spec) in Chain(targetDir))
         {
@@ -67,6 +69,7 @@ public static class TargetSpecLoader
             Merge(spec, "packages", packages);
             Merge(spec, "properties", properties);
             patchDirs.Add(Path.Combine(dir, "patches"));
+            apiRemaps.AddRange(Strings(spec, "api_remaps").Select(p => Path.GetFullPath(Path.Combine(dir, p))));
         }
 
         string[] Accumulated(string key) => lists[key].Distinct(StringComparer.Ordinal).ToArray();
@@ -103,6 +106,7 @@ public static class TargetSpecLoader
             Packages = packages,
             Properties = properties,
             PatchDirs = patchDirs,
+            ApiRemaps = apiRemaps.Distinct(StringComparer.OrdinalIgnoreCase).ToArray(),
         };
         // a package / source target has nothing weaved to prepare
         return result.Kind == TargetKind.Decompile ? result : result with { Weave = WeaveMode.None };

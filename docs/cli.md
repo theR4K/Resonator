@@ -27,7 +27,7 @@ Shipped Resonite assemblies → buildable C# projects. See [Pipeline](pipeline.m
 
 ```
 Resonator.ProjectBuilder <output-dir> [pipeline options]
-  [--stage all|prepare|decompile|fixup|build]   run one stage only (default: all)
+  [--stage all|prepare|decompile|remap|fixup|build]   run one stage only (default: all)
   [--no-csproj]                                 emit only source + references.targets
   [--keep-going]                                carry on after a failing target, report all at the end
   [--publish <dir>]                             drop-in folder of a successful full run (default: <output-dir>/publish)

@@ -17,7 +17,7 @@ flowchart LR
       SC[source target:<br/>pinned checkout]
     end
     subgraph fixup
-      RT[references.targets] --> FX[decompiler fixes] --> PL[patch layers]
+      RT[references.targets] --> FX[decompiler fixes] --> RM[API remapping] --> PL[patch layers]
     end
     subgraph build
       B[dotnet build] -->|errors| BF[build-error fixes] --> B
@@ -68,9 +68,10 @@ A `source` target is checked out at its pinned ref instead (git or release archi
    | `NewTypeArgumentFix` | `new Typearg;` | `new Type(arg);` (known type names only) |
    | `GenericMemberCallFix` | `x.Name<T>arg` | `x.Name<T> (arg)` |
 
-3. Applies the target's [patch layers](patches.md), root ancestor first.
+3. Runs the target's symbol-based [API remapping](api-remapping.md) profiles, root ancestor first.
+4. Applies the target's [patch layers](patches.md), root ancestor first.
 
-Source targets get only step 1 and 3.
+Source targets get steps 1, 3 and 4. `--stage remap` runs only remapping on an existing source tree.
 
 ## 4. Build
 

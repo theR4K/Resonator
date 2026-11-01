@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Executable regression checks for symbol-based API remapping. -->
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../src/Resonator.Pipeline/Resonator.Pipeline.csproj" /></ItemGroup>
+</Project>

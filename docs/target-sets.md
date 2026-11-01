@@ -120,6 +120,7 @@ replaces each with its official release, using one of two target kinds:
 | `select_types` | decompile only these types (split targets) |
 | `exclude_types` | decompile everything except these |
 | `exclude_refs` / `refs` | drop / add assembly references in `references.targets` |
+| `api_remaps` | paths to [API mapping profiles](api-remapping.md), relative to the declaring target; inherited root first, applied before patches |
 | `package` | `{"id", "version"}`: a NuGet package target |
 | `source` | `{"git" \| "archive", "ref", "dir", "exclude", "files", "submodules"}`: a source target; `ref` is a pinned tag or commit, `exclude` takes files or `dir/` prefixes, `files` the globs of what a checkout takes (default `["**/*.cs"]`; `**` any folders, `*` within a name), `submodules` the repo's submodules fetched with it (shallow, recursive) |
 | `tree` | `true`: the source is a tree for the consumer's own build (native code, a repo's own projects), not a C# project of Resonator's: checked out and patched only - no `assembly`, `references.targets`, csproj or build. Patches can be on any text file |

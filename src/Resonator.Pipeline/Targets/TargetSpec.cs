@@ -88,6 +88,9 @@ public sealed record TargetSpec
     /// <summary>The patch layers, root ancestor first, this target's own last.</summary>
     public IReadOnlyList<string> PatchDirs { get; init; } = [];
 
+    /// <summary>Symbol-based API mapping profiles, inherited root first; absolute JSON paths.</summary>
+    public IReadOnlyList<string> ApiRemaps { get; init; } = [];
+
     public TargetKind Kind => Package != null ? TargetKind.Package : Source != null ? TargetKind.Source : TargetKind.Decompile;
     public string BaseName => Path.GetFileNameWithoutExtension(Assembly);
     /// <summary>The files the target's source tree is made of (globs relative to it): a source's "files", else every .cs.</summary>

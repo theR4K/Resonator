@@ -26,7 +26,7 @@ internal static class Program
     static readonly string Usage = $"""
         Resonator.ProjectBuilder <output-dir> [options]
         {PipelineSettings.OptionsUsage}
-          [--stage all|prepare|decompile|fixup|build]   run one stage only (default: all)
+          [--stage all|prepare|decompile|remap|fixup|build]   run one stage only (default: all)
           [--no-csproj]                   emit only source + references.targets (the consumer builds it)
           [--keep-going]                  carry on after a failing target, report all at the end
           [--publish <dir>]               where a successful full run collects the drop-in files
@@ -43,7 +43,7 @@ internal static class Program
           the post-compile step of a "calli" target (run by its references.targets)
         """;
 
-    enum Stage { All, Prepare, Decompile, Fixup, Build }
+    enum Stage { All, Prepare, Decompile, Remap, Fixup, Build }
 
     static int Main(string[] args)
     {
@@ -112,6 +112,7 @@ internal static class Program
                 {
                     if (Runs(Stage.Prepare) || Runs(Stage.Decompile)) PrepareStage.Run(target);   // decompile needs it; cached
                     if (Runs(Stage.Decompile)) DecompileStage.Run(target);
+                    if (stage == Stage.Remap) ApiRemapStage.Run(target);
                     if (Runs(Stage.Fixup)) FixupStage.Run(target);
                 }
                 if (Runs(Stage.Build)) BuildStage.Run(target);
@@ -172,7 +173,7 @@ internal static class Program
                 case "--stage":
                     string value = ++i < args.Count ? args[i] : throw new ArgumentException("--stage needs a value");
                     if (!Enum.TryParse(value, ignoreCase: true, out stage) || int.TryParse(value, out _))
-                        throw new ArgumentException($"unknown stage '{value}' (expected all|prepare|decompile|fixup|build)");
+                        throw new ArgumentException($"unknown stage '{value}' (expected all|prepare|decompile|remap|fixup|build)");
                     break;
                 case "--keep-going": keepGoing = true; break;
                 case "--no-csproj": noCsproj = true; break;

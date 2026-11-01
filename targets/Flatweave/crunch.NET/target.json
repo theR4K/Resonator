@@ -1,9 +1,14 @@
 {
   "name": "crunch.NET",
-  "description": "Yellow Dog Man's own library: their published package (= YDM git HEAD).",
+  "description": "Official Yellow Dog Man source, rebuilt for .NET 10 instead of the net46-only NuGet package. Native crnlib is supplied by the consumer.",
   "assembly": "crunch.NET.dll",
-  "package": {
-    "id": "YellowDogMan.crunch.NET",
-    "version": "0.1.1"
+  "tfm": "net10.0",
+  "source": {
+    "git": "https://github.com/Yellow-Dog-Man/Crunch.NET",
+    "ref": "e054374bd4adf4b22b512cc6634212ff6ea1de47",
+    "dir": "crunch.NET",
+    "exclude": [
+      "Properties/"
+    ]
   }
 }

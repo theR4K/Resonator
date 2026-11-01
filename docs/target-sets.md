@@ -99,7 +99,8 @@ replaces each with its official release, using one of two target kinds:
 |---|---|---|
 | SoundFlow, SteamAudio.NET, PDFiumSharp (`PDFiumSharpV2`), Brotli.Core (`Brotli.NET`), Steamworks.NET, SDL3-CS, Microsoft.ML.OnnxRuntime | package (official) | Steamworks.NET: engine patch cuts the fork-only `ExceptionHandler` hook |
 | AssimpNet | package `AssimpNetter` 6.0.5 | the maintained continuation; official AssimpNet (2020) predates assimp 5.1's structs. Engine patch: System.Numerics types, matrix helpers (transpose-aware), bone node by name |
-| Compressonator.NET, crunch.NET, Mikktspace.NET, Msdfgen.NET, SharpPipe | package `YellowDogMan.*` | Yellow Dog Man's own libraries: their published package is the official one |
+| Compressonator.NET, Mikktspace.NET, Msdfgen.NET, SharpPipe | package `YellowDogMan.*` | Yellow Dog Man's own libraries: their published package is the official one |
+| crunch.NET | source Yellow-Dog-Man/Crunch.NET (`e054374`) | rebuilt for `net10.0`; the package targets `net46`. Only managed sources are taken; the consumer supplies native crnlib |
 | SharpFont | source Robmaister/SharpFont master | the NuGet package is net45-only |
 | CSCore | source filoe/cscore master + patches | YDM's `WasapiOut`/`MMDevice` additions the WASAPI driver uses; `ILUtils` on `Unsafe`; session GUID by pointer; `calli` post-compile step. Engine patch: codec choice + OGG (NVorbis) in `CSCoreSampleDecoder` |
 | FreeImageNET | source: the FreeImage 3.18.0 release's wrapper | engine patch: raw EXIF cleared directly |

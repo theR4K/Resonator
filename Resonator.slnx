@@ -15,6 +15,7 @@
     <File Path="docs/target-sets.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/Flatweave.Adapter/Flatweave.Adapter.csproj" />
     <Project Path="src/Resonator.Deweaver/Resonator.Deweaver.csproj" />
     <Project Path="src/Resonator.PatchGenerator/Resonator.PatchGenerator.csproj" />
     <Project Path="src/Resonator.Pipeline/Resonator.Pipeline.csproj" />

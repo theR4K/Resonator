@@ -36,7 +36,7 @@
  		{
  			DisposeAnalysisEngine();
  			currentEngine = targetEngine;
-+			IVisemeContextFactory factory = NativeServices.Get<IVisemeContextFactory>();
++			IVisemeContextFactory factory = ArmAginator.Adapter.NativeServices.Get<IVisemeContextFactory>(); // ArmAgedon seam
 +			int sr = AudioSystem.SampleRate;
 +			int fs = AudioSystem.SimulationFrameSize;
 +			context = factory?.Create(targetEngine, sr, fs);

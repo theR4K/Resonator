@@ -3,6 +3,10 @@
 Consumed by the ArmAgedon repo in `--no-csproj` mode: each target's tree is compiled by the
 consumer's own csproj (`generated/` + its `Injected/` code).
 
+The engine's original-host SDL3 metadata hook (`Engine.EnsureInitializedSDL` and its initialization field) is cut.
+FrooxEngine and its split strategies exclude `SDL3-CS`; ArmAgedon supplies no SDL3 strategy or shadow.
+The in-process MonoGame renderer owns its separate SDL2 runtime.
+
 | Target | Weave | Contents |
 |---|---|---|
 | `FrooxEngine` | flatten (extends `Flatweave/FrooxEngine`) | the engine minus the strategy split types; ARM/platform patches on top of the Resonator layer |

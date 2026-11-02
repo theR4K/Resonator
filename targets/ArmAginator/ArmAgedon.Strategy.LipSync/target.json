@@ -15,6 +15,7 @@
     "Elements.Assets",
     "Awwdio",
     "CSCore",
-    "Steamworks.NET"
+    "Steamworks.NET",
+    "SDL3-CS"
   ]
 }

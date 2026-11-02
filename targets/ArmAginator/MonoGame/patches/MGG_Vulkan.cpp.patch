@@ -65,7 +65,7 @@
  {
  	MGG_Texture* texture = nullptr;
  	VkSemaphore renderCompleteSemaphore = VK_NULL_HANDLE;
-@@ -205,27 +215,52 @@
+@@ -205,39 +215,80 @@
  	std::vector<MGG_DisplayMode> modes;
  };
  
@@ -118,7 +118,35 @@
  {
  	MGG_Texture* owner;
  	VkCommandBuffer cmd;
-@@ -253,12 +288,15 @@
+ 	MGG_Buffer staging;
+ 	VkFence done;
+ };
+ 
+ 
+ const int MAX_TEXTURE_SLOTS = 16;
++
++// ArmAgedon (video interop): what the device was created with, for libplacebo / FFmpeg sharing it (MGVK_GetVideoInterop).
++// The feature chain is the one passed to vkCreateDevice minus MonoGame's extension structs; it lives as long as the device.
++struct MGVK_VideoInterop
++{
++	VkPhysicalDeviceFeatures2 features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
++	VkPhysicalDeviceVulkan11Features f11 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES };
++	VkPhysicalDeviceVulkan12Features f12 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
++	VkPhysicalDeviceVulkan13Features f13 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
++	VkPhysicalDeviceVideoMaintenance1FeaturesKHR videoMaintenance1 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR };
++	void** chainTail = nullptr; // pNext of the last struct above that is in the chain
++	std::vector<std::string> deviceExtensions; // every extension the device was created with
++	std::vector<const char*> deviceExtensionNames;
++	std::vector<const char*> instanceExtensionNames;
++	uint32_t decodeFamily = UINT32_MAX; // a family with VK_QUEUE_VIDEO_DECODE_BIT_KHR that has a queue, or none
++};
+ 
+ struct MGG_GraphicsDevice
+ {
+ 	VkInstance instance = VK_NULL_HANDLE;
+ 
+ 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+@@ -253,12 +304,26 @@
  	VkQueue queue = VK_NULL_HANDLE;
  	VkCommandPool cmdPool = VK_NULL_HANDLE;
  
@@ -128,13 +156,24 @@
 +	// ArmAgedon: signaled by textures' first layout transitions (MGVK_SubmitCreation), waited by the next submit of the
 +	// frame's command buffer (MGVK_WaitCreations); under queueMutex
 +	std::vector<VkSemaphore> pendingCreates;
++
++	// ArmAgedon (video interop): set when the device was created for it (MGVK_RequestVideoInterop)
++	MGVK_VideoInterop* video = nullptr;
++	// ArmAgedon: timeline semaphore values the next submit of the frame's command buffer waits on (MGVK_AddFrameWait); under
++	// queueMutex
++	std::vector<std::pair<VkSemaphore, uint64_t>> pendingExternalWaits;
++	// ArmAgedon: every submit of a frame's command buffer signals ++frameTimelineValue (video interop only); under queueMutex
++	VkSemaphore frameTimeline = VK_NULL_HANDLE;
++	uint64_t frameTimelineValue = 0;
++	// ArmAgedon: guards the queues of other families (video decode), used only by the interop's users
++	std::recursive_mutex videoQueueMutex;
  
  	VmaAllocator allocator = VK_NULL_HANDLE;
  
  	FrameCounter frame = 0;
  	FrameCounter frameIndex = 0;
  	FrameCounter freeFrames = 0;
-@@ -266,12 +304,14 @@
+@@ -266,12 +331,14 @@
  
  	std::vector<MGVK_Frame> frames;
  	std::vector<MGVK_Swapchain> swapchains;
@@ -149,7 +188,7 @@
  
  	bool inRenderPass = false;
  	bool renderTargetDirty = false;
-@@ -285,12 +325,14 @@
+@@ -285,12 +352,14 @@
  #else
  #error Not Implemented
  #endif
@@ -164,7 +203,7 @@
  	uint32_t vertexOffsets[8] = { 0 };
  
  	MGG_Buffer* indexBuffer = nullptr;
-@@ -311,12 +353,14 @@
+@@ -311,12 +380,14 @@
  	bool shaderDirty = false;
  	std::map<uint64_t, MGVK_Program*> shader_programs;
  	std::vector<MGG_Shader*> all_shaders;
@@ -179,7 +218,7 @@
  	std::map<uint32_t, MGG_DepthStencilState*> depthStencilStates;
  
  	MGVK_TargetSet targets;
-@@ -324,22 +368,25 @@
+@@ -324,22 +395,25 @@
  
  
  	//
@@ -207,7 +246,7 @@
  	std::queue<MGG_DepthStencilState*> destroyDepthStencilStates;
  	std::queue<MGG_SamplerState*> destroySamplers;
  
-@@ -421,18 +468,24 @@
+@@ -421,18 +495,24 @@
  	VkDescriptorImageInfo* imageInfo;
  	MGTextureType textureTypes[MAX_TEXTURE_SLOTS];
  
@@ -232,7 +271,7 @@
  {
  	VkDescriptorType type;
  	mguint slot;
-@@ -496,12 +549,14 @@
+@@ -496,12 +576,52 @@
  static MGG_Buffer* MGVK_Buffer_Create(MGG_GraphicsDevice* device, MGBufferType type, mgint sizeInBytes, bool no_push);
  static void MGVK_DestroyPipelines(MGG_GraphicsDevice* device, std::function<bool(const MGVK_PipelineState&)> compare);
  static void MGVK_DestroyFrameResources(MGG_GraphicsDevice* device, FrameCounter currentFrame, mgbyte free_all);
@@ -240,14 +279,52 @@
  static VkCommandBuffer MGVK_BeginNewCommandBuffer(MGG_GraphicsDevice* device, VkCommandPool pool = VK_NULL_HANDLE);
  static void MGVK_ExecuteAndFreeCommandBuffer(MGG_GraphicsDevice* device, VkCommandBuffer commandBuffer, VkCommandPool pool = VK_NULL_HANDLE);
 +static void MGVK_SubmitCreation(MGG_GraphicsDevice* device, MGG_Texture* owner, VkCommandBuffer commandBuffer); // ArmAgedon
-+static void MGVK_WaitCreations(MGG_GraphicsDevice* device, MGVK_Frame& frame, std::vector<VkSemaphore>& waits, std::vector<VkPipelineStageFlags>& stages); // ArmAgedon
++// ArmAgedon: the waits and signals of a submit of a frame's command buffer (MGVK_WaitCreations); Apply points the submit at
++// them, with timeline values when the device has the frame timeline (video interop)
++struct MGVK_FrameSubmitSync
++{
++	std::vector<VkSemaphore> waits;
++	std::vector<VkPipelineStageFlags> stages;
++	std::vector<uint64_t> waitValues;
++	std::vector<VkSemaphore> signals;
++	std::vector<uint64_t> signalValues;
++	VkTimelineSemaphoreSubmitInfo timeline = { VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO };
++
++	void Wait(VkSemaphore semaphore, VkPipelineStageFlags stage, uint64_t value = 0)
++	{
++		waits.push_back(semaphore);
++		stages.push_back(stage);
++		waitValues.push_back(value);
++	}
++	void Signal(VkSemaphore semaphore, uint64_t value = 0)
++	{
++		signals.push_back(semaphore);
++		signalValues.push_back(value);
++	}
++	void Apply(VkSubmitInfo& info, bool timelines)
++	{
++		info.waitSemaphoreCount = (uint32_t)waits.size();
++		info.pWaitSemaphores = waits.data();
++		info.pWaitDstStageMask = stages.data();
++		info.signalSemaphoreCount = (uint32_t)signals.size();
++		info.pSignalSemaphores = signals.data();
++		if (!timelines)
++			return;
++		timeline.waitSemaphoreValueCount = (uint32_t)waitValues.size();
++		timeline.pWaitSemaphoreValues = waitValues.data();
++		timeline.signalSemaphoreValueCount = (uint32_t)signalValues.size();
++		timeline.pSignalSemaphoreValues = signalValues.data();
++		info.pNext = &timeline;
++	}
++};
++static void MGVK_WaitCreations(MGG_GraphicsDevice* device, MGVK_Frame& frame, MGVK_FrameSubmitSync& sync); // ArmAgedon
  static void MGVK_ProcessDescriptorCaches(MGG_GraphicsDevice* device, FrameCounter currentFrame);
  static void MGVK_CmdTransitionImageLayout(
  	VkCommandBuffer cmd,
  	VkImage image,
  	VkImageLayout oldLayout,
  	VkImageLayout newLayout,
-@@ -511,12 +566,128 @@
+@@ -511,12 +631,128 @@
  	uint32_t baseArrayLayer = 0,
  	uint32_t layerCount = 1);
  static void MGVK_FlushCommands(MGG_GraphicsDevice* device, MGVK_Frame& frame);
@@ -376,7 +453,7 @@
  {
      switch (multiSampleCount)
      {
-@@ -561,13 +732,13 @@
+@@ -561,13 +797,13 @@
  		return VK_FORMAT_BC3_UNORM_BLOCK;
  	case MGSurfaceFormat::NormalizedByte2:
  		return VK_FORMAT_R8G8_UNORM;
@@ -391,7 +468,7 @@
  		return VK_FORMAT_R16G16B16A16_UNORM;
  	case MGSurfaceFormat::Alpha8:
  		return VK_FORMAT_R8_UNORM;
-@@ -618,12 +789,16 @@
+@@ -618,12 +854,16 @@
  	case MGDepthFormat::Depth24Stencil8:
  #if defined(__APPLE__)
  		return VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
@@ -408,7 +485,7 @@
  }
  
  static VkFormat ToVkFormat(MGVertexElementFormat format)
-@@ -772,12 +947,36 @@
+@@ -772,12 +1012,43 @@
  	{
  		if (strcmp(extension.extensionName, extensionName) == 0)
  			return true;
@@ -421,6 +498,13 @@
 +// (xrGetVulkanInstanceExtensionsKHR / xrGetVulkanDeviceExtensionsKHR). Set with MGVK_SetExtraExtensions.
 +static std::vector<std::string> s_extraInstanceExtensions;
 +static std::vector<std::string> s_extraDeviceExtensions;
++
++// ArmAgedon (video interop): MGVK_RequestVideoInterop, before the Game exists. The instance then asks for Vulkan 1.3
++// (as far as the loader goes) and the device enables what libplacebo needs to share it (mpv renders video frames into
++// render targets, MGVK_GetVideoInterop) and, where the GPU has them, the Vulkan Video decode extensions and queue.
++static bool s_videoInteropRequested = false;
++static uint32_t s_instanceApiVersion = VK_API_VERSION_1_0;
++static std::vector<std::string> s_enabledInstanceExtensions;
 +
 +static void MGVK_AppendExtraExtensions(const std::vector<std::string>& extra, const std::vector<VkExtensionProperties>& supported, std::vector<const char*>& enabled, const char* kind)
 +{
@@ -445,7 +529,7 @@
  {
  #ifndef __APPLE__
  	printf("Initializing volk.\n");
-@@ -911,12 +1110,14 @@
+@@ -911,12 +1182,20 @@
  			enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
  			printf("Validation layers are enabled (performances will be drastically impacted). To run without validation layers, please use a RELEASE build or uninstall the Vulkan SDK.\n");
  		}
@@ -454,13 +538,19 @@
  	}
 +
 +	MGVK_AppendExtraExtensions(s_extraInstanceExtensions, supportedInstanceExtensions, instanceExtensions, "instance");
++
++	// ArmAgedon (video interop): libplacebo needs an instance of 1.2 or newer, FFmpeg's Vulkan decoder 1.3
++	if (s_videoInteropRequested && version >= VK_API_VERSION_1_2)
++		app_info.apiVersion = version >= VK_API_VERSION_1_3 ? VK_API_VERSION_1_3 : VK_API_VERSION_1_2;
++	s_instanceApiVersion = app_info.apiVersion;
++	s_enabledInstanceExtensions.assign(instanceExtensions.begin(), instanceExtensions.end());
  
  	VkInstanceCreateInfo instance_create_info = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
  	instance_create_info.pApplicationInfo = &app_info;
  	instance_create_info.enabledExtensionCount = instanceExtensions.size();
  	instance_create_info.ppEnabledExtensionNames = instanceExtensions.data();
  	instance_create_info.enabledLayerCount = enabledLayers.size();
-@@ -1127,13 +1328,13 @@
+@@ -1127,13 +1406,13 @@
  			texture->image,
  			VK_IMAGE_LAYOUT_UNDEFINED,
  			optimalLayout,
@@ -475,26 +565,23 @@
      texture->optimal_layout = optimalLayout;
  
  	texture->writeFrame = -1;
-@@ -1196,12 +1397,18 @@
+@@ -1196,12 +1475,15 @@
  	VkSubmitInfo submitInfo = {};
  	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
  	submitInfo.commandBufferCount = 1;
  	submitInfo.pCommandBuffers = &frame.commandBuffer;
  	{
  		std::lock_guard lock(device->queueMutex);
-+		std::vector<VkSemaphore> waits;
-+		std::vector<VkPipelineStageFlags> waitStages;
-+		MGVK_WaitCreations(device, frame, waits, waitStages);
-+		submitInfo.waitSemaphoreCount = (uint32_t)waits.size();
-+		submitInfo.pWaitSemaphores = waits.data();
-+		submitInfo.pWaitDstStageMask = waitStages.data();
++		MGVK_FrameSubmitSync sync;
++		MGVK_WaitCreations(device, frame, sync);
++		sync.Apply(submitInfo, device->frameTimeline != VK_NULL_HANDLE);
  		vkQueueSubmit(device->queue, 1, &submitInfo, renderFence);
  	}
  	vkWaitForFences(device->device, 1, &renderFence, VK_TRUE, UINT64_MAX);
  	vkDestroyFence(device->device, renderFence, nullptr);
  }
  
-@@ -1215,12 +1422,91 @@
+@@ -1215,12 +1497,91 @@
  	VmaAllocationCreateInfo allocInfo = {};
  	allocInfo.usage = flags;
  
@@ -586,7 +673,7 @@
  {
  	VkBufferUsageFlags usage;
  	switch (type)
-@@ -1286,20 +1572,67 @@
+@@ -1286,20 +1647,72 @@
  
  	vkWaitForFences(device->device, 1, &renderFence, VK_TRUE, UINT64_MAX);
  	vkDestroyFence(device->device, renderFence, nullptr);
@@ -627,16 +714,21 @@
 +	device->pendingCreates.push_back(created);
 +}
 +
-+// ArmAgedon: a submit of the frame's command buffer waits on the creation transitions not waited on yet. Under queueMutex.
-+static void MGVK_WaitCreations(MGG_GraphicsDevice* device, MGVK_Frame& frame, std::vector<VkSemaphore>& waits, std::vector<VkPipelineStageFlags>& stages)
++// ArmAgedon: a submit of the frame's command buffer waits on the creation transitions not waited on yet and on the video
++// interop's frames (MGVK_AddFrameWait), and signals the frame timeline (MGVK_FrameTimelineValue). Under queueMutex.
++static void MGVK_WaitCreations(MGG_GraphicsDevice* device, MGVK_Frame& frame, MGVK_FrameSubmitSync& sync)
 +{
 +	for (VkSemaphore s : device->pendingCreates)
 +	{
-+		waits.push_back(s);
-+		stages.push_back(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
++		sync.Wait(s, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
 +		frame.waitedCreates.push_back(s);
 +	}
 +	device->pendingCreates.clear();
++	for (const auto& wait : device->pendingExternalWaits)
++		sync.Wait(wait.first, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, wait.second);
++	device->pendingExternalWaits.clear();
++	if (device->frameTimeline != VK_NULL_HANDLE)
++		sync.Signal(device->frameTimeline, ++device->frameTimelineValue);
  }
  
  MGG_GraphicsDevice* MGG_GraphicsDevice_Create(MGG_GraphicsSystem* system, MGG_GraphicsAdapter* adapter)
@@ -654,7 +746,7 @@
  	device->deviceFeatures = adapter->features;
  	device->deviceProperties = adapter->properties;
  
-@@ -1398,12 +1731,16 @@
+@@ -1398,17 +1811,101 @@
  	{
  		enabledFeatures.occlusionQueryPrecise = VK_TRUE;
  	}
@@ -665,19 +757,112 @@
 +	if (device->deviceFeatures.pipelineStatisticsQuery && MGVK_DrawProfileRequested()) // ArmAgedon: ARMA_GPU_DRAW_PROFILE
 +	{
 +		enabledFeatures.pipelineStatisticsQuery = VK_TRUE;
++	}
++
++	// ArmAgedon (video interop): Vulkan 1.1-1.3 features as far as supported (libplacebo requires timeline semaphores and
++	// some 1.1 features; FFmpeg's decoder synchronization2 and more), a few core shader capabilities libplacebo's shaders
++	// use, and on a 1.3 device the Vulkan Video decode extensions with a queue of a decode family.
++	MGVK_VideoInterop* video = nullptr;
++	VkDeviceQueueCreateInfo queueCreateInfos[2] = { queueCreateInfo, queueCreateInfo };
++	uint32_t queueCreateInfoCount = 1;
++	if (s_videoInteropRequested && s_instanceApiVersion >= VK_API_VERSION_1_2 && device->deviceProperties.apiVersion >= VK_API_VERSION_1_2)
++	{
++		video = new MGVK_VideoInterop();
++		bool v13 = s_instanceApiVersion >= VK_API_VERSION_1_3 && device->deviceProperties.apiVersion >= VK_API_VERSION_1_3;
++		if (SupportsExtension(deviceExtensions, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME))
++			video->deviceExtensions.push_back(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME);
++		bool decode = v13 && SupportsExtension(deviceExtensions, VK_KHR_VIDEO_QUEUE_EXTENSION_NAME) &&
++			SupportsExtension(deviceExtensions, VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME);
++		bool maintenance1 = false;
++		if (decode)
++		{
++			static const char* const decodeExtensions[] = {
++				VK_KHR_VIDEO_QUEUE_EXTENSION_NAME, VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME,
++				VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME, VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME,
++				VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME, "VK_KHR_video_decode_vp9", VK_KHR_VIDEO_MAINTENANCE_1_EXTENSION_NAME,
++			};
++			for (const char* name : decodeExtensions)
++				if (SupportsExtension(deviceExtensions, name))
++				{
++					video->deviceExtensions.push_back(name);
++					maintenance1 |= strcmp(name, VK_KHR_VIDEO_MAINTENANCE_1_EXTENSION_NAME) == 0;
++				}
++
++			uint32_t familyCount = 0;
++			vkGetPhysicalDeviceQueueFamilyProperties(device->physicalDevice, &familyCount, nullptr);
++			std::vector<VkQueueFamilyProperties> families(familyCount);
++			vkGetPhysicalDeviceQueueFamilyProperties(device->physicalDevice, &familyCount, families.data());
++			for (uint32_t i = 0; i < familyCount && video->decodeFamily == UINT32_MAX; i++)
++				if ((families[i].queueFlags & VK_QUEUE_VIDEO_DECODE_BIT_KHR) != 0)
++					video->decodeFamily = i;
++			if (video->decodeFamily != UINT32_MAX && video->decodeFamily != device->graphicsQueueFamily)
++				queueCreateInfos[queueCreateInfoCount++].queueFamilyIndex = video->decodeFamily;
++		}
++		for (const auto& name : video->deviceExtensions)
++			extensions.push_back(name.c_str());
++
++		video->features.pNext = &video->f11;
++		video->f11.pNext = &video->f12;
++		video->chainTail = &video->f12.pNext;
++		if (v13)
++		{
++			*video->chainTail = &video->f13;
++			video->chainTail = &video->f13.pNext;
++		}
++		if (maintenance1)
++		{
++			*video->chainTail = &video->videoMaintenance1;
++			video->chainTail = &video->videoMaintenance1.pNext;
++		}
++		vkGetPhysicalDeviceFeatures2(device->physicalDevice, &video->features); // all supported ones get enabled
++		video->f11.protectedMemory = VK_FALSE; // except protected memory, robustness and capture/replay
++		video->f12.bufferDeviceAddressCaptureReplay = VK_FALSE;
++		video->f12.bufferDeviceAddressMultiDevice = VK_FALSE;
++		video->f13.robustImageAccess = VK_FALSE;
++		VkPhysicalDeviceFeatures supported = video->features.features;
++		enabledFeatures.shaderImageGatherExtended = supported.shaderImageGatherExtended;
++		enabledFeatures.shaderStorageImageExtendedFormats = supported.shaderStorageImageExtendedFormats;
++		enabledFeatures.shaderStorageImageReadWithoutFormat = supported.shaderStorageImageReadWithoutFormat;
++		enabledFeatures.shaderStorageImageWriteWithoutFormat = supported.shaderStorageImageWriteWithoutFormat;
++		enabledFeatures.shaderInt16 = supported.shaderInt16;
++		enabledFeatures.shaderInt64 = supported.shaderInt64;
++		enabledFeatures.fragmentStoresAndAtomics = supported.fragmentStoresAndAtomics;
++		enabledFeatures.vertexPipelineStoresAndAtomics = supported.vertexPipelineStoresAndAtomics;
++		video->features.features = enabledFeatures;
++		if (!video->f12.timelineSemaphore)
++		{
++			printf("Video interop: timeline semaphores are not supported\n");
++			delete video;
++			video = nullptr;
++			extensions.resize(1); // VK_KHR_swapchain; nothing else was added yet
++			queueCreateInfoCount = 1;
++		}
  	}
  
  	VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
- 	deviceCreateInfo.queueCreateInfoCount = 1;
- 	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
++	deviceCreateInfo.queueCreateInfoCount = queueCreateInfoCount;
++	deviceCreateInfo.pQueueCreateInfos = queueCreateInfos;
+-	deviceCreateInfo.queueCreateInfoCount = 1;
+-	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
  	deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
-@@ -1428,12 +1765,21 @@
+ 
+ 	void* lastFeature = nullptr;
+ 
+ 	VkPhysicalDeviceCustomBorderColorFeaturesEXT customBorderColorFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT };
+ 	if (device->customBorderColorSupported)
+@@ -1426,14 +1923,27 @@
+ 	}
+ 	VkPhysicalDeviceScalarBlockLayoutFeatures scalarFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES };
  	if (scalarBlockLayoutSupported)
  	{
  		extensions.push_back(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME);
  		scalarFeatures.scalarBlockLayout = VK_TRUE;
- 		scalarFeatures.pNext = lastFeature;
- 		lastFeature = &scalarFeatures;
++		// ArmAgedon (video interop): VkPhysicalDeviceVulkan12Features carries it then (the two may not be chained together)
++		if (video == nullptr)
++		{
++			scalarFeatures.pNext = lastFeature;
++			lastFeature = &scalarFeatures;
++		}
 +	}
 +	// ArmAgedon: ARMA_PIPELINE_STATS=1: per-pipeline compiler statistics (instructions, registers, waves) at creation
 +	VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR executableFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_EXECUTABLE_PROPERTIES_FEATURES_KHR };
@@ -687,18 +872,27 @@
 +		executableFeatures.pipelineExecutableInfo = VK_TRUE;
 +		executableFeatures.pNext = lastFeature;
 +		lastFeature = &executableFeatures;
+-		scalarFeatures.pNext = lastFeature;
+-		lastFeature = &scalarFeatures;
  	}
  	if (hlslFunctionalitySupported)
  		extensions.push_back(VK_GOOGLE_HLSL_FUNCTIONALITY1_EXTENSION_NAME);
  	if (userTypeSupported)
  		extensions.push_back(VK_GOOGLE_USER_TYPE_EXTENSION_NAME);
  
-@@ -1443,12 +1789,14 @@
+@@ -1442,29 +1952,67 @@
+ 	{
  		deviceFeatures2.features = enabledFeatures;
  		deviceFeatures2.pNext = lastFeature;
  
  		deviceCreateInfo.pEnabledFeatures = nullptr;
  		deviceCreateInfo.pNext = &deviceFeatures2;
++	}
++	if (video != nullptr) // ArmAgedon: the interop's chain, MonoGame's extension structs after it
++	{
++		*video->chainTail = lastFeature;
++		deviceCreateInfo.pEnabledFeatures = nullptr;
++		deviceCreateInfo.pNext = &video->features;
  	}
 +
 +	MGVK_AppendExtraExtensions(s_extraDeviceExtensions, deviceExtensions, extensions, "device");
@@ -708,7 +902,21 @@
  
  	auto res = vkCreateDevice(device->physicalDevice, &deviceCreateInfo, NULL, &device->device);
  	VK_CHECK_RESULT(res);
-@@ -1456,12 +1804,19 @@
++	if (video != nullptr)
++	{
++		*video->chainTail = nullptr; // MonoGame's structs were on this stack frame
++		std::vector<std::string> enabledNames(extensions.begin(), extensions.end()); // some point into deviceExtensions
++		video->deviceExtensions = std::move(enabledNames);
++		for (const auto& name : video->deviceExtensions)
++			video->deviceExtensionNames.push_back(name.c_str());
++		for (const auto& name : s_enabledInstanceExtensions)
++			video->instanceExtensionNames.push_back(name.c_str());
++		device->video = video;
++		printf("Video interop: Vulkan %u.%u instance, %zu device extensions, decode queue family %d\n",
++			VK_API_VERSION_MAJOR(s_instanceApiVersion), VK_API_VERSION_MINOR(s_instanceApiVersion),
++			video->deviceExtensions.size(), video->decodeFamily == UINT32_MAX ? -1 : (int)video->decodeFamily);
++	}
+ 	VK_SET_OBJECT_NAME(device->device, device->device, VK_OBJECT_TYPE_DEVICE, "MGG_GraphicsDevice.device");
  	VK_SET_OBJECT_NAME(device->device, device->physicalDevice, VK_OBJECT_TYPE_PHYSICAL_DEVICE, "MGG_GraphicsDevice.physicalDevice");
  
  	VmaAllocatorCreateInfo allocatorInfo = {};
@@ -725,10 +933,22 @@
  	vmaCreateAllocator(&allocatorInfo, &device->allocator);
  
  	vkGetDeviceQueue(device->device, device->graphicsQueueFamily, 0, &device->queue);
++	if (device->video != nullptr) // ArmAgedon: MGVK_FrameTimelineValue
++	{
++		VkSemaphoreTypeCreateInfo timelineType = { VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
++		timelineType.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
++		VkSemaphoreCreateInfo timelineInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
++		timelineInfo.pNext = &timelineType;
++		VK_CHECK_RESULT(vkCreateSemaphore(device->device, &timelineInfo, nullptr, &device->frameTimeline));
++		VK_SET_OBJECT_NAME(device->device, device->frameTimeline, VK_OBJECT_TYPE_SEMAPHORE, "MGG_GraphicsDevice.frameTimeline");
++	}
  
  	VkCommandPoolCreateInfo cmdPoolInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
  	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-@@ -1576,13 +1931,14 @@
+ 	cmdPoolInfo.queueFamilyIndex = device->graphicsQueueFamily;
+ 	res = vkCreateCommandPool(device->device, &cmdPoolInfo, nullptr, &device->cmdPool);
+ 	VK_CHECK_RESULT(res);
+@@ -1576,13 +2124,14 @@
  			{
  				auto& view = targetSetCache->arraySlicesViews[i];
  				if (view.has_value()) {
@@ -744,7 +964,7 @@
  			// Erase the element and get an iterator to the next one.
  			itr = cache.erase(itr);
  		}
-@@ -1640,23 +1996,37 @@
+@@ -1640,23 +2189,44 @@
  	// Prevents some exceptions while shutting down.
  	vkDeviceWaitIdle(device->device);
  
@@ -762,6 +982,13 @@
 +			vkDestroySemaphore(device->device, s, nullptr);
 +		f.waitedCreates.clear();
 +	}
++	// ArmAgedon (video interop): its users' semaphores are theirs; the frame timeline is ours
++	device->pendingExternalWaits.clear();
++	if (device->frameTimeline != VK_NULL_HANDLE)
++		vkDestroySemaphore(device->device, device->frameTimeline, nullptr);
++	device->frameTimeline = VK_NULL_HANDLE;
++	delete device->video;
++	device->video = nullptr;
  
  	MGVK_CleanupSwapChain(device);
  
@@ -782,7 +1009,7 @@
  
  	for (size_t i = 0; i < device->swapchainCount; i++)
  	{
-@@ -1744,12 +2114,15 @@
+@@ -1744,12 +2314,15 @@
  			return;
  		}
  		VK_SET_OBJECT_NAME(device->device, (uint64_t)device->surface, VK_OBJECT_TYPE_SURFACE_KHR, "MGG_GraphicsDevice.surface");
@@ -798,7 +1025,7 @@
  	int wx, wy;
  	SDL_GetWindowPosition(device->window, &wx, &wy);
  	SDL_SetWindowPosition(device->window, wx+1, wy);
-@@ -1796,14 +2169,19 @@
+@@ -1796,14 +2369,19 @@
  			maxMultisampleCount = 2;
  
  		multiSampleCount = std::clamp(multiSampleCount, 1, maxMultisampleCount);
@@ -820,7 +1047,7 @@
  
  	// Check if the requested color format is supported, and fallback to another one otherwise.
  	VkFormat surface_format = VK_FORMAT_UNDEFINED;
-@@ -1812,12 +2190,27 @@
+@@ -1812,12 +2390,27 @@
  		res = vkGetPhysicalDeviceSurfaceFormatsKHR(device->physicalDevice, device->surface, &format_count, nullptr);
  		VK_CHECK_RESULT(res);
  
@@ -848,7 +1075,7 @@
  		for (const auto& surfFormat : surfFormats)
  		{
  			if (surfFormat.colorSpace != VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-@@ -1900,12 +2293,14 @@
+@@ -1900,12 +2493,14 @@
  		{
  			selectedPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
  			break;
@@ -863,7 +1090,7 @@
  	create_info.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
  	create_info.imageExtent = extent;
  	create_info.imageArrayLayers = 1;
-@@ -1942,14 +2337,16 @@
+@@ -1942,14 +2537,16 @@
  			{
  				// TODO: Should we wait for fences here or is vkDeviceWaitIdle enough?
  
@@ -882,7 +1109,7 @@
  				vkDestroySemaphore(device->device, swap.renderCompleteSemaphore, nullptr);
  			}
  
-@@ -2096,17 +2493,22 @@
+@@ -2096,17 +2693,22 @@
  		printf("Cannot recreate swapchain: window is null!\n");
  		fflush(stdout);
  
@@ -907,7 +1134,7 @@
  		device->syncInterval);
  
      MGG_GraphicsDevice_SetRenderTargets(device, nullptr, nullptr, 0);
-@@ -2125,16 +2527,16 @@
+@@ -2125,16 +2727,16 @@
  	assert(device);
  
  	// There is no zero... always at least 1.
@@ -927,7 +1154,7 @@
  
  	auto vkColor = ToVkFormat(color);
  	auto vkDepth = ToVkFormat(depth);
-@@ -2188,40 +2590,100 @@
+@@ -2188,40 +2790,100 @@
  	};
  
  	auto res = vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -1029,7 +1256,7 @@
  	auto& frame = device->frames[device->frameIndex];
  
  	// This is only here for the first frame or for after the
-@@ -2234,19 +2696,27 @@
+@@ -2234,19 +2896,27 @@
  	// MGVK_DestroyFrameResources uses currentFrame and device->freeFrames to calculate age.
  	// We should pass the device->frame rather than swapchain_image_index.
  	// Otherwise age calculation will underflow.
@@ -1059,7 +1286,7 @@
  
  	frame.is_recording = true;
  }
-@@ -2349,13 +2819,14 @@
+@@ -2349,13 +3019,14 @@
                  auto& view = itr->second->arraySlicesViews[i];
                  if (view.has_value()) {
                      vkDestroyImageView(device->device, view.value(), nullptr);
@@ -1075,7 +1302,7 @@
  	}
  
  	device->pipelineState.targets = nullptr;
-@@ -2389,13 +2860,16 @@
+@@ -2389,13 +3060,16 @@
  			auto buffer = device->destroyBuffers.front();
  			auto diff = currentFrame - buffer->frame;
  			if (!free_all && diff < device->freeFrames)
@@ -1093,7 +1320,7 @@
  		while (!device->destroyTextures.empty())
  		{
  			auto texture = device->destroyTextures.front();
-@@ -2555,118 +3029,157 @@
+@@ -2555,118 +3229,152 @@
  	}
  }
  
@@ -1130,29 +1357,24 @@
  		VK_CHECK_RESULT(res);
  		frame.is_recording = false;
  
-+		std::vector<VkSemaphore> waits;
-+		std::vector<VkPipelineStageFlags> waitFlags;
++		MGVK_FrameSubmitSync sync;
 +		if (presenting)
 +		{
-+			waits.push_back(frame.imageAcquiredSemaphore);
-+			waitFlags.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
++			sync.Wait(frame.imageAcquiredSemaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
++			sync.Signal(swap->renderCompleteSemaphore);
 +		}
-+		MGVK_WaitCreations(device, frame, waits, waitFlags);
++		MGVK_WaitCreations(device, frame, sync);
 -		VkSemaphore waits[] = { frame.imageAcquiredSemaphore };
 -		VkPipelineStageFlags waitFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
  
  		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
  		submitInfo.pNext = nullptr;
-+		submitInfo.waitSemaphoreCount = (uint32_t)waits.size();
-+		submitInfo.pWaitSemaphores = waits.data();
-+		submitInfo.pWaitDstStageMask = waitFlags.data();
 -		submitInfo.waitSemaphoreCount = 1;
 -		submitInfo.pWaitSemaphores = waits;
 -		submitInfo.pWaitDstStageMask = waitFlags;
  		submitInfo.commandBufferCount = 1;
  		submitInfo.pCommandBuffers = &frame.commandBuffer;
-+		submitInfo.signalSemaphoreCount = presenting ? 1 : 0;
-+		submitInfo.pSignalSemaphores = presenting ? &swap->renderCompleteSemaphore : nullptr;
++		sync.Apply(submitInfo, device->frameTimeline != VK_NULL_HANDLE);
 +		commandTiming.Stop();
 +		{ ArmaPresentSpan timing(3); res = vkQueueSubmit(device->queue, 1, &submitInfo, frame.completedFence); }
 -		submitInfo.signalSemaphoreCount = 1;
@@ -1287,7 +1509,7 @@
  void MGG_GraphicsDevice_SetBlendState(MGG_GraphicsDevice* device, MGG_BlendState* state, mgfloat factorR, mgfloat factorG, mgfloat factorB, mgfloat factorA)
  {
  	assert(device != nullptr);
-@@ -2789,26 +3302,42 @@
+@@ -2789,26 +3497,42 @@
  
  		device->targets.numTargets = count;
  	}
@@ -1335,7 +1557,7 @@
  	{
  		if (buffer->dirty)		
  			device->uniformsDirty |= 1 << (int)stage;
-@@ -2818,22 +3347,26 @@
+@@ -2818,22 +3542,26 @@
  void MGG_GraphicsDevice_SetTexture(MGG_GraphicsDevice* device, MGShaderStage stage, mgint slot, MGG_Texture* texture)
  {
  	assert(device != nullptr);
@@ -1362,7 +1584,7 @@
  
  void MGG_GraphicsDevice_SetIndexBuffer(MGG_GraphicsDevice* device, MGIndexElementSize size, MGG_Buffer* buffer)
  {
-@@ -3345,15 +3878,16 @@
+@@ -3345,15 +4073,16 @@
  			target->layouts[0] = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
  	}
  
@@ -1382,7 +1604,7 @@
  	render_area.offset.x = 0;
  	render_area.offset.y = 0;
  	render_area.extent.width = cached->width;
-@@ -3377,59 +3911,113 @@
+@@ -3377,59 +4106,113 @@
  		{
  			vkCmdResetQueryPool(commandBuffer, query->queryPool, 0, 1);
  			query->gpuHasBegun = true;
@@ -1508,7 +1730,7 @@
  	// needs to be updated before we draw.
  
  	MGVK_DescriptorInfo* info;
-@@ -3469,17 +4057,20 @@
+@@ -3469,17 +4252,20 @@
  	// wrong buffer if the descriptor is retrieved from the cache (and will
  	// result in flickers/broken rendering).
  	// 
@@ -1529,7 +1751,7 @@
  		{
  			// Allocate more cache if empty.
  			MGVK_FillDescriptorSetCache(device, shader);
-@@ -3490,20 +4081,21 @@
+@@ -3490,20 +4276,21 @@
  		info = shader->freeSets.front();
  		shader->freeSets.pop();
  
@@ -1552,7 +1774,7 @@
  			else if (w.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
  			{
  				int slot = w.dstBinding - 32;
-@@ -3530,28 +4122,54 @@
+@@ -3530,28 +4317,54 @@
  				// This should never happen!
  				assert(0);
  			}
@@ -1612,7 +1834,7 @@
  					assert(0);
  				}
  
-@@ -3600,25 +4218,92 @@
+@@ -3600,25 +4413,92 @@
  	VK_CHECK_RESULT(res);
  	VK_SET_OBJECT_NAME(device->device, program->layout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, "MGVK_Program.layout (id: %llu)", programId);
  
@@ -1706,7 +1928,7 @@
  	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
  
  	// We set the viewport and scissor dynamically.
-@@ -3716,21 +4401,26 @@
+@@ -3716,21 +4596,26 @@
  		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
  		multisampling.sampleShadingEnable = VK_FALSE;
  		multisampling.minSampleShading = 1.0f;
@@ -1734,7 +1956,7 @@
  
  	return pipeline.cache;
  }
-@@ -3766,22 +4456,25 @@
+@@ -3766,22 +4651,25 @@
  	// First update the pipeline if we need to.
  	if (device->pipelineStateDirty)
  	{
@@ -1762,7 +1984,7 @@
  		// We need to re-apply the viewport too.
  		vkCmdSetViewport(commandBuffer, 0, 1, &device->viewport);
  	}
-@@ -3828,27 +4521,38 @@
+@@ -3828,27 +4716,38 @@
  		if (program->vertex->bindings.size() == 0)
  			setOffset++;
  		else
@@ -1803,7 +2025,7 @@
  		// Clear all the dirty flags.
  		device->uniformsDirty = 0;
  		device->textureSamplerDirty = 0;
-@@ -3860,25 +4564,40 @@
+@@ -3860,25 +4759,40 @@
  
  		int count = 0;
  		VkDeviceSize offsets[8];
@@ -1846,7 +2068,7 @@
  }
  
  static int MGVK_GetIndexCount(MGPrimitiveType primitiveType, mgint primitiveCount)
-@@ -3898,49 +4617,66 @@
+@@ -3898,49 +4812,66 @@
  		return primitiveCount;
  	}
  }
@@ -1915,7 +2137,7 @@
  	{
  		device->pipelineStateDirty = true;
  		device->pipelineState.topology = topology;
-@@ -3948,64 +4684,79 @@
+@@ -3948,64 +4879,79 @@
  
  	MGVK_UpdatePipeline(device, frame.commandBuffer, device->frame);
  
@@ -1999,7 +2221,7 @@
  {
  	value = value >> level;
  	return value < 1 ? 1 : value;
-@@ -4221,25 +4972,32 @@
+@@ -4221,35 +5167,35 @@
  	assert(data != nullptr);
  	assert(count > 0);
  	assert(dataBytes > 0);
@@ -2012,31 +2234,37 @@
  	MGVK_EndRenderPass(device, frame.commandBuffer);
  
  	VK_CHECK_RESULT(vkEndCommandBuffer(frame.commandBuffer));
- 
-+	std::vector<VkSemaphore> flushWaits = { frame.imageAcquiredSemaphore };
-+	std::vector<VkPipelineStageFlags> waitStages = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-+	{
-+		std::lock_guard createLock(device->queueMutex);
-+		MGVK_WaitCreations(device, frame, flushWaits, waitStages);
-+	}
+-
 -	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
  
  	VkSubmitInfo flushSubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-+	flushSubmitInfo.waitSemaphoreCount = (uint32_t)flushWaits.size();
-+	flushSubmitInfo.pWaitSemaphores = flushWaits.data();
 -	flushSubmitInfo.waitSemaphoreCount = 1;
 -	flushSubmitInfo.pWaitSemaphores = &frame.imageAcquiredSemaphore;
  	flushSubmitInfo.commandBufferCount = 1;
  	flushSubmitInfo.pCommandBuffers = &frame.commandBuffer;
-+	flushSubmitInfo.pWaitDstStageMask = waitStages.data();
 -	flushSubmitInfo.pWaitDstStageMask = waitStages;
- 	flushSubmitInfo.signalSemaphoreCount = 1;
- 	flushSubmitInfo.pSignalSemaphores = &device->swapchains[frame.image_index].renderCompleteSemaphore;
+-	flushSubmitInfo.signalSemaphoreCount = 1;
+-	flushSubmitInfo.pSignalSemaphores = &device->swapchains[frame.image_index].renderCompleteSemaphore;
  
  	VkFence flushFence;
  	VkFenceCreateInfo fenceInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
  	vkCreateFence(device->device, &fenceInfo, nullptr, &flushFence);
-@@ -4631,13 +5389,14 @@
+ 	VK_SET_OBJECT_NAME(device->device, flushFence, VK_OBJECT_TYPE_FENCE, "MGG_GraphicsDevice_GetBackBufferData::flushFence");
+ 
+ 	{
+ 		std::lock_guard lock(device->queueMutex);
++		MGVK_FrameSubmitSync sync;
++		sync.Wait(frame.imageAcquiredSemaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
++		sync.Signal(device->swapchains[frame.image_index].renderCompleteSemaphore);
++		MGVK_WaitCreations(device, frame, sync);
++		sync.Apply(flushSubmitInfo, device->frameTimeline != VK_NULL_HANDLE);
+ 		vkQueueSubmit(device->queue, 1, &flushSubmitInfo, flushFence);
+ 	}
+ 	vkWaitForFences(device->device, 1, &flushFence, VK_TRUE, UINT64_MAX);
+ 	vkDestroyFence(device->device, flushFence, nullptr);
+ 
+ 	auto srcImage = device->swapchains[frame.image_index].texture->image;
+@@ -4631,13 +5577,14 @@
  	rasterizer.flags = 0; // Reserved for future use.
  	rasterizer.depthClampEnable = !info->depthClipEnable;
  	rasterizer.rasterizerDiscardEnable = VK_FALSE;
@@ -2052,7 +2280,7 @@
  	rasterizer.lineWidth = 1.0f;
  
  	// These don't fit this structure, so we
-@@ -4816,12 +5575,13 @@
+@@ -4816,12 +5763,13 @@
  	// Get the info we need to find/allocate a new buffer.
  	auto dataSize = buffer->dataSize;
  	auto type = buffer->type;
@@ -2066,7 +2294,7 @@
  
  	// Search for the best fit from the free list.	
  	MGG_Buffer** curr = &device->free;
-@@ -4894,12 +5654,19 @@
+@@ -4894,12 +5842,19 @@
  			break;
  		case MGBufferType::Constant:
  			usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
@@ -2086,7 +2314,7 @@
  
  		// TODO: We could lazy map on first write/read... then
  		// unmap it if we haven't accessed it in a while.  This
-@@ -4978,13 +5745,13 @@
+@@ -4978,13 +5933,13 @@
  		delete [] buffer->push;
  		delete buffer;
  		return;
@@ -2101,7 +2329,7 @@
  	device->destroyBuffers.push(buffer);
  }
  
-@@ -4995,12 +5762,24 @@
+@@ -4995,12 +5950,24 @@
  	assert(buffer != nullptr);
  	assert(data != nullptr);
  	assert(offset >= 0);
@@ -2126,7 +2354,7 @@
  	// If this is a push buffer we don't need to
  	// do anything other than copy over the content.
  	// We can safely ignore the discard.
-@@ -5036,17 +5815,20 @@
+@@ -5036,17 +6003,20 @@
  
  		switch (buffer->type)
  		{
@@ -2151,7 +2379,7 @@
  		case MGBufferType::Vertex:
  			for (int i = 0; i < 8; i++)
  			{
-@@ -5159,13 +5941,13 @@
+@@ -5159,13 +6129,13 @@
  
  		cmd = MGVK_BeginNewCommandBuffer(device, device->transferPool);
  		MGVK_CmdTransitionImageLayout(cmd, texture->image,
@@ -2166,7 +2394,7 @@
  
  	return texture;
  }
-@@ -5275,13 +6057,13 @@
+@@ -5275,13 +6245,13 @@
  				0,
  				mipmaps,
  				0,
@@ -2181,7 +2409,7 @@
  			texture->layouts[i] = startLayout;
  		texture->optimal_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
  	}
-@@ -5536,12 +6318,14 @@
+@@ -5536,12 +6506,14 @@
  
  	// We store the pre-generated bindings info at the top of the shader bytecode data.
  	int uniformCount = 0;
@@ -2196,7 +2424,7 @@
  
  		memcpy(shader->textureTypes, bytecode, sizeof(MGTextureType) * MAX_TEXTURE_SLOTS);
  		bytecode += sizeof(MGTextureType) * MAX_TEXTURE_SLOTS;
-@@ -5602,29 +6386,27 @@
+@@ -5602,29 +6574,27 @@
  		VkDescriptorPoolSize* pool_sizes = new VkDescriptorPoolSize[layoutBindings.size()];
  
  		for (int i = 0; i < layoutBindings.size(); i++)
@@ -2231,7 +2459,7 @@
  	VkDescriptorBufferInfo* bufferInfo = shader->bufferInfo = new VkDescriptorBufferInfo[uniformCount];
  	VkDescriptorImageInfo* imageInfo = shader->imageInfo =  new VkDescriptorImageInfo[layoutBindings.size() - uniformCount];
  	for (int i = 0; i < layoutBindings.size(); i++)
-@@ -5724,12 +6506,14 @@
+@@ -5724,12 +6694,14 @@
  		delete free;
  	}
  
@@ -2246,7 +2474,23 @@
  		delete shader->poolInfo;
  	}
  
-@@ -5871,8 +6655,792 @@
+@@ -5814,12 +6786,15 @@
+     
+     VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+     submitInfo.commandBufferCount = 1;
+     submitInfo.pCommandBuffers = &frame.commandBuffer;
+ 	{
+ 		std::lock_guard lock(device->queueMutex);
++		MGVK_FrameSubmitSync sync; // ArmAgedon: as every submit of the frame's command buffer
++		MGVK_WaitCreations(device, frame, sync);
++		sync.Apply(submitInfo, device->frameTimeline != VK_NULL_HANDLE);
+ 		VK_CHECK_RESULT(vkQueueSubmit(device->queue, 1, &submitInfo, fence));
+ 	}
+ 
+     VK_CHECK_RESULT(vkWaitForFences(device->device, 1, &fence, VK_TRUE, UINT64_MAX));
+     vkDestroyFence(device->device, fence, nullptr);
+ 
+@@ -5871,8 +6846,898 @@
  	else
  	{
  		// An error occurred.
@@ -2323,6 +2567,112 @@
 +	if (width) *width = (mgint)texture->info.extent.width;
 +	if (height) *height = (mgint)texture->info.extent.height;
 +	return (uint64_t)texture->image;
++}
++
++// ---------------------------------------------------------------------------------------------------------------------
++// ArmAgedon: video interop. mpv (libplacebo, FFmpeg Vulkan Video) shares this VkDevice and renders video frames into render
++// targets on its own threads. Queue access goes through the lock callbacks; frames are handed over with timeline
++// semaphores: mpv waits on the frame timeline before writing a target (MGVK_FrameTimelineValue), the frame waits on mpv's
++// semaphore before sampling it (MGVK_AddFrameWait). Nothing changes unless MGVK_RequestVideoInterop was called.
++// ---------------------------------------------------------------------------------------------------------------------
++
++/// Before the Game exists (it creates the instance and device): ask for the device the interop needs.
++MG_EXPORT void MGVK_RequestVideoInterop(mgbool on)
++{
++	s_videoInteropRequested = on != 0;
++}
++
++struct MGVK_VideoInteropInfo
++{
++	void* instance;
++	void* getInstanceProcAddr;
++	uint32_t apiVersion;
++	const char* const* instanceExtensions;
++	int32_t numInstanceExtensions;
++	void* physicalDevice;
++	void* device;
++	const char* const* deviceExtensions;
++	int32_t numDeviceExtensions;
++	const void* features; // VkPhysicalDeviceFeatures2 chain, valid as long as the device
++	uint32_t queueFamily;
++	uint32_t queueCount;
++	void* lockQueue;   // void(void* ctx, uint32_t family, uint32_t index)
++	void* unlockQueue;
++	void* queueContext;
++	uint64_t frameTimeline; // VkSemaphore (timeline) signaled by the frame's submits
++};
++
++static void MGVK_InteropLockQueue(void* ctx, uint32_t family, uint32_t index)
++{
++	auto device = (MGG_GraphicsDevice*)ctx;
++	if (family == device->graphicsQueueFamily)
++		device->queueMutex.lock();
++	else
++		device->videoQueueMutex.lock();
++}
++
++static void MGVK_InteropUnlockQueue(void* ctx, uint32_t family, uint32_t index)
++{
++	auto device = (MGG_GraphicsDevice*)ctx;
++	if (family == device->graphicsQueueFamily)
++		device->queueMutex.unlock();
++	else
++		device->videoQueueMutex.unlock();
++}
++
++/// Returns 0 and fills info when the device was created for the interop, -1 otherwise.
++MG_EXPORT mgint MGVK_GetVideoInterop(MGG_GraphicsDevice* device, MGVK_VideoInteropInfo* info)
++{
++	if (device == nullptr || info == nullptr || device->video == nullptr || device->frameTimeline == VK_NULL_HANDLE)
++		return -1;
++	MGVK_VideoInterop* video = device->video;
++	info->instance = device->instance;
++	info->getInstanceProcAddr = (void*)vkGetInstanceProcAddr;
++	info->apiVersion = s_instanceApiVersion;
++	info->instanceExtensions = video->instanceExtensionNames.data();
++	info->numInstanceExtensions = (int32_t)video->instanceExtensionNames.size();
++	info->physicalDevice = device->physicalDevice;
++	info->device = device->device;
++	info->deviceExtensions = video->deviceExtensionNames.data();
++	info->numDeviceExtensions = (int32_t)video->deviceExtensionNames.size();
++	info->features = &video->features;
++	info->queueFamily = device->graphicsQueueFamily;
++	info->queueCount = 1;
++	info->lockQueue = (void*)&MGVK_InteropLockQueue;
++	info->unlockQueue = (void*)&MGVK_InteropUnlockQueue;
++	info->queueContext = device;
++	info->frameTimeline = (uint64_t)device->frameTimeline;
++	return 0;
++}
++
++/// The next submit of the frame's command buffer waits until the timeline semaphore reaches value (all stages).
++MG_EXPORT void MGVK_AddFrameWait(MGG_GraphicsDevice* device, uint64_t semaphore, uint64_t value)
++{
++	if (device == nullptr || semaphore == 0 || device->frameTimeline == VK_NULL_HANDLE)
++		return;
++	std::lock_guard lock(device->queueMutex);
++	device->pendingExternalWaits.emplace_back((VkSemaphore)semaphore, value);
++}
++
++/// The frame timeline value the latest submit of a frame's command buffer signals: once it is reached, everything submitted
++/// so far by MonoGame's frames is done.
++MG_EXPORT uint64_t MGVK_FrameTimelineValue(MGG_GraphicsDevice* device)
++{
++	if (device == nullptr)
++		return 0;
++	std::lock_guard lock(device->queueMutex);
++	return device->frameTimelineValue;
++}
++
++/// Tells MonoGame which layout a texture's image is in after someone else wrote it (GetData and copies start from it), and
++/// that this frame uses it: a GetData in this frame then submits the frame first, with its waits (MGVK_AddFrameWait).
++MG_EXPORT void MGVK_SetTextureLayout(MGG_GraphicsDevice* device, MGG_Texture* texture, mgint layout)
++{
++	if (device == nullptr || texture == nullptr)
++		return;
++	for (int i = 0; i < MGVK_MAX_MIPS; i++)
++		texture->layouts[i] = (VkImageLayout)layout;
++	texture->frame = device->frame;
 +}
 +
 +/// Copy a render target into an external image owned by someone else (an OpenXR swapchain image), in order with

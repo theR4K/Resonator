@@ -1,0 +1,19 @@
+--- a/FrooxEngine/VR_Manager.cs
++++ b/FrooxEngine/VR_Manager.cs
+@@ -5,7 +5,7 @@
+ 
+ namespace FrooxEngine;
+ 
++public partial class VR_Manager
+-public class VR_Manager
+ {
+ 	private GeneralHeadset _headset;
+ 
+@@ -311,6 +311,7 @@
+ 			{
+ 				mappedHand = Input.CreateDevice<MappableTrackedObject>(controller.Name + " - Hand");
+ 				mappedHand.Initialize(mappedHand.Name, BodyNode.LeftHand.GetSide(state.side), MappingTarget.VR, state.handPosition, state.handRotation);
++				ApplyBoundHandOffset(mappedHand, state); // ArmAgedon seam
+ 				mappedHand.Priority = -10;
+ 				_controllerBoundHands.Add(state.deviceID, mappedHand);
+ 			}

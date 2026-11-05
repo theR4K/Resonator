@@ -115,6 +115,7 @@ Specs, weave modes, the official-library table and the `target.json` keys are in
 | [CLI reference](docs/cli.md) | every tool and option |
 | [Weaver spec](src/Resonator.Weaver/README.md) | what the weaver does and what each deweave operation reverts |
 | [Contributing](CONTRIBUTING.md) | conventions and the checks before a commit |
+| [Releases and CI](docs/releases.md) | Forgejo tool releases, current-Resonite validation and ARM64 Steam downloads |
 
 ## 🗂️ Repository layout
 

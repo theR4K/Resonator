@@ -1,0 +1,67 @@
+name: Publish Resonator tools
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag, for example v0.1.0'
+        required: true
+        type: string
+      downloader:
+        description: 'depotdownloader (native ARM64) or steamcmd (preinstalled launcher)'
+        default: depotdownloader
+        type: string
+
+concurrency:
+  group: resonator-release-${{ inputs.tag || forgejo.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ${{ vars.RESONATOR_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 60
+    env:
+      RESONITE_DIR: ${{ forgejo.workspace }}/out/resonite
+      RESONATOR_STEAM_HOME: ${{ vars.RESONATOR_STEAM_HOME }}
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+    steps:
+      - name: Check out the release tag
+        uses: https://github.com/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.tag || forgejo.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate the version tag
+        env:
+          RELEASE_TAG: ${{ inputs.tag || forgejo.ref_name }}
+        run: python3 -c 'import os,re; tag=os.environ["RELEASE_TAG"]; assert re.fullmatch(r"v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?",tag), "Expected vMAJOR.MINOR.PATCH release tag"'
+      - name: Install native .NET 10 SDK
+        uses: https://github.com/actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Download Resonite compile references from Steam
+        env:
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+          STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
+          STEAMCMD: ${{ vars.STEAMCMD }}
+          DOWNLOADER: ${{ inputs.downloader || vars.RESONATOR_DOWNLOADER || 'depotdownloader' }}
+        run: python3 ci/download_resonite.py "$RESONITE_DIR" --method "$DOWNLOADER"
+      - name: Build and test
+        run: |
+          dotnet build Resonator.slnx -c Release
+          dotnet run --project tests/Resonator.Remapping.Tests -c Release --no-build
+          python3 -m unittest discover -s ci/tests -v
+      - name: Package the complete tool suite
+        env:
+          RELEASE_TAG: ${{ inputs.tag || forgejo.ref_name }}
+        run: |
+          python3 ci/package_tools.py --version "${RELEASE_TAG#v}"
+      - name: Publish Forgejo release and checksums
+        env:
+          RELEASE_TAG: ${{ inputs.tag || forgejo.ref_name }}
+          FORGEJO_SERVER_URL: ${{ forgejo.server_url }}
+          FORGEJO_REPOSITORY: ${{ forgejo.repository }}
+          FORGEJO_TOKEN: ${{ forgejo.token }}
+        run: python3 ci/publish_release.py --tag "$RELEASE_TAG" --output out/release

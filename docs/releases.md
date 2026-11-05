@@ -1,0 +1,58 @@
+# Forgejo releases and Resonite validation
+
+The workflows live in `.forgejo/workflows`:
+
+- `release.yaml`: a `vMAJOR.MINOR.PATCH` tag builds/tests the suite, creates a portable archive and SHA256SUMS, uploads them to a Forgejo draft, then publishes it. Manual dispatch accepts an existing tag. Published releases are never overwritten; an interrupted draft can be retried.
+- `resonite-validation.yaml`: runs daily at 03:17 UTC or on manual dispatch. It downloads the current public Windows Resonite managed assemblies/PDBs, builds/tests Resonator, and runs the full **Flatweave** rebuild. Failed patch hunks fail the job even if ProjectBuilder prints `PIPELINE OK`. Manual dispatch can narrow the target.
+- `checks.yaml`: runs on branch pushes/pull requests and can be dispatched manually. It builds the three CLIs that have no game-reference dependency, runs source-only remapping/adapter tests and the release helper tests. This checks the native runner without Steam credentials. ShadersReferenceBuilder and original-Assimp differential checks run in the download-backed workflows.
+
+## Runner setup
+
+The default is a **Linux runner**, including ARM64, with an `ubuntu-latest` label. The current private Forgejo instance exposes runner `pi` with labels `pi`, `ubuntu-latest`, and `arm64`, so the default label already matches it. Set repository variable `RESONATOR_RUNNER` to choose another Linux runner label. It needs Python 3.10+, Git, a shell, and Node.js 24 for the pinned setup-dotnet action; setup-dotnet installs the native .NET 10 SDK. No Docker privileged mode or emulator is needed for the default download method. The CI scripts are portable Python; the supplied workflow shell commands target Linux.
+
+The release archive is framework dependent and portable: the same ZIP runs with native .NET on Linux/Windows/macOS, ARM64 or x64. It contains all four CLIs, target sets/patches, docs, and the local Flatweave.Adapter source needed by those targets. Run:
+
+```
+dotnet tools/Resonator.ProjectBuilder/Resonator.ProjectBuilder.dll --help
+```
+
+The .NET 10 SDK and a user's own Resonite install are required. Targets are located automatically from the bundled repository marker. Resonite assemblies, generated engine trees and Steam login state are excluded from tool releases. Validation builds are not uploaded as tool-suite release assets.
+
+## Steam authentication and ARM64
+
+Set secret `STEAM_USERNAME` to an account with Resonite in its library. Set `STEAM_PASSWORD` only if needed for a noninteractive login; prefer a remembered session bootstrapped on the runner with Steam Guard. Set variable `RESONATOR_STEAM_HOME` to a private persistent directory visible to each job (and inside the job container if using Docker). Without it, the default is under the runner's temporary directory and the login will not persist reliably.
+
+The default **DepotDownloader 3.4.0** is a Steam CLI using SteamKit2, with native Linux ARM64 and Windows ARM64 releases. The helper downloads the matching native binary, requests Windows x64 Resonite depots for their managed reference assemblies, and does not execute the game. The selected game architecture does not change the downloader's host architecture. Only DLL/PDB/config build inputs are fetched with this method.
+
+For first-time authorization, run DepotDownloader interactively as the runner account from the configured Steam home, using `-app 2519830 -os windows -username YOUR_ACCOUNT -remember-password`; complete Steam Guard. Then keep that directory private and reuse the same runner identity. Never upload this directory or put it in a shared action cache. A password alone may still require Steam Guard; CI cannot complete an interactive prompt.
+
+To use Valve **SteamCMD** instead, set `RESONATOR_DOWNLOADER=steamcmd` and `STEAMCMD` to an installed executable/launcher visible in the job. On Linux ARM64, provide a working x86 emulation launcher; changing the requested depot architecture does not make SteamCMD an ARM binary. The workflow deliberately does not install host emulation or request privileged containers. SteamCMD fetches the full app rather than the managed-only file selection. On Windows ARM64, test the installed SteamCMD under Windows' x86 compatibility support first.
+
+Steam tools never ship with the Resonator archive. Downloader flags and session behavior are documented by [DepotDownloader](https://github.com/SteamRE/DepotDownloader); [Resonite's SteamCMD instructions](https://wiki.resonite.com/Headless_Server_Software/Setup) cover account authorization (the public-client workflow here does not request the restricted headless branch).
+
+## Forgejo configuration
+
+Enable Actions for the repository and make the runner available to it. Forgejo supplies the workflow repository token for release creation/upload, so a separate publishing PAT is unnecessary. The automatic token needs repository write access; this is the standard Forgejo token for trusted tag/manual workflows. Release publishing does not run on pull requests.
+
+Optional repository variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `RESONATOR_RUNNER` | `ubuntu-latest` | Available Linux runner label |
+| `RESONATOR_STEAM_HOME` | runner temp/resonator-steam | Private persistent Steam session/tool directory |
+| `RESONATOR_DOWNLOADER` | `depotdownloader` | `depotdownloader` or `steamcmd` |
+| `STEAMCMD` | executable on PATH | Preinstalled SteamCMD launcher |
+
+The build uses Resonite references for ShadersReferenceBuilder; `Private=false` prevents those game assemblies from being copied into the tool output. Packaging also rejects core game DLLs and apphost executables. Tool archives are versioned, include a per-file SHA256 manifest, and have an external SHA256SUMS file.
+
+## Local verification
+
+```
+python3 -m unittest discover -s ci/tests -v
+dotnet build Resonator.slnx -c Release -p:ResoniteDir=/path/to/Resonite
+dotnet run --project tests/Resonator.Remapping.Tests -c Release --no-build
+python3 ci/package_tools.py --version 0.1.0 --output out/release-check
+python3 ci/validate_pipeline.py --resonite /path/to/Resonite --target Awwdio
+```
+
+Set `RESONITE_DIR` for the package command too: it publishes ShadersReferenceBuilder against that install. Use a fresh package output directory for each check. Full generated Flatweave validation can take considerably longer than the tool build.

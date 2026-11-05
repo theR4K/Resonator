@@ -11,3 +11,4 @@ work/
 *.dll
 *.pdb
 *.exe
+__pycache__/

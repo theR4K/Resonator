@@ -171,15 +171,33 @@ public static class ReferencesTargets
     /// </summary>
     static XElement CalliStep(CalliSpec calli)
     {
-        string exe = Path.Combine(AppContext.BaseDirectory, "Resonator.ProjectBuilder.exe");
-        if (!File.Exists(exe)) exe = Path.Combine(AppContext.BaseDirectory, "Resonator.ProjectBuilder");
-        string command = $"\"{exe}\" calli \"@(IntermediateAssembly->'%(FullPath)')\" {calli.Attribute}"
+        string command = $"dotnet \"{ProjectBuilderDll()}\" calli \"@(IntermediateAssembly->'%(FullPath)')\" {calli.Attribute}"
                          + (calli.RemoveTypeAttribute != null ? " " + calli.RemoveTypeAttribute : "");
         return new XElement("Target",
             new XAttribute("Name", "ResonatorCalli"),
             new XAttribute("AfterTargets", "CoreCompile"),
             new XAttribute("Condition", "'@(IntermediateAssembly)' != ''"),
             new XElement("Exec", new XAttribute("Command", command)));
+    }
+
+    /// <summary>The managed CLI works with native .NET on every host, including portable releases without an apphost.</summary>
+    static string ProjectBuilderDll()
+    {
+        const string dll = "Resonator.ProjectBuilder.dll";
+        string beside = Path.Combine(AppContext.BaseDirectory, dll);
+        if (File.Exists(beside)) return beside;
+        for (string? dir = AppContext.BaseDirectory; dir != null; dir = Directory.GetParent(dir)?.FullName)
+        {
+            // Published suite layout; PatchGenerator also writes references.targets.
+            string published = Path.Combine(dir, "tools", "Resonator.ProjectBuilder", dll);
+            if (File.Exists(published)) return published;
+            if (!File.Exists(Path.Combine(dir, "Resonator.slnx"))) continue;
+            var framework = new DirectoryInfo(AppContext.BaseDirectory);
+            string built = Path.Combine(dir, "src", "Resonator.ProjectBuilder", "bin", framework.Parent!.Name, framework.Name, dll);
+            if (File.Exists(built)) return built;
+            break;
+        }
+        throw new FileNotFoundException("Resonator.ProjectBuilder.dll is needed for the CSCore calli build step; build ProjectBuilder or use the complete tool-suite release.");
     }
 
     /// <summary>

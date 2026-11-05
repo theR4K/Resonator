@@ -14,6 +14,17 @@ import zipfile
 DEPOT_TAG = "DepotDownloader_3.4.0"
 
 
+def depot_environment(home):
+    environment = os.environ.copy()
+    if platform.system() == "Linux":
+        # DepotDownloader uses .NET IsolatedStorage, not its working directory.
+        data = home.resolve() / "user-data"
+        data.mkdir(parents=True, exist_ok=True)
+        data.chmod(0o700)
+        environment["XDG_DATA_HOME"] = str(data)
+    return environment
+
+
 def downloader_asset(system=None, machine=None):
     system = system or platform.system()
     machine = (machine or platform.machine()).lower()
@@ -75,7 +86,8 @@ def download(destination, method, home):
         command += ["validate", "+quit"]
     # A remembered Steam session belongs in the private Steam home, never in a release or artifact.
     # A first-time Steam Guard prompt cannot be answered in CI: bootstrap the session on the runner.
-    subprocess.run(command, cwd=home, check=True, stdin=subprocess.DEVNULL, timeout=1800)
+    environment = depot_environment(home) if method == "depotdownloader" else os.environ.copy()
+    subprocess.run(command, cwd=home, env=environment, check=True, stdin=subprocess.DEVNULL, timeout=1800)
     required = ["FrooxEngine.dll", "FrooxEngine.Weaver.dll", "SkyFrost.Base.dll", "Elements.Core.dll"]
     missing = [name for name in required if not (destination / name).is_file()]
     if missing:

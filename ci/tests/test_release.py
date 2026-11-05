@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 import urllib.error
+from unittest import mock
 
 CI = Path(__file__).resolve().parents[1]
 
@@ -21,6 +22,17 @@ release = module("publish_release")
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_linux_login_state_survives_a_new_process_environment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with mock.patch.object(download.platform, "system", return_value="Linux"):
+                with mock.patch.dict(download.os.environ, {"XDG_DATA_HOME": "/temporary-container-home"}):
+                    login_environment = download.depot_environment(root)
+                with mock.patch.dict(download.os.environ, {"XDG_DATA_HOME": "/another-container-home"}):
+                    job_environment = download.depot_environment(root)
+            self.assertEqual(login_environment["XDG_DATA_HOME"], job_environment["XDG_DATA_HOME"])
+            self.assertTrue(Path(job_environment["XDG_DATA_HOME"]).is_dir())
+
     def test_native_downloader_selection(self):
         self.assertEqual(download.downloader_asset("Linux", "aarch64"), "DepotDownloader-linux-arm64.zip")
         self.assertEqual(download.downloader_asset("Windows", "ARM64"), "DepotDownloader-windows-arm64.zip")

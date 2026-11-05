@@ -24,7 +24,17 @@ Set secret `STEAM_USERNAME` to an account with Resonite in its library. Set `STE
 
 The default **DepotDownloader 3.4.0** is a Steam CLI using SteamKit2, with native Linux ARM64 and Windows ARM64 releases. The helper downloads the matching native binary, requests Windows x64 Resonite depots for their managed reference assemblies, and does not execute the game. The selected game architecture does not change the downloader's host architecture. Only DLL/PDB/config build inputs are fetched with this method.
 
-For first-time authorization, run DepotDownloader interactively as the runner account from the configured Steam home, using `-app 2519830 -os windows -username YOUR_ACCOUNT -remember-password`; complete Steam Guard. Then keep that directory private and reuse the same runner identity. Never upload this directory or put it in a shared action cache. A password alone may still require Steam Guard; CI cannot complete an interactive prompt.
+For first-time authorization, use the interactive helper from the Resonator checkout:
+
+```sh
+python3 ci/steam_login.py --username YOUR_STEAM_LOGIN --steam-home /resonator-steam
+```
+
+Enter the password at the terminal prompt and approve Steam Guard. This fetches manifests only. Unlike the CI downloader, this helper permits interactive input. Both helpers put Linux .NET isolated storage under `/resonator-steam/user-data`: DepotDownloader does not save login state in its working directory. The executable's absolute path also contributes to the isolated-storage identity, so use the same `/resonator-steam` path for bootstrap and jobs.
+
+For Docker runners, mount a private persistent directory or named volume at `/resonator-steam` in both the bootstrap container and the Steam-backed job containers. Set `RESONATOR_STEAM_HOME=/resonator-steam` as a Forgejo repository variable and `STEAM_USERNAME` as a repository secret. The job user must be able to read/write the mounted directory. Mounting this directory only in the runner daemon container does not mount it into job containers; configure the job container mounts in your runner setup. The supplied workflow does not create host mounts automatically.
+
+Keep the directory private and never upload it or put it in a shared action cache. A password alone may still require Steam Guard; CI cannot complete an interactive prompt.
 
 To use Valve **SteamCMD** instead, set `RESONATOR_DOWNLOADER=steamcmd` and `STEAMCMD` to an installed executable/launcher visible in the job. On Linux ARM64, provide a working x86 emulation launcher; changing the requested depot architecture does not make SteamCMD an ARM binary. The workflow deliberately does not install host emulation or request privileged containers. SteamCMD fetches the full app rather than the managed-only file selection. On Windows ARM64, test the installed SteamCMD under Windows' x86 compatibility support first.
 

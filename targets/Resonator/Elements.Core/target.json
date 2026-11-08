@@ -1,6 +1,6 @@
 {
   "name": "Elements.Core",
-  "description": "Consumer of native wrappers (Brotli.Core): plain recompile of the shipped dll, so it can be rebuilt against replacement wrappers.",
+  "description": "Plain recompile of the shipped dll. It called the Brotli.Core wrapper until Resonite 2026.11 moved it to the runtime's System.IO.Compression.Brotli; kept as the base ArmAginator/Elements.Core extends.",
   "assembly": "Elements.Core.dll",
   "weave": "none"
 }

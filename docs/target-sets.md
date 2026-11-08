@@ -42,14 +42,15 @@ run-time closure (`FrooxEngine.dll`, plus the weaved assemblies it loads), the s
 
   | Assembly | Wrappers it calls |
   |---|---|
-  | `Elements.Core` | Brotli.Core |
   | `Elements.Assets` | AssimpNet, Compressonator.NET, crunch.NET, FreeImageNET, Mikktspace.NET, Msdfgen.NET, PDFiumSharp, RNNoise.NET, SharpFont, SharpPipe |
   | `Awwdio` | SharpPipe, SteamAudio.NET |
   | `OpenLipSync.Inference` | Microsoft.ML.OnnxRuntime |
   | `Renderite.Shared` | YellowDogMan.Cloudtoid.Interprocess |
 
-  The engine and the ProtoFlux assemblies are wrapper consumers too.
-- **the wrappers themselves** (`none`): `ApplicationLoopback.NET`, `AssimpNet`, `Brotli.Core`,
+  The engine and the ProtoFlux assemblies are wrapper consumers too. `Elements.Core` no longer is: Resonite
+  2026.11 replaced its Brotli.Core wrapper with the runtime's `System.IO.Compression.Brotli`. Its target stays as
+  the base of `ArmAginator/Elements.Core`.
+- **the wrappers themselves** (`none`): `ApplicationLoopback.NET`, `AssimpNet`,
   `Compressonator.NET`, `crunch.NET`, `FreeImageNET`, `LeapSharp`, `Microsoft.ML.OnnxRuntime`, `Mikktspace.NET`,
   `Msdfgen.NET`, `PDFiumSharp`, `POpusCodec`, `RNNoise.NET`, `SDL3-CS`, `SharpFont`, `SharpPipe`, `SoundFlow`,
   `SRAnipalSharp`, `SteamAudio.NET`, `Steamworks.NET`, `YellowDogMan.Cloudtoid.Interprocess`. Use these when no
@@ -97,7 +98,7 @@ replaces each with its official release, using one of two target kinds:
 
 | Library (assembly) | Flatweave | Notes |
 |---|---|---|
-| SoundFlow, SteamAudio.NET, PDFiumSharp (`PDFiumSharpV2`), Brotli.Core (`Brotli.NET`), Steamworks.NET, SDL3-CS, Microsoft.ML.OnnxRuntime | package (official) | Steamworks.NET: engine patch cuts the fork-only `ExceptionHandler` hook |
+| SoundFlow, SteamAudio.NET, PDFiumSharp (`PDFiumSharpV2`), Steamworks.NET, SDL3-CS, Microsoft.ML.OnnxRuntime | package (official) | Steamworks.NET: engine patch cuts the fork-only `ExceptionHandler` hook |
 | AssimpNet | package `AssimpNetter` 6.0.5 | the maintained continuation; official AssimpNet (2020) predates assimp 5.1's structs. Engine patch: System.Numerics types, matrix helpers (transpose-aware), bone node by name |
 | Compressonator.NET, Mikktspace.NET, Msdfgen.NET, SharpPipe | package `YellowDogMan.*` | Yellow Dog Man's own libraries: their published package is the official one |
 | crunch.NET | source Yellow-Dog-Man/Crunch.NET (`e054374`) | rebuilt for `net10.0`; the package targets `net46`. Only managed sources are taken; the consumer supplies native crnlib |

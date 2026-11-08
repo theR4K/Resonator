@@ -1,6 +1,17 @@
 --- a/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.Vulkan.cs
 +++ b/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.Vulkan.cs
-@@ -244,23 +244,22 @@
+@@ -178,7 +178,9 @@
+ 
+                 //toolArgs += "-Qstrip_reflect ";
+                 //toolArgs += "-fspv-reflect ";
++                // ArmAgedon vk-multiview: shader model 6.1, the first with SV_ViewID (VR single-pass stereo); the SPIR-V of a
++                // shader that does not read it is the same as at 6.0
++                toolArgs += "-T " + (isVertexShader ? "vs_" : "ps_") + "6_1 ";
+-                toolArgs += "-T " + (isVertexShader ? "vs_" : "ps_") + "6_0 ";
+                 toolArgs += "-E main ";
+                 toolArgs += "-Fc \"" + reflectFile + "\" ";
+                 toolArgs += "-Fo \"" + binFile + "\" ";
+@@ -244,23 +246,22 @@
                  var shaderData = new ShaderData(isVertexShader, effect.Shaders.Count, bytecode);
                  var samplers = new List<ShaderData.Sampler>();
  
@@ -32,7 +43,7 @@
                          SpirvTypeStruct constantBuffer = variable.Pointer.PointerType as SpirvTypeStruct;
                          ConstantBufferData cbuffer = ConstantBufferData.BuildFromSpirvStruct(constantBuffer);
  
-@@ -275,9 +274,8 @@
+@@ -275,9 +276,8 @@
                              }
                              else
                                  cbufferIndex.Add(match);
@@ -43,7 +54,7 @@
                      }
                      else if (variable.Pointer.PointerType.Type == SpirvType.Image)
                      {
-@@ -521,11 +519,11 @@
+@@ -521,11 +521,11 @@
                      uint samplerSlots = 0;
                      var textureTypes = new uint[16];
  

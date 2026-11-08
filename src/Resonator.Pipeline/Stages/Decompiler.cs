@@ -68,9 +68,17 @@ internal static class Decompiler
     static (PEFile Pe, UniversalAssemblyResolver Resolver, IDebugInfoProvider? Pdb) Open(Target target)
     {
         var pe = new PEFile(target.SourceDll);
-        var resolver = new UniversalAssemblyResolver(target.SourceDll, throwOnError: false, targetFramework: pe.DetectTargetFrameworkId());
+        string framework = pe.DetectTargetFrameworkId();
+        var resolver = new UniversalAssemblyResolver(target.SourceDll, throwOnError: false, targetFramework: framework);
         resolver.AddSearchDirectory(target.Settings.ResoniteDir);
         resolver.AddSearchDirectory(AppContext.BaseDirectory);   // the shared Flatweave marker is a tool dependency
+        // A .NET Framework dll: its framework assemblies from the official reference package, so the
+        // output does not depend on the build host having a GAC (Windows) or not (Linux).
+        if (FrameworkReferences.DirectoryFor(framework, target.Settings.WorkDir) is string references)
+        {
+            resolver.AddSearchDirectory(references);
+            Log.Info("  framework references: " + references);
+        }
         return (pe, resolver, target.Settings.UsePdb ? TryLoadPdb(target.SourceDll) : null);
     }
 

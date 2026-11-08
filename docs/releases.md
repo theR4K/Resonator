@@ -3,12 +3,12 @@
 The workflows live in `.forgejo/workflows`:
 
 - `release.yaml`: a `vMAJOR.MINOR.PATCH` tag builds/tests the suite, creates a portable archive and SHA256SUMS, uploads them to a Forgejo draft, then publishes it. Manual dispatch accepts an existing tag. Published releases are never overwritten; an interrupted draft can be retried.
-- `resonite-validation.yaml`: runs daily at 03:17 UTC or on manual dispatch. It downloads the current public Windows Resonite managed assemblies/PDBs, builds/tests Resonator, and runs the full **Flatweave** rebuild. Failed patch hunks fail the job even if ProjectBuilder prints `PIPELINE OK`. Manual dispatch can narrow the target.
+- The daily check for new Resonite builds lives in the private `resonator-publish` repository: for each new Steam build (or new tool release) it builds the Resonator, Flatweave and ArmAginator sets with the latest tool release and publishes them as drop-in bundles. A failed patch hunk fails that run. `ci/validate_pipeline.py` still runs the Flatweave rebuild locally.
 - `checks.yaml`: runs on branch pushes/pull requests and can be dispatched manually. It builds the three CLIs that have no game-reference dependency, runs source-only remapping/adapter tests and the release helper tests. This checks the native runner without Steam credentials. ShadersReferenceBuilder and original-Assimp differential checks run in the download-backed workflows.
 
 ## Runner setup
 
-The default is a **Linux runner**, including ARM64, with an `ubuntu-latest` label. The current private Forgejo instance exposes runner `pi` with labels `pi`, `ubuntu-latest`, and `arm64`, so the default label already matches it. Set repository variable `RESONATOR_RUNNER` to choose another Linux runner label. It needs Python 3.10+, Git, a shell, and Node.js 24 for the pinned setup-dotnet action; setup-dotnet installs the native .NET 10 SDK. No Docker privileged mode or emulator is needed for the default download method. The CI scripts are portable Python; the supplied workflow shell commands target Linux.
+The default is a **Linux runner**, including ARM64. `checks.yaml` runs on `ubuntu-latest` (the home lab's runner `pi`; repository variable `RESONATOR_RUNNER` overrides it). `release.yaml` needs Steam and runs on the runner labelled `steam` (variable `RESONATOR_STEAM_RUNNER` overrides it), which mounts the persistent Steam directory at `/resonator-steam` in every job and runs one job at a time. It needs Python 3.10+, Git, a shell, and Node.js 24 for the pinned setup-dotnet action; setup-dotnet installs the native .NET 10 SDK. No Docker privileged mode or emulator is needed for the default download method. The CI scripts are portable Python; the supplied workflow shell commands target Linux.
 
 The release archive is framework dependent and portable: the same ZIP runs with native .NET on Linux/Windows/macOS, ARM64 or x64. It contains all four CLIs, target sets/patches, docs, and the local Flatweave.Adapter source needed by those targets. Run:
 
@@ -48,8 +48,9 @@ Optional repository variables:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `RESONATOR_RUNNER` | `ubuntu-latest` | Available Linux runner label |
-| `RESONATOR_STEAM_HOME` | runner temp/resonator-steam | Private persistent Steam session/tool directory |
+| `RESONATOR_RUNNER` | `ubuntu-latest` | Runner label for `checks.yaml` |
+| `RESONATOR_STEAM_RUNNER` | `steam` | Runner label for `release.yaml` |
+| `RESONATOR_STEAM_HOME` | `/resonator-steam` | Private persistent Steam session/tool directory |
 | `RESONATOR_DOWNLOADER` | `depotdownloader` | `depotdownloader` or `steamcmd` |
 | `STEAMCMD` | executable on PATH | Preinstalled SteamCMD launcher |
 

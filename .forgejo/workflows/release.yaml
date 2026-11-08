@@ -19,11 +19,13 @@ concurrency:
 
 jobs:
   release:
-    runs-on: ${{ vars.RESONATOR_RUNNER || 'ubuntu-latest' }}
+    # Steam-backed: the home lab's "steam" runner mounts the remembered Steam
+    # session at /resonator-steam and runs one such job at a time.
+    runs-on: ${{ vars.RESONATOR_STEAM_RUNNER || 'steam' }}
     timeout-minutes: 60
     env:
       RESONITE_DIR: ${{ forgejo.workspace }}/out/resonite
-      RESONATOR_STEAM_HOME: ${{ vars.RESONATOR_STEAM_HOME }}
+      RESONATOR_STEAM_HOME: ${{ vars.RESONATOR_STEAM_HOME || '/resonator-steam' }}
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
     steps:

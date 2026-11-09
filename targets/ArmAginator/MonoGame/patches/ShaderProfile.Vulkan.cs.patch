@@ -11,6 +11,24 @@
                  toolArgs += "-E main ";
                  toolArgs += "-Fc \"" + reflectFile + "\" ";
                  toolArgs += "-Fo \"" + binFile + "\" ";
+@@ -192,7 +194,7 @@
+                 toolArgs += "\"" + hlslFile + "\"";
+ 
+                 // Ok first build gathers reflection info.
++                toolResult = RunDxc(toolArgs, out stdout, out stderr);
+-                toolResult = Dxc.Run(toolArgs, out stdout, out stderr);
+                 errorsAndWarnings += stderr;
+ 
+                 if (toolResult != 0)
+@@ -209,7 +211,7 @@
+                 // reflection info that forces Google VK extensions into the binary.
+                 {
+                     toolArgs = toolArgs.Replace("-fspv-reflect ", "");
++                    toolResult = RunDxc(toolArgs, out stdout, out stderr);
+-                    toolResult = Dxc.Run(toolArgs, out stdout, out stderr);
+                     errorsAndWarnings += stderr;
+ 
+                     if (toolResult != 0)
 @@ -244,23 +246,22 @@
                  var shaderData = new ShaderData(isVertexShader, effect.Shaders.Count, bytecode);
                  var samplers = new List<ShaderData.Sampler>();
@@ -70,3 +88,30 @@
                          binding.descriptorType = VkDescriptorType.UNIFORM_BUFFER_DYNAMIC;
                          bindings.Add(binding);
                      }
+@@ -620,7 +620,26 @@
+                     return 1;
+                 case MojoShader.MOJOSHADER_samplerType.MOJOSHADER_SAMPLER_CUBE:
+                     return 2;
++            }
++        }
++
++        /// <summary>
++        /// ArmAgedon: DXC, retried. dxc.exe (MonoGame.Tool.Dxc 1.8.2505.11) crashes now and then on the same input that
++        /// compiles the next time (heap corruption, access violations, a "generated SPIR-V is invalid" once): about one run in
++        /// a few hundred on the large Materials.fx, one of its ~200 runs, so most builds of it failed. A real compile error
++        /// fails every attempt and is reported from the last one.
++        /// </summary>
++        private static int RunDxc(string args, out string stdout, out string stderr)
++        {
++            int result = 0;
++            stdout = stderr = string.Empty;
++            for (int attempt = 0; attempt < 4; attempt++)
++            {
++                result = Dxc.Run(args, out stdout, out stderr);
++                if (result == 0)
++                    break;
+             }
++            return result;
+         }
+     }
+ }

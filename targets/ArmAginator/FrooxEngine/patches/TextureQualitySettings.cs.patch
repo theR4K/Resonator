@@ -1,0 +1,14 @@
+--- a/FrooxEngine/TextureQualitySettings.cs
++++ b/FrooxEngine/TextureQualitySettings.cs
+@@ -51,6 +51,11 @@
+ 	}
+ 
+ 	public int? GetMaxSize(int textureSize)
++	{
++		return TextureBudget.Apply(textureSize, GetSettingMaxSize(textureSize)); // ArmAgedon seam: the device cap (Injected/TextureBudget.cs)
++	}
++
++	private int? GetSettingMaxSize(int textureSize)
+ 	{
+ 		if (TextureSizeRatio.Value == FrooxEngine.TextureSizeRatio.FullSize && TextureSizeLimit.Value == FrooxEngine.TextureSizeLimit.Unlimited)
+ 		{

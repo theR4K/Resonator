@@ -1,0 +1,30 @@
+--- a/FrooxEngine/LibraryInitializer.cs
++++ b/FrooxEngine/LibraryInitializer.cs
+@@ -20,8 +20,8 @@
+ 
+ 	// Flatweave: Renderite.Host.deps.json lists only the shipped assemblies, so one the rebuild adds (Concentus)
+ 	// is never probed for. Resolve a missing assembly from the dll next to the engine.
++	// The official SteamAudio.NET / Brotli.NET import native names that do not load on Linux: "phonon.dll"
++	// (shipped as runtimes/<rid>/native/libphonon.so) and "libdl.so" (glibc ships libdl.so.2).
+-	// The official SteamAudio.NET imports "phonon.dll", which does not load on Linux: the library ships as
+-	// runtimes/<rid>/native/libphonon.so.
+ 	[System.Runtime.CompilerServices.ModuleInitializer]
+ 	internal static void ResolveFlatweaveLibraries()
+ 	{
+@@ -44,7 +44,7 @@
+ 
+ 	private static void MapLinuxNativeNames(Assembly assembly)
+ 	{
++		if (assembly.GetName().Name is not ("SteamAudio.NET" or "Brotli.Core"))
+-		if (assembly.GetName().Name != "SteamAudio.NET")
+ 		{
+ 			return;
+ 		}
+@@ -55,6 +55,7 @@
+ 				string mapped = name switch
+ 				{
+ 					"phonon.dll" => "phonon",
++					"libdl.so" => "libdl.so.2",
+ 					_ => null
+ 				};
+ 				return mapped != null && System.Runtime.InteropServices.NativeLibrary.TryLoad(mapped, owner, searchPath, out IntPtr handle) ? handle : IntPtr.Zero;

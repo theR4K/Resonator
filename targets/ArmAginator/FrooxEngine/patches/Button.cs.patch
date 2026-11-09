@@ -1,0 +1,21 @@
+--- a/FrooxEngine/UIX/Button.cs
++++ b/FrooxEngine/UIX/Button.cs
+@@ -8,7 +8,7 @@
+ 
+ [Category(new string[] { "UIX/Interaction" })]
+ [OldTypeName("FrooxEngine.UI.Button", null)]
++public partial class Button : InteractionElement, IButton, IComponent, IComponentBase, IDestroyable, IWorker, IWorldElement, IUpdatable, IChangeable, IAudioUpdatable, IInitializable, ILinkable // ArmAgedon seam
+-public class Button : InteractionElement, IButton, IComponent, IComponentBase, IDestroyable, IWorker, IWorldElement, IUpdatable, IChangeable, IAudioUpdatable, IInitializable, ILinkable
+ {
+ 	[FlattenedInitOnly]
+ 	public Sync<VibratePreset> HoverVibrate;
+@@ -157,8 +157,7 @@
+ 
+ 	protected override void OnHoverEnd(Canvas.InteractionData eventData)
+ 	{
++		EndHoverWithAvailableLayout(eventData); // ArmAgedon seam
+-		eventData.source.Slot.TryVibrate(HoverVibrate);
+-		RunHoverLeave(ConstructEventData(eventData));
+ 	}
+ 
+ 	protected override void OnPressBegin(Canvas.InteractionData eventData)

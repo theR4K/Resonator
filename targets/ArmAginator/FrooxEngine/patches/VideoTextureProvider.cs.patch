@@ -1,0 +1,20 @@
+--- a/FrooxEngine/VideoTextureProvider.cs
++++ b/FrooxEngine/VideoTextureProvider.cs
+@@ -233,7 +233,7 @@
+ 		VideoTexture asset = Asset;
+ 		if (asset != null && asset.IsLoaded)
+ 		{
++			VideoPlaybackBridge.Update(Asset, Enabled && Playback.IsPlaying, Playback.Loop, Playback.InstantPosition, Playback.Speed); // ArmAgedon seam
+-			Asset.UpdateState(Enabled && Playback.IsPlaying, Playback.Loop, Playback.InstantPosition);
+ 		}
+ 		CurrentClockError.Value = Asset?.CurrentClockError ?? 0f;
+ 	}
+@@ -245,7 +245,7 @@
+ 			VideoTexture asset = Asset;
+ 			if (asset != null && asset.IsLoaded)
+ 			{
++				VideoPlaybackBridge.Update(Asset, false, Playback.Loop, Playback.InstantPosition, Playback.Speed); // ArmAgedon seam
+-				Asset.UpdateState(play: false, Playback.Loop, Playback.InstantPosition);
+ 			}
+ 		}
+ 	}

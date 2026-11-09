@@ -1,0 +1,11 @@
+--- a/FrooxEngine/InputInterface.cs
++++ b/FrooxEngine/InputInterface.cs
+@@ -745,7 +745,7 @@
+ 		}
+ 		AfterInputsUpdate?.Invoke();
+ 		ActivityHeuristic.Update();
++		ActiveEyes = GetDevice((Eyes e) => e.IsTracking && e.IsEyeTrackingActive);
+-		ActiveEyes = GetDevice((Eyes e) => e.IsEyeTrackingActive);
+ 		ActiveMouth = GetDevice((Mouth e) => e.IsDeviceActive);
+ 	}
+ 

@@ -1,0 +1,17 @@
+--- a/FrooxEngine/VideoTextureAudioReader.cs
++++ b/FrooxEngine/VideoTextureAudioReader.cs
+@@ -106,12 +106,12 @@
+ 		{
+ 			sampleCountFloorIndex = 0;
+ 			int sampleCountFloor = sampleCountFloorData.Min();
++			if (sampleCountFloor > VideoAudioBuffering.Reserve(simulator)) // ArmAgedon seam
+-			if (sampleCountFloor > simulator.FrameSize)
+ 			{
+ 				long pos = currentReadPosition;
+ 				_audioReadBuffer.Read(trimFadeData.AsSpan(), ref pos);
+ 				trimmed = true;
++				currentReadPosition += VideoAudioBuffering.Trim(sampleCountFloor, simulator); // ArmAgedon seam
+-				currentReadPosition += sampleCountFloor;
+ 				Array.Clear(sampleCountFloorData);
+ 			}
+ 		}

@@ -1,0 +1,10 @@
+--- a/FrooxEngine/ProtoFlux/ProtoFluxWireProxy.cs
++++ b/FrooxEngine/ProtoFlux/ProtoFluxWireProxy.cs
+@@ -20,6 +20,7 @@
+ 	protected override void OnChanges()
+ 	{
+ 		base.OnChanges();
++		if (!ProtoFluxWireLifecycle.CanUpdateWire(this)) return; // ArmAgedon seam
+ 		TTarget target = CurrentTarget;
+ 		if (target == null)
+ 		{

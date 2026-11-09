@@ -1,0 +1,23 @@
+--- a/Tools/MonoGame.Effect.Compiler/Effect/EffectObject.cs
++++ b/Tools/MonoGame.Effect.Compiler/Effect/EffectObject.cs
+@@ -660,6 +660,20 @@
+             // Go thru the techniques and that will find all the 
+             // shaders and constant buffers.
+             var shaderInfo = shaderResult.ShaderInfo;
++            // ArmAgedon effect-parallel: every distinct shader, compiled up front (in parallel where the profile can)
++            var unique = new List<(string function, string model, bool isVertexShader)>();
++            var seen = new HashSet<(string, string, bool)>();
++            foreach (var tinfo in shaderInfo.Techniques)
++            {
++                foreach (var pinfo in tinfo.Passes)
++                {
++                    if (!string.IsNullOrEmpty(pinfo.psFunction) && seen.Add((pinfo.psFunction, pinfo.psModel, false)))
++                        unique.Add((pinfo.psFunction, pinfo.psModel, false));
++                    if (!string.IsNullOrEmpty(pinfo.vsFunction) && seen.Add((pinfo.vsFunction, pinfo.vsModel, true)))
++                        unique.Add((pinfo.vsFunction, pinfo.vsModel, true));
++                }
++            }
++            shaderResult.Profile.Precompile(shaderResult, unique);
+             effect.Techniques = new d3dx_technique[shaderInfo.Techniques.Count];
+             for (var t = 0; t < shaderInfo.Techniques.Count; t++)
+             {

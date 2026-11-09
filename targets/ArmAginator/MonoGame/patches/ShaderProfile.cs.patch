@@ -1,0 +1,18 @@
+--- a/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.cs
++++ b/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.cs
+@@ -66,6 +66,15 @@
+         internal abstract void ValidateShaderModels(PassInfo pass);
+ 
+         internal abstract ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, bool isVertexShader, EffectObject effect, ref string errorsAndWarnings);
++
++        /// <summary>
++        /// ArmAgedon effect-parallel: the effect's shaders (entry point, model, vertex or pixel), each once, before CreateShader
++        /// takes them in technique order. A profile may compile them all in parallel here and hand CreateShader the results;
++        /// what CreateShader then adds to the effect stays in the same order. Default: nothing (CreateShader compiles).
++        /// </summary>
++        internal virtual void Precompile(ShaderResult shaderResult, IReadOnlyList<(string function, string model, bool isVertexShader)> shaders)
++        {
++        }
+ 
+         protected static void ParseShaderModel(string text, Regex regex, out int major, out int minor)
+         {

@@ -1,35 +1,216 @@
 --- a/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.Vulkan.cs
 +++ b/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.Vulkan.cs
-@@ -178,7 +178,9 @@
+@@ -105,33 +105,43 @@
+             public VkShaderStageFlags stageFlags;
+             public nint pImmutableSamplers;
+         };
++
++        const int SlotOffset = 32;
++
++        // ArmAgedon effect-parallel: Precompile's results by (entry point, stage), taken once by CreateShader
++        private readonly System.Collections.Concurrent.ConcurrentDictionary<(string, bool), (byte[] bytecode, string[] reflection, string errors)> _precompiled = new();
  
-                 //toolArgs += "-Qstrip_reflect ";
-                 //toolArgs += "-fspv-reflect ";
++        /// <summary>
++        /// ArmAgedon effect-parallel: every shader of the effect compiled at once, on all cores (DXC is a process per run, two
++        /// per shader; Materials.fx has hundreds, one after another made a shader build take minutes). CreateShader then only
++        /// adds the results to the effect, in technique order as before, so the effect comes out the same. ARMA_FX_JOBS=1:
++        /// one at a time.
++        /// </summary>
++        internal override void Precompile(ShaderResult shaderResult, IReadOnlyList<(string function, string model, bool isVertexShader)> shaders)
+-        internal override ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, bool isVertexShader, EffectObject effect, ref string errorsAndWarnings)
+         {
++            int jobs = int.TryParse(Environment.GetEnvironmentVariable("ARMA_FX_JOBS"), out int j) && j > 0 ? j : Environment.ProcessorCount;
++            if (jobs <= 1)
++                return;
++            System.Threading.Tasks.Parallel.ForEach(shaders, new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = jobs }, s =>
++            {
++                _precompiled[(s.function, s.isVertexShader)] = CompileSpirv(shaderResult, s.function, s.isVertexShader);
++            });
++        }
+-            const int SlotOffset = 32;
+ 
++        private static string SourceFileName(ShaderResult shaderResult, string shaderFunction, bool isVertexShader) =>
++            // ArmAgedon effect-parallel: the stage in the name, so a vertex and a pixel shader of one entry point compiled at
++            // once do not share files
++            Path.GetFileNameWithoutExtension(shaderResult.FilePath) + "." + shaderFunction + (isVertexShader ? ".vs" : ".ps");
+-            var outputPath = Path.GetDirectoryName(shaderResult.OutputFilePath);
+-            var sourceFileName = Path.GetFileNameWithoutExtension(shaderResult.FilePath) + "." + shaderFunction;
+ 
++        /// <summary>The shader's SPIR-V and its reflection (null bytecode: DXC failed; errors has why). Its own files only.</summary>
++        private static (byte[] bytecode, string[] reflection, string errors) CompileSpirv(ShaderResult shaderResult, string shaderFunction, bool isVertexShader)
++        {
++            var intermediateDir = Path.GetDirectoryName(shaderResult.OutputFilePath);
++            var sourceFileName = SourceFileName(shaderResult, shaderFunction, isVertexShader);
+-            // TODO: We have no intermediate folder in 2MGFX for temp stuff
+-            // that isn't content, but could be useful later.  So just putting
+-            // them into the output then cleaning it up after.
+-            var intermediateDir = outputPath;
+             var hlslFile = Path.Combine(intermediateDir, sourceFileName + ".hlsl");
+-            var glslFile = Path.Combine(intermediateDir, sourceFileName + ".glsl");
+             var binFile = Path.Combine(intermediateDir, sourceFileName + ".bin");
+             var reflectFile = Path.Combine(intermediateDir, sourceFileName + ".reflect");
++            string errors = string.Empty;
+-
+-            // Need to keep this for debugging to work.
+-            var dbgFile = Path.Combine(outputPath, sourceFileName + ".dbg");
+-
+-            // Disable this if you want to keep these around for testing!
+-            var cleanup = new List<string>();
+-            cleanup.Add(hlslFile);
+-            cleanup.Add(binFile);
+-            cleanup.Add(dbgFile);
+-            cleanup.Add(reflectFile);
+-
+             try
+             {
+                 if (!Directory.Exists(intermediateDir))
+@@ -139,89 +149,85 @@
+ 
+                 // Replace the entrypoint name with "main" for simplicity at runtime.
+                 var shaderContent = Regex.Replace(shaderResult.FileContent, @"(?<=\s+)" + shaderFunction + @"(?=\s*[(])", "main");
+-
+-                // Write preprocessed hlsl file.
+                 File.WriteAllText(hlslFile, shaderContent);
+ 
++                string toolArgs = "-nologo -spirv -fvk-use-dx-layout ";
+-                // Run HlslCrossCompiler.exe to convert temp.fx to a .glsl
+-                string stdout = string.Empty;
+-                string stderr = string.Empty;
+-                string toolArgs;
+-                int toolResult;
+-
+-                toolArgs = "";
+-                toolArgs += "-nologo ";
+-                toolArgs += "-spirv ";
+-                toolArgs += "-fvk-use-dx-layout ";
+-
+                 // Adds HLSL specific reflection information to the SPIR-V
+                 // https://github.com/Microsoft/DirectXShaderCompiler/blob/main/docs/SPIR-V.rst#reflection
+                 toolArgs += "-fspv-reflect ";
++                // vertex: flip Y, DX position.w; pixel: the second descriptor set (no overlap with the vertex stage's bindings)
++                toolArgs += isVertexShader ? "-fvk-invert-y -fvk-use-dx-position-w " : "-auto-binding-space 1 ";
+-
+-                if (isVertexShader)
+-                {
+-                    toolArgs += "-fvk-invert-y ";
+-                    toolArgs += "-fvk-use-dx-position-w ";
+-                }
+-                else
+-                {
+-                    // Move pixel shaders into the second descriptor
+-                    // to avoid overlapping bindings between the vertex
+-                    // and pixel stages.
+-                    toolArgs += "-auto-binding-space 1 ";
+-                }
+-
+-                // Offset the texture/sampler slots?
+                 toolArgs += $"-fvk-t-shift {SlotOffset} all ";
+                 toolArgs += $"-fvk-s-shift {SlotOffset} all ";
 +                // ArmAgedon vk-multiview: shader model 6.1, the first with SV_ViewID (VR single-pass stereo); the SPIR-V of a
 +                // shader that does not read it is the same as at 6.0
 +                toolArgs += "-T " + (isVertexShader ? "vs_" : "ps_") + "6_1 ";
+-
+-
+-                //toolArgs += "-Qstrip_reflect ";
+-                //toolArgs += "-fspv-reflect ";
 -                toolArgs += "-T " + (isVertexShader ? "vs_" : "ps_") + "6_0 ";
                  toolArgs += "-E main ";
                  toolArgs += "-Fc \"" + reflectFile + "\" ";
                  toolArgs += "-Fo \"" + binFile + "\" ";
-@@ -192,7 +194,7 @@
+-
+                 if (shaderResult.Debug)
+-                {
+                     toolArgs += "-Zi ";
+-                    // Error: '-Fd cannot be used with -spirv' - investigate
+-                    //toolArgs += "-Fd \"" + dbgFile + "\" ";
+-                }
                  toolArgs += "\"" + hlslFile + "\"";
  
                  // Ok first build gathers reflection info.
-+                toolResult = RunDxc(toolArgs, out stdout, out stderr);
++                int toolResult = RunDxc(toolArgs, out string stdout, out string stderr);
++                errors += stderr;
++                if (toolResult != 0)
++                    return (null, null, errors + $"DXC.exe returned error code '{toolResult}'.\n" + stdout);
++                string[] reflection = File.ReadAllLines(reflectFile);
 -                toolResult = Dxc.Run(toolArgs, out stdout, out stderr);
-                 errorsAndWarnings += stderr;
+-                errorsAndWarnings += stderr;
  
++                // This second build is for generating the shader binary without
++                // reflection info that forces Google VK extensions into the binary.
++                toolResult = RunDxc(toolArgs.Replace("-fspv-reflect ", ""), out stdout, out stderr);
++                errors += stderr;
                  if (toolResult != 0)
-@@ -209,7 +211,7 @@
-                 // reflection info that forces Google VK extensions into the binary.
++                    return (null, null, errors + $"DXC.exe returned error code '{toolResult}'.\n" + stdout);
++                return (File.ReadAllBytes(binFile), reflection, errors);
++            }
++            finally
++            {
++                foreach (var file in new[] { hlslFile, binFile, reflectFile })
                  {
-                     toolArgs = toolArgs.Replace("-fspv-reflect ", "");
-+                    toolResult = RunDxc(toolArgs, out stdout, out stderr);
--                    toolResult = Dxc.Run(toolArgs, out stdout, out stderr);
-                     errorsAndWarnings += stderr;
++                    try { File.Delete(file); } catch { }
+-                    errorsAndWarnings += $"DXC.exe returned error code '{toolResult}'.\n";
+-                    errorsAndWarnings += stdout;
+-                    throw new ShaderCompilerException();
+                 }
++            }
++        }
++
++        internal override ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, bool isVertexShader, EffectObject effect, ref string errorsAndWarnings)
++        {
++            var outputPath = Path.GetDirectoryName(shaderResult.OutputFilePath);
++            var sourceFileName = SourceFileName(shaderResult, shaderFunction, isVertexShader);
  
-                     if (toolResult != 0)
-@@ -244,23 +246,22 @@
++            // TODO: We have no intermediate folder in 2MGFX for temp stuff
++            // that isn't content, but could be useful later.  So just putting
++            // them into the output then cleaning it up after.
++            var intermediateDir = outputPath;
++            var hlslFile = Path.Combine(intermediateDir, sourceFileName + ".hlsl");
++            var glslFile = Path.Combine(intermediateDir, sourceFileName + ".glsl");
++            var binFile = Path.Combine(intermediateDir, sourceFileName + ".bin");
++            var reflectFile = Path.Combine(intermediateDir, sourceFileName + ".reflect");
+-                string[] reflectionDataArray = File.ReadAllLines(reflectFile);
+-                SpirvReflectionInfo reflectionInfo = SpirvReflectionInfo.Parse(reflectionDataArray);
+ 
++            // Need to keep this for debugging to work.
++            var dbgFile = Path.Combine(outputPath, sourceFileName + ".dbg");
+-                // This second build is for generating the shader binary without
+-                // reflection info that forces Google VK extensions into the binary.
+-                {
+-                    toolArgs = toolArgs.Replace("-fspv-reflect ", "");
+-                    toolResult = Dxc.Run(toolArgs, out stdout, out stderr);
+-                    errorsAndWarnings += stderr;
+ 
++            // Disable this if you want to keep these around for testing!
++            var cleanup = new List<string>();
++            cleanup.Add(hlslFile);
++            cleanup.Add(binFile);
++            cleanup.Add(dbgFile);
++            cleanup.Add(reflectFile);
+-                    if (toolResult != 0)
+-                    {
+-                        errorsAndWarnings += $"DXC.exe returned error code '{toolResult}'.\n";
+-                        errorsAndWarnings += stdout;
+-                        throw new ShaderCompilerException();
+-                    }
+-                }
+ 
++            try
++            {
++                // ArmAgedon effect-parallel: Precompile's result, else compiled now (CompileSpirv: DXC twice, reflection and
++                // binary; it writes and deletes its own files)
++                if (!_precompiled.TryRemove((shaderFunction, isVertexShader), out var compiled))
++                    compiled = CompileSpirv(shaderResult, shaderFunction, isVertexShader);
++                errorsAndWarnings += compiled.errors;
++                if (compiled.bytecode == null)
++                    throw new ShaderCompilerException();
++                SpirvReflectionInfo reflectionInfo = SpirvReflectionInfo.Parse(compiled.reflection);
++                var bytecode = compiled.bytecode;
+-                // Load up the compiled shader.
+-                var bytecode = File.ReadAllBytes(binFile);
+ 
+                 // First look to see if we already created this same shader.
+                 foreach (var shader in effect.Shaders)
+@@ -244,23 +250,22 @@
                  var shaderData = new ShaderData(isVertexShader, effect.Shaders.Count, bytecode);
                  var samplers = new List<ShaderData.Sampler>();
  
@@ -61,7 +242,7 @@
                          SpirvTypeStruct constantBuffer = variable.Pointer.PointerType as SpirvTypeStruct;
                          ConstantBufferData cbuffer = ConstantBufferData.BuildFromSpirvStruct(constantBuffer);
  
-@@ -275,9 +276,8 @@
+@@ -275,9 +280,8 @@
                              }
                              else
                                  cbufferIndex.Add(match);
@@ -72,7 +253,7 @@
                      }
                      else if (variable.Pointer.PointerType.Type == SpirvType.Image)
                      {
-@@ -399,7 +399,9 @@
+@@ -399,7 +403,9 @@
                  if (isVertexShader)
                  {
                      // Sort by the location.
@@ -83,7 +264,7 @@
  
                      foreach (SpirvVariable input in sorted)
                      {
-@@ -521,11 +523,11 @@
+@@ -521,11 +527,11 @@
                      uint samplerSlots = 0;
                      var textureTypes = new uint[16];
  
@@ -99,7 +280,7 @@
                          binding.descriptorType = VkDescriptorType.UNIFORM_BUFFER_DYNAMIC;
                          bindings.Add(binding);
                      }
-@@ -620,7 +622,26 @@
+@@ -620,7 +626,26 @@
                      return 1;
                  case MojoShader.MOJOSHADER_samplerType.MOJOSHADER_SAMPLER_CUBE:
                      return 2;

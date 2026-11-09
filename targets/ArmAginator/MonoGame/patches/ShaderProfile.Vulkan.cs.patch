@@ -72,7 +72,18 @@
                      }
                      else if (variable.Pointer.PointerType.Type == SpirvType.Image)
                      {
-@@ -521,11 +521,11 @@
+@@ -399,7 +399,9 @@
+                 if (isVertexShader)
+                 {
+                     // Sort by the location.
++                    // ArmAgedon vk-multiview: built-in inputs (SV_ViewID's ViewIndex, SV_VertexID, SV_InstanceID) have no
++                    // location and are no vertex attribute: as one, the draw asked for a vertex element nothing supplies.
++                    var sorted = reflectionInfo.Input.Where(i => i.Location.HasValue).OrderBy(i => i.Location);
+-                    var sorted = reflectionInfo.Input.OrderBy(i => i.Location);
+ 
+                     foreach (SpirvVariable input in sorted)
+                     {
+@@ -521,11 +523,11 @@
                      uint samplerSlots = 0;
                      var textureTypes = new uint[16];
  
@@ -88,7 +99,7 @@
                          binding.descriptorType = VkDescriptorType.UNIFORM_BUFFER_DYNAMIC;
                          bindings.Add(binding);
                      }
-@@ -620,7 +620,26 @@
+@@ -620,7 +622,26 @@
                      return 1;
                  case MojoShader.MOJOSHADER_samplerType.MOJOSHADER_SAMPLER_CUBE:
                      return 2;

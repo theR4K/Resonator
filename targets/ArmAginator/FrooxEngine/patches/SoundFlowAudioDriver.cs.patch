@@ -1,0 +1,22 @@
+--- a/FrooxEngine/SoundFlowAudioDriver.cs
++++ b/FrooxEngine/SoundFlowAudioDriver.cs
+@@ -9,7 +9,7 @@
+ 
+ namespace FrooxEngine;
+ 
++public static partial class SoundFlowAudioDriver
+-public static class SoundFlowAudioDriver
+ {
+ 	private static bool _initialized;
+ 
+@@ -38,8 +38,8 @@
+ 		{
+ 			_initialized = true;
+ 			SoundFlowAudioDriver.inputInterface = inputInterface;
++			AudioSystem.RegisterAudioRefresh(InitializeDevicesSerialized); // ArmAgedon seam
++			InitializeDevicesSerialized(); // ArmAgedon seam
+-			AudioSystem.RegisterAudioRefresh(InitializeDevices);
+-			InitializeDevices();
+ 		}
+ 	}
+ 

@@ -9,7 +9,15 @@
  {
  	private readonly struct TaskData(SendOrPostCallback callback, object state, IUpdatable updatable)
  	{
-@@ -131,6 +131,7 @@
+@@ -87,6 +87,7 @@
+ 
+ 	public void Dispose()
+ 	{
++		BeginLifetimeDisposal(); // ArmAgedon seam
+ 		Engine = null;
+ 		World = null;
+ 		worldQueue.Clear();
+@@ -131,6 +132,7 @@
  				}
  			}
  		}
@@ -17,3 +25,44 @@
  		int count = 0;
  		CoroutineHandle coroutine;
  		while (worldQueue.TryDequeue(out coroutine))
+@@ -318,11 +320,13 @@
+ 
+ 	internal void PostToSync(SendOrPostCallback d, object state)
+ 	{
++		if (PostWithLifetime(d, state, 0, true)) return; // ArmAgedon seam
+ 		syncTaskQueue.Enqueue(new TaskData(d, state, Updatable.Value));
+ 	}
+ 
+ 	internal void PostDelayed(SendOrPostCallback d, object state, int updates)
+ 	{
++		if (PostWithLifetime(d, state, updates, false)) return; // ArmAgedon seam
+ 		if (updates == 0)
+ 		{
+ 			worldTaskQueue.Enqueue(new TaskData(d, state, Updatable.Value));
+@@ -418,15 +422,12 @@
+ 			coroutine.lastContext = Context.TargetContext.World;
+ 			if (context.delay == Context.WorldDelay.None)
+ 			{
++				QueueWorldWithLifetime(coroutine); // ArmAgedon seam
+-				worldQueue.Enqueue(coroutine);
+ 				break;
+ 			}
+ 			DelayedTask delayedTask = new DelayedTask(coroutine, context.delay, context.delayLength);
++			QueueDelayWithLifetime(delayedTask); // ArmAgedon seam
++			break;
+-			lock (_delayedRoutines)
+-			{
+-				_delayedRoutines.Add(delayedTask);
+-				break;
+-			}
+ 		}
+ 		case Context.TargetContext.Job:
+ 		{
+@@ -448,6 +449,7 @@
+ 
+ 	private void ScheduleBackground(CoroutineHandle coroutine)
+ 	{
++		if (ScheduleBackgroundWithLifetime(coroutine)) return; // ArmAgedon seam
+ 		_backgroundCoroutines.Enqueue(coroutine);
+ 		JobProcessor.Enqueue(_backgroundProcessDelegate);
+ 	}

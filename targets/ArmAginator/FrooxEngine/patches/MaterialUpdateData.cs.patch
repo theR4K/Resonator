@@ -1,0 +1,19 @@
+--- a/FrooxEngine/MaterialUpdateData.cs
++++ b/FrooxEngine/MaterialUpdateData.cs
+@@ -5,7 +5,7 @@
+ 
+ namespace FrooxEngine;
+ 
++public partial class MaterialUpdateData // ArmAgedon seam
+-public class MaterialUpdateData
+ {
+ 	private World _world;
+ 
+@@ -28,6 +28,7 @@
+ 
+ 	public void Completed()
+ 	{
++		if (CompleteWithWorldLifetime()) return; // ArmAgedon seam
+ 		_world.RunSynchronously(RunCompleted);
+ 	}
+ 

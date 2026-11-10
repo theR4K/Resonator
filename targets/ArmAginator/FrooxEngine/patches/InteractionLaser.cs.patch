@@ -1,0 +1,19 @@
+--- a/FrooxEngine/InteractionLaser.cs
++++ b/FrooxEngine/InteractionLaser.cs
+@@ -10,7 +10,7 @@
+ 
+ [DefaultUpdateOrder(-900)]
+ [Category(new string[] { "Interaction/Handlers" })]
++public partial class InteractionLaser : UserRootComponent // ArmAgedon seam
+-public class InteractionLaser : UserRootComponent
+ {
+ 	private struct LaserHit
+ 	{
+@@ -351,6 +351,7 @@
+ 
+ 	protected override void OnDispose()
+ 	{
++		ReleaseSettingsForDisposal(); // ArmAgedon seam
+ 		base.OnDispose();
+ 		Slot.ActiveUserRootChanged -= Slot_ActiveUserRootChanged;
+ 		if (CursorFactory != null)

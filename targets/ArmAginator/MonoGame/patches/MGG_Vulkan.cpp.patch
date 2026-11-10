@@ -2784,7 +2784,7 @@
      VK_CHECK_RESULT(vkWaitForFences(device->device, 1, &fence, VK_TRUE, UINT64_MAX));
      vkDestroyFence(device->device, fence, nullptr);
  
-@@ -5871,8 +6993,1076 @@
+@@ -5871,8 +6993,1084 @@
  	else
  	{
  		// An error occurred.
@@ -3077,7 +3077,7 @@
 +/// OpenXR only needs the commands writing a swapchain image submitted before xrReleaseSwapchainImage, so the caller
 +/// releases the image (and ends the XR frame) after present. Same layouts and copy/blit choice as the synchronous copy.
 +static mgint MGVK_RecordCopyImpl(MGG_GraphicsDevice* device, MGG_Texture* source, uint64_t externalImage, mgint externalFormat, mgint width, mgint height, mgbool flipY, uint32_t layer,
-+	VkImageLayout dstLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VkImageLayout dstOldLayout = VK_IMAGE_LAYOUT_MAX_ENUM)
++	VkImageLayout dstLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VkImageLayout dstOldLayout = VK_IMAGE_LAYOUT_MAX_ENUM, uint32_t dstLayer = 0) // ArmAgedon vk-fdm
 +{
 +	assert(device != nullptr);
 +	if (source == nullptr || externalImage == 0 || source->image == VK_NULL_HANDLE || layer >= source->info.arrayLayers)
@@ -3110,6 +3110,7 @@
 +	barriers[0].dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 +	barriers[1].image = dst;
 +	barriers[1].oldLayout = dstOldLayout == VK_IMAGE_LAYOUT_MAX_ENUM ? dstLayout : dstOldLayout; // UNDEFINED: never used yet
++	barriers[1].subresourceRange.baseArrayLayer = dstLayer; // ArmAgedon vk-fdm: stereo swapchain destination layer
 +	barriers[1].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 +	barriers[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
 +	barriers[1].dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -3123,7 +3124,7 @@
 +	{
 +		VkImageCopy region = {};
 +		region.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, layer, 1 };
-+		region.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
++		region.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, dstLayer, 1 }; // ArmAgedon vk-fdm
 +		region.extent = { (uint32_t)width, (uint32_t)height, 1 };
 +		vkCmdCopyImage(cmd, src, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 +	}
@@ -3131,7 +3132,7 @@
 +	{
 +		VkImageBlit blit = {};
 +		blit.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, layer, 1 };
-+		blit.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
++		blit.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, dstLayer, 1 }; // ArmAgedon vk-fdm
 +		blit.srcOffsets[0] = { 0, 0, 0 };
 +		blit.srcOffsets[1] = { sw, sh, 1 };
 +		blit.dstOffsets[0] = { 0, flipY ? height : 0, 0 };
@@ -3169,6 +3170,13 @@
 +MG_EXPORT mgint MGVK_RecordCopyToExternalImage(MGG_GraphicsDevice* device, MGG_Texture* source, uint64_t externalImage, mgint externalFormat, mgint width, mgint height, mgbool flipY)
 +{
 +	return MGVK_RecordCopyImpl(device, source, externalImage, externalFormat, width, height, flipY, 0);
++}
++
++// ArmAgedon vk-fdm: distinct export preserves the old copy ABI when deploying against an older native runtime.
++MG_EXPORT mgint MGVK_RecordCopyToExternalImageLayer(MGG_GraphicsDevice* device, MGG_Texture* source, uint64_t externalImage, mgint externalFormat, mgint width, mgint height, mgbool flipY, mgint dstLayer)
++{
++	return dstLayer < 0 || dstLayer > 1 ? -1 : MGVK_RecordCopyImpl(device, source, externalImage, externalFormat, width, height, flipY, 0,
++		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_MAX_ENUM, (uint32_t)dstLayer);
 +}
 +
 +// ArmAgedon vk-multiview: MGVK_RecordCopyToExternalImage from one layer (one eye) of a layered render target.

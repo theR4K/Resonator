@@ -1,6 +1,6 @@
 --- a/native/monogame/vulkan/MGG_Vulkan.cpp
 +++ b/native/monogame/vulkan/MGG_Vulkan.cpp
-@@ -21,12 +21,22 @@
+@@ -21,12 +21,24 @@
  
  #if defined(__APPLE__)
  #include <MoltenVK/mvk_vulkan.h>
@@ -14,16 +14,18 @@
 +#define VK_VALVE_FRAGMENT_DENSITY_MAP_LAYERED_EXTENSION_NAME "VK_VALVE_fragment_density_map_layered"
 +#define VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_LAYERED_FEATURES_VALVE ((VkStructureType)1000611000)
 +#define VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_LAYERED_PROPERTIES_VALVE ((VkStructureType)1000611001)
++#define VK_STRUCTURE_TYPE_PIPELINE_FRAGMENT_DENSITY_MAP_LAYERED_CREATE_INFO_VALVE ((VkStructureType)1000611002)
 +#define VK_RENDER_PASS_CREATE_PER_LAYER_FRAGMENT_DENSITY_BIT_VALVE ((VkRenderPassCreateFlags)0x00000004)
 +struct VkPhysicalDeviceFragmentDensityMapLayeredFeaturesVALVE { VkStructureType sType; void* pNext; VkBool32 fragmentDensityMapLayered; };
 +struct VkPhysicalDeviceFragmentDensityMapLayeredPropertiesVALVE { VkStructureType sType; void* pNext; uint32_t maxFragmentDensityMapLayers; };
++struct VkPipelineFragmentDensityMapLayeredCreateInfoVALVE { VkStructureType sType; const void* pNext; uint32_t maxFragmentDensityMapLayers; };
  #endif
  
  #ifdef DEBUG
  #define VK_EXT_debug_utils
  #ifdef __APPLE__
  #define MVK_CONFIG_DEBUG
-@@ -43,12 +53,14 @@
+@@ -43,12 +55,14 @@
  #include <vk_mem_alloc.h>
  
  #if defined(MG_SDL2)
@@ -38,7 +40,7 @@
  #define NOMINMAX
  #include <Windows.h>
  #include <vulkan/vulkan_win32.h>
-@@ -66,12 +78,13 @@
+@@ -66,12 +80,13 @@
  		assert(_vkr == VK_SUCCESS);														\
  	}																					\
  }
@@ -52,7 +54,34 @@
  
  
  #if defined(DEBUG)
-@@ -142,12 +155,13 @@
+@@ -124,30 +139,41 @@
+ struct MGVK_Program;
+ 
+ typedef uint32_t FrameCounter;
+ 
+ 
+ constexpr size_t MGVK_NUM_TARGETS = 4;
++
++// ArmAgedon vk-fdm: a value snapshot belongs in the framebuffer key, never a pointer to mutable target metadata.
++struct MGVK_DensityMap
++{
++	VkImage image = VK_NULL_HANDLE;
++	VkFormat format = VK_FORMAT_UNDEFINED;
++	uint32_t width = 0, height = 0, layers = 0, baseLayer = 0, padding = 0;
++};
+ 
+ struct MGVK_TargetSet
+ {
+     MGG_Texture* targets[MGVK_NUM_TARGETS] = { 0 };
+ 	bool firstUse[MGVK_NUM_TARGETS] = { false };
+ 	int numTargets = 0;
+ 	std::optional<int> arraySlices[MGVK_NUM_TARGETS];
++	MGVK_DensityMap density; // ArmAgedon vk-fdm
+ };
+ 
+ struct MGVK_TargetSetCache
+ {
+ 	MGVK_TargetSet set;
  
  	int width = 0;
  	int height = 0;
@@ -60,13 +89,14 @@
  	VkRenderPass renderPass = VK_NULL_HANDLE;
      std::optional<VkImageView> arraySlicesViews[MGVK_NUM_TARGETS];
 +	bool renderPassShared = false; // ArmAgedon: device->compatiblePasses owns renderPass (MGVK_CreatePipeline)
++	VkImageView densityView = VK_NULL_HANDLE; // ArmAgedon vk-fdm: this framebuffer owns the view, never the external image
  };
  
  struct MGVK_PipelineState
  {
  	VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
  
-@@ -178,15 +192,21 @@
+@@ -178,15 +204,21 @@
  {
  	bool is_recording = false;
  	bool is_rendering = false;
@@ -88,7 +118,7 @@
  {
  	MGG_Texture* texture = nullptr;
  	VkSemaphore renderCompleteSemaphore = VK_NULL_HANDLE;
-@@ -205,60 +225,118 @@
+@@ -205,60 +237,119 @@
  	std::vector<MGG_DisplayMode> modes;
  };
  
@@ -176,6 +206,7 @@
 +	bool multiviewEnabled = false; // ArmAgedon vk-multiview: the device has multiview on (MGVK_SetRenderTargetMultiview)
 +	uint32_t fdmProbe[10] = {}; // ArmAgedon vk-fdm: queried capabilities, never implicit feature enablement
 +	bool fdmEnabled = false, fdmLayered = false; // ArmAgedon vk-fdm
++	std::vector<std::pair<VkImage, VmaAllocation>> fdmTestImages; // ArmAgedon vk-fdm: debug-only constant maps
  
  	VkDevice device = VK_NULL_HANDLE;
  
@@ -207,7 +238,7 @@
  	FrameCounter frame = 0;
  	FrameCounter frameIndex = 0;
  	FrameCounter freeFrames = 0;
-@@ -266,12 +344,14 @@
+@@ -266,12 +357,14 @@
  
  	std::vector<MGVK_Frame> frames;
  	std::vector<MGVK_Swapchain> swapchains;
@@ -222,7 +253,7 @@
  
  	bool inRenderPass = false;
  	bool renderTargetDirty = false;
-@@ -285,12 +365,24 @@
+@@ -285,12 +378,24 @@
  #else
  #error Not Implemented
  #endif
@@ -247,7 +278,7 @@
  	uint32_t vertexOffsets[8] = { 0 };
  
  	MGG_Buffer* indexBuffer = nullptr;
-@@ -311,12 +403,14 @@
+@@ -311,12 +416,14 @@
  	bool shaderDirty = false;
  	std::map<uint64_t, MGVK_Program*> shader_programs;
  	std::vector<MGG_Shader*> all_shaders;
@@ -262,7 +293,7 @@
  	std::map<uint32_t, MGG_DepthStencilState*> depthStencilStates;
  
  	MGVK_TargetSet targets;
-@@ -324,22 +418,25 @@
+@@ -324,22 +431,25 @@
  
  
  	//
@@ -290,13 +321,14 @@
  	std::queue<MGG_DepthStencilState*> destroyDepthStencilStates;
  	std::queue<MGG_SamplerState*> destroySamplers;
  
-@@ -352,12 +449,13 @@
+@@ -352,12 +462,14 @@
  
  	std::vector<MGG_OcclusionQuery*> deferredOcclusionQueries;
  };
  
  struct MGG_Texture
  {
++	MGVK_DensityMap density; // ArmAgedon vk-fdm: association for all passes drawing this target
 +	uint32_t viewMask = 0; // ArmAgedon vk-multiview: a render target drawn in every one of these layers per draw (0: none)
  	FrameCounter writeFrame = -1;
  	FrameCounter frame = 0;
@@ -304,7 +336,7 @@
  	MGTextureType type = MGTextureType::_2D;
  	MGSurfaceFormat format = MGSurfaceFormat::Color;
  
-@@ -388,12 +486,25 @@
+@@ -388,12 +500,25 @@
  	VkImageView target_view = VK_NULL_HANDLE;
  	VkImageView resolve_view = VK_NULL_HANDLE;
  
@@ -330,7 +362,7 @@
  	std::vector<VkVertexInputAttributeDescription> attributes;
  	std::vector<VkVertexInputBindingDescription> bindings;
  };
-@@ -421,18 +532,24 @@
+@@ -421,18 +546,24 @@
  	VkDescriptorImageInfo* imageInfo;
  	MGTextureType textureTypes[MAX_TEXTURE_SLOTS];
  
@@ -355,7 +387,7 @@
  {
  	VkDescriptorType type;
  	mguint slot;
-@@ -496,12 +613,52 @@
+@@ -496,12 +627,52 @@
  static MGG_Buffer* MGVK_Buffer_Create(MGG_GraphicsDevice* device, MGBufferType type, mgint sizeInBytes, bool no_push);
  static void MGVK_DestroyPipelines(MGG_GraphicsDevice* device, std::function<bool(const MGVK_PipelineState&)> compare);
  static void MGVK_DestroyFrameResources(MGG_GraphicsDevice* device, FrameCounter currentFrame, mgbyte free_all);
@@ -408,7 +440,7 @@
  	VkImage image,
  	VkImageLayout oldLayout,
  	VkImageLayout newLayout,
-@@ -511,12 +668,128 @@
+@@ -511,12 +682,128 @@
  	uint32_t baseArrayLayer = 0,
  	uint32_t layerCount = 1);
  static void MGVK_FlushCommands(MGG_GraphicsDevice* device, MGVK_Frame& frame);
@@ -537,7 +569,7 @@
  {
      switch (multiSampleCount)
      {
-@@ -561,13 +834,13 @@
+@@ -561,13 +848,13 @@
  		return VK_FORMAT_BC3_UNORM_BLOCK;
  	case MGSurfaceFormat::NormalizedByte2:
  		return VK_FORMAT_R8G8_UNORM;
@@ -552,7 +584,7 @@
  		return VK_FORMAT_R16G16B16A16_UNORM;
  	case MGSurfaceFormat::Alpha8:
  		return VK_FORMAT_R8_UNORM;
-@@ -618,12 +891,16 @@
+@@ -618,12 +905,16 @@
  	case MGDepthFormat::Depth24Stencil8:
  #if defined(__APPLE__)
  		return VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
@@ -569,7 +601,7 @@
  }
  
  static VkFormat ToVkFormat(MGVertexElementFormat format)
-@@ -772,12 +1049,44 @@
+@@ -772,12 +1063,44 @@
  	{
  		if (strcmp(extension.extensionName, extensionName) == 0)
  			return true;
@@ -614,7 +646,7 @@
  {
  #ifndef __APPLE__
  	printf("Initializing volk.\n");
-@@ -911,12 +1220,20 @@
+@@ -911,12 +1234,20 @@
  			enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
  			printf("Validation layers are enabled (performances will be drastically impacted). To run without validation layers, please use a RELEASE build or uninstall the Vulkan SDK.\n");
  		}
@@ -635,7 +667,7 @@
  	instance_create_info.enabledExtensionCount = instanceExtensions.size();
  	instance_create_info.ppEnabledExtensionNames = instanceExtensions.data();
  	instance_create_info.enabledLayerCount = enabledLayers.size();
-@@ -1084,13 +1401,13 @@
+@@ -1084,13 +1415,13 @@
  	VmaAllocationCreateInfo allocInfo = {};
  	allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
  	VkResult res = vmaCreateImage(device->allocator, info, &allocInfo, &texture->image, &texture->allocation, nullptr);
@@ -650,7 +682,7 @@
  
  	MGG_Texture* texture = new MGG_Texture;
  	memset(texture, 0, sizeof(MGG_Texture));
-@@ -1099,13 +1416,13 @@
+@@ -1099,13 +1430,13 @@
  	VkImageCreateInfo& create_info = texture->info;
  	create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
  	create_info.imageType = VK_IMAGE_TYPE_2D;
@@ -665,7 +697,7 @@
  	create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
  	create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
  
-@@ -1124,16 +1441,17 @@
+@@ -1124,16 +1455,17 @@
  		VkCommandBuffer cmd = MGVK_BeginNewCommandBuffer(device, device->transferPool);
  		MGVK_CmdTransitionImageLayout(
  			cmd,
@@ -685,7 +717,7 @@
      texture->optimal_layout = optimalLayout;
  
  	texture->writeFrame = -1;
-@@ -1196,12 +1514,15 @@
+@@ -1196,12 +1528,15 @@
  	VkSubmitInfo submitInfo = {};
  	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
  	submitInfo.commandBufferCount = 1;
@@ -701,7 +733,7 @@
  	vkDestroyFence(device->device, renderFence, nullptr);
  }
  
-@@ -1215,12 +1536,91 @@
+@@ -1215,12 +1550,91 @@
  	VmaAllocationCreateInfo allocInfo = {};
  	allocInfo.usage = flags;
  
@@ -793,7 +825,7 @@
  {
  	VkBufferUsageFlags usage;
  	switch (type)
-@@ -1286,20 +1686,72 @@
+@@ -1286,20 +1700,72 @@
  
  	vkWaitForFences(device->device, 1, &renderFence, VK_TRUE, UINT64_MAX);
  	vkDestroyFence(device->device, renderFence, nullptr);
@@ -866,7 +898,7 @@
  	device->deviceFeatures = adapter->features;
  	device->deviceProperties = adapter->properties;
  
-@@ -1398,17 +1850,101 @@
+@@ -1398,17 +1864,101 @@
  	{
  		enabledFeatures.occlusionQueryPrecise = VK_TRUE;
  	}
@@ -970,7 +1002,7 @@
  
  	VkPhysicalDeviceCustomBorderColorFeaturesEXT customBorderColorFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT };
  	if (device->customBorderColorSupported)
-@@ -1426,14 +1962,48 @@
+@@ -1426,14 +1976,48 @@
  	}
  	VkPhysicalDeviceScalarBlockLayoutFeatures scalarFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES };
  	if (scalarBlockLayoutSupported)
@@ -1021,7 +1053,7 @@
  	if (userTypeSupported)
  		extensions.push_back(VK_GOOGLE_USER_TYPE_EXTENSION_NAME);
  
-@@ -1442,29 +2012,124 @@
+@@ -1442,29 +2026,124 @@
  	{
  		deviceFeatures2.features = enabledFeatures;
  		deviceFeatures2.pNext = lastFeature;
@@ -1146,7 +1178,7 @@
  	cmdPoolInfo.queueFamilyIndex = device->graphicsQueueFamily;
  	res = vkCreateCommandPool(device->device, &cmdPoolInfo, nullptr, &device->cmdPool);
  	VK_CHECK_RESULT(res);
-@@ -1576,13 +2241,14 @@
+@@ -1576,13 +2255,14 @@
  			{
  				auto& view = targetSetCache->arraySlicesViews[i];
  				if (view.has_value()) {
@@ -1162,7 +1194,7 @@
  			// Erase the element and get an iterator to the next one.
  			itr = cache.erase(itr);
  		}
-@@ -1640,23 +2306,44 @@
+@@ -1640,23 +2320,44 @@
  	// Prevents some exceptions while shutting down.
  	vkDeviceWaitIdle(device->device);
  
@@ -1207,7 +1239,22 @@
  
  	for (size_t i = 0; i < device->swapchainCount; i++)
  	{
-@@ -1744,12 +2431,15 @@
+@@ -1682,12 +2383,14 @@
+ 	for (size_t i = 0; i < device->swapchainCount; i++)
+ 		MGVK_DestroyFrameResources(device, i, true);
+ 
+ 	if (device->surface != nullptr)
+ 		vkDestroySurfaceKHR(device->instance, device->surface, nullptr);
+ 
++	// ArmAgedon vk-fdm: target caches and their views have already been destroyed above.
++	for (auto image : device->fdmTestImages) vmaDestroyImage(device->allocator, image.first, image.second);
+ 	vmaDestroyAllocator(device->allocator);
+ 
+ 	vkDestroyDevice(device->device, nullptr);
+ 
+ 	delete device;
+ }
+@@ -1744,12 +2447,15 @@
  			return;
  		}
  		VK_SET_OBJECT_NAME(device->device, (uint64_t)device->surface, VK_OBJECT_TYPE_SURFACE_KHR, "MGG_GraphicsDevice.surface");
@@ -1223,7 +1270,7 @@
  	int wx, wy;
  	SDL_GetWindowPosition(device->window, &wx, &wy);
  	SDL_SetWindowPosition(device->window, wx+1, wy);
-@@ -1796,14 +2486,19 @@
+@@ -1796,14 +2502,19 @@
  			maxMultisampleCount = 2;
  
  		multiSampleCount = std::clamp(multiSampleCount, 1, maxMultisampleCount);
@@ -1245,7 +1292,7 @@
  
  	// Check if the requested color format is supported, and fallback to another one otherwise.
  	VkFormat surface_format = VK_FORMAT_UNDEFINED;
-@@ -1812,12 +2507,27 @@
+@@ -1812,12 +2523,27 @@
  		res = vkGetPhysicalDeviceSurfaceFormatsKHR(device->physicalDevice, device->surface, &format_count, nullptr);
  		VK_CHECK_RESULT(res);
  
@@ -1273,7 +1320,7 @@
  		for (const auto& surfFormat : surfFormats)
  		{
  			if (surfFormat.colorSpace != VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-@@ -1900,12 +2610,14 @@
+@@ -1900,12 +2626,14 @@
  		{
  			selectedPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
  			break;
@@ -1288,7 +1335,7 @@
  	create_info.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
  	create_info.imageExtent = extent;
  	create_info.imageArrayLayers = 1;
-@@ -1942,14 +2654,16 @@
+@@ -1942,14 +2670,16 @@
  			{
  				// TODO: Should we wait for fences here or is vkDeviceWaitIdle enough?
  
@@ -1307,7 +1354,7 @@
  				vkDestroySemaphore(device->device, swap.renderCompleteSemaphore, nullptr);
  			}
  
-@@ -2096,17 +2810,22 @@
+@@ -2096,17 +2826,22 @@
  		printf("Cannot recreate swapchain: window is null!\n");
  		fflush(stdout);
  
@@ -1332,7 +1379,7 @@
  		device->syncInterval);
  
      MGG_GraphicsDevice_SetRenderTargets(device, nullptr, nullptr, 0);
-@@ -2125,16 +2844,16 @@
+@@ -2125,16 +2860,16 @@
  	assert(device);
  
  	// There is no zero... always at least 1.
@@ -1352,7 +1399,7 @@
  
  	auto vkColor = ToVkFormat(color);
  	auto vkDepth = ToVkFormat(depth);
-@@ -2188,40 +2907,100 @@
+@@ -2188,40 +2923,100 @@
  	};
  
  	auto res = vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -1454,7 +1501,7 @@
  	auto& frame = device->frames[device->frameIndex];
  
  	// This is only here for the first frame or for after the
-@@ -2234,19 +3013,27 @@
+@@ -2234,19 +3029,27 @@
  	// MGVK_DestroyFrameResources uses currentFrame and device->freeFrames to calculate age.
  	// We should pass the device->frame rather than swapchain_image_index.
  	// Otherwise age calculation will underflow.
@@ -1484,7 +1531,7 @@
  
  	frame.is_recording = true;
  }
-@@ -2263,12 +3050,14 @@
+@@ -2263,12 +3066,14 @@
  {
  	assert(device != nullptr);
  
@@ -1499,13 +1546,15 @@
  
  	MGVK_UpdateRenderPass(device, device->frame, frame.commandBuffer);
  
-@@ -2349,13 +3138,14 @@
+@@ -2349,13 +3154,16 @@
                  auto& view = itr->second->arraySlicesViews[i];
                  if (view.has_value()) {
                      vkDestroyImageView(device->device, view.value(), nullptr);
                  }
              }
  			vkDestroyFramebuffer(device->device, itr->second->framebuffer, nullptr);
++			if (itr->second->densityView != VK_NULL_HANDLE) // ArmAgedon vk-fdm: framebuffer gone before its external map view
++				vkDestroyImageView(device->device, itr->second->densityView, nullptr);
 +			if (!itr->second->renderPassShared) // ArmAgedon
 +				vkDestroyRenderPass(device->device, itr->second->renderPass, nullptr);
 -			vkDestroyRenderPass(device->device, itr->second->renderPass, nullptr);
@@ -1515,7 +1564,7 @@
  	}
  
  	device->pipelineState.targets = nullptr;
-@@ -2389,13 +3179,16 @@
+@@ -2389,13 +3197,16 @@
  			auto buffer = device->destroyBuffers.front();
  			auto diff = currentFrame - buffer->frame;
  			if (!free_all && diff < device->freeFrames)
@@ -1533,7 +1582,7 @@
  		while (!device->destroyTextures.empty())
  		{
  			auto texture = device->destroyTextures.front();
-@@ -2555,118 +3348,152 @@
+@@ -2555,118 +3366,152 @@
  	}
  }
  
@@ -1722,7 +1771,7 @@
  void MGG_GraphicsDevice_SetBlendState(MGG_GraphicsDevice* device, MGG_BlendState* state, mgfloat factorR, mgfloat factorG, mgfloat factorB, mgfloat factorA)
  {
  	assert(device != nullptr);
-@@ -2755,16 +3582,20 @@
+@@ -2755,16 +3600,20 @@
  void MGG_GraphicsDevice_SetRenderTargets(MGG_GraphicsDevice* device, MGG_Texture** targets, mgint* arraySlices, mgint count)
  {
  	assert(device != nullptr);
@@ -1743,7 +1792,7 @@
  
  		device->targets.numTargets = 1;
          for (int i = 0; i < MGVK_NUM_TARGETS; i++)
-@@ -2789,26 +3620,42 @@
+@@ -2789,26 +3638,42 @@
  
  		device->targets.numTargets = count;
  	}
@@ -1791,7 +1840,7 @@
  	{
  		if (buffer->dirty)		
  			device->uniformsDirty |= 1 << (int)stage;
-@@ -2818,22 +3665,26 @@
+@@ -2818,22 +3683,26 @@
  void MGG_GraphicsDevice_SetTexture(MGG_GraphicsDevice* device, MGShaderStage stage, mgint slot, MGG_Texture* texture)
  {
  	assert(device != nullptr);
@@ -1818,7 +1867,36 @@
  
  void MGG_GraphicsDevice_SetIndexBuffer(MGG_GraphicsDevice* device, MGIndexElementSize size, MGG_Buffer* buffer)
  {
-@@ -3118,21 +3969,23 @@
+@@ -3071,13 +3940,13 @@
+ 
+ 	vkCmdCopyImageToBuffer(cmds, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
+ }
+ 
+ static void MGVK_UpdateRenderPass(MGG_GraphicsDevice* device, FrameCounter currentFrame, VkCommandBuffer commandBuffer)
+ {
++    const int MAX_ATTACHMENTS = 7; // ArmAgedon vk-fdm: colors, depth, resolve and density
+-    const int MAX_ATTACHMENTS = 6;
+ 
+ 	if (device->inRenderPass && !device->renderTargetDirty)
+ 		return;
+ 
+ 	MGVK_EndRenderPass(device, commandBuffer);
+ 
+@@ -3095,12 +3964,13 @@
+ 
+ 		// Mark the targets as being written to this frame.
+ 		target->writeFrame = currentFrame;
+ 	}
+ 
+ 	// Lookup the texture set in the cache.
++	device->targets.density = device->targets.targets[0] != nullptr ? device->targets.targets[0]->density : MGVK_DensityMap{}; // ArmAgedon vk-fdm
+ 	const uint32_t hash = MG_ComputeHash((mgbyte*)&device->targets, sizeof(MGVK_TargetSet));
+ 	MGVK_TargetSetCache* cached = device->targetCache[hash];
+ 
+ 	if (!cached)
+ 	{
+ 		cached = new MGVK_TargetSetCache();
+@@ -3118,21 +3988,23 @@
          VkAttachmentReference resolve_attachment_ref = {};
          VkAttachmentDescription attachment_descs[MAX_ATTACHMENTS];
  		memset(attachment_descs, 0, sizeof(attachment_descs));
@@ -1843,7 +1921,42 @@
                  ivci.viewType = VK_IMAGE_VIEW_TYPE_2D;
                  ivci.format = target->info.format;
                  ivci.subresourceRange.aspectMask = DetermineAspectMask(target->info.format);
-@@ -3310,12 +4163,23 @@
+@@ -3238,12 +4110,34 @@
+ 			desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+ 			desc.finalLayout = firstTarget->isSwapchain ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+ 
+ 			num_attachments++;
+ 		}
+ 
++		// ArmAgedon vk-fdm: ordinary views (Frame has no fragmentDensityMapDynamic), kept as long as the framebuffer.
++		VkRenderPassFragmentDensityMapCreateInfoEXT densityInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_FRAGMENT_DENSITY_MAP_CREATE_INFO_EXT };
++		const auto& density = cached->set.density;
++		if (density.image != VK_NULL_HANDLE)
++		{
++			VkImageViewCreateInfo view = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
++			view.image = density.image;
++			view.viewType = density.layers > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
++			view.format = density.format;
++			view.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, density.baseLayer, density.layers };
++			VK_CHECK_RESULT(vkCreateImageView(device->device, &view, nullptr, &cached->densityView));
++			attachments[num_attachments] = cached->densityView;
++			auto& desc = attachment_descs[num_attachments];
++			desc.format = density.format;
++			desc.samples = VK_SAMPLE_COUNT_1_BIT;
++			desc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
++			desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
++			desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
++			desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
++			desc.initialLayout = desc.finalLayout = VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT;
++			densityInfo.fragmentDensityMapAttachment = { (uint32_t)num_attachments++, VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT };
++		}
+ 		{
+ 			VkSubpassDescription subpass_desc = {};
+ 			subpass_desc.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+ 			subpass_desc.colorAttachmentCount = num_color_attachments;
+ 			subpass_desc.pColorAttachments = color_attachments;
+ 
+@@ -3310,12 +4204,31 @@
  				dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
  				dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
  				dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -1861,13 +1974,21 @@
 +				multiview.pCorrelationMasks = &viewMask;
 +				create_info.pNext = &multiview;
 +			}
++			// ArmAgedon vk-fdm: legacy render passes use this flag, not a guessed layered render-pass pNext structure.
++			// Mesa tu_pass.cc reads it into has_layered_fdm. The pipeline inherits it from renderPass.
++			if (density.image != VK_NULL_HANDLE)
++			{
++				densityInfo.pNext = create_info.pNext;
++				create_info.pNext = &densityInfo;
++				if (density.layers > 1) create_info.flags |= VK_RENDER_PASS_CREATE_PER_LAYER_FRAGMENT_DENSITY_BIT_VALVE;
++			}
  			VkResult res = vkCreateRenderPass(device->device, &create_info, nullptr, &cached->renderPass);
  			VK_CHECK_RESULT(res);
  			VK_SET_OBJECT_NAME(device->device, cached->renderPass, VK_OBJECT_TYPE_RENDER_PASS, "MGVK_TargetSetCache.renderPass (hash: %u)", hash);
  		}
  
  		{
-@@ -3345,15 +4209,16 @@
+@@ -3345,15 +4258,16 @@
  			target->layouts[0] = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
  	}
  
@@ -1887,7 +2008,7 @@
  	render_area.offset.x = 0;
  	render_area.offset.y = 0;
  	render_area.extent.width = cached->width;
-@@ -3377,59 +4242,113 @@
+@@ -3377,59 +4291,113 @@
  		{
  			vkCmdResetQueryPool(commandBuffer, query->queryPool, 0, 1);
  			query->gpuHasBegun = true;
@@ -2013,7 +2134,7 @@
  	// needs to be updated before we draw.
  
  	MGVK_DescriptorInfo* info;
-@@ -3469,17 +4388,20 @@
+@@ -3469,17 +4437,20 @@
  	// wrong buffer if the descriptor is retrieved from the cache (and will
  	// result in flickers/broken rendering).
  	// 
@@ -2034,7 +2155,7 @@
  		{
  			// Allocate more cache if empty.
  			MGVK_FillDescriptorSetCache(device, shader);
-@@ -3490,20 +4412,21 @@
+@@ -3490,20 +4461,21 @@
  		info = shader->freeSets.front();
  		shader->freeSets.pop();
  
@@ -2057,7 +2178,7 @@
  			else if (w.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
  			{
  				int slot = w.dstBinding - 32;
-@@ -3530,28 +4453,54 @@
+@@ -3530,28 +4502,54 @@
  				// This should never happen!
  				assert(0);
  			}
@@ -2117,7 +2238,7 @@
  					assert(0);
  				}
  
-@@ -3600,25 +4549,94 @@
+@@ -3600,29 +4598,109 @@
  	VK_CHECK_RESULT(res);
  	VK_SET_OBJECT_NAME(device->device, program->layout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, "MGVK_Program.layout (id: %llu)", programId);
  
@@ -2139,6 +2260,8 @@
 +		int depthSamples;
 +		int swapchain;
 +		uint32_t viewMask;
++		VkFormat densityFormat; // ArmAgedon vk-fdm: attachment reference and layered flag affect pass compatibility
++		uint32_t densityLayered;
 +	} key;
 +	memset(&key, 0, sizeof(key));
 +	key.numTargets = targets->set.numTargets;
@@ -2155,6 +2278,8 @@
 +	}
 +	key.swapchain = targets->set.targets[0]->isSwapchain ? 1 : 0; // the subpass dependencies differ
 +	key.viewMask = MGVK_TargetViewMask(targets->set); // ArmAgedon vk-multiview: a multiview pass is a different pass
++	key.densityFormat = targets->set.density.format; // ArmAgedon vk-fdm: snapshot, even after the target association is removed
++	key.densityLayered = targets->set.density.layers > 1;
 +	return MG_ComputeHash((mgbyte*)&key, sizeof(key));
  }
  
@@ -2211,9 +2336,20 @@
  	VkGraphicsPipelineCreateInfo pipelineInfo;
  	memset(&pipelineInfo, 0, sizeof(pipelineInfo));
  	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
++	// ArmAgedon vk-fdm: Turnip derives the per-layer flag from the legacy pass, but its shader also needs the layer bound.
++	VkPipelineFragmentDensityMapLayeredCreateInfoVALVE densityLayers = { VK_STRUCTURE_TYPE_PIPELINE_FRAGMENT_DENSITY_MAP_LAYERED_CREATE_INFO_VALVE };
++	if (device->pipelineState.targets->set.density.layers > 1)
++	{
++		densityLayers.maxFragmentDensityMapLayers = device->pipelineState.targets->set.density.layers;
++		pipelineInfo.pNext = &densityLayers;
++	}
  
  	// We set the viewport and scissor dynamically.
-@@ -3716,21 +4734,26 @@
+ 	static const VkDynamicState dynamicStates[] = {
+ 		VK_DYNAMIC_STATE_VIEWPORT,
+ 		VK_DYNAMIC_STATE_SCISSOR,
+ 		VK_DYNAMIC_STATE_BLEND_CONSTANTS,
+@@ -3716,21 +4794,26 @@
  		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
  		multisampling.sampleShadingEnable = VK_FALSE;
  		multisampling.minSampleShading = 1.0f;
@@ -2241,7 +2377,7 @@
  
  	return pipeline.cache;
  }
-@@ -3766,22 +4789,25 @@
+@@ -3766,22 +4849,25 @@
  	// First update the pipeline if we need to.
  	if (device->pipelineStateDirty)
  	{
@@ -2269,7 +2405,7 @@
  		// We need to re-apply the viewport too.
  		vkCmdSetViewport(commandBuffer, 0, 1, &device->viewport);
  	}
-@@ -3828,27 +4854,38 @@
+@@ -3828,27 +4914,38 @@
  		if (program->vertex->bindings.size() == 0)
  			setOffset++;
  		else
@@ -2310,7 +2446,7 @@
  		// Clear all the dirty flags.
  		device->uniformsDirty = 0;
  		device->textureSamplerDirty = 0;
-@@ -3860,25 +4897,40 @@
+@@ -3860,25 +4957,40 @@
  
  		int count = 0;
  		VkDeviceSize offsets[8];
@@ -2353,7 +2489,7 @@
  }
  
  static int MGVK_GetIndexCount(MGPrimitiveType primitiveType, mgint primitiveCount)
-@@ -3898,49 +4950,72 @@
+@@ -3898,49 +5010,72 @@
  		return primitiveCount;
  	}
  }
@@ -2428,7 +2564,7 @@
  	{
  		device->pipelineStateDirty = true;
  		device->pipelineState.topology = topology;
-@@ -3948,64 +5023,82 @@
+@@ -3948,64 +5083,82 @@
  
  	MGVK_UpdatePipeline(device, frame.commandBuffer, device->frame);
  
@@ -2515,7 +2651,7 @@
  {
  	value = value >> level;
  	return value < 1 ? 1 : value;
-@@ -4221,35 +5314,35 @@
+@@ -4221,35 +5374,35 @@
  	assert(data != nullptr);
  	assert(count > 0);
  	assert(dataBytes > 0);
@@ -2558,7 +2694,7 @@
  	vkDestroyFence(device->device, flushFence, nullptr);
  
  	auto srcImage = device->swapchains[frame.image_index].texture->image;
-@@ -4631,13 +5724,14 @@
+@@ -4631,13 +5784,14 @@
  	rasterizer.flags = 0; // Reserved for future use.
  	rasterizer.depthClampEnable = !info->depthClipEnable;
  	rasterizer.rasterizerDiscardEnable = VK_FALSE;
@@ -2574,7 +2710,7 @@
  	rasterizer.lineWidth = 1.0f;
  
  	// These don't fit this structure, so we
-@@ -4816,12 +5910,13 @@
+@@ -4816,12 +5970,13 @@
  	// Get the info we need to find/allocate a new buffer.
  	auto dataSize = buffer->dataSize;
  	auto type = buffer->type;
@@ -2588,7 +2724,7 @@
  
  	// Search for the best fit from the free list.	
  	MGG_Buffer** curr = &device->free;
-@@ -4894,12 +5989,19 @@
+@@ -4894,12 +6049,19 @@
  			break;
  		case MGBufferType::Constant:
  			usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
@@ -2608,7 +2744,7 @@
  
  		// TODO: We could lazy map on first write/read... then
  		// unmap it if we haven't accessed it in a while.  This
-@@ -4978,13 +6080,13 @@
+@@ -4978,13 +6140,13 @@
  		delete [] buffer->push;
  		delete buffer;
  		return;
@@ -2623,7 +2759,7 @@
  	device->destroyBuffers.push(buffer);
  }
  
-@@ -4995,12 +6097,24 @@
+@@ -4995,12 +6157,24 @@
  	assert(buffer != nullptr);
  	assert(data != nullptr);
  	assert(offset >= 0);
@@ -2648,7 +2784,7 @@
  	// If this is a push buffer we don't need to
  	// do anything other than copy over the content.
  	// We can safely ignore the discard.
-@@ -5036,17 +6150,20 @@
+@@ -5036,17 +6210,20 @@
  
  		switch (buffer->type)
  		{
@@ -2673,7 +2809,7 @@
  		case MGBufferType::Vertex:
  			for (int i = 0; i < 8; i++)
  			{
-@@ -5159,13 +6276,13 @@
+@@ -5159,13 +6336,13 @@
  
  		cmd = MGVK_BeginNewCommandBuffer(device, device->transferPool);
  		MGVK_CmdTransitionImageLayout(cmd, texture->image,
@@ -2688,7 +2824,7 @@
  
  	return texture;
  }
-@@ -5275,13 +6392,13 @@
+@@ -5275,13 +6452,13 @@
  				0,
  				mipmaps,
  				0,
@@ -2703,7 +2839,7 @@
  			texture->layouts[i] = startLayout;
  		texture->optimal_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
  	}
-@@ -5536,12 +6653,14 @@
+@@ -5536,12 +6713,14 @@
  
  	// We store the pre-generated bindings info at the top of the shader bytecode data.
  	int uniformCount = 0;
@@ -2718,7 +2854,7 @@
  
  		memcpy(shader->textureTypes, bytecode, sizeof(MGTextureType) * MAX_TEXTURE_SLOTS);
  		bytecode += sizeof(MGTextureType) * MAX_TEXTURE_SLOTS;
-@@ -5602,29 +6721,27 @@
+@@ -5602,29 +6781,27 @@
  		VkDescriptorPoolSize* pool_sizes = new VkDescriptorPoolSize[layoutBindings.size()];
  
  		for (int i = 0; i < layoutBindings.size(); i++)
@@ -2753,7 +2889,7 @@
  	VkDescriptorBufferInfo* bufferInfo = shader->bufferInfo = new VkDescriptorBufferInfo[uniformCount];
  	VkDescriptorImageInfo* imageInfo = shader->imageInfo =  new VkDescriptorImageInfo[layoutBindings.size() - uniformCount];
  	for (int i = 0; i < layoutBindings.size(); i++)
-@@ -5724,12 +6841,14 @@
+@@ -5724,12 +6901,14 @@
  		delete free;
  	}
  
@@ -2768,7 +2904,7 @@
  		delete shader->poolInfo;
  	}
  
-@@ -5814,12 +6933,15 @@
+@@ -5814,12 +6993,15 @@
      
      VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
      submitInfo.commandBufferCount = 1;
@@ -2784,7 +2920,7 @@
      VK_CHECK_RESULT(vkWaitForFences(device->device, 1, &fence, VK_TRUE, UINT64_MAX));
      vkDestroyFence(device->device, fence, nullptr);
  
-@@ -5871,8 +6993,1084 @@
+@@ -5871,8 +7053,1180 @@
  	else
  	{
  		// An error occurred.
@@ -3155,6 +3291,102 @@
 +}
 +
 +// ArmAgedon vk-fdm: stable, optional probe ABI for managed builds used with older native runtimes.
++MG_EXPORT uint64_t MGVK_CreateTestDensityMap(MGG_GraphicsDevice* device, mgint width, mgint height, mgint layers, mgint* mapWidth, mgint* mapHeight)
++{
++	if (device == nullptr || !device->fdmEnabled || width <= 0 || height <= 0 || layers < 1 || layers > 2 || mapWidth == nullptr || mapHeight == nullptr) return 0;
++	VkImageCreateInfo info = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
++	info.imageType = VK_IMAGE_TYPE_2D;
++	info.format = VK_FORMAT_R8G8_UNORM;
++	info.extent = { ((uint32_t)width + device->fdmProbe[3] - 1) / device->fdmProbe[3],
++		((uint32_t)height + device->fdmProbe[4] - 1) / device->fdmProbe[4], 1 };
++	info.mipLevels = 1; info.arrayLayers = layers;
++	info.samples = VK_SAMPLE_COUNT_1_BIT;
++	info.tiling = VK_IMAGE_TILING_OPTIMAL;
++	info.usage = VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
++	VmaAllocationCreateInfo allocationInfo = {};
++	allocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; // ArmAgedon vk-fdm: Turnip reads static maps on the host
++	allocationInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
++	allocationInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
++	VkImage image; VmaAllocation allocation;
++	if (vmaCreateImage(device->allocator, &info, &allocationInfo, &image, &allocation, nullptr) != VK_SUCCESS) return 0;
++	VkCommandBuffer cmd = MGVK_BeginNewCommandBuffer(device, device->transferPool);
++	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
++	barrier.srcQueueFamilyIndex = barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
++	barrier.image = image;
++	barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, (uint32_t)layers };
++	barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
++	barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
++	barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
++	vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
++	VkClearColorValue value = { { 64.0f / 255.0f, 64.0f / 255.0f, 0.0f, 0.0f } };
++	vkCmdClearColorImage(cmd, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &value, 1, &barrier.subresourceRange);
++	barrier.oldLayout = barrier.newLayout;
++	barrier.newLayout = VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT;
++	barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
++	barrier.dstAccessMask = VK_ACCESS_FRAGMENT_DENSITY_MAP_READ_BIT_EXT;
++	vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_DENSITY_PROCESS_BIT_EXT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
++	MGVK_ExecuteAndFreeCommandBuffer(device, cmd, device->transferPool);
++	device->fdmTestImages.push_back({ image, allocation });
++	*mapWidth = info.extent.width; *mapHeight = info.extent.height;
++	printf("[xr] foveation: constant 0x40/0x40 test map %ux%ux%d\n", info.extent.width, info.extent.height, layers);
++	return (uint64_t)image;
++}
++
++MG_EXPORT mgint MGVK_SetTargetDensityMap(MGG_GraphicsDevice* device, MGG_Texture* target, uint64_t image, mgint format, mgint width, mgint height, mgint layers, mgint layer)
++{
++	if (device == nullptr || target == nullptr || !target->isTarget) return -1;
++	MGVK_DensityMap density = {};
++	if (image != 0)
++	{
++		if (!device->fdmEnabled || format != VK_FORMAT_R8G8_UNORM || width <= 0 || height <= 0 || layers <= 0 || layer >= layers) return -2;
++		if (layer < 0 && (!device->fdmLayered || target->viewMask == 0 || layers < 2 || (uint32_t)layers > device->fdmProbe[9])) return -3;
++		// Density map dimensions are independent of framebuffer dimensions; check the spec's maximum texel size bound.
++		if ((uint32_t)width < (target->info.extent.width + device->fdmProbe[5] - 1) / device->fdmProbe[5] ||
++			(uint32_t)height < (target->info.extent.height + device->fdmProbe[6] - 1) / device->fdmProbe[6]) return -4;
++		density.image = (VkImage)image;
++		density.format = (VkFormat)format;
++		density.width = width; density.height = height;
++		density.layers = layer < 0 ? layers : 1;
++		density.baseLayer = layer < 0 ? 0 : layer;
++	}
++	if (memcmp(&target->density, &density, sizeof(density)) == 0) return 0;
++	target->density = density;
++	if (device->targets.targets[0] == target)
++	{
++		device->renderTargetDirty = true;
++		device->pipelineStateDirty = true;
++	}
++	return 0;
++}
++
++// ArmAgedon vk-fdm: before xrDestroySwapchain, finish graphics work and drop every framebuffer/view referencing its maps.
++// Also used at teardown. No runtime image is destroyed by MonoGame. Never called on the normal per-frame path.
++MG_EXPORT void MGVK_ReleaseDensityMaps(MGG_GraphicsDevice* device, uint64_t* images, mgint count)
++{
++	if (device == nullptr || images == nullptr || count <= 0) return;
++	auto matches = [images, count](VkImage image) {
++		for (int i = 0; i < count; i++) if (image == (VkImage)images[i]) return true;
++		return false;
++	};
++	auto& frame = device->frames[device->frameIndex];
++	if (frame.is_recording)
++	{
++		MGVK_FlushCommands(device, frame);
++		MGVK_BeginCommandBuffer(frame.commandBuffer);
++	}
++	else
++	{
++		std::lock_guard lock(device->queueMutex);
++		vkQueueWaitIdle(device->queue);
++	}
++	MGVK_DestroyTargetSets(device, [matches](const MGVK_TargetSetCache* cache) { return matches(cache->set.density.image); });
++	for (auto target : device->all_textures)
++		if (matches(target->density.image)) target->density = {};
++	device->targets.density = {};
++	device->renderTargetDirty = true;
++	device->pipelineStateDirty = true;
++}
++
 +MG_EXPORT void MGVK_RequestFragmentDensityMap(mgbool requested) { s_fdmRequested = requested != 0; }
 +MG_EXPORT mgint MGVK_FragmentDensityMapEnabled(MGG_GraphicsDevice* device)
 +{

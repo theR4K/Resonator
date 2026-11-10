@@ -1,0 +1,20 @@
+--- a/FrooxEngine/RendererInitProgressWrapper.cs
++++ b/FrooxEngine/RendererInitProgressWrapper.cs
+@@ -3,7 +3,7 @@
+ 
+ namespace FrooxEngine;
+ 
++public partial class RendererInitProgressWrapper : IEngineInitProgress
+-public class RendererInitProgressWrapper : IEngineInitProgress
+ {
+ 	public const int TOTAL_FIXED_PHASE_COUNT = 25;
+ 
+@@ -57,7 +57,7 @@
+ 	{
+ 		renderSystem.SendInitProgress(new RendererInitProgressUpdate
+ 		{
++			progress = ArmInitProgress(), // ArmAgedon seam
+-			progress = MathX.Clamp01(FixedPhaseIndex / 25),
+ 			phase = fixedPhase,
+ 			subPhase = subPhase,
+ 			forceShow = forceShow

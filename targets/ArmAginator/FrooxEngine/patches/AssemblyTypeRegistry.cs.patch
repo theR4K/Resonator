@@ -1,0 +1,21 @@
+--- a/FrooxEngine/AssemblyTypeRegistry.cs
++++ b/FrooxEngine/AssemblyTypeRegistry.cs
+@@ -79,8 +79,7 @@
+ 	{
+ 		if (fileHash == null)
+ 		{
++			fileHash = AssemblyFileIdentity.Hash(assembly); // ArmAgedon seam
+-			byte[] hash = FileUtil.ComputeHash(assembly.Location, FileUtil.FileHash.MD5);
+-			fileHash = Convert.ToBase64String(hash);
+ 		}
+ 	}
+ 
+@@ -101,7 +100,7 @@
+ 		{
+ 			metadataPath = Path.Combine(GlobalTypeRegistry.MetadataCachePath, AssemblyName + ".metadata");
+ 		}
++		DateTime lastModification = AssemblyFileIdentity.LastModification(assembly); // ArmAgedon seam
+-		DateTime lastModification = new FileInfo(assembly.Location).LastWriteTimeUtc;
+ 		string fileHash = null;
+ 		if (File.Exists(metadataPath))
+ 		{

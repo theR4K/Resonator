@@ -1,0 +1,23 @@
+--- a/MonoGame.Framework/Platform/Native/Mouse.Native.cs
++++ b/MonoGame.Framework/Platform/Native/Mouse.Native.cs
+@@ -24,7 +24,19 @@
+     private static unsafe MouseState PlatformGetState(GameWindow window)
+     {
+         // Mouse events keep this updated for each window.
++        var state = window.MouseState;
++        // ArmAgedon: presses released before this read still count once (NativeGameWindow.ArmUnreadPresses)
++        if (window is NativeGameWindow native)
++        {
++            int unread = native.ArmUnreadPresses;
++            native.ArmUnreadPresses = 0;
++            if ((unread & (1 << (int)MouseButton.Left)) != 0) state.LeftButton = ButtonState.Pressed;
++            if ((unread & (1 << (int)MouseButton.Right)) != 0) state.RightButton = ButtonState.Pressed;
++            if ((unread & (1 << (int)MouseButton.Middle)) != 0) state.MiddleButton = ButtonState.Pressed;
++            if ((unread & (1 << (int)MouseButton.X1)) != 0) state.XButton1 = ButtonState.Pressed;
++            if ((unread & (1 << (int)MouseButton.X2)) != 0) state.XButton2 = ButtonState.Pressed;
++        }
++        return state;
+-        return window.MouseState;
+     }
+ 
+     private static unsafe void PlatformSetPosition(int x, int y)

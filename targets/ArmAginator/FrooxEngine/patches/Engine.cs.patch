@@ -34,7 +34,7 @@
  		DataPath = Path.GetFullPath(Environment.ExpandEnvironmentVariables(options.DataDirectory));
  		CachePath = Path.GetFullPath(Environment.ExpandEnvironmentVariables(options.CacheDirectory));
  		if (string.IsNullOrWhiteSpace(options.LocaleDirectory))
-@@ -735,16 +735,6 @@
+@@ -736,16 +736,6 @@
  		await InitializeInputDrivers(options);
  		await FinishInitialization(options);
  		UniLog.Log("FrooxEngine Initialized in " + initStopwatch.GetElapsedMilliseconds() + " ms");
@@ -51,7 +51,7 @@
  	}
  
  	private async Task InitializeProtocolRegistration()
-@@ -970,10 +960,7 @@
+@@ -971,10 +961,7 @@
  		}
  		InputInterface.RegisterPostInputStateTask(() =>
  		{
@@ -63,7 +63,7 @@
  			if (OmniceptTrackingDriver.ShouldRegister(InputInterface))
  			{
  				InputInterface.RegisterInputDriver(new OmniceptTrackingDriver());
-@@ -984,11 +971,8 @@
+@@ -985,11 +972,8 @@
  				InputInterface.RegisterInputDriver(new BabbleOSC_Driver());
  			}
  		});
@@ -77,7 +77,7 @@
  		InputInterface.RegisterInputDriver(new OWO_Driver());
  		InputInterface.RegisterInputDriver(new GiggleTechDriver());
  	}
-@@ -1174,6 +1158,7 @@
+@@ -1175,6 +1159,7 @@
  	private async Task FinishInitialization(LaunchOptions options)
  	{
  		InitProgress?.SetFixedPhase("Finalizing initialization");

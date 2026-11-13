@@ -1,0 +1,28 @@
+--- a/MonoGame.Framework/Platform/Input/Mouse.SDL.cs
++++ b/MonoGame.Framework/Platform/Input/Mouse.SDL.cs
+@@ -10,6 +10,15 @@
+     {
+         internal static int ScrollX;
+         internal static int ScrollY;
++
++        // ArmAgedon: buttons pressed since the last GetState (SDL button masks), reported pressed once even if already
++        // released, so a press that starts and ends within one event pump is not lost
++        private static int _pressedSinceRead;
++
++        internal static void LatchPress(int buttonMask)
++        {
++            _pressedSinceRead |= buttonMask;
++        }
+ 
+         private static IntPtr PlatformGetWindowHandle()
+         {
+@@ -24,7 +33,8 @@
+         {
+             int x, y;
+             var winFlags = Sdl.Window.GetWindowFlags(window.Handle);
++            var state = Sdl.Mouse.GetGlobalState(out x, out y) | (Sdl.Mouse.Button)_pressedSinceRead;
++            _pressedSinceRead = 0;
+-            var state = Sdl.Mouse.GetGlobalState(out x, out y);
+             var clientBounds = window.ClientBounds;
+ 
+             window.MouseState.LeftButton = (state & Sdl.Mouse.Button.Left) != 0 ? ButtonState.Pressed : ButtonState.Released;

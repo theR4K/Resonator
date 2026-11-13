@@ -1,0 +1,14 @@
+--- a/MonoGame.Framework/Platform/Native/GameWindow.Native.cs
++++ b/MonoGame.Framework/Platform/Native/GameWindow.Native.cs
+@@ -13,6 +13,11 @@
+ internal class NativeGameWindow : GameWindow
+ {
+     internal unsafe MGP_Window* _handle;
++
++    // ArmAgedon: buttons pressed since the last Mouse.GetState (bit per MouseButton, Left = 1 << 0 ... X2 = 1 << 4).
++    // A press and its release can both arrive in one event pump (a quick tap on a touch screen, which SDL synthesizes
++    // as mouse buttons): GetState reports such a button pressed once, so the press is not lost.
++    internal int ArmUnreadPresses;
+ 
+     private static readonly Dictionary<nint, NativeGameWindow> _windows = new Dictionary<nint, NativeGameWindow>();
+ 

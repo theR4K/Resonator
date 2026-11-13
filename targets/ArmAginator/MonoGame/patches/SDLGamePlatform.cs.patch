@@ -1,6 +1,19 @@
 --- a/MonoGame.Framework/Platform/SDL/SDLGamePlatform.cs
 +++ b/MonoGame.Framework/Platform/SDL/SDLGamePlatform.cs
-@@ -345,6 +345,9 @@
+@@ -137,6 +137,12 @@
+                     case Sdl.EventType.ControllerButtonDown:
+                     case Sdl.EventType.ControllerAxisMotion:
+                         GamePad.UpdatePacketInfo(ev.ControllerDevice.Which, ev.ControllerDevice.TimeStamp);
++                        break;
++                    case Sdl.EventType.MouseButtonDown:
++                        // ArmAgedon: a press and its release can both arrive in one pump (a quick tap on a touch screen,
++                        // synthesized as mouse buttons): GetState would never see it pressed, so it is latched until read
++                        if (ev.MouseButton.Button >= 1 && ev.MouseButton.Button <= 5)
++                            Mouse.LatchPress(1 << (ev.MouseButton.Button - 1));
+                         break;
+                     case Sdl.EventType.MouseWheel:
+                         const int wheelDelta = 120;
+@@ -345,6 +351,9 @@
          {
              if (_view != null)
              {

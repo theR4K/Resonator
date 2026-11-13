@@ -1,0 +1,34 @@
+--- a/MonoGame.Framework/Platform/SDL/SDL2.cs
++++ b/MonoGame.Framework/Platform/SDL/SDL2.cs
+@@ -120,6 +120,8 @@
+         public Keyboard.TextInputEvent Text;
+         [FieldOffset(0)]
+         public Mouse.WheelEvent Wheel;
++        [FieldOffset(0)]
++        public Mouse.ButtonEvent MouseButton;
+         [FieldOffset(0)]
+         public Joystick.DeviceEvent JoystickDevice;
+         [FieldOffset(0)]
+@@ -739,6 +741,22 @@
+             public int X;
+             public int Y;
+             public uint Direction;
++        }
++
++        // SDL_MouseButtonEvent (ArmAgedon: tap latching, Mouse.SDL.cs)
++        [StructLayout(LayoutKind.Sequential)]
++        public struct ButtonEvent
++        {
++            public EventType Type;
++            public uint TimeStamp;
++            public uint WindowId;
++            public uint Which;
++            public byte Button;
++            public byte State;
++            public byte Clicks;
++            private byte padding1;
++            public int X;
++            public int Y;
+         }
+ 
+         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

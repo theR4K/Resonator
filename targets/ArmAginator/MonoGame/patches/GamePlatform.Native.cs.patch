@@ -76,3 +76,12 @@
      {
          MGP_Event event_;
          while (MGP.Platform_PollEvent(Handle, out event_) != 0)
+@@ -202,6 +255,8 @@
+                     if (window != null)
+                     {
+                         var state = event_.Type == EventType.MouseButtonDown ? ButtonState.Pressed : ButtonState.Released;
++                        if (state == ButtonState.Pressed && (int)event_.MouseButton.Button >= 0 && (int)event_.MouseButton.Button < 5)
++                            window.ArmUnreadPresses |= 1 << (int)event_.MouseButton.Button;
+ 
+                         switch (event_.MouseButton.Button)
+                         {

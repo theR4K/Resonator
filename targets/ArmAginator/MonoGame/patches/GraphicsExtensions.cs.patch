@@ -1,0 +1,10 @@
+--- a/MonoGame.Framework/Graphics/GraphicsExtensions.cs
++++ b/MonoGame.Framework/Graphics/GraphicsExtensions.cs
+@@ -503,6 +503,7 @@
+             out PixelFormat glFormat,
+             out PixelType glType)
+ 		{
++            if (ArmOpenGLFormats.TryGet(format, out glInternalFormat, out glFormat, out glType)) return; // ArmAgedon seam
+ 			glInternalFormat = PixelInternalFormat.Rgba;
+ 			glFormat = PixelFormat.Rgba;
+ 			glType = PixelType.UnsignedByte;

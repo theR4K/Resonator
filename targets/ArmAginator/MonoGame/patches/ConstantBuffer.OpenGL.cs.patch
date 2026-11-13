@@ -1,0 +1,17 @@
+--- a/MonoGame.Framework/Platform/Graphics/Shader/ConstantBuffer.OpenGL.cs
++++ b/MonoGame.Framework/Platform/Graphics/Shader/ConstantBuffer.OpenGL.cs
+@@ -35,12 +35,14 @@
+ 
+         private void PlatformClear()
+         {
++            ClearUniformBlock(); // ArmAgedon seam
+             // Force the uniform location to be looked up again
+             _shaderProgram = null;
+         }
+ 
+         public unsafe void PlatformApply(GraphicsDevice device, ShaderProgram program)
+         {
++            if (TryApplyUniformBlock(device, program)) return; // ArmAgedon seam
+             // NOTE: We assume here the program has 
+             // already been set on the device.
+ 

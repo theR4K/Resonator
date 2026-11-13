@@ -46,7 +46,17 @@
  
              _name = name;
  
-@@ -143,35 +168,27 @@
+@@ -98,6 +123,9 @@
+ 
+         private int SetParameter(int offset, EffectParameter param)
+         {
++#if OPENGL
++            if (TrySetUniformInteger(offset, param, out int uniformRows)) return uniformRows; // ArmAgedon seam
++#endif
+             const int elementSize = 4;
+             const int rowSize = elementSize * 4;
+ 
+@@ -143,35 +171,27 @@
  
          public void Update(EffectParameterCollection parameters)
          {

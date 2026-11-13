@@ -1,0 +1,12 @@
+--- a/MonoGame.Framework/Platform/SDL/SDLGamePlatform.cs
++++ b/MonoGame.Framework/Platform/SDL/SDLGamePlatform.cs
+@@ -345,6 +345,9 @@
+         {
+             if (_view != null)
+             {
++#if OPENGL
++                Microsoft.Xna.Framework.Graphics.ArmOpenGLShutdown.BeforeWindowDispose(); // ArmAgedon seam
++#endif
+                 _view.Dispose();
+                 _view = null;
+ 

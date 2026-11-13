@@ -20,12 +20,14 @@ namespace Resonator.Pipeline.Stages;
 /// </summary>
 internal static class Decompiler
 {
+    // Match references.targets: C# 14 span inference can omit type arguments required by C# 13.
+
     /// <summary>The whole assembly as a project tree: one file per type, namespace folders.</summary>
     public static void WholeProject(Target target)
     {
         Log.Banner("DECOMPILE (in-process ICSharpCode.Decompiler, refs from Resonite folder)");
         var (pe, resolver, pdb) = Open(target);
-        var settings = new DecompilerSettings(LanguageVersion.Latest) { ThrowOnAssemblyResolveErrors = false, UseSdkStyleProjectFormat = true };
+        var settings = new DecompilerSettings(LanguageVersion.CSharp13_0) { ThrowOnAssemblyResolveErrors = false, UseSdkStyleProjectFormat = true };
         var decompiler = new WholeProjectDecompiler(settings, resolver, projectWriter: null, assemblyReferenceClassifier: resolver, debugInfoProvider: pdb);
 
         // the decompiler also writes a csproj: discarded - the reference set comes from the assembly
@@ -49,7 +51,7 @@ internal static class Decompiler
         var types = target.Spec.SelectTypes;
         Log.Banner($"DECOMPILE (type subset: {types.Length} type(s))");
         var (_, resolver, pdb) = Open(target);
-        var settings = new DecompilerSettings(LanguageVersion.Latest) { ThrowOnAssemblyResolveErrors = false };
+        var settings = new DecompilerSettings(LanguageVersion.CSharp13_0) { ThrowOnAssemblyResolveErrors = false };
         var decompiler = new CSharpDecompiler(target.SourceDll, resolver, settings) { DebugInfoProvider = pdb };
 
         foreach (string type in types)

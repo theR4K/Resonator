@@ -9,6 +9,24 @@
  {
  	private static string[] AndroidBlockedShaders = new string[14]
  	{
+@@ -34,7 +34,7 @@
+ 
+ 	private string ShaderName => AssetURL.LocalPath.Substring(1);
+ 
++	private ShaderTargetPlatform ShaderPlatform => PlatformRoles.Assets(Engine.Platform) switch
+-	private ShaderTargetPlatform ShaderPlatform => Engine.Platform switch
+ 	{
+ 		Platform.Windows => ShaderTargetPlatform.WindowsDX11, 
+ 		Platform.Linux => ShaderTargetPlatform.WindowsDX11, 
+@@ -85,7 +85,7 @@
+ 			return;
+ 		}
+ 		bool blockShader = false;
++		if (PlatformRoles.Assets(Engine.Platform) == Platform.Android)
+-		if (Engine.Platform == Platform.Android)
+ 		{
+ 			string filename = Metadata.SourceFile.FileName;
+ 			string[] androidBlockedShaders = AndroidBlockedShaders;
 @@ -116,6 +116,7 @@
  		{
  			if (variantRequestCount.Increment(variant) == 1)

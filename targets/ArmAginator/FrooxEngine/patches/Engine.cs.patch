@@ -26,6 +26,15 @@
  
  	public string DataPath { get; private set; }
  
+@@ -258,7 +257,7 @@
+ 		get
+ 		{
+ 			Platform platform = Platform;
++			if (platform == Platform.Windows || PlatformRoles.IsLinuxLike(platform))
+-			if (platform == Platform.Windows || platform == Platform.Linux)
+ 			{
+ 				return Path.Combine(RuntimeDataPath, "AssemblyMetadata");
+ 			}
 @@ -638,6 +637,7 @@
  		UniqueSessionID = Guid.NewGuid();
  		InitProgress?.SetFixedPhase("Initializing Runtime Parameters...");

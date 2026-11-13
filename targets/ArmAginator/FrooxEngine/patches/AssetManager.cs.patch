@@ -1,0 +1,11 @@
+--- a/FrooxEngine/AssetManager.cs
++++ b/FrooxEngine/AssetManager.cs
+@@ -37,7 +37,7 @@
+ 	{
+ 		get
+ 		{
++			if (PlatformRoles.Assets(Engine.Platform) != Platform.Android)
+-			if (Engine.Platform != Platform.Android)
+ 			{
+ 				return 15f;
+ 			}

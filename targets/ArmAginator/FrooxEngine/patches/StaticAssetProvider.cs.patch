@@ -12,3 +12,12 @@
  		});
  	}
  
+@@ -171,7 +172,7 @@
+ 		{
+ 			if (_metadata == null)
+ 			{
++				M fetchedMetadata = await _engine.AssetManager.RequestMetadata<M>(assetURL, PlatformRoles.Assets(_engine.Platform) == Platform.Android || WaitOnMetadataFromCloud).ConfigureAwait(continueOnCapturedContext: false);
+-				M fetchedMetadata = await _engine.AssetManager.RequestMetadata<M>(assetURL, _engine.Platform == Platform.Android || WaitOnMetadataFromCloud).ConfigureAwait(continueOnCapturedContext: false);
+ 				if (cancellationToken.IsCancellationRequested)
+ 				{
+ 					return;

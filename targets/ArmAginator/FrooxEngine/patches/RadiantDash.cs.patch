@@ -1,0 +1,11 @@
+--- a/FrooxEngine/RadiantDash.cs
++++ b/FrooxEngine/RadiantDash.cs
+@@ -273,7 +273,7 @@
+ 
+ 	public int2 TextureResolution => MathX.RoundToInt(TotalResolution) + new int2(0, TEXTURE_PADDING * 2);
+ 
++	public float RenderTextureResolutionWidth => (PlatformRoles.Assets(Engine.Platform) == Platform.Android) ? 1280 : 2560;
+-	public float RenderTextureResolutionWidth => (Engine.Platform == Platform.Android) ? 1280 : 2560;
+ 
+ 	public float RenderTextureScale => RenderTextureResolutionWidth / (float)BASE_RESOLUTION.x;
+ 

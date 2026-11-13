@@ -1,0 +1,11 @@
+--- a/FrooxEngine/Texture.cs
++++ b/FrooxEngine/Texture.cs
+@@ -138,7 +138,7 @@
+ 					}
+ 					if (loadChain.Count == 0)
+ 					{
++						if (PlatformRoles.Assets(Engine.SystemInfo.Platform) == Platform.Android)
+-						if (Engine.SystemInfo.Platform == Platform.Android)
+ 						{
+ 							waitForCloud = true;
+ 							variant.GenerateLoadChain(loadChain);

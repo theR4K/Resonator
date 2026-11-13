@@ -1,0 +1,11 @@
+--- a/FrooxEngine/StaticTextureProvider.cs
++++ b/FrooxEngine/StaticTextureProvider.cs
+@@ -83,7 +83,7 @@
+ 			}
+ 			else
+ 			{
++				switch (PlatformRoles.Assets(Engine.SystemInfo.Platform))
+-				switch (Engine.SystemInfo.Platform)
+ 				{
+ 				case Platform.Windows:
+ 				case Platform.Linux:

@@ -9,15 +9,18 @@
  
  	public bool IsMuted { get; set; }
  
-@@ -428,7 +426,7 @@
+@@ -428,9 +426,9 @@
  		Settings.RegisterComponentChanges<AudioInputFilteringSettings>(OnInputChanged);
  		Settings.RegisterValueChanges<AudioPerformanceSettings>(OnPerformanceChanged);
  		Settings.GetActiveSetting<VoiceSettings>();
 +		if (engine.InputInterface.HeadOutputDevice != HeadOutputDevice.Headless && ArmAgedonHost.AudioDrivers) // ArmAgedon seam: simulator-only hosts
 -		if (engine.InputInterface.HeadOutputDevice != HeadOutputDevice.Headless)
  		{
- 			if (engine.Platform == Platform.Linux || options.ForceAlternateAudio)
++			if (PlatformRoles.IsLinuxLike(engine.Platform) || options.ForceAlternateAudio)
+-			if (engine.Platform == Platform.Linux || options.ForceAlternateAudio)
  			{
+ 				UniLog.Log("Initializing SoundFlow Audio Driver");
+ 				SoundFlowAudioDriver.Initialize(engine.InputInterface);
 @@ -445,7 +443,6 @@
  		audioThreadLoop = new AudioThreadLoopUpdater(Simulator);
  		audioThreadLoop.StartThread();

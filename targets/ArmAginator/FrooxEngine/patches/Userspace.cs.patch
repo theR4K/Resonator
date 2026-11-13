@@ -1,0 +1,11 @@
+--- a/FrooxEngine/Userspace.cs
++++ b/FrooxEngine/Userspace.cs
+@@ -1320,7 +1320,7 @@
+ 		{
+ 			startTutorial = false;
+ 		}
++		if (Engine.SystemInfo.Platform != Platform.Windows && !PlatformRoles.IsLinuxLike(Engine.SystemInfo.Platform))
+-		if (Engine.SystemInfo.Platform != Platform.Windows && Engine.SystemInfo.Platform != Platform.Linux)
+ 		{
+ 			startTutorial = false;
+ 		}

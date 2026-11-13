@@ -1,0 +1,11 @@
+--- a/FrooxEngine/FileBrowser.cs
++++ b/FrooxEngine/FileBrowser.cs
+@@ -249,7 +249,7 @@
+ 		if (string.IsNullOrWhiteSpace(_lastPath))
+ 		{
+ 			files = new string[0];
++			directories = ((!PlatformRoles.IsLinuxLike(Engine.Platform)) ? Directory.GetLogicalDrives() : new string[1] { "/" });
+-			directories = ((Engine.Platform != Platform.Linux) ? Directory.GetLogicalDrives() : new string[1] { "/" });
+ 		}
+ 		else if (Directory.Exists(_lastPath))
+ 		{

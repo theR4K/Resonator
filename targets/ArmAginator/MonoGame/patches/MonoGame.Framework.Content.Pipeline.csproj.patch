@@ -1,0 +1,10 @@
+--- a/MonoGame.Framework.Content.Pipeline/MonoGame.Framework.Content.Pipeline.csproj
++++ b/MonoGame.Framework.Content.Pipeline/MonoGame.Framework.Content.Pipeline.csproj
+@@ -29,6 +29,7 @@
+   </ItemGroup>
+ 
+   <ItemGroup>
++    <Compile Include="../../Injected/EffectCompiler/*.cs" /> <!-- ArmAgedon seam -->
+     <Compile Include="..\Tools\MonoGame.Effect.Compiler\Effect\**\*.cs">
+       <Link>Processors\Effect\%(RecursiveDir)%(Filename)%(Extension)</Link>
+     </Compile>

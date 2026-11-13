@@ -1,0 +1,11 @@
+--- a/MonoGame.Framework/Platform/Graphics/GraphicsCapabilities.OpenGL.cs
++++ b/MonoGame.Framework/Platform/Graphics/GraphicsCapabilities.OpenGL.cs
+@@ -114,7 +114,7 @@
+ 
+             SupportsDepthClamp = GL.HasExtension("GL_ARB_depth_clamp");
+ 
++            SupportsVertexTextures = device.MaxVertexTextureSlots > 0; // ArmAgedon seam
+-            SupportsVertexTextures = false; // For now, until we implement vertex textures in OpenGL.
+ 
+             SupportsInstancing = GL.VertexAttribDivisor != null;
+ 

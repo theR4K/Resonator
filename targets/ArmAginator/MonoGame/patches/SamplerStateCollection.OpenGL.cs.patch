@@ -1,0 +1,19 @@
+--- a/MonoGame.Framework/Platform/Graphics/SamplerStateCollection.OpenGL.cs
++++ b/MonoGame.Framework/Platform/Graphics/SamplerStateCollection.OpenGL.cs
+@@ -27,14 +27,14 @@
+             for (var i = 0; i < _actualSamplers.Length; i++)
+             {
+                 var sampler = _actualSamplers[i];
++                var texture = ArmOpenGLTextures.Textures(device, _stage)[i]; // ArmAgedon seam
+-                var texture = device.Textures[i];
+ 
+                 if (sampler != null && texture != null && sampler != texture.glLastSamplerState)
+                 {
+                     // TODO: Avoid doing this redundantly (see TextureCollection.SetTextures())
+                     // However, I suspect that rendering from the same texture with different sampling modes
+                     // is a relatively rare occurrence...
++                    GL.ActiveTexture(TextureUnit.Texture0 + ArmOpenGLTextures.Unit(_stage, i) /* ArmAgedon seam */);
+-                    GL.ActiveTexture(TextureUnit.Texture0 + i);
+                     GraphicsExtensions.CheckGLError();
+ 
+                     // NOTE: We don't have to bind the texture here because it is already bound in

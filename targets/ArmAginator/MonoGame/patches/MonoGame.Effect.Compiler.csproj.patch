@@ -1,0 +1,9 @@
+--- a/Tools/MonoGame.Effect.Compiler/MonoGame.Effect.Compiler.csproj
++++ b/Tools/MonoGame.Effect.Compiler/MonoGame.Effect.Compiler.csproj
+@@ -1,4 +1,6 @@
+ <Project Sdk="Microsoft.NET.Sdk">
++  <ItemGroup><Compile Include="../../../Injected/EffectCompiler/*.cs" /></ItemGroup> <!-- ArmAgedon seam -->
++
+ 
+   <PropertyGroup>
+     <OutputType>Exe</OutputType>

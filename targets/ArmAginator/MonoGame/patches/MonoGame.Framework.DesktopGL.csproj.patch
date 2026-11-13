@@ -1,0 +1,8 @@
+--- a/MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj
++++ b/MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj
+@@ -1,4 +1,5 @@
+ <Project Sdk="Microsoft.NET.Sdk">
++  <ItemGroup><Compile Include="../../Injected/OpenGL/*.cs" /></ItemGroup> <!-- ArmAgedon seam -->
+ 
+   <PropertyGroup>
+     <TargetFramework>net8.0</TargetFramework>

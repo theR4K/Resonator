@@ -1,0 +1,11 @@
+--- a/MonoGame.Framework/Platform/Graphics/TextureCollection.OpenGL.cs
++++ b/MonoGame.Framework/Platform/Graphics/TextureCollection.OpenGL.cs
+@@ -35,7 +35,7 @@
+ 
+                 var tex = _textures[i];
+ 
++                GL.ActiveTexture(TextureUnit.Texture0 + ArmOpenGLTextures.Unit(_stage, i) /* ArmAgedon seam */);
+-                GL.ActiveTexture(TextureUnit.Texture0 + i);
+                 GraphicsExtensions.CheckGLError();
+ 
+                 // Clear the previous binding if the 

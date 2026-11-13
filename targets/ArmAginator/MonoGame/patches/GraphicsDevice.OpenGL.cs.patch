@@ -1,0 +1,18 @@
+--- a/MonoGame.Framework/Platform/Graphics/GraphicsDevice.OpenGL.cs
++++ b/MonoGame.Framework/Platform/Graphics/GraphicsDevice.OpenGL.cs
+@@ -260,6 +260,7 @@
+             GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out MaxTextureSlots);
+             GraphicsExtensions.CheckGLError();
+ 
++            ArmOpenGLTextures.Initialize(this); // ArmAgedon seam
+             GL.GetInteger(GetPName.MaxTextureSize, out _maxTextureSize);
+             GraphicsExtensions.CheckGLError();
+ 
+@@ -1055,6 +1056,7 @@
+             _vertexConstantBuffers.SetConstantBuffers(this, _shaderProgram);
+             _pixelConstantBuffers.SetConstantBuffers(this, _shaderProgram);
+ 
++            ArmOpenGLTextures.ApplyVertex(this); // ArmAgedon seam
+             Textures.SetTextures(this);
+             SamplerStates.PlatformSetSamplers(this);
+         }

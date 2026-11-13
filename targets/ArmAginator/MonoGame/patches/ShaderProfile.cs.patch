@@ -16,3 +16,11 @@
  
          protected static void ParseShaderModel(string text, Regex regex, out int major, out int minor)
          {
+@@ -83,6 +92,7 @@
+ 
+         public static ShaderProfile GetProfileForPlatform(TargetPlatform platform) => platform switch
+         {
++            TargetPlatform.DesktopGL when Environment.GetEnvironmentVariable("ARMA_OPENGL_MODERN") == "1" => FromName("OpenGLModern"), // ArmAgedon seam
+             TargetPlatform.Windows => ShaderProfile.DirectX_11,
+             TargetPlatform.iOS or TargetPlatform.Android or TargetPlatform.DesktopGL or TargetPlatform.MacOSX or TargetPlatform.RaspberryPi or TargetPlatform.Web => ShaderProfile.OpenGL,
+             TargetPlatform.DesktopVK => ShaderProfile.Vulkan,

@@ -1,0 +1,10 @@
+--- a/MonoGame.Framework/Platform/Graphics/Shader/ShaderProgramCache.cs
++++ b/MonoGame.Framework/Platform/Graphics/Shader/ShaderProgramCache.cs
+@@ -106,6 +106,7 @@
+             vertexShader.GetVertexAttributeLocations(program);
+ 
+             pixelShader.ApplySamplerTextureUnits(program);
++            vertexShader.ApplySamplerTextureUnits(program); // ArmAgedon seam
+ 
+             var linked = 0;
+ 

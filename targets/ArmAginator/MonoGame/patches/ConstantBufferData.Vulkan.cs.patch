@@ -1,0 +1,11 @@
+--- a/Tools/MonoGame.Effect.Compiler/Effect/ConstantBufferData.Vulkan.cs
++++ b/Tools/MonoGame.Effect.Compiler/Effect/ConstantBufferData.Vulkan.cs
+@@ -79,7 +79,7 @@
+ 
+         public static ConstantBufferData BuildFromSpirvStruct(SpirvTypeStruct svStruct)
+         {
++            var cbuffer = new ConstantBufferData(OpenGLModernShaderProfile.ConstantBufferName(svStruct.Name)) /* ArmAgedon seam */;
+-            var cbuffer = new ConstantBufferData(svStruct.Name);
+             var byOffset = svStruct.Members.OrderBy(m => m.Offset.Value);
+ 
+             foreach (var member in byOffset)

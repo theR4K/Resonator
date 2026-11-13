@@ -1,0 +1,11 @@
+--- a/MonoGame.Framework/Platform/Graphics/Shader/Shader.OpenGL.cs
++++ b/MonoGame.Framework/Platform/Graphics/Shader/Shader.OpenGL.cs
+@@ -86,7 +86,7 @@
+                 GraphicsExtensions.CheckGLError();
+                 if (loc != -1)
+                 {
++                    GL.Uniform1(loc, ArmOpenGLTextures.Unit(Stage, sampler.textureSlot)); // ArmAgedon seam
+-                    GL.Uniform1(loc, sampler.textureSlot);
+                     GraphicsExtensions.CheckGLError();
+                 }
+             }

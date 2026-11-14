@@ -1,0 +1,19 @@
+--- a/FrooxEngine/QUIC_Listener.cs
++++ b/FrooxEngine/QUIC_Listener.cs
+@@ -13,7 +13,7 @@
+ 
+ namespace FrooxEngine;
+ 
++public partial class QUIC_Listener : IListener, IDisposable
+-public class QUIC_Listener : IListener, IDisposable
+ {
+ 	public const long STREAM_ERROR_CODE = 10L;
+ 
+@@ -226,6 +226,7 @@
+ 		}
+ 		catch (Exception value)
+ 		{
++			if (IsShutdown(value, cancellationToken)) return; // ArmAgedon seam
+ 			UniLog.Error($"Exception when listening to connections:\n{value}");
+ 		}
+ 	}

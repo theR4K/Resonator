@@ -9,3 +9,11 @@
  				{
  				case Platform.Windows:
  				case Platform.Linux:
+@@ -147,6 +147,7 @@
+ 				needsLinear = true;
+ 			}
+ 		}
++		_compression = TextureCompressionSupport.Available(_compression); // ArmAgedon seam
+ 		int quality = _compression.GetRecommendedQuality();
+ 		if (UseNormalMap | needsLinear)
+ 		{

@@ -1,0 +1,10 @@
+--- a/FrooxEngine/ComponentBase.cs
++++ b/FrooxEngine/ComponentBase.cs
+@@ -331,6 +331,7 @@
+ 			try
+ 			{
+ 				OnAttach();
++				BuiltInOverrides.Attached(this as Component); // ArmAgedon seam
+ 			}
+ 			catch (Exception exception)
+ 			{

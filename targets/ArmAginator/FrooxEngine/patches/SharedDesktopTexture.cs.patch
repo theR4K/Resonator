@@ -1,0 +1,19 @@
+--- a/FrooxEngine/SharedDesktopTexture.cs
++++ b/FrooxEngine/SharedDesktopTexture.cs
+@@ -195,7 +195,7 @@
+ 		double aspect = (double)display.Resolution.x / (double)display.Resolution.y;
+ 		int horizontalResolution = MathX.RoundToInt((double)verticalResolution * aspect);
+ 		bool hasAudio = audioSource != null;
++		FFMpegArguments args = DesktopStreamPipe.Use(display) ? DesktopStreamPipe.Inputs(display, fps, audioSource, _cancellationToken.Token) : ((!hasAudio) ? FFMpegArguments.FromNoInput() : FFMpegArguments.FromPipeInput(audioSource)); // ArmAgedon seam
+-		FFMpegArguments args = ((!hasAudio) ? FFMpegArguments.FromNoInput() : FFMpegArguments.FromPipeInput(audioSource));
+ 		FFMpegArgumentProcessor fFMpegArgumentProcessor = args.OutputToUrl(outputUrl, (FFMpegArgumentOptions options) =>
+ 		{
+ 			options.WithTimeout(TimeSpan.FromSeconds(10L));
+@@ -205,6 +205,7 @@
+ 				options.WithCustomArgument("-muxdelay 0.3 -muxpreload 0.3");
+ 				options.WithCustomArgument("-af \"asetpts=(RTCSTART/(TB*1000000))+(N/SR/TB)\"");
+ 			}
++			if (DesktopStreamPipe.Use(display)) options.WithCustomArgument(DesktopStreamPipe.Filters(horizontalResolution, verticalResolution, fps)); else // ArmAgedon seam
+ 			options.WithVideoFilters((VideoFilterOptions filters) =>
+ 			{
+ 				filters.CaptureMonitor(display.DisplayHandle, new GraphicsCaptureOptions(new Size(horizontalResolution, verticalResolution), ResizeMode.ScaleAspect, ScaleMode.Bilinear, fps));

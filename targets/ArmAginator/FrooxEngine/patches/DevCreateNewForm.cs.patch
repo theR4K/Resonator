@@ -1,0 +1,11 @@
+--- a/FrooxEngine/DevCreateNewForm.cs
++++ b/FrooxEngine/DevCreateNewForm.cs
+@@ -316,7 +316,7 @@
+ 	public static void OpenInspector(Slot slot)
+ 	{
+ 		Slot inspectorSlot = slot.LocalUserSpace.AddSlot("Inspector");
++		SceneInspector sceneInspector = BuiltInOverrides.Spawn<SceneInspector>(inspectorSlot) ?? inspectorSlot.AttachComponent<SceneInspector>(); // ArmAgedon seam
+-		SceneInspector sceneInspector = inspectorSlot.AttachComponent<SceneInspector>();
+ 		sceneInspector.Root.Target = slot;
+ 		sceneInspector.ComponentView.Target = slot;
+ 		inspectorSlot.PositionInFrontOfUser(float3.Backward);

@@ -1,0 +1,11 @@
+--- a/FrooxEngine/DevTool.cs
++++ b/FrooxEngine/DevTool.cs
+@@ -504,7 +504,7 @@
+ 	{
+ 		Slot slot = LocalUserSpace.AddSlot("Inspector");
+ 		slot.PositionInFrontOfUser(float3.Backward);
++		SceneInspector inspector = BuiltInOverrides.Spawn<SceneInspector>(slot) ?? slot.AttachComponent<SceneInspector>(); // ArmAgedon seam
+-		SceneInspector inspector = slot.AttachComponent<SceneInspector>();
+ 		inspector.Root.Target = target;
+ 		if (!target.IsRootSlot)
+ 		{

@@ -1,0 +1,20 @@
+--- a/FrooxEngine/InspectorTool.cs
++++ b/FrooxEngine/InspectorTool.cs
+@@ -38,7 +38,7 @@
+ 			Slot slot = World.AddSlot("Inspector");
+ 			slot.GlobalPosition = Tip;
+ 			slot.Forward = Slot.Forward;
++			SceneInspector sceneInspector = BuiltInOverrides.Spawn<SceneInspector>(slot) ?? slot.AttachComponent<SceneInspector>(); // ArmAgedon seam
+-			SceneInspector sceneInspector = slot.AttachComponent<SceneInspector>();
+ 			Slot root = hit.Collider.Slot.GetObjectRoot();
+ 			sceneInspector.Root.Target = root;
+ 		}
+@@ -49,7 +49,7 @@
+ 		Slot slot = World.AddSlot("Inspector");
+ 		slot.GlobalPosition = Tip;
+ 		slot.Forward = Slot.Forward;
++		SceneInspector sceneInspector = BuiltInOverrides.Spawn<SceneInspector>(slot) ?? slot.AttachComponent<SceneInspector>(); // ArmAgedon seam
+-		SceneInspector sceneInspector = slot.AttachComponent<SceneInspector>();
+ 		Slot root = World.RootSlot;
+ 		sceneInspector.Root.Target = root;
+ 	}

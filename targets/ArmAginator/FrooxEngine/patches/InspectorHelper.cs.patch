@@ -1,0 +1,18 @@
+--- a/FrooxEngine/InspectorHelper.cs
++++ b/FrooxEngine/InspectorHelper.cs
+@@ -40,13 +40,13 @@
+ 		}
+ 		else if (slot != null)
+ 		{
++			SceneInspector sceneInspector = BuiltInOverrides.Spawn<SceneInspector>(inspectorSlot) ?? inspectorSlot.AttachComponent<SceneInspector>(); // ArmAgedon seam
+-			SceneInspector sceneInspector = inspectorSlot.AttachComponent<SceneInspector>();
+ 			sceneInspector.Root.Target = slot;
+ 			sceneInspector.ComponentView.Target = slot;
+ 		}
+ 		else if (user != null)
+ 		{
++			UserInspector inspector = BuiltInOverrides.Spawn<UserInspector>(inspectorSlot) ?? inspectorSlot.AttachComponent<UserInspector>(); // ArmAgedon seam
+-			UserInspector inspector = inspectorSlot.AttachComponent<UserInspector>();
+ 			inspector.ViewUser.Target = user;
+ 			Stream stream = target.FindNearestParent<Stream>();
+ 			if (stream != null)

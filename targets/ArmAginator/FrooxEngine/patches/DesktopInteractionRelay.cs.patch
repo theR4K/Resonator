@@ -1,0 +1,11 @@
+--- a/FrooxEngine/DesktopInteractionRelay.cs
++++ b/FrooxEngine/DesktopInteractionRelay.cs
+@@ -135,7 +135,7 @@
+ 		{
+ 			return false;
+ 		}
++		if (DesktopInputPolicy.BlocksScreenMode(InputInterface)) // ArmAgedon seam
+-		if (InputInterface.ScreenActive)
+ 		{
+ 			return false;
+ 		}

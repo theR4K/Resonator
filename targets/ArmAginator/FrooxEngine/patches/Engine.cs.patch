@@ -60,6 +60,15 @@
  	}
  
  	private async Task InitializeProtocolRegistration()
+@@ -886,7 +876,7 @@
+ 		{
+ 			Config = new AppConfig();
+ 		}
++		if (IsWine || (Current.Platform != Platform.Windows && !DesktopStreamPipe.HostHasDesktop)) // ArmAgedon seam
+-		if (IsWine || Current.Platform != Platform.Windows)
+ 		{
+ 			Config.DisableDesktop = true;
+ 		}
 @@ -971,10 +961,7 @@
  		}
  		InputInterface.RegisterPostInputStateTask(() =>

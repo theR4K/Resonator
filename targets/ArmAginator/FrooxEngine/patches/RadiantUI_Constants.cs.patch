@@ -1,0 +1,26 @@
+--- a/FrooxEngine/RadiantUI_Constants.cs
++++ b/FrooxEngine/RadiantUI_Constants.cs
+@@ -254,6 +254,7 @@
+ 		{
+ 			ui.Style.ButtonTextPadding = 2f;
+ 		}
++		BuiltInOverrides.ApplyStyle(ui.Style, "Default"); // ArmAgedon seam
+ 	}
+ 
+ 	public static void SetupBaseStyle(UIBuilder ui)
+@@ -262,6 +263,7 @@
+ 		ui.Style.HighlightColor = LABEL_COLOR;
+ 		ui.Style.SliderFillColor = SLIDER_COLOR;
+ 		SetupButtonStyle(ui);
++		BuiltInOverrides.ApplyStyle(ui.Style, "Base"); // ArmAgedon seam
+ 	}
+ 
+ 	public static SpriteProvider GetButtonSprite(World world)
+@@ -319,6 +321,7 @@
+ 		{
+ 			ui.Style.ButtonTextPadding = 2f;
+ 		}
++		BuiltInOverrides.ApplyStyle(ui.Style, "Editor"); // ArmAgedon seam
+ 	}
+ 
+ 	public static StaticTexture2D GetLineGridCellTransparentTexture(World world)

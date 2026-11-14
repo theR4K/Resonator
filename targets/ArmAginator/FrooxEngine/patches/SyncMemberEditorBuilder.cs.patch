@@ -1,0 +1,10 @@
+--- a/FrooxEngine/SyncMemberEditorBuilder.cs
++++ b/FrooxEngine/SyncMemberEditorBuilder.cs
+@@ -409,6 +409,7 @@
+ 
+ 	public static void BuildField(IField field, FieldInfo fieldInfo, Slot root, LayoutElement layoutElement)
+ 	{
++		if (BuiltInOverrides.LoadFieldEditor(field, fieldInfo, root, layoutElement)) return; // ArmAgedon seam
+ 		UIBuilder ui = new UIBuilder(root);
+ 		RadiantUI_Constants.SetupEditorStyle(ui);
+ 		ui.Style.RequireLockInToPress = true;

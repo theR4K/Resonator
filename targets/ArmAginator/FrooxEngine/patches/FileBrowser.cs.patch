@@ -9,3 +9,12 @@
  		}
  		else if (Directory.Exists(_lastPath))
  		{
+@@ -451,7 +451,7 @@
+ 		else
+ 		{
+ 			Slot slot = LocalUserSpace.AddSlot("Directory Create Dialog");
++			BrowserCreateDirectoryDialog createDialog = BuiltInOverrides.Attach<BrowserCreateDirectoryDialog>(slot); // ArmAgedon seam
+-			BrowserCreateDirectoryDialog createDialog = slot.AttachComponent<BrowserCreateDirectoryDialog>();
+ 			slot.PositionInFrontOfUser(float3.Backward, null, 0.6f);
+ 			createDialog.Setup(this, CreateDirectory);
+ 		}

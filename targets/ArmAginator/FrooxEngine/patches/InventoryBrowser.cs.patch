@@ -1,0 +1,11 @@
+--- a/FrooxEngine/InventoryBrowser.cs
++++ b/FrooxEngine/InventoryBrowser.cs
+@@ -667,7 +667,7 @@
+ 				return;
+ 			}
+ 			Slot slot = LocalUserSpace.AddSlot("Directory Create Dialog");
++			BuiltInOverrides.Attach<BrowserCreateDirectoryDialog>(slot).Setup(this, CreateDirectory); // ArmAgedon seam
+-			slot.AttachComponent<BrowserCreateDirectoryDialog>().Setup(this, CreateDirectory);
+ 			slot.PositionInFrontOfUser(float3.Backward, null, 0.6f);
+ 		}
+ 	}

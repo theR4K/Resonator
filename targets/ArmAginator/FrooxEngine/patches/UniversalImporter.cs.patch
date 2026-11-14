@@ -1,0 +1,11 @@
+--- a/FrooxEngine/UniversalImporter.cs
++++ b/FrooxEngine/UniversalImporter.cs
+@@ -264,7 +264,7 @@
+ 		{
+ 			await default(ToWorld);
+ 			Slot s = CreateAndPositionSlotForImport(world, "ModelImporter", position, rotation, scale);
++			FolderImportDialog folderImportDialog = BuiltInOverrides.Attach<FolderImportDialog>(s); // ArmAgedon seam
+-			FolderImportDialog folderImportDialog = s.AttachComponent<FolderImportDialog>();
+ 			folderImportDialog.Path.Value = files.First();
+ 			folderImportDialog.SetLocalUserAsImporting();
+ 			break;

@@ -1,0 +1,11 @@
+--- a/FrooxEngine/MeshCollider.cs
++++ b/FrooxEngine/MeshCollider.cs
+@@ -95,7 +95,7 @@
+ 		if (Mesh.Asset != null)
+ 		{
+ 			Slot slot = LocalUserSpace.AddSlot("V-HACD Wizard");
++			VHACD_Dialog wizard = BuiltInOverrides.Attach<VHACD_Dialog>(slot); // ArmAgedon seam
+-			VHACD_Dialog wizard = slot.AttachComponent<VHACD_Dialog>();
+ 			slot.PositionInFrontOfUser(float3.Backward);
+ 			wizard.TargetCollider.Target = this;
+ 		}

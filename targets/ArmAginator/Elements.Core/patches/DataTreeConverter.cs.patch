@@ -1,0 +1,11 @@
+--- a/Elements/Core/DataTreeConverter.cs
++++ b/Elements/Core/DataTreeConverter.cs
+@@ -10,7 +10,7 @@
+ 
+ namespace Elements.Core;
+ 
++public static partial class DataTreeConverter
+-public static class DataTreeConverter
+ {
+ 	public enum Compression
+ 	{

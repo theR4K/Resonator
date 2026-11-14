@@ -1,0 +1,11 @@
+--- a/FrooxEngine/Workspace.cs
++++ b/FrooxEngine/Workspace.cs
+@@ -209,7 +209,7 @@
+ 			return false;
+ 		}
+ 		Clear();
++		if (!BuiltInOverrides.LoadWorkspace(this)) InitializeWorkspace.Target?.Invoke(Slot); // ArmAgedon seam
+-		InitializeWorkspace.Target?.Invoke(Slot);
+ 		_currentDefault = InitializeWorkspace.Target;
+ 		_unsavedChanges.Value = false;
+ 		return true;

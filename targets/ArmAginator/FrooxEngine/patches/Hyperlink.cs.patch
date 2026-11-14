@@ -1,0 +1,11 @@
+--- a/FrooxEngine/Hyperlink.cs
++++ b/FrooxEngine/Hyperlink.cs
+@@ -76,7 +76,7 @@
+ 		{
+ 			Slot slot = Userspace.UserspaceWorld.AddSlot("Hyperlink");
+ 			slot.PositionInFrontOfUser(float3.Backward);
++			BuiltInOverrides.Attach<HyperlinkOpenDialog>(slot).Setup(url, Reason.Value); // ArmAgedon seam
+-			slot.AttachComponent<HyperlinkOpenDialog>().Setup(url, Reason.Value);
+ 		});
+ 		RunInSeconds(5f, () =>
+ 		{

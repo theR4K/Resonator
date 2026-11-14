@@ -1,0 +1,11 @@
+--- a/FrooxEngine/LegacyWorldThumbnailItem.cs
++++ b/FrooxEngine/LegacyWorldThumbnailItem.cs
+@@ -331,7 +331,7 @@
+ 		}
+ 		if (shouldSave)
+ 		{
++			BuiltInOverrides.Attach<WorldCloseDialog>(Slot.OpenModalOverlay(new float2(0.75f, 0.75f)).Slot).TargetWorld = world; // ArmAgedon seam
+-			Slot.OpenModalOverlay(new float2(0.75f, 0.75f)).Slot.AttachComponent<WorldCloseDialog>().TargetWorld = world;
+ 			return;
+ 		}
+ 		Slot.OpenModalChoiceDialog((world.IsAuthority ? "World.Actions.ClosePrompt" : "World.Actions.LeavePrompt").AsLocaleKey(), (world.IsAuthority ? "World.Actions.HostingWarning" : "World.Actions.GuestWarning").AsLocaleKey(), new ModalChoiceItem("General.Cancel".AsLocaleKey(), OfficialAssets.Graphics.Icons.General.Cancel, null), new ModalChoiceItem((world.IsAuthority ? "World.Actions.CloseConfirm" : "World.Actions.LeaveConfirm").AsLocaleKey(), OfficialAssets.Graphics.Icons.Dash.LeaveWorld, [SyncMethod(typeof(Delegate), null)] (IButton button2, ButtonEventData data) =>

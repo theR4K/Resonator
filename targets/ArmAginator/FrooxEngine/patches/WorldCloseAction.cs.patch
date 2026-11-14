@@ -1,0 +1,11 @@
+--- a/FrooxEngine/WorldCloseAction.cs
++++ b/FrooxEngine/WorldCloseAction.cs
+@@ -75,7 +75,7 @@
+ 		case CloseAction.LeaveOrOpenCloseScreen:
+ 			if (shouldSave)
+ 			{
++				BuiltInOverrides.Attach<WorldCloseDialog>(Slot.OpenModalOverlay(new float2(0.75f, 0.75f)).Slot).TargetWorld = _targetWorld; // ArmAgedon seam
+-				Slot.OpenModalOverlay(new float2(0.75f, 0.75f)).Slot.AttachComponent<WorldCloseDialog>().TargetWorld = _targetWorld;
+ 			}
+ 			else if (!WaitingConfirm.Value)
+ 			{

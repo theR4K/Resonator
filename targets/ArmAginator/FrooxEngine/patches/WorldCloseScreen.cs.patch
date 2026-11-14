@@ -1,0 +1,11 @@
+--- a/FrooxEngine/WorldCloseScreen.cs
++++ b/FrooxEngine/WorldCloseScreen.cs
+@@ -27,7 +27,7 @@
+ 		Icon.Value = OfficialAssets.Graphics.Icons.Dash.CloseWorld;
+ 		Label.Value = "Close";
+ 		ActiveColor.Value = new colorX(1f, 0.2f, 0.2f);
++		_closeDialog.Target = BuiltInOverrides.Attach<WorldCloseDialog>(ScreenCanvas.Slot); // ArmAgedon seam
+-		_closeDialog.Target = ScreenCanvas.Slot.AttachComponent<WorldCloseDialog>();
+ 	}
+ 
+ 	protected override void InitializeSyncMembers()

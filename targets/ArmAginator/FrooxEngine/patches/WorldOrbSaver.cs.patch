@@ -1,0 +1,11 @@
+--- a/FrooxEngine/WorldOrbSaver.cs
++++ b/FrooxEngine/WorldOrbSaver.cs
+@@ -76,7 +76,7 @@
+ 			lookAtUser.TargetAtLocalUser.Value = true;
+ 			lookAtUser.RotationOffset.Value = floatQ.AxisAngle(float3.Up, 180f);
+ 		}
++		ContextMenu contextMenu = BuiltInOverrides.Attach<ContextMenu>(menuRoot); // ArmAgedon seam
+-		ContextMenu contextMenu = menuRoot.AttachComponent<ContextMenu>();
+ 		menu.Target = contextMenu;
+ 		menuRoot.LocalScale *= 1.25f;
+ 		StartTask(async () =>

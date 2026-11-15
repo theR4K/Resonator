@@ -1,0 +1,11 @@
+--- a/SimplexNoise/Noise.cs
++++ b/SimplexNoise/Noise.cs
+@@ -2,7 +2,7 @@
+ 
+ namespace SimplexNoise;
+ 
++public partial class Noise // ArmAgedon seam: Injected/Noise.Batch.cs
+-public class Noise
+ {
+ 	private static byte[] perm = new byte[512]
+ 	{

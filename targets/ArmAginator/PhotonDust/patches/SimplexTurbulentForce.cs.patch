@@ -1,0 +1,19 @@
+--- a/PhotonDust/SimplexTurbulentForce.cs
++++ b/PhotonDust/SimplexTurbulentForce.cs
+@@ -3,7 +3,7 @@
+ 
+ namespace PhotonDust;
+ 
++public partial class SimplexTurbulentForce : PositionModuleBase // ArmAgedon seam
+-public class SimplexTurbulentForce : PositionModuleBase
+ {
+ 	public ForceMode Mode;
+ 
+@@ -27,6 +27,7 @@
+ 
+ 	public override void SimulateChunk(int offset, int count, float deltaTime)
+ 	{
++		if (SimulateChunkBatched(offset, count, deltaTime)) return; // ArmAgedon seam: Injected/SimplexTurbulentForce.Batch.cs
+ 		if (PositionModule != null)
+ 		{
+ 			Span<float3> positions = System.GetSourcePositionBuffer(this).Slice(offset, count);

@@ -1,0 +1,27 @@
+--- a/OpenLipSyncBackend.cs
++++ b/OpenLipSyncBackend.cs
+@@ -13,7 +13,7 @@
+ /// OpenLipSync backend implementation that processes audio through a trained TCN model
+ /// to generate real-time viseme predictions compatible with OVR LipSync interface.
+ /// </summary>
++public sealed partial class OpenLipSyncBackend : IOvrLipSyncBackend // ArmAgedon seam: Injected/OpenLipSyncBackend.Memo.cs
+-public sealed class OpenLipSyncBackend : IOvrLipSyncBackend
+ {
+     private readonly object _lock = new();
+     private readonly ConcurrentDictionary<uint, AudioContext> _contexts = new();
+@@ -398,6 +398,7 @@
+     private void RunInferenceInto(float[] melFeatures, float[] destination)
+     {
+         if (_onnxSession == null || _audioConfig == null) { Array.Clear(destination); return; }
++        if (ReuseInference(melFeatures, destination)) return; // ArmAgedon seam
+ 
+         try
+         {
+@@ -449,6 +450,7 @@
+                 }
+             }
+             if (numVisemes < destination.Length) Array.Clear(destination, numVisemes, destination.Length - numVisemes);
++            RememberInference(melFeatures, destination); // ArmAgedon seam
+         }
+         catch (Exception ex)
+         {

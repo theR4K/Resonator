@@ -1,0 +1,5 @@
+{
+  "name": "OpenLipSync.Inference",
+  "description": "OpenLipSync.Inference built from the official source by ArmAgedon (generated/ + Injected/). Extends Flatweave/OpenLipSync.Inference; the ARM layer only plugs in Injected/ code (the inference memo).",
+  "extends": "Flatweave/OpenLipSync.Inference"
+}

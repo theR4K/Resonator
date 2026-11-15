@@ -1,0 +1,10 @@
+--- a/FrooxEngine/MediaMTX_Interface.cs
++++ b/FrooxEngine/MediaMTX_Interface.cs
+@@ -34,6 +34,7 @@
+ 	{
+ 		get
+ 		{
++			if (HostPrograms.MediaMtx != null) return HostPrograms.MediaMtx; // ArmAgedon seam
+ 			string exe = System.IO.Path.Combine(Folder, "mediamtx");
+ 			bool useProton = Engine.IsRunningWithBootstrapper && (Settings.GetActiveSetting<DebugSettings>()?.UseProtonForMediaMTX.Value ?? false);
+ 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) | useProton)

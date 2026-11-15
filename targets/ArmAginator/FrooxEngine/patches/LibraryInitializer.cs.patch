@@ -28,3 +28,12 @@
  					_ => null
  				};
  				return mapped != null && System.Runtime.InteropServices.NativeLibrary.TryLoad(mapped, owner, searchPath, out IntPtr handle) ? handle : IntPtr.Zero;
+@@ -124,7 +125,7 @@
+ 		StringColorNode.RegisterColorConstant("dark.orange", RadiantUI_Constants.Dark.ORANGE);
+ 		GlobalFFOptions.Configure((FFOptions options) =>
+ 		{
++			options.BinaryFolder = HostPrograms.FFmpegFolder ?? engine.RuntimeDataPath; // ArmAgedon seam
+-			options.BinaryFolder = engine.RuntimeDataPath;
+ 			options.LogLevel = FFMpegLogLevel.Warning;
+ 		});
+ 		FastFourierTransform.Initialize();

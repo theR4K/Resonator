@@ -3731,7 +3731,7 @@
      VK_CHECK_RESULT(vkWaitForFences(device->device, 1, &fence, VK_TRUE, UINT64_MAX));
      vkDestroyFence(device->device, fence, nullptr);
  
-@@ -5871,8 +7460,1287 @@
+@@ -5871,8 +7460,1295 @@
  	else
  	{
  		// An error occurred.
@@ -4309,6 +4309,14 @@
 +MG_EXPORT mgint MGVK_RecordCopyToExternalImageLayer(MGG_GraphicsDevice* device, MGG_Texture* source, uint64_t externalImage, mgint externalFormat, mgint width, mgint height, mgbool flipY, mgint dstLayer)
 +{
 +	return dstLayer < 0 || dstLayer > 1 ? -1 : MGVK_RecordCopyImpl(device, source, externalImage, externalFormat, width, height, flipY, 0,
++		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_MAX_ENUM, (uint32_t)dstLayer);
++}
++
++// ArmAgedon vk-xr-direct-copy: one layer (one eye) of a layered render target straight into one layer of a stereo
++// swapchain image, without the eye target in between.
++MG_EXPORT mgint MGVK_RecordCopyLayerToExternalImageLayer(MGG_GraphicsDevice* device, MGG_Texture* source, mgint layer, uint64_t externalImage, mgint externalFormat, mgint width, mgint height, mgbool flipY, mgint dstLayer)
++{
++	return layer < 0 || dstLayer < 0 || dstLayer > 1 ? -1 : MGVK_RecordCopyImpl(device, source, externalImage, externalFormat, width, height, flipY, (uint32_t)layer,
 +		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_MAX_ENUM, (uint32_t)dstLayer);
 +}
 +

@@ -7,8 +7,8 @@
 +		if (!num && HostPrograms.HardwareEncoder != null) encoders.Add(new EncoderOption(HostPrograms.HardwareEncoder)); // ArmAgedon seam
  		if (!num)
  		{
- 			string gpuName = Engine.SystemInfo.GPU;
-@@ -195,7 +196,7 @@
+ 			switch (Engine.SystemInfo.GPU_Vendor)
+@@ -193,7 +194,7 @@
  		double aspect = (double)display.Resolution.x / (double)display.Resolution.y;
  		int horizontalResolution = MathX.RoundToInt((double)verticalResolution * aspect);
  		bool hasAudio = audioSource != null;
@@ -17,7 +17,7 @@
  		FFMpegArgumentProcessor fFMpegArgumentProcessor = args.OutputToUrl(outputUrl, (FFMpegArgumentOptions options) =>
  		{
  			options.WithTimeout(TimeSpan.FromSeconds(10L));
-@@ -205,6 +206,7 @@
+@@ -203,6 +204,7 @@
  				options.WithCustomArgument("-muxdelay 0.3 -muxpreload 0.3");
  				options.WithCustomArgument("-af \"asetpts=(RTCSTART/(TB*1000000))+(N/SR/TB)\"");
  			}

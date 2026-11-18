@@ -1,6 +1,6 @@
 --- a/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.cs
 +++ b/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.cs
-@@ -66,6 +66,15 @@
+@@ -66,6 +66,39 @@
          internal abstract void ValidateShaderModels(PassInfo pass);
  
          internal abstract ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, bool isVertexShader, EffectObject effect, ref string errorsAndWarnings);
@@ -13,10 +13,34 @@
 +        internal virtual void Precompile(ShaderResult shaderResult, IReadOnlyList<(string function, string model, bool isVertexShader)> shaders)
 +        {
 +        }
++
++        /// <summary>ArmAgedon effect-parallel: how many shaders Precompile compiles at once (ARMA_FX_JOBS, default all cores; 1: none
++        /// precompiled, CreateShader compiles one at a time).</summary>
++        protected static int PrecompileJobs =>
++            int.TryParse(System.Environment.GetEnvironmentVariable("ARMA_FX_JOBS"), out int jobs) && jobs > 0 ? jobs : System.Environment.ProcessorCount;
++
++        /// <summary>
++        /// ArmAgedon: DXC, retried. dxc.exe (MonoGame.Tool.Dxc 1.8.2505.11) crashes now and then on the same input that
++        /// compiles the next time (heap corruption, access violations, a "generated SPIR-V is invalid" once): about one run in
++        /// a few hundred on the large Materials.fx, one of its ~200 runs, so most builds of it failed. A real compile error
++        /// fails every attempt and is reported from the last one.
++        /// </summary>
++        protected static int RunDxc(string args, out string stdout, out string stderr)
++        {
++            int result = 0;
++            stdout = stderr = string.Empty;
++            for (int attempt = 0; attempt < 4; attempt++)
++            {
++                result = MonoGame.Tool.Dxc.Run(args, out stdout, out stderr);
++                if (result == 0)
++                    break;
++            }
++            return result;
++        }
  
          protected static void ParseShaderModel(string text, Regex regex, out int major, out int minor)
          {
-@@ -83,6 +92,7 @@
+@@ -83,6 +116,7 @@
  
          public static ShaderProfile GetProfileForPlatform(TargetPlatform platform) => platform switch
          {

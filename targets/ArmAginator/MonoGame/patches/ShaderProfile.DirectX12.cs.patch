@@ -1,6 +1,6 @@
 --- a/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.DirectX12.cs
 +++ b/Tools/MonoGame.Effect.Compiler/Effect/ShaderProfile.DirectX12.cs
-@@ -43,6 +43,8 @@
+@@ -43,13 +43,48 @@
          }
  
          private static readonly Regex CBufferParam = new Regex(@";[\W]+(?:column_major)?(?:row_major)?[\W]+(?<ParamType>[^\r\n\t\f\v} ]+)[\W]+(?<ParamName>[\S]+);[\W]+; Offset:[\W]+(?<ParamOffset>[\d]*)", RegexOptions.Compiled);
@@ -9,7 +9,85 @@
          private static readonly Regex CBufferStruct = new Regex(@";[\W]+(?<CBufferName>[^\r\n\t\f\v} ]+);[\W]+; Offset:[\W]+(?<ParamOffset>[\d]*) Size:[\W]+(?<Size>[\d]*)", RegexOptions.Compiled);
          private static readonly Regex ResourceSampler = new Regex(@";[\W]+(?<ResName>[\S]+)[\W]+sampler[\W]+(?<ResFormat>[\S]+)[\W]+(?<ResDim>[\S]+)[\W]+[\S]+[\W]+s(?<ResBind>[\d]*)[\W]+(?<ResCount>[\d]*)", RegexOptions.Compiled);
          private static readonly Regex ResourceTexture = new Regex(@";[\W]+(?<ResName>[\S]+)[\W]+texture[\W]+(?<ResFormat>[\S]+)[\W]+(?<ResDim>[\S]+)[\W]+[\S]+[\W]+t(?<ResBind>[\d]*)[\W]+(?<ResCount>[\d]*)", RegexOptions.Compiled);
-@@ -276,6 +278,30 @@
+         private static readonly Regex InputAttribute = new Regex(@"; (\w+)\s+(\d+)\s+([xyzw]+)\s+(\d+)\s+(\w+)\s+(\w+)\s+([xyzw]+)", RegexOptions.Multiline | RegexOptions.Compiled);
++
++        // ArmAgedon effect-parallel: Precompile's results by (entry point, model, stage), taken once by CreateShader
++        private readonly System.Collections.Concurrent.ConcurrentDictionary<(string, string, bool), (byte[] bytecode, string reflection, string errors)> _precompiled = new();
++
++        /// <summary>
++        /// ArmAgedon effect-parallel: every shader of the effect compiled at once, as the Vulkan profile does (two DXC processes
++        /// per shader; Materials.fx one after another took over two minutes). CreateShader then adds the results in technique
++        /// order, so the effect comes out the same.
++        /// </summary>
++        internal override void Precompile(ShaderResult shaderResult, IReadOnlyList<(string function, string model, bool isVertexShader)> shaders)
++        {
++            int jobs = PrecompileJobs;
++            if (jobs <= 1)
++                return;
++            System.Threading.Tasks.Parallel.ForEach(shaders, new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = jobs }, s =>
++            {
++                _precompiled[(s.function, s.model, s.isVertexShader)] = CompileDxil(shaderResult, s.function, s.model, s.isVertexShader);
++            });
++        }
+ 
+         internal override ShaderData CreateShader(ShaderResult shaderResult, string shaderFunction, string shaderProfile, bool isVertexShader, EffectObject effect, ref string errorsAndWarnings)
++        {
++            // ArmAgedon effect-parallel: Precompile's result, else compiled now
++            if (!_precompiled.TryRemove((shaderFunction, shaderProfile, isVertexShader), out var compiled))
++                compiled = CompileDxil(shaderResult, shaderFunction, shaderProfile, isVertexShader);
++            errorsAndWarnings += compiled.errors;
++            if (compiled.bytecode == null)
++                throw new ShaderCompilerException();
++            return CreateShaderData(shaderResult, isVertexShader, effect, compiled.reflection, compiled.bytecode, ref errorsAndWarnings);
++        }
++
++        /// <summary>ArmAgedon effect-parallel: the shader's DXIL and its reflection (null bytecode: DXC failed; errors has why). Its own
++        /// temporary files only, so shaders compile in parallel.</summary>
++        private static (byte[] bytecode, string reflection, string errors) CompileDxil(ShaderResult shaderResult, string shaderFunction, string shaderProfile, bool isVertexShader)
+         {
++            string errorsAndWarnings = string.Empty;
+             var inputFile = Path.GetTempFileName();
+             var outputFile = Path.GetTempFileName();
+ 
+@@ -81,10 +116,10 @@
+ 
+                 // Compile the shader once just to get reflection info.
+                 string stdout, stderr;
++                var result = RunDxc(toolArgs + "\"" + inputFile + "\"", out reflectionData, out stderr);
+-                var result = Dxc.Run(toolArgs + "\"" + inputFile + "\"", out reflectionData, out stderr);
+                 errorsAndWarnings += stderr;
+                 if (result > 0)
++                    return (null, null, errorsAndWarnings);
+-                    throw new ShaderCompilerException();
+ 
+                 // Now really compile the shader.
+                 if (shaderResult.Debug)
+@@ -104,10 +139,10 @@
+                 }
+ 
+                 toolArgs += "/Fo " + "\"" + outputFile + "\"" + " ";
++                result = RunDxc(toolArgs + "\"" + inputFile + "\"", out stdout, out stderr);
+-                result = Dxc.Run(toolArgs + "\"" + inputFile + "\"", out stdout, out stderr);
+                 errorsAndWarnings += stderr;
+                 if (result > 0)
++                    return (null, null, errorsAndWarnings);
+-                    throw new ShaderCompilerException();
+ 
+                 // Load up the compiled shader.
+                 bytecode = File.ReadAllBytes(outputFile);
+@@ -118,6 +153,11 @@
+                 ExternalTool.DeleteFile(inputFile);
+                 ExternalTool.DeleteFile(outputFile);
+             }
++            return (bytecode, reflectionData, errorsAndWarnings);
++        }
++
++        private ShaderData CreateShaderData(ShaderResult shaderResult, bool isVertexShader, EffectObject effect, string reflectionData, byte[] bytecode, ref string errorsAndWarnings)
++        {
+ 
+             // First look to see if we already created this same shader.
+             foreach (var shader in effect.Shaders)
+@@ -276,6 +316,30 @@
                      cbufferIndex.Add(match);
              }
              shaderData._cbuffers = cbufferIndex.ToArray();

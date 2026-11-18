@@ -1,0 +1,10 @@
+--- a/FrooxEngine/EntityHelper.cs
++++ b/FrooxEngine/EntityHelper.cs
+@@ -80,6 +80,7 @@
+ 
+ 	private static async Task<I> SpawnPlatformEntity<I>(Slot slot, FavoriteEntity favorite) where I : class
+ 	{
++		if (BuiltInOverrides.UsesBuiltInEntity(favorite)) return null; // ArmAgedon seam
+ 		Uri spawnUrl = slot.Engine.Cloud.Platform.GetSpawnObjectUri(favorite.ToString());
+ 		if (spawnUrl != null)
+ 		{

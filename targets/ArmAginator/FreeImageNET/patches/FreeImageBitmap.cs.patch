@@ -54,34 +54,61 @@
  		{
  			if (original == null)
  			{
-@@ -308,7 +308,7 @@
+@@ -239,6 +239,7 @@
+ 		/// <see cref="FreeImageBitmap"/>.
+ 		/// </remarks>
+ 		/// <exception cref="Exception">The operation failed.</exception>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public FreeImageBitmap(Image original)
+ 			: this(original as Bitmap)
+ 		{
+@@ -264,6 +265,7 @@
+ 		/// <exception cref="ArgumentOutOfRangeException">
+ 		/// <paramref name="newSize.Width"/> or <paramref name="newSize.Height"/> are less or equal zero.
+ 		/// </exception>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public FreeImageBitmap(Image original, Size newSize)
+ 			: this(original as Bitmap, newSize.Width, newSize.Height)
+ 		{
+@@ -288,6 +290,7 @@
+ 		/// <exception cref="ArgumentNullException"><paramref name="original"/> is a null reference.</exception>
+ 		/// <exception cref="ArgumentOutOfRangeException">
+ 		/// <paramref name="width"/> or <paramref name="height"/> are less or equal zero.</exception>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public FreeImageBitmap(Image original, int width, int height)
+ 			: this(original as Bitmap, width, height)
+ 		{
+@@ -308,7 +311,8 @@
  		/// </remarks>
  		/// <exception cref="ArgumentNullException"><paramref name="original"/> is a null reference.</exception>
  		/// <exception cref="Exception">The operation failed.</exception>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 +		public FreeImageBitmap(Bitmap? original)
 -		public FreeImageBitmap(Bitmap original)
  		{
  			if (original == null)
  			{
-@@ -343,7 +343,7 @@
+@@ -343,7 +347,8 @@
  		/// <exception cref="ArgumentOutOfRangeException">
  		/// <paramref name="newSize.Width"/> or <paramref name="newSize.Height"/> are less or equal zero.
  		/// </exception>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 +		public FreeImageBitmap(Bitmap? original, Size newSize)
 -		public FreeImageBitmap(Bitmap original, Size newSize)
  			: this(original, newSize.Width, newSize.Height)
  		{
  		}
-@@ -367,7 +367,7 @@
+@@ -367,7 +372,8 @@
  		/// <exception cref="ArgumentNullException"><paramref name="original"/> is a null reference.</exception>
  		/// <exception cref="ArgumentOutOfRangeException">
  		/// <paramref name="width"/> or <paramref name="height"/> are less or equal zero.</exception>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 +		public FreeImageBitmap(Bitmap? original, int width, int height)
 -		public FreeImageBitmap(Bitmap original, int width, int height)
  		{
  			if (original == null)
  			{
-@@ -407,7 +407,7 @@
+@@ -407,7 +413,7 @@
  		/// <remarks>
  		/// You must keep the stream open for the lifetime of the <see cref="FreeImageBitmap"/>.
  		/// </remarks>
@@ -90,7 +117,7 @@
  			: this(stream)
  		{
  		}
-@@ -422,7 +422,7 @@
+@@ -422,7 +428,7 @@
  		/// <remarks>
  		/// You must keep the stream open for the lifetime of the <see cref="FreeImageBitmap"/>.
  		/// </remarks>
@@ -99,7 +126,7 @@
  			: this(stream, FREE_IMAGE_FORMAT.FIF_UNKNOWN, FREE_IMAGE_LOAD_FLAGS.DEFAULT)
  		{
  		}
-@@ -438,7 +438,7 @@
+@@ -438,7 +444,7 @@
  		/// <remarks>
  		/// You must keep the stream open for the lifetime of the <see cref="FreeImageBitmap"/>.
  		/// </remarks>
@@ -108,7 +135,7 @@
  			: this(stream, format, FREE_IMAGE_LOAD_FLAGS.DEFAULT)
  		{
  		}
-@@ -454,7 +454,7 @@
+@@ -454,7 +460,7 @@
  		/// <remarks>
  		/// You must keep the stream open for the lifetime of the <see cref="FreeImageBitmap"/>.
  		/// </remarks>
@@ -117,7 +144,7 @@
  			: this(stream, FREE_IMAGE_FORMAT.FIF_UNKNOWN, flags)
  		{
  		}
-@@ -472,7 +472,7 @@
+@@ -472,7 +478,7 @@
  		/// <remarks>
  		/// You must keep the stream open for the lifetime of the <see cref="FreeImageBitmap"/>.
  		/// </remarks>
@@ -126,7 +153,39 @@
  		{
  			if (stream == null)
  			{
-@@ -913,7 +913,7 @@
+@@ -606,6 +612,7 @@
+ 		/// <param name="g">The Graphics object that specifies the resolution for the new <see cref="FreeImageBitmap"/>.</param>
+ 		/// <exception cref="Exception">The operation failed.</exception>
+ 		/// <exception cref="ArgumentNullException"><paramref name="g"/> is a null reference.</exception>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public FreeImageBitmap(int width, int height, Graphics g)
+ 			: this(width, height)
+ 		{
+@@ -631,6 +638,7 @@
+ 		/// <exception cref="ArgumentException"><paramref name="format"/> is invalid.</exception>
+ 		/// <exception cref="ArgumentOutOfRangeException">
+ 		/// <paramref name="width"/> or <paramref name="height"/> are less or equal zero.</exception>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public FreeImageBitmap(int width, int height, PixelFormat format)
+ 		{
+ 			if (width <= 0)
+@@ -715,6 +723,7 @@
+ 		/// <exception cref="ArgumentException"><paramref name="format"/> is invalid.</exception>
+ 		/// <exception cref="ArgumentOutOfRangeException">
+ 		/// <paramref name="width"/> or <paramref name="height"/> are less or equal zero.</exception>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public FreeImageBitmap(int width, int height, int stride, PixelFormat format, IntPtr scan0)
+ 		{
+ 			if (width <= 0)
+@@ -771,6 +780,7 @@
+ 		/// <exception cref="ArgumentOutOfRangeException">
+ 		/// <paramref name="width"/> or <paramref name="height"/> are less or equal zero.</exception>
+ 		/// <exception cref="ArgumentNullException"><paramref name="bits"/> is null</exception>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public FreeImageBitmap(int width, int height, int stride, PixelFormat format, byte[] bits)
+ 		{
+ 			if (width <= 0)
+@@ -913,7 +923,7 @@
  		{
  			try
  			{
@@ -135,7 +194,23 @@
  				if ((data != null) && (data.Length > 0))
  				{
  					MemoryStream memory = new MemoryStream(data);
-@@ -986,7 +986,7 @@
+@@ -958,6 +968,7 @@
+ 		/// PixtureBox for example without having to call any
+ 		/// conversion operations.
+ 		/// </remarks>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public static explicit operator Bitmap(FreeImageBitmap value)
+ 		{
+ 			return value.ToBitmap();
+@@ -973,6 +984,7 @@
+ 		/// allows to create an instance on the fly to perform
+ 		/// image processing operations and converting it back.
+ 		/// </remarks>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public static explicit operator FreeImageBitmap(Bitmap value)
+ 		{
+ 			return new FreeImageBitmap(value);
+@@ -986,7 +998,7 @@
  		/// <returns>
  		/// <b>true</b> if the value of left is the same as the value of right; otherwise, <b>false</b>.
  		/// </returns>
@@ -144,7 +219,7 @@
  		{
  			if (object.ReferenceEquals(left, right))
  			{
-@@ -1012,7 +1012,7 @@
+@@ -1012,7 +1024,7 @@
  		/// <returns>
  		/// true if the value of left is different from the value of right; otherwise, <b>false</b>.
  		/// </returns>
@@ -153,10 +228,84 @@
  		{
  			return (!(left == right));
  		}
-@@ -1555,12 +1555,12 @@
+@@ -1416,7 +1428,7 @@
+ 
+ 				if ((cd == 32) || (FreeImage.GetTransparencyCount(dib) != 0))
+ 				{
++					result += FreeImageDrawingFlags.HasAlpha; // ArmAgedon seam
+-					result += (int)ImageFlags.HasAlpha;
+ 				}
+ 
+ 				if (cd == 32)
+@@ -1431,7 +1443,7 @@
+ 							alpha = scanline[x].Color.A;
+ 							if (alpha != byte.MinValue && alpha != byte.MaxValue)
+ 							{
++								result += FreeImageDrawingFlags.HasTranslucent; // ArmAgedon seam
+-								result += (int)ImageFlags.HasTranslucent;
+ 								y = (int)height;
+ 								break;
+ 							}
+@@ -1445,7 +1457,7 @@
+ 					{
+ 						if (transTable[i] != byte.MinValue && transTable[i] != byte.MaxValue)
+ 						{
++							result += FreeImageDrawingFlags.HasTranslucent; // ArmAgedon seam
+-							result += (int)ImageFlags.HasTranslucent;
+ 							break;
+ 						}
+ 					}
+@@ -1453,17 +1465,17 @@
+ 
+ 				if (FreeImage.GetICCProfileEx(dib).IsCMYK)
+ 				{
++					result += FreeImageDrawingFlags.ColorSpaceCmyk; // ArmAgedon seam
+-					result += (int)ImageFlags.ColorSpaceCmyk;
+ 				}
+ 				else
+ 				{
++					result += FreeImageDrawingFlags.ColorSpaceRgb; // ArmAgedon seam
+-					result += (int)ImageFlags.ColorSpaceRgb;
+ 				}
+ 
+ 				if (FreeImage.GetColorType(dib) == FREE_IMAGE_COLOR_TYPE.FIC_MINISBLACK ||
+ 					FreeImage.GetColorType(dib) == FREE_IMAGE_COLOR_TYPE.FIC_MINISWHITE)
+ 				{
++					result += FreeImageDrawingFlags.ColorSpaceGray; // ArmAgedon seam
+-					result += (int)ImageFlags.ColorSpaceGray;
+ 				}
+ 
+ 				if (originalFormat == FREE_IMAGE_FORMAT.FIF_BMP ||
+@@ -1475,7 +1487,7 @@
+ 					originalFormat == FREE_IMAGE_FORMAT.FIF_PSD ||
+ 					originalFormat == FREE_IMAGE_FORMAT.FIF_TIFF)
+ 				{
++					result += FreeImageDrawingFlags.HasRealDpi; // ArmAgedon seam
+-					result += (int)ImageFlags.HasRealDpi;
+ 				}
+ 
+ 				return result;
+@@ -1497,6 +1509,7 @@
+ 		/// <summary>
+ 		/// Gets the pixel format for this <see cref="FreeImageBitmap"/>.
+ 		/// </summary>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public PixelFormat PixelFormat
+ 		{
+ 			get
+@@ -1532,6 +1545,7 @@
+ 		/// <summary>
+ 		/// Gets all the property items (pieces of metadata) stored in this <see cref="FreeImageBitmap"/>.
+ 		/// </summary>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public PropertyItem[] PropertyItems
+ 		{
+ 			get
+@@ -1555,12 +1569,13 @@
  		/// <summary>
  		/// Gets the format of this <see cref="FreeImageBitmap"/>.
  		/// </summary>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 +		public ImageFormat? RawFormat
 -		public ImageFormat RawFormat
  		{
@@ -168,7 +317,7 @@
  					Attribute.GetCustomAttribute(
  						typeof(FreeImageBitmap), typeof(System.Runtime.InteropServices.GuidAttribute)
  					);
-@@ -1585,7 +1585,7 @@
+@@ -1585,7 +1600,7 @@
  		/// <summary>
  		/// Gets or sets an object that provides additional data about the <see cref="FreeImageBitmap"/>.
  		/// </summary>
@@ -177,7 +326,7 @@
  		{
  			get
  			{
-@@ -1626,7 +1626,7 @@
+@@ -1626,7 +1641,7 @@
  		/// Gets or sets the comment of this <see cref="FreeImageBitmap"/>.
  		/// Supported formats are JPEG, PNG and GIF.
  		/// </summary>
@@ -186,16 +335,25 @@
  		{
  			get
  			{
-@@ -1742,7 +1742,7 @@
+@@ -1726,6 +1741,7 @@
+ 		/// the unit of measure for the bounding rectangle.</param>
+ 		/// <returns>The <see cref="System.Drawing.RectangleF"/> that represents the bounds of this
+ 		/// <see cref="FreeImageBitmap"/>, in the specified unit.</returns>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public RectangleF GetBounds(ref GraphicsUnit pageUnit)
+ 		{
+ 			EnsureNotDisposed();
+@@ -1742,7 +1758,8 @@
  		/// </summary>
  		/// <param name="propid">The ID of the property item to get.</param>
  		/// <returns>The <see cref="PropertyItem"/> this method gets.</returns>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 +		public PropertyItem? GetPropertyItem(int propid)
 -		public PropertyItem GetPropertyItem(int propid)
  		{
  			EnsureNotDisposed();
  			ImageMetadata metadata = new ImageMetadata(dib, true);
-@@ -1767,11 +1767,11 @@
+@@ -1767,11 +1784,11 @@
  		/// <param name="callback">Ignored.</param>
  		/// <param name="callBackData">Ignored.</param>
  		/// <returns>A <see cref="FreeImageBitmap"/> that represents the thumbnail.</returns>
@@ -209,7 +367,7 @@
  			FIBITMAP newDib = FreeImage.Rescale(
  				dib, thumbWidth, thumbHeight, FREE_IMAGE_FILTER.FILTER_BICUBIC);
  			if (!newDib.IsNull)
-@@ -1790,10 +1790,10 @@
+@@ -1790,10 +1807,10 @@
  		/// <param name="convert">When true HDR images are transperantly
  		/// converted to standard images.</param>
  		/// <returns>The thumbnail in a new instance.</returns>
@@ -222,7 +380,15 @@
  			FIBITMAP newDib = FreeImage.MakeThumbnail(dib, maxPixelSize, convert);
  			if (!newDib.IsNull)
  			{
-@@ -1927,7 +1927,7 @@
+@@ -1806,6 +1823,7 @@
+ 		/// Converts this <see cref="FreeImageBitmap"/> instance to a <see cref="Bitmap"/> instance.
+ 		/// </summary>
+ 		/// <returns>A new instance of <see cref="Bitmap"/> initialized this instance.</returns>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public Bitmap ToBitmap()
+ 		{
+ 			EnsureNotDisposed();
+@@ -1927,7 +1945,7 @@
  		public object GetScanline(int scanline)
  		{
  			EnsureNotDisposed();
@@ -231,7 +397,7 @@
  			int width = (int)FreeImage.GetWidth(dib);
  
  			switch (FreeImage.GetImageType(dib))
-@@ -2098,7 +2098,7 @@
+@@ -2098,7 +2116,7 @@
  				{
  					if (tag.ID == propid)
  					{
@@ -240,7 +406,23 @@
  						return;
  					}
  				}
-@@ -2758,10 +2758,10 @@
+@@ -2110,6 +2128,7 @@
+ 		/// </summary>
+ 		/// <param name="rotateFlipType">A RotateFlipType member
+ 		/// that specifies the type of rotation and flip to apply to this <see cref="FreeImageBitmap"/>.</param>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public void RotateFlip(RotateFlipType rotateFlipType)
+ 		{
+ 			EnsureNotDisposed();
+@@ -2550,6 +2569,7 @@
+ 		/// Returns the handle to an icon.
+ 		/// </summary>
+ 		/// <returns>A Windows handle to an icon with the same image as this <see cref="FreeImageBitmap"/>.</returns>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public IntPtr GetHicon()
+ 		{
+ 			EnsureNotDisposed();
+@@ -2758,10 +2778,10 @@
  		/// <param name="type">Destination type.</param>
  		/// <param name="scaleLinear">True to scale linear, else false.</param>
  		/// <returns>The converted instance.</returns>
@@ -253,7 +435,7 @@
  			if (ImageType != type)
  			{
  				FIBITMAP newDib = FreeImage.ConvertToType(dib, type, scaleLinear);
-@@ -2787,10 +2787,10 @@
+@@ -2787,10 +2807,10 @@
  		/// <param name="bpp">A bitfield containing information about the conversion
  		/// to perform.</param>
  		/// <returns>The converted instance.</returns>
@@ -266,7 +448,7 @@
  			FIBITMAP newDib = FreeImage.ConvertColorDepth(dib, bpp, false);
  			if (newDib == dib)
  			{
-@@ -2838,7 +2838,7 @@
+@@ -2838,7 +2858,7 @@
  		/// size of the new <see cref="FreeImageBitmap"/>.</param>
  		/// <param name="filter">Filter to use for resizing.</param>
  		/// <returns>The rescaled instance.</returns>
@@ -275,7 +457,7 @@
  		{
  			return GetScaledInstance(newSize.Width, newSize.Height, filter);
  		}
-@@ -2851,10 +2851,10 @@
+@@ -2851,10 +2871,10 @@
  		/// <param name="height">Height of the new <see cref="FreeImageBitmap"/>.</param>
  		/// <param name="filter">Filter to use for resizing.</param>
  		/// <returns>The rescaled instance.</returns>
@@ -288,7 +470,7 @@
  			FIBITMAP newDib = FreeImage.Rescale(dib, width, height, filter);
  			if (!newDib.IsNull)
  			{
-@@ -2924,7 +2924,7 @@
+@@ -2924,7 +2944,7 @@
  		/// Negative values shrink the image on its bottom side.</param>
  		/// <param name="color">The color, the enlarged sides of the image should be filled with.</param>
  		/// <returns>The enlarged instance.</returns>
@@ -297,7 +479,7 @@
  			T? color) where T : struct
  		{
  			return GetEnlargedInstance(left, top, right, bottom, color, FREE_IMAGE_COLOR_OPTIONS.FICO_DEFAULT);
-@@ -2947,11 +2947,11 @@
+@@ -2947,11 +2967,11 @@
  		/// <param name="color">The color, the enlarged sides of the image should be filled with.</param>
  		/// <param name="options">Options that affect the color search process for palletized images.</param>
  		/// <returns>The enlarged instance.</returns>
@@ -311,7 +493,7 @@
  			FIBITMAP newDib = FreeImage.EnlargeCanvas(dib, left, top, right, bottom, color, options);
  			if (!newDib.IsNull)
  			{
-@@ -2970,7 +2970,7 @@
+@@ -2970,7 +2990,7 @@
  		/// <returns>Returns true on success, false on failure.</returns>
  		public bool Quantize(FREE_IMAGE_QUANTIZE algorithm, int paletteSize)
  		{
@@ -320,7 +502,7 @@
  		}
  
  		/// <summary>
-@@ -3018,7 +3018,7 @@
+@@ -3018,7 +3038,7 @@
  		/// <param name="reserveSize">Size of the provided palette of ReservePalette.</param>
  		/// <param name="reservePalette">The provided palette.</param>
  		/// <returns>Returns true on success, false on failure.</returns>
@@ -329,7 +511,7 @@
  		{
  			EnsureNotDisposed();
  			return ReplaceDib(FreeImage.ColorQuantizeEx(dib, algorithm, paletteSize, reserveSize, reservePalette));
-@@ -3032,9 +3032,9 @@
+@@ -3032,9 +3052,9 @@
  		/// <param name="algorithm">The color reduction algorithm to be used.</param>
  		/// <param name="paletteSize">Size of the desired output palette.</param>
  		/// <returns>The quantized instance.</returns>
@@ -341,7 +523,7 @@
  		}
  
  		/// <summary>
-@@ -3046,7 +3046,7 @@
+@@ -3046,7 +3066,7 @@
  		/// <param name="paletteSize">Size of the desired output palette.</param>
  		/// <param name="reservePalette">The provided palette.</param>
  		/// <returns>The quantized instance.</returns>
@@ -350,7 +532,7 @@
  		{
  			return GetQuantizedInstance(algorithm, paletteSize, reservePalette.Length, reservePalette);
  		}
-@@ -3062,7 +3062,7 @@
+@@ -3062,7 +3082,7 @@
  		/// <param name="reserveSize">Size of the provided palette.</param>
  		/// <param name="reservePalette">The provided palette.</param>
  		/// <returns>The quantized instance.</returns>
@@ -359,7 +541,7 @@
  		{
  			return GetQuantizedInstance(algorithm, paletteSize, reserveSize, reservePalette.Data);
  		}
-@@ -3078,10 +3078,10 @@
+@@ -3078,10 +3098,10 @@
  		/// <param name="reserveSize">Size of the provided palette.</param>
  		/// <param name="reservePalette">The provided palette.</param>
  		/// <returns>The quantized instance.</returns>
@@ -372,7 +554,7 @@
  			FIBITMAP newDib = FreeImage.ColorQuantizeEx(dib, algorithm, paletteSize, reserveSize, reservePalette);
  			if (!newDib.IsNull)
  			{
-@@ -3185,10 +3185,10 @@
+@@ -3185,10 +3205,10 @@
  		/// <param name="angle">The angle of rotation.</param>
  		/// <param name="backgroundColor">The color used used to fill the bitmap's background.</param>
  		/// <returns>The rotated instance.</returns>
@@ -385,7 +567,7 @@
  			FIBITMAP newDib;
  			if (ColorDepth == 4)
  			{
-@@ -3212,10 +3212,10 @@
+@@ -3212,10 +3232,10 @@
  		/// </summary>
  		/// <param name="angle">The angle of rotation.</param>
  		/// <returns>The rotated instance.</returns>
@@ -398,7 +580,7 @@
  			FIBITMAP newDib;
  			if (ColorDepth == 4)
  			{
-@@ -3263,11 +3263,11 @@
+@@ -3263,11 +3283,11 @@
  		/// <param name="useMask">When true the irrelevant part of the image is set to a black color,
  		/// otherwise, a mirroring technique is used to fill irrelevant pixels.</param>
  		/// <returns>The rotated instance.</returns>
@@ -412,7 +594,7 @@
  			FIBITMAP newDib = FreeImage.RotateEx(
  				dib, angle, xShift, yShift, xOrigin, yOrigin, useMask);
  			if (!newDib.IsNull)
-@@ -3354,10 +3354,10 @@
+@@ -3354,10 +3374,10 @@
  		/// </summary>
  		/// <param name="channel">The color channel to extract.</param>
  		/// <returns>The color channel in a new instance.</returns>
@@ -425,7 +607,7 @@
  			FIBITMAP newDib = FreeImage.GetChannel(dib, channel);
  			if (!newDib.IsNull)
  			{
-@@ -3385,10 +3385,10 @@
+@@ -3385,10 +3405,10 @@
  		/// </summary>
  		/// <param name="channel">The color channel to extract.</param>
  		/// <returns>The color channel in a new instance.</returns>
@@ -438,7 +620,7 @@
  			FIBITMAP newDib = FreeImage.GetComplexChannel(dib, channel);
  			if (!newDib.IsNull)
  			{
-@@ -3416,7 +3416,7 @@
+@@ -3416,7 +3436,7 @@
  		/// </summary>
  		/// <param name="rect">The subpart to copy.</param>
  		/// <returns>The sub part in a new instance.</returns>
@@ -447,7 +629,7 @@
  		{
  			EnsureNotDisposed();
  			return Copy(rect.Left, rect.Top, rect.Right, rect.Bottom);
-@@ -3430,10 +3430,10 @@
+@@ -3430,10 +3450,10 @@
  		/// <param name="right">Specifies the right position of the cropped rectangle.</param>
  		/// <param name="bottom">Specifies the bottom position of the cropped rectangle.</param>
  		/// <returns>The sub part in a new instance.</returns>
@@ -460,7 +642,7 @@
  			FIBITMAP newDib = FreeImage.Copy(dib, left, top, right, bottom);
  			if (!newDib.IsNull)
  			{
-@@ -3708,7 +3708,7 @@
+@@ -3708,7 +3728,7 @@
  		/// <param name="obj">The object to test.</param>
  		/// <returns><b>true</b> if this instance is the same <paramref name="obj"/>
  		/// or if both are null references; otherwise, false.</returns>
@@ -469,7 +651,50 @@
  		{
  			return ReferenceEquals(this, obj);
  		}
-@@ -3813,9 +3813,9 @@
+@@ -3733,7 +3753,7 @@
+ 		/// <returns><b>true</b> if pixfmt contains alpha information; otherwise, <b>false</b>.</returns>
+ 		public static bool IsAlphaPixelFormat(PixelFormat pixfmt)
+ 		{
++			return FreeImageDrawingFlags.Alpha((int)pixfmt); // ArmAgedon seam
+-			return Bitmap.IsAlphaPixelFormat(pixfmt);
+ 		}
+ 
+ 		/// <summary>
+@@ -3743,7 +3763,7 @@
+ 		/// <returns>true if pixfmt is canonical; otherwise, false.</returns>
+ 		public static bool IsCanonicalPixelFormat(PixelFormat pixfmt)
+ 		{
++			return FreeImageDrawingFlags.Canonical((int)pixfmt); // ArmAgedon seam
+-			return Bitmap.IsCanonicalPixelFormat(pixfmt);
+ 		}
+ 
+ 		/// <summary>
+@@ -3753,7 +3773,7 @@
+ 		/// <returns>true if pixfmt is extended; otherwise, false.</returns>
+ 		public static bool IsExtendedPixelFormat(PixelFormat pixfmt)
+ 		{
++			return FreeImageDrawingFlags.Extended((int)pixfmt); // ArmAgedon seam
+-			return Bitmap.IsExtendedPixelFormat(pixfmt);
+ 		}
+ 
+ 		/// <summary>
+@@ -3761,6 +3781,7 @@
+ 		/// </summary>
+ 		/// <param name="hicon">A handle to an icon.</param>
+ 		/// <returns>The <see cref="FreeImageBitmap"/> that this method creates.</returns>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public static FreeImageBitmap FromHicon(IntPtr hicon)
+ 		{
+ 			using (Bitmap bitmap = Bitmap.FromHicon(hicon))
+@@ -3776,6 +3797,7 @@
+ 		/// file that contains the resource.</param>
+ 		/// <param name="bitmapName">A string containing the name of the resource bitmap.</param>
+ 		/// <returns>The <see cref="FreeImageBitmap"/> that this method creates.</returns>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+ 		public static FreeImageBitmap FromResource(IntPtr hinstance, string bitmapName)
+ 		{
+ 			using (Bitmap bitmap = Bitmap.FromResource(hinstance, bitmapName))
+@@ -3813,9 +3835,9 @@
  		/// </summary>
  		/// <param name="hbitmap">The GDI bitmap handle from which to create the <see cref="FreeImageBitmap"/>.</param>
  		/// <returns>The <see cref="FreeImageBitmap"/> this method creates.</returns>
@@ -481,7 +706,7 @@
  			FIBITMAP newDib = FreeImage.CreateFromHbitmap(hbitmap, IntPtr.Zero);
  			if (!newDib.IsNull)
  			{
-@@ -3830,7 +3830,7 @@
+@@ -3830,7 +3852,7 @@
  		/// <param name="hbitmap">The GDI bitmap handle from which to create the <see cref="FreeImageBitmap"/>.</param>
  		/// <param name="hpalette">Ignored.</param>
  		/// <returns>The <see cref="FreeImageBitmap"/> this method creates.</returns>
@@ -490,16 +715,26 @@
  		{
  			return FromHbitmap(hbitmap);
  		}
-@@ -4158,7 +4158,7 @@
+@@ -3887,7 +3909,7 @@
+ 		/// <returns>The color depth of the specified pixel format.</returns>
+ 		public static int GetPixelFormatSize(PixelFormat pixfmt)
+ 		{
++			return FreeImageDrawingFlags.PixelSize((int)pixfmt); // ArmAgedon seam
+-			return Bitmap.GetPixelFormatSize(pixfmt);
+ 		}
+ 
+ 		/// <summary>
+@@ -4158,7 +4180,8 @@
  		/// has no public accessible constructor.
  		/// </summary>
  		/// <returns>A new instace of <see cref="PropertyItem"/>.</returns>
++		[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 +		public static PropertyItem? CreateNewPropertyItem()
 -		public static PropertyItem CreateNewPropertyItem()
  		{
  			return FreeImage.CreatePropertyItem();
  		}
-@@ -4272,7 +4272,7 @@
+@@ -4272,7 +4295,7 @@
  		/// </summary>
  		private sealed class SaveInformation : ICloneable
  		{
@@ -508,7 +743,7 @@
  			public FREE_IMAGE_FORMAT format = FREE_IMAGE_FORMAT.FIF_UNKNOWN;
  			public FREE_IMAGE_LOAD_FLAGS loadFlags = FREE_IMAGE_LOAD_FLAGS.DEFAULT;
  			public FREE_IMAGE_SAVE_FLAGS saveFlags = FREE_IMAGE_SAVE_FLAGS.DEFAULT;
-@@ -4289,17 +4289,7 @@
+@@ -4289,17 +4312,7 @@
  		/// <returns>A deep copy of this <see cref="FreeImageBitmap"/>.</returns>
  		public object Clone()
  		{
@@ -527,7 +762,7 @@
  		}
  
  		/// <summary>
-@@ -4343,7 +4333,7 @@
+@@ -4343,7 +4356,7 @@
  			}
  
  			tag = null;

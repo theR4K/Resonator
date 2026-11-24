@@ -1,0 +1,35 @@
+--- a/Tags/ID3/ID3Utils.cs
++++ b/Tags/ID3/ID3Utils.cs
+@@ -6,7 +6,7 @@
+ 
+ namespace CSCore.Tags.ID3
+ {
++    internal static partial class ID3Utils // ArmAgedon seam
+-    internal static class ID3Utils
+     {
+         public readonly static Encoding Iso88591 = Encoding.GetEncoding("ISO-8859-1");
+         public readonly static Encoding Utf16 = new UnicodeEncoding(false, true);
+@@ -137,21 +137,10 @@
+ 
+         public const string MimeURL = "-->";
+ 
++        [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+         public static Image DecodeImage(byte[] rawdata, string mimetype)
+         {
++            return DecodeHttpPicture(rawdata, mimetype); // ArmAgedon seam
+-            Stream stream;
+-            if (mimetype.Trim() == MimeURL)
+-            {
+-                WebClient client = new WebClient();
+-                var data = client.DownloadData(GetURL(rawdata, mimetype));
+-                stream = new MemoryStream(data);
+-            }
+-            else
+-            {
+-                stream = new MemoryStream(rawdata, false);
+-            }
+-
+-            return Image.FromStream(stream);
+         }
+ 
+         public static string GetURL(byte[] RawData, string MimeType)

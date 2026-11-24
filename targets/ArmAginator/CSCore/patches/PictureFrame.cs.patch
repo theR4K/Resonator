@@ -1,6 +1,6 @@
 --- a/Tags/ID3/Frames/PictureFrame.cs
 +++ b/Tags/ID3/Frames/PictureFrame.cs
-@@ -6,15 +6,15 @@
+@@ -6,29 +6,31 @@
  {
      public class PictureFrame : Frame
      {
@@ -20,8 +20,16 @@
  
          /// <summary>
          /// WARNING: If MimeType equals "-->" the picture will be downloaded from the web.
-@@ -28,7 +28,7 @@
+         /// Use GetURL() the get the url to the picture. If not, data, contained by the frame will
+         /// be used.
+         /// </summary>
++        [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
+         public Image Image
+         {
+             get { return _image ?? (_image = DecodeImage()); }
+         }
  
++        [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
          private Image DecodeImage()
          {
 +            return ID3Utils.DecodeImage(CSCoreNullable.Require(RawData), CSCoreNullable.Require(MimeType)); // ArmAgedon seam
@@ -29,7 +37,7 @@
          }
  
          private ID3Version _version;
-@@ -81,7 +81,7 @@
+@@ -81,7 +83,7 @@
  
          public string GetURL()
          {

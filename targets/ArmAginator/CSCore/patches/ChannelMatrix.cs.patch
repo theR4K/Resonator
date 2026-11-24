@@ -1,5 +1,14 @@
 --- a/DSP/ChannelMatrix.cs
 +++ b/DSP/ChannelMatrix.cs
+@@ -9,7 +9,7 @@
+     ///     Represents a channel conversion matrix. For more information, see
+     ///     <see href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff819070(v=vs.85).aspx" />.
+     /// </summary>
++    public partial class ChannelMatrix // ArmAgedon seam
+-    public class ChannelMatrix
+     {
+         /// <summary>
+         ///     Defines a stereo to 5.1 surround (with rear) channel conversion matrix.
 @@ -137,7 +137,7 @@
          /// </returns>
          /// <exception cref="ArgumentException">The channelmask of the input format equals the channelmask of the output format.</exception>
@@ -22,3 +31,20 @@
              }
  
              return values.ToArray();
+@@ -537,14 +537,12 @@
+ 
+                 new FactoryEntry(ChannelMasks.FiveDotOneWithRearMask, ChannelMasks.MonoMask, FiveDotOneSurroundWithRearToMono),
+                 new FactoryEntry(ChannelMasks.FiveDotOneWithRearMask, ChannelMasks.StereoMask, FiveDotOneSurroundWithRearToStereo), 
++                new FactoryEntry(ChannelMasks.FiveDotOneWithRearMask, ChannelMasks.FiveDotOneWithSideMask, RearToSide()), // ArmAgedon seam 
+-#warning not implemented channel matrix
+-                //new FactoryEntry(FiveDotOneWithRearMask, FiveDotOneWithSideMask, ), 
+                 new FactoryEntry(ChannelMasks.FiveDotOneWithRearMask, ChannelMasks.SevenDotOneMask, FiveDotOneSurroundWithRearToSevenDotOne),
+ 
+                 new FactoryEntry(ChannelMasks.FiveDotOneWithSideMask, ChannelMasks.MonoMask, FiveDotOneSurroundWithSideToMono),
+                 new FactoryEntry(ChannelMasks.FiveDotOneWithSideMask, ChannelMasks.StereoMask, FiveDotOneSurroundWithSideToStereo), 
++                new FactoryEntry(ChannelMasks.FiveDotOneWithSideMask, ChannelMasks.FiveDotOneWithRearMask, RearToSide().Flip()), // ArmAgedon seam 
+-#warning not implemented channel matrix
+-                //new FactoryEntry(FiveDotOneWithSideMask, FiveDotOneWithRearMask, ), 
+                 new FactoryEntry(ChannelMasks.FiveDotOneWithSideMask, ChannelMasks.SevenDotOneMask, FiveDotOneSurroundWithSideToSevenDotOne),
+ 
+                 new FactoryEntry(ChannelMasks.SevenDotOneMask, ChannelMasks.MonoMask, SevenDotOneSurroundToMono),

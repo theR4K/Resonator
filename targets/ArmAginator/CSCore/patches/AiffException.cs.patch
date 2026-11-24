@@ -1,0 +1,10 @@
+--- a/Codecs/AIFF/AiffException.cs
++++ b/Codecs/AIFF/AiffException.cs
+@@ -44,6 +44,7 @@
+         ///     The <see cref="T:System.Runtime.Serialization.StreamingContext" /> that contains contextual
+         ///     information about the source or destination.
+         /// </param>
++        [Obsolete("Formatter-based serialization is obsolete.")]
+         protected AiffException(
+             SerializationInfo info,
+             StreamingContext context) : base(info, context)

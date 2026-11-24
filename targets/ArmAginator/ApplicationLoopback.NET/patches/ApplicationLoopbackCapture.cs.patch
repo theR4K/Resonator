@@ -25,3 +25,65 @@
  
          AudioCallback _onData;
          AudioEvent _onCaptureStopped;
+@@ -52,14 +50,12 @@
+             _captureActive = true;
+             _captureStopRequested = false;
+ 
++            BeginCaptureCompletion(); // ArmAgedon seam
+             var success = Native.StartCaptureAsync(_capture, processId, mode == CaptureMode.IncludeProcessTree);
++
++            CheckCaptureStarted(success); // ArmAgedon seam
+ 
+-            if (success < 0)
+-                throw new Exception($"Failed to start capture. Error code: {success}");
+ 
+-            // The capture won't stop immediatelly so we might have systems that wait on it stopping
+-            // Create the completion source now when we started, because it's the cleanest time to do it
+-            _captureCompleted = new TaskCompletionSource<bool>();
+         }
+ 
+         public Task StopCapture()
+@@ -108,8 +104,7 @@
+ 
+         void OnCaptureStopped(IntPtr instance)
+         {
++            CompleteCapture(); // ArmAgedon seam
+-            _captureActive = false;
+-            _captureCompleted.TrySetResult(true);
+         }
+ 
+         void CheckDisposed()
+@@ -126,32 +121,7 @@
+ 
+         public void Dispose()
+         {
++            DisposeCapture(); // ArmAgedon seam
+-            if (_disposed)
+-                return;
+-
+-            _disposed = true;
+-
+-            if (_captureActive)
+-            {
+-                // If it's still active, stop the capture
+-                if (!_captureStopRequested)
+-                    StopCapture();
+-
+-                // If the capture is still active (e.g. Dispose was called too soon)
+-                // Let's wait for it to finish and then call it again
+-                Task.Run(async () =>
+-                {
+-                    // Wait for the capture to complete
+-                    await _captureCompleted.Task;
+-
+-                    // Do the actual dispose
+-                    DisposeInternal();
+-                });
+-
+-                return;
+-            }
+-
+-            DisposeInternal();
+         }
+ 
+         void DisposeInternal()

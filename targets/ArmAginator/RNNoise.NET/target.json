@@ -1,0 +1,5 @@
+{
+  "name": "RNNoise.NET",
+  "description": "ArmAgedon nullable contracts and injected lifecycle seams for the official source wrapper.",
+  "extends": "Flatweave/RNNoise.NET"
+}

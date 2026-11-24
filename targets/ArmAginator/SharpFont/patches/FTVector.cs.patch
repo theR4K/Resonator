@@ -1,0 +1,11 @@
+--- a/FTVector.cs
++++ b/FTVector.cs
+@@ -218,7 +218,7 @@
+ 		/// </summary>
+ 		/// <param name="obj">An object.</param>
+ 		/// <returns>A value indicating equality.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			if (obj is FTVector)
+ 				return this.Equals((FTVector)obj);

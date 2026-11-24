@@ -1,0 +1,11 @@
+--- a/Bdf/Property.cs
++++ b/Bdf/Property.cs
+@@ -66,7 +66,7 @@
+ 		/// <summary>
+ 		/// Gets the atom string, if type is <see cref="PropertyType.Atom"/>.
+ 		/// </summary>
++		public string? Atom
+-		public string Atom
+ 		{
+ 			get
+ 			{

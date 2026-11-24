@@ -1,0 +1,41 @@
+--- a/Crunch.cs
++++ b/Crunch.cs
+@@ -7,9 +7,9 @@
+ {
+     public static class Crunch
+     {
++        public static unsafe byte[]? Compress(int width, int height, List<List<Memory<byte>>> data,
+-        public static unsafe byte[] Compress(int width, int height, List<List<Memory<byte>>> data,
+             crn_format format,
++            crn_mipmap_params? mipmaps = null, int maxThreads = -1)
+-            crn_mipmap_params mipmaps = null, int maxThreads = -1)
+         {
+             var comp_params = new crn_comp_params();
+ 
+@@ -20,7 +20,7 @@
+             return Compress(data, comp_params, mipmaps);
+         }
+ 
++        public static unsafe byte[]? Compress(List<List<Memory<byte>>> data, crn_comp_params comp_params, crn_mipmap_params? mipmaps = null, int maxThreads = -1)
+-        public static unsafe byte[] Compress(List<List<Memory<byte>>> data, crn_comp_params comp_params, crn_mipmap_params mipmaps = null, int maxThreads = -1)
+         {
+             if (data.Count != 1 && data.Count != 6)
+                 throw new ArgumentOutOfRangeException("Invalid number of faces");
+@@ -67,7 +67,7 @@
+                 else
+                     compressedPtr = NativeMethods.crn_compress(comp_params, out compressed_size, out actual_quality_level, out actual_bitrate);
+ 
++                byte[]? compressedData = null;
+-                byte[] compressedData = null;
+ 
+                 if (compressedPtr != IntPtr.Zero)
+                 {
+@@ -90,7 +90,7 @@
+         public static unsafe bool Decompress(byte[] rawData, List<List<Memory<byte>>> data) => Decompress(rawData, data, out _);
+ 
+         public static unsafe bool Decompress(byte[] rawData, List<List<Memory<byte>>> data, out crn_texture_info info,
++            Action<crn_texture_info>? onInfoDecoded = null)
+-            Action<crn_texture_info> onInfoDecoded = null)
+         {
+             fixed (byte* pData = rawData)
+             {

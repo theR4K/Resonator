@@ -1,0 +1,10 @@
+--- a/Structs/crn_comp_params.cs
++++ b/Structs/crn_comp_params.cs
+@@ -116,6 +116,7 @@
+         public IntPtr progress_func;
+         public IntPtr progress_func_data;
+ 
++        [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(images))]
+         public void Clear()
+         {
+             size_of_obj = (uint)Marshal.SizeOf<crn_comp_params>();

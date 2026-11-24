@@ -1,0 +1,11 @@
+--- a/Fixed26Dot6.cs
++++ b/Fixed26Dot6.cs
+@@ -562,7 +562,7 @@
+ 		/// </summary>
+ 		/// <param name="obj">The object to compare with the current object.</param>
+ 		/// <returns>A value indicating equality between the two objects.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			if (obj is Fixed26Dot6)
+ 				return this.Equals((Fixed26Dot6)obj);

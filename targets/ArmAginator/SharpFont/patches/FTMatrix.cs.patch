@@ -1,0 +1,11 @@
+--- a/FTMatrix.cs
++++ b/FTMatrix.cs
+@@ -228,7 +228,7 @@
+ 		/// </summary>
+ 		/// <param name="obj">An object.</param>
+ 		/// <returns>A value indicating equality.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			if (obj is FTMatrix)
+ 				return this.Equals((FTMatrix)obj);

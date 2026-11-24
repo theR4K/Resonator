@@ -1,0 +1,24 @@
+--- a/Denoiser.cs
++++ b/Denoiser.cs
+@@ -4,11 +4,11 @@
+ 
+ namespace RNNoise.NET
+ {
++    public partial class Denoiser : IDisposable // ArmAgedon seam: nullable buffer lifecycle in Injected/Denoiser.Lifecycle.cs
+-    public class Denoiser : IDisposable
+     {
+         IntPtr state;
+ 
++        float[]? processingBuffer;
+-        float[] processingBuffer;
+         int processingBufferDataStart;
+ 
+         float[] processedData;
+@@ -24,6 +24,7 @@
+ 
+         public unsafe int Denoise(Span<float> buffer, bool finish = true)
+         {
++            float[] processingBuffer = GetProcessingBuffer(); // ArmAgedon seam
+             int count = 0;
+ 
+             fixed(float* processingPtr = &processingBuffer[0])

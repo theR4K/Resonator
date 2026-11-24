@@ -1,0 +1,20 @@
+--- a/ListNode.cs
++++ b/ListNode.cs
+@@ -53,7 +53,7 @@
+ 		/// <summary>
+ 		/// Gets the previous element in the list. NULL if first.
+ 		/// </summary>
++		public ListNode? Previous
+-		public ListNode Previous
+ 		{
+ 			get
+ 			{
+@@ -67,7 +67,7 @@
+ 		/// <summary>
+ 		/// Gets the next element in the list. NULL if last.
+ 		/// </summary>
++		public ListNode? Next
+-		public ListNode Next
+ 		{
+ 			get
+ 			{

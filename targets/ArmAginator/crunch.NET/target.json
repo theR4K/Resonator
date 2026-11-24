@@ -1,0 +1,5 @@
+{
+  "name": "crunch.NET",
+  "description": "ArmAgedon nullable contracts and injected lifecycle seams for the official source wrapper.",
+  "extends": "Flatweave/crunch.NET"
+}

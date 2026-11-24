@@ -1,0 +1,85 @@
+--- a/Glyph.cs
++++ b/Glyph.cs
+@@ -32,7 +32,7 @@
+ 	/// <summary>
+ 	/// The root glyph structure contains a given glyph image plus its advance width in 16.16 fixed float format.
+ 	/// </summary>
++	public sealed partial class Glyph : IDisposable // ArmAgedon seam: owned and cached glyph lifetimes in Injected/
+-	public sealed class Glyph : IDisposable
+ 	{
+ 		#region Fields
+ 
+@@ -41,18 +41,18 @@
+ 		private IntPtr reference;
+ 		private GlyphRec rec;
+ 
++		private Library? parentLibrary;
+-		private Library parentLibrary;
+ 
+ 		#endregion
+ 
+ 		#region Constructors
+ 
++		internal Glyph(IntPtr reference, Library? parentLibrary)
+-		internal Glyph(IntPtr reference, Library parentLibrary)
+ 		{
+ 			Reference = reference;
+ 
+ 			this.parentLibrary = parentLibrary;
++			RegisterGlyphOwnership(parentLibrary); // ArmAgedon seam
+-			parentLibrary.AddChildGlyph(this);
+ 		}
+ 
+ 		/// <summary>
+@@ -81,7 +81,7 @@
+ 		/// <summary>
+ 		/// Gets a handle to the FreeType library object.
+ 		/// </summary>
++		public Library? Library
+-		public Library Library
+ 		{
+ 			get
+ 			{
+@@ -216,7 +216,7 @@
+ 			if (err != Error.Ok)
+ 				throw new FreeTypeException(err);
+ 
++			return CreateOwned(glyphRef, Library); // ArmAgedon seam
+-			return new Glyph(glyphRef, Library);
+ 		}
+ 
+ 		/// <summary>
+@@ -368,7 +368,7 @@
+ 			if (sourceRef == reference)
+ 				return this;
+ 			else
++				return CreateOwned(sourceRef, parentLibrary); // ArmAgedon seam
+-				return new Glyph(sourceRef, parentLibrary);
+ 		}
+ 
+ 		/// <summary>
+@@ -407,7 +407,7 @@
+ 			if (sourceRef == reference)
+ 				return this;
+ 			else
++				return CreateOwned(sourceRef, parentLibrary); // ArmAgedon seam
+-				return new Glyph(sourceRef, parentLibrary );
+ 		}
+ 
+ 		#endregion
+@@ -427,13 +427,12 @@
+ 			{
+ 				disposed = true;
+ 
++				ReleaseOwnedGlyph(); // ArmAgedon seam
+-				FT.FT_Done_Glyph(reference);
+ 
+ 				// removes itself from the parent Library, with a check to prevent this from happening when Library is
+ 				// being disposed (Library disposes all it's children with a foreach loop, this causes an
+ 				// InvalidOperationException for modifying a collection during enumeration)
++				UnregisterGlyphOwner(); // ArmAgedon seam
+-				if (!parentLibrary.IsDisposed)
+-					parentLibrary.RemoveChildGlyph(this);
+ 
+ 				reference = IntPtr.Zero;
+ 			}

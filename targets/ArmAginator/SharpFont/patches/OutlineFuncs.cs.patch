@@ -1,0 +1,57 @@
+--- a/OutlineFuncs.cs
++++ b/OutlineFuncs.cs
+@@ -101,10 +101,10 @@
+ 
+ 		private bool isDisposed;
+ 
++		private MoveToFunc? moveToFunc;
++		private LineToFunc? lineToFunc;
++		private ConicToFunc? conicToFunc;
++		private CubicToFunc? cubicToFunc;
+-		private MoveToFunc moveToFunc;
+-		private LineToFunc lineToFunc;
+-		private ConicToFunc conicToFunc;
+-		private CubicToFunc cubicToFunc;
+ 
+ 		private GCHandle moveToPin;
+ 		private GCHandle lineToPin;
+@@ -182,7 +182,8 @@
+ 		/// <summary>
+ 		/// Gets or sets the ‘move to’ emitter.
+ 		/// </summary>
++		[System.Diagnostics.CodeAnalysis.DisallowNull]
++		public MoveToFunc? MoveFunction
+-		public MoveToFunc MoveFunction
+ 		{
+ 			get
+ 			{
+@@ -205,7 +206,8 @@
+ 		/// <summary>
+ 		/// Gets or sets the segment emitter.
+ 		/// </summary>
++		[System.Diagnostics.CodeAnalysis.DisallowNull]
++		public LineToFunc? LineFunction
+-		public LineToFunc LineFunction
+ 		{
+ 
+ 			get
+@@ -229,7 +231,8 @@
+ 		/// <summary>
+ 		/// Gets or sets the second-order Bézier arc emitter.
+ 		/// </summary>
++		[System.Diagnostics.CodeAnalysis.DisallowNull]
++		public ConicToFunc? ConicFunction
+-		public ConicToFunc ConicFunction
+ 		{
+ 
+ 			get
+@@ -253,7 +256,8 @@
+ 		/// <summary>
+ 		/// Gets or sets the third-order Bézier arc emitter.
+ 		/// </summary>
++		[System.Diagnostics.CodeAnalysis.DisallowNull]
++		public CubicToFunc? CubicFunction
+-		public CubicToFunc CubicFunction
+ 		{
+ 
+ 			get

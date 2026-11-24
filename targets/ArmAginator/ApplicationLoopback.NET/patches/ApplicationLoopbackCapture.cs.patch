@@ -1,0 +1,27 @@
+--- a/ApplicationLoopbackCapture.cs
++++ b/ApplicationLoopbackCapture.cs
+@@ -9,7 +9,7 @@
+     public delegate void AudioDataHandler(ReadOnlySpan<float> data);
+     public delegate void AudioEventHandler();
+ 
++    public partial class ApplicationLoopbackCapture : IDisposable // ArmAgedon seam: managed completion state in Injected/
+-    public class ApplicationLoopbackCapture : IDisposable
+     {
+         public int Channels { get; private set; }
+         public int SampleRate { get; private set; }
+@@ -17,13 +17,11 @@
+         bool _captureActive;
+         bool _captureStopRequested;
+         bool _disposed;
+-
+-        TaskCompletionSource<bool> _captureCompleted;
+ 
+         IntPtr _capture;
+ 
++        public event AudioDataHandler? NewDataAvailable;
++        public event AudioEventHandler? CaptureStopped;
+-        public event AudioDataHandler NewDataAvailable;
+-        public event AudioEventHandler CaptureStopped;
+ 
+         AudioCallback _onData;
+         AudioEvent _onCaptureStopped;

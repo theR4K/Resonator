@@ -1,0 +1,30 @@
+--- a/GlyphToScriptMapProperty.cs
++++ b/GlyphToScriptMapProperty.cs
+@@ -35,7 +35,7 @@
+ 	public class GlyphToScriptMapProperty
+ 	{
+ 		private GlyphToScriptMapPropertyRec rec;
++		private Face? face;
+-		private Face face;
+ 
+ 		/// <summary>
+ 		/// Initializes a new instance of the <see cref="GlyphToScriptMapProperty"/> class.
+@@ -46,7 +46,7 @@
+ 			Face = face;
+ 		}
+ 
++		internal GlyphToScriptMapProperty(GlyphToScriptMapPropertyRec rec, Face? face)
+-		internal GlyphToScriptMapProperty(GlyphToScriptMapPropertyRec rec, Face face)
+ 		{
+ 			this.rec = rec;
+ 			this.face = face;
+@@ -55,7 +55,8 @@
+ 		/// <summary>
+ 		/// Gets or sets the associated face.
+ 		/// </summary>
++		[System.Diagnostics.CodeAnalysis.DisallowNull]
++		public Face? Face
+-		public Face Face
+ 		{
+ 			get
+ 			{

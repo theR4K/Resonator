@@ -1,0 +1,56 @@
+--- a/FTSize.cs
++++ b/FTSize.cs
+@@ -43,7 +43,7 @@
+ 		private IntPtr reference;
+ 		private SizeRec rec;
+ 
++		private Face? parentFace;
+-		private Face parentFace;
+ 
+ 		#endregion
+ 
+@@ -65,7 +65,7 @@
+ 			userAlloc = true;
+ 		}
+ 
++		internal FTSize(IntPtr reference, bool userAlloc, Face? parentFace)
+-		internal FTSize(IntPtr reference, bool userAlloc, Face parentFace)
+ 		{
+ 			Reference = reference;
+ 
+@@ -97,7 +97,7 @@
+ 		/// <summary>
+ 		/// Occurs when the size is disposed.
+ 		/// </summary>
++		public event EventHandler? Disposed;
+-		public event EventHandler Disposed;
+ 
+ 		#endregion
+ 
+@@ -117,7 +117,7 @@
+ 		/// <summary>
+ 		/// Gets a handle to the parent face object.
+ 		/// </summary>
++		public Face? Face
+-		public Face Face
+ 		{
+ 			get
+ 			{
+@@ -175,7 +175,7 @@
+ 		/// This is a replacement for FT_Generic in FreeType. If you are retrieving the same object multiple times
+ 		/// from functions, this object will not appear in new copies.
+ 		/// </remarks>
++		public object? Tag { get; set; }
+-		public object Tag { get; set; }
+ 
+ 		internal IntPtr Reference
+ 		{
+@@ -258,7 +258,7 @@
+ 				reference = IntPtr.Zero;
+ 				rec = new SizeRec();
+ 
++				EventHandler? handler = Disposed;
+-				EventHandler handler = Disposed;
+ 				if (handler != null)
+ 					handler(this, EventArgs.Empty);
+ 			}

@@ -1,0 +1,54 @@
+--- a/GlyphSlot.cs
++++ b/GlyphSlot.cs
+@@ -80,13 +80,13 @@
+ 		private GlyphSlotRec rec;
+ 
+ 		private Face parentFace;
++		private Library? parentLibrary;
+-		private Library parentLibrary;
+ 
+ 		#endregion
+ 
+ 		#region Constructors
+ 
++		internal GlyphSlot(IntPtr reference, Face parentFace, Library? parentLibrary)
+-		internal GlyphSlot(IntPtr reference, Face parentFace, Library parentLibrary)
+ 		{
+ 			Reference = reference;
+ 			this.parentFace = parentFace;
+@@ -100,7 +100,7 @@
+ 		/// <summary>
+ 		/// Gets a handle to the FreeType library instance this slot belongs to.
+ 		/// </summary>
++		public Library? Library
+-		public Library Library
+ 		{
+ 			get
+ 			{
+@@ -282,7 +282,7 @@
+ 		/// Gets an array of subglyph descriptors for composite glyphs. There are ‘num_subglyphs’ elements in there.
+ 		/// Currently internal to FreeType.
+ 		/// </summary>
++		public SubGlyph[]? Subglyphs
+-		public SubGlyph[] Subglyphs
+ 		{
+ 			get
+ 			{
+@@ -358,7 +358,7 @@
+ 		/// This is a replacement for FT_Generic in FreeType. If you are retrieving the same object multiple times
+ 		/// from functions, this object will not appear in new copies.
+ 		/// </remarks>
++		public object? Tag { get; set; }
+-		public object Tag { get; set; }
+ 
+ 		/// <summary>
+ 		/// Gets other data. Really wicked formats can use this pointer to present their own glyph image to client
+@@ -447,7 +447,7 @@
+ 			if (err != Error.Ok)
+ 				throw new FreeTypeException(err);
+ 
++			return Glyph.CreateOwned(glyphRef, Library); // ArmAgedon seam
+-			return new Glyph(glyphRef, Library);
+ 		}
+ 
+ 		#endregion

@@ -1,0 +1,11 @@
+--- a/FTVector26Dot6.cs
++++ b/FTVector26Dot6.cs
+@@ -142,7 +142,7 @@
+ 		/// </summary>
+ 		/// <param name="obj">An object.</param>
+ 		/// <returns>A value indicating equality.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			if (obj is FTVector26Dot6)
+ 				return this.Equals((FTVector26Dot6)obj);

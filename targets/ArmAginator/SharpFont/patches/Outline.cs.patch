@@ -1,0 +1,83 @@
+--- a/Outline.cs
++++ b/Outline.cs
+@@ -36,7 +36,7 @@
+ 	/// as given with <see cref="OutlineFlags.IgnoreDropouts"/>, <see cref="OutlineFlags.SmartDropouts"/>, and
+ 	/// <see cref="OutlineFlags.IncludeStubs"/> in ‘flags’ is then overridden.
+ 	/// </remarks>
++	public sealed partial class Outline : IDisposable // ArmAgedon seam: optional outline owners in Injected/
+-	public sealed class Outline : IDisposable
+ 	{
+ 		#region Fields
+ 
+@@ -46,8 +46,8 @@
+ 		private IntPtr reference;
+ 		private OutlineRec rec;
+ 
++		private Library? parentLibrary;
++		private Memory? parentMemory;
+-		private Library parentLibrary;
+-		private Memory parentMemory;
+ 
+ 		#endregion
+ 
+@@ -159,7 +159,7 @@
+ 		/// Gets a pointer to an array of ‘PointsCount’ <see cref="FTVector"/> elements, giving the outline's point
+ 		/// coordinates.
+ 		/// </summary>
++		public FTVector[]? Points
+-		public FTVector[] Points
+ 		{
+ 			get
+ 			{
+@@ -196,7 +196,7 @@
+ 		/// </para><para>
+ 		/// Bits 3 and 4 are reserved for internal purposes.
+ 		/// </para></summary>
++		public byte[]? Tags
+-		public byte[] Tags
+ 		{
+ 			get
+ 			{
+@@ -225,7 +225,7 @@
+ 		/// example, the first contour is defined by the points ‘0’ to ‘Contours[0]’, the second one is defined by the
+ 		/// points ‘Contours[0]+1’ to ‘Contours[1]’, etc.
+ 		/// </summary>
++		public short[]? Contours
+-		public short[] Contours
+ 		{
+ 			get
+ 			{
+@@ -514,7 +514,7 @@
+ 			if (disposed)
+ 				throw new ObjectDisposedException("Outline", "Cannot access a disposed object.");
+ 
++			Error err = FT.FT_Outline_Get_Bitmap(RequireParentLibrary().Reference, reference, bitmap.Reference); // ArmAgedon seam
+-			Error err = FT.FT_Outline_Get_Bitmap(parentLibrary.Reference, reference, bitmap.Reference);
+ 
+ 			if (err != Error.Ok)
+ 				throw new FreeTypeException(err);
+@@ -577,7 +577,7 @@
+ 			if (parameters == null)
+ 				throw new ArgumentNullException("parameters");
+ 
++			Error err = FT.FT_Outline_Render(RequireParentLibrary().Reference, reference, parameters.Reference); // ArmAgedon seam
+-			Error err = FT.FT_Outline_Render(parentLibrary.Reference, reference, parameters.Reference);
+ 
+ 			if (err != Error.Ok)
+ 				throw new FreeTypeException(err);
+@@ -679,13 +679,12 @@
+ 					if (parentLibrary != null)
+ 						FT.FT_Outline_Done(parentLibrary.Reference, reference);
+ 					else
++						ReleaseMemoryOwnedOutline(); // ArmAgedon seam
+-						FT.FT_Outline_Done_Internal(parentMemory.Reference, reference);
+ 
+ 					// removes itself from the parent Library, with a check to prevent this from happening when Library is
+ 					// being disposed (Library disposes all it's children with a foreach loop, this causes an
+ 					// InvalidOperationException for modifying a collection during enumeration)
++					UnregisterOutlineOwner(); // ArmAgedon seam
+-					if (!parentLibrary.IsDisposed)
+-						parentLibrary.RemoveChildOutline(this);
+ 				}
+ 
+ 				reference = IntPtr.Zero;

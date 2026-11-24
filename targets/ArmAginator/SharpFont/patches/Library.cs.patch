@@ -1,0 +1,20 @@
+--- a/Library.cs
++++ b/Library.cs
+@@ -596,7 +596,7 @@
+ 			GlyphToScriptMapPropertyRec rec;
+ 			PropertyGet(moduleName, propertyName, out rec);
+ 
++			Face? face = childFaces.Find(f => f.Reference == rec.face);
+-			Face face = childFaces.Find(f => f.Reference == rec.face);
+ 			return new GlyphToScriptMapProperty(rec, face);
+ 		}
+ 
+@@ -615,7 +615,7 @@
+ 			IncreaseXHeightPropertyRec rec;
+ 			PropertyGet(moduleName, propertyName, out rec);
+ 
++			Face? face = childFaces.Find(f => f.Reference == rec.face);
+-			Face face = childFaces.Find(f => f.Reference == rec.face);
+ 			return new IncreaseXHeightProperty(rec, face);
+ 		}
+ 

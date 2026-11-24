@@ -1,0 +1,11 @@
+--- a/OpenArgs.cs
++++ b/OpenArgs.cs
+@@ -164,7 +164,7 @@
+ 		/// <summary>
+ 		/// Gets the extra parameters passed to the font driver when opening a new face.
+ 		/// </summary>
++		public Parameter[]? Params
+-		public Parameter[] Params
+ 		{
+ 			get
+ 			{

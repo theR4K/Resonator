@@ -1,0 +1,49 @@
+--- a/BitmapGlyph.cs
++++ b/BitmapGlyph.cs
+@@ -39,11 +39,11 @@
+ 	/// The corresponding pixel buffer is always owned by <see cref="BitmapGlyph"/> and is thus created and destroyed
+ 	/// with it.
+ 	/// </para></remarks>
++	public sealed partial class BitmapGlyph : IDisposable // ArmAgedon seam: disposed root handling in Injected/
+-	public sealed class BitmapGlyph : IDisposable
+ 	{
+ 		#region Fields
+ 
++		private Glyph? original;
+-		private Glyph original;
+ 		private BitmapGlyphRec rec;
+ 
+ 		#endregion
+@@ -71,11 +71,12 @@
+ 		/// <summary>
+ 		/// Gets a value indicating whether the object has been disposed.
+ 		/// </summary>
++		[System.Diagnostics.CodeAnalysis.MemberNotNullWhen(false, nameof(original))]
+ 		public bool IsDisposed
+ 		{
+ 			get
+ 			{
++				return OriginalDisposed(); // ArmAgedon seam
+-				return original.IsDisposed;
+ 			}
+ 		}
+ 
+@@ -168,7 +169,7 @@
+ 		/// <returns>A <see cref="Glyph"/>.</returns>
+ 		public static implicit operator Glyph(BitmapGlyph g)
+ 		{
++			return g.Root; // ArmAgedon seam: Root validates disposal
+-			return g.original;
+ 		}
+ 
+ 		#endregion
+@@ -197,8 +198,7 @@
+ 		{
+ 			if (disposing)
+ 			{
++				ReleaseOriginal(); // ArmAgedon seam
+-				original.Dispose();
+-				original = null;
+ 			}
+ 		}
+ 

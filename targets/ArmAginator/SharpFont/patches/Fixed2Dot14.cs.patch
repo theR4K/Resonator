@@ -1,0 +1,11 @@
+--- a/Fixed2Dot14.cs
++++ b/Fixed2Dot14.cs
+@@ -529,7 +529,7 @@
+ 		/// </summary>
+ 		/// <param name="obj">The object to compare with the current object.</param>
+ 		/// <returns>A value indicating equality between the two objects.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			if (obj is Fixed2Dot14)
+ 				return this.Equals((Fixed2Dot14)obj);

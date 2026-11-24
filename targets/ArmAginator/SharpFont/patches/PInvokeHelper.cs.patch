@@ -1,0 +1,14 @@
+--- a/PInvokeHelper.cs
++++ b/PInvokeHelper.cs
+@@ -38,9 +38,9 @@
+ 		/// <typeparam name="T">The type to cast to.</typeparam>
+ 		/// <param name="reference">The pointer that holds the struct.</param>
+ 		/// <returns>A marshalled struct.</returns>
++		internal static T? PtrToStructure<T>(IntPtr reference)
+-		internal static T PtrToStructure<T>(IntPtr reference)
+ 		{
++			return (T?)Marshal.PtrToStructure(reference, typeof(T));
+-			return (T)Marshal.PtrToStructure(reference, typeof(T));
+ 		}
+ 
+ 		/// <summary>

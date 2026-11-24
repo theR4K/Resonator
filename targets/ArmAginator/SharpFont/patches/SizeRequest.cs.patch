@@ -1,0 +1,11 @@
+--- a/SizeRequest.cs
++++ b/SizeRequest.cs
+@@ -183,7 +183,7 @@
+ 		/// </summary>
+ 		/// <param name="obj">An object.</param>
+ 		/// <returns>A value indicating equality.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			if (obj is SizeRequest)
+ 				return this.Equals((SizeRequest)obj);

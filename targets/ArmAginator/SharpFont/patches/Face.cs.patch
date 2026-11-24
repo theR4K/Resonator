@@ -1,0 +1,176 @@
+--- a/Face.cs
++++ b/Face.cs
+@@ -40,7 +40,7 @@
+ 	/// <remarks>
+ 	/// Fields may be changed after a call to <see cref="AttachFile"/> or <see cref="AttachStream"/>.
+ 	/// </remarks>
++	public sealed partial class Face : NativeObject, IDisposable // ArmAgedon seam: borrowed-face lifetime in Injected/
+-	public sealed class Face : NativeObject, IDisposable
+ 	{
+ 		#region Fields
+ 
+@@ -50,7 +50,7 @@
+ 
+ 		private GCHandle memoryFaceHandle;
+ 
++		private Library? parentLibrary;
+-		private Library parentLibrary;
+ 		private List<FTSize> childSizes;
+ 
+ 		#endregion
+@@ -130,13 +130,14 @@
+ 		/// </summary>
+ 		/// <param name="reference">A pointer to the unmanaged memory containing the Face.</param>
+ 		/// <param name="parent">The parent <see cref="Library"/>.</param>
++		internal Face(IntPtr reference, Library? parent)
+-		internal Face(IntPtr reference, Library parent)
+ 			: this(parent)
+ 		{
+ 			Reference = reference;
++			RetainBorrowedFace(parent); // ArmAgedon seam: retain only after the native pointer is set
+ 		}
+ 
++		private Face(Library? parent): base(IntPtr.Zero)
+-		private Face(Library parent): base(IntPtr.Zero)
+ 		{
+ 			childSizes = new List<FTSize>();
+ 
+@@ -144,11 +145,6 @@
+ 			{
+ 				parentLibrary = parent;
+ 				parentLibrary.AddChildFace(this);
+-			}
+-			else
+-			{
+-				//if there's no parent, this is a marshalled duplicate.
+-				FT.FT_Reference_Face(Reference);
+ 			}
+ 		}
+ 
+@@ -167,7 +163,7 @@
+ 		/// <summary>
+ 		/// Occurs when the face is disposed.
+ 		/// </summary>
++		public event EventHandler? Disposed;
+-		public event EventHandler Disposed;
+ 
+ 		#endregion
+ 
+@@ -266,7 +262,7 @@
+ 		/// Applications should use the format specific interface to access them. Can be NULL (e.g., in fonts embedded
+ 		/// in a PDF file).
+ 		/// </summary>
++		public string? FamilyName
+-		public string FamilyName
+ 		{
+ 			get
+ 			{
+@@ -283,7 +279,7 @@
+ 		/// is optional, and can be set to NULL. As for ‘family_name’, some formats provide localized and Unicode
+ 		/// versions of this string. Applications should use the format specific interface to access them.
+ 		/// </summary>
++		public string? StyleName
+-		public string StyleName
+ 		{
+ 			get
+ 			{
+@@ -313,7 +309,7 @@
+ 		/// Gets an array of FT_Bitmap_Size for all bitmap strikes in the face. It is set to NULL if there is no bitmap
+ 		/// strike.
+ 		/// </summary>
++		public BitmapSize[]? AvailableSizes
+-		public BitmapSize[] AvailableSizes
+ 		{
+ 			get
+ 			{
+@@ -354,7 +350,7 @@
+ 		/// <summary>
+ 		/// Gets an array of the charmaps of the face.
+ 		/// </summary>
++		public CharMap[]? CharMaps
+-		public CharMap[] CharMaps
+ 		{
+ 			get
+ 			{
+@@ -581,7 +577,7 @@
+ 		/// <summary>
+ 		/// Gets the current active charmap for this face.
+ 		/// </summary>
++		public CharMap? CharMap
+-		public CharMap CharMap
+ 		{
+ 			get
+ 			{
+@@ -749,7 +745,7 @@
+ 		/// This is a replacement for FT_Generic in FreeType. If you are retrieving the same object multiple times
+ 		/// from functions, this object will not appear in new copies.
+ 		/// </remarks>
++		public object? Tag { get; set; }
+-		public object Tag { get; set; }
+ 
+ 		internal override IntPtr Reference
+ 		{
+@@ -1157,7 +1153,7 @@
+ 		/// <param name="bufferSize">The maximal number of bytes available in the buffer.</param>
+ 		/// <returns>The ASCII name of a given glyph in a face.</returns>
+ 		[CLSCompliant(false)]
++		public string? GetGlyphName(uint glyphIndex, int bufferSize)
+-		public string GetGlyphName(uint glyphIndex, int bufferSize)
+ 		{
+ 			if (disposed)
+ 				throw new ObjectDisposedException("face", "Cannot access a disposed object.");
+@@ -1186,7 +1182,7 @@
+ 		/// <param name="buffer">The target buffer where the name is copied to.</param>
+ 		/// <returns>The ASCII name of a given glyph in a face.</returns>
+ 		[CLSCompliant(false)]
++		public unsafe string? GetGlyphName(uint glyphIndex, byte[] buffer)
+-		public unsafe string GetGlyphName(uint glyphIndex, byte[] buffer)
+ 		{
+ 			if (disposed)
+ 				throw new ObjectDisposedException("face", "Cannot access a disposed object.");
+@@ -1211,7 +1207,7 @@
+ 		/// The returned pointer is owned by the face and is destroyed with it.
+ 		/// </remarks>
+ 		/// <returns>A pointer to the face's Postscript name. NULL if unavailable.</returns>
++		public string? GetPostscriptName()
+-		public string GetPostscriptName()
+ 		{
+ 			if (disposed)
+ 				throw new ObjectDisposedException("face", "Cannot access a disposed object.");
+@@ -1651,7 +1647,7 @@
+ 		/// </para><para>
+ 		/// Use a typecast according to ‘tag’ to access the structure elements.
+ 		/// </para></returns>
++		public object? GetSfntTable(SfntTag tag)
+-		public object GetSfntTable(SfntTag tag)
+ 		{
+ 			IntPtr tableRef = FT.FT_Get_Sfnt_Table(Reference, tag);
+ 
+@@ -2134,7 +2130,7 @@
+ 		/// ‘PFR’, and ‘Windows FNT’.
+ 		/// </summary>
+ 		/// <returns>Font format string. NULL in case of error.</returns>
++		public string? GetX11FontFormat()
+-		public string GetX11FontFormat()
+ 		{
+ 			return Marshal.PtrToStringAnsi(FT.FT_Get_X11_Font_Format(Reference));
+ 		}
+@@ -2392,8 +2388,7 @@
+ 				// removes itself from the parent Library, with a check to prevent this from happening when Library is
+ 				// being disposed (Library disposes all it's children with a foreach loop, this causes an
+ 				// InvalidOperationException for modifying a collection during enumeration)
++				UnregisterFaceOwner(); // ArmAgedon seam
+-				if (!parentLibrary.IsDisposed)
+-					parentLibrary.RemoveChildFace(this);
+ 
+ 				base.Reference = IntPtr.Zero;
+ 				rec = new FaceRec();
+@@ -2401,7 +2396,7 @@
+ 				if (memoryFaceHandle.IsAllocated)
+ 					memoryFaceHandle.Free();
+ 
++				EventHandler? handler = Disposed;
+-				EventHandler handler = Disposed;
+ 				if (handler != null)
+ 					handler(this, EventArgs.Empty);
+ 			}

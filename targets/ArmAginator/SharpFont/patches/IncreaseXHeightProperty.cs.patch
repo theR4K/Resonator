@@ -1,0 +1,30 @@
+--- a/IncreaseXHeightProperty.cs
++++ b/IncreaseXHeightProperty.cs
+@@ -34,7 +34,7 @@
+ 	public class IncreaseXHeightProperty
+ 	{
+ 		private IncreaseXHeightPropertyRec rec;
++		private Face? face;
+-		private Face face;
+ 
+ 		/// <summary>
+ 		/// Initializes a new instance of the <see cref="IncreaseXHeightProperty"/> class.
+@@ -46,7 +46,7 @@
+ 			this.face = face;
+ 		}
+ 
++		internal IncreaseXHeightProperty(IncreaseXHeightPropertyRec rec, Face? face)
+-		internal IncreaseXHeightProperty(IncreaseXHeightPropertyRec rec, Face face)
+ 		{
+ 			this.rec = rec;
+ 			this.face = face;
+@@ -55,7 +55,8 @@
+ 		/// <summary>
+ 		/// Gets or sets the associated face.
+ 		/// </summary>
++		[System.Diagnostics.CodeAnalysis.DisallowNull]
++		public Face? Face
+-		public Face Face
+ 		{
+ 			get
+ 			{

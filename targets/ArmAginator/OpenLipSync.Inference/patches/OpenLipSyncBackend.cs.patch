@@ -9,7 +9,19 @@
  {
      private readonly object _lock = new();
      private readonly ConcurrentDictionary<uint, AudioContext> _contexts = new();
-@@ -398,6 +398,7 @@
+@@ -91,10 +91,7 @@
+     {
+         if (!_initialized) return Result.Unknown;
+ 
++        if (!EnsureAudioConfiguration()) return Result.CannotCreateContext; // ArmAgedon seam
+-        if (_audioConfig == null)
+-        {
+-            if (!LoadModel(null)) return Result.CannotCreateContext;
+-        }
+ 
+         try
+         {
+@@ -398,6 +395,7 @@
      private void RunInferenceInto(float[] melFeatures, float[] destination)
      {
          if (_onnxSession == null || _audioConfig == null) { Array.Clear(destination); return; }
@@ -17,7 +29,7 @@
  
          try
          {
-@@ -449,6 +450,7 @@
+@@ -449,6 +447,7 @@
                  }
              }
              if (numVisemes < destination.Length) Array.Clear(destination, numVisemes, destination.Length - numVisemes);

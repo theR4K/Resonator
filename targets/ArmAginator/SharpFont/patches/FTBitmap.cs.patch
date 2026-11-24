@@ -1,0 +1,45 @@
+--- a/FTBitmap.cs
++++ b/FTBitmap.cs
+@@ -37,14 +37,14 @@
+ 	/// For now, the only pixel modes supported by FreeType are mono and grays. However, drivers might be added in the
+ 	/// future to support more ‘colorful’ options.
+ 	/// </remarks>
++	public sealed partial class FTBitmap : IDisposable // ArmAgedon seam: owned bitmap release in Injected/
+-	public sealed class FTBitmap : IDisposable
+ 	{
+ 		#region Fields
+ 
+ 		private IntPtr reference;
+ 		private BitmapRec rec;
+ 
++		private Library? library;
+-		private Library library;
+ 
+ 		private bool disposed;
+ 
+@@ -69,13 +69,13 @@
+ 			this.user = true;
+ 		}
+ 
++		internal FTBitmap(IntPtr reference, Library? library)
+-		internal FTBitmap(IntPtr reference, Library library)
+ 		{
+ 			Reference = reference;
+ 			this.library = library;
+ 		}
+ 
++		internal FTBitmap(IntPtr reference, BitmapRec bmpInt, Library? library)
+-		internal FTBitmap(IntPtr reference, BitmapRec bmpInt, Library library)
+ 		{
+ 			this.reference = reference;
+ 			this.rec = bmpInt;
+@@ -384,8 +384,7 @@
+ 
+ 				if (user)
+ 				{
++					ReleaseOwnedBitmap(); // ArmAgedon seam
+-					FT.FT_Bitmap_Done(library.Reference, reference);
+-					Marshal.FreeHGlobal(reference);
+ 				}
+ 
+ 				reference = IntPtr.Zero;

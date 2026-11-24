@@ -1,0 +1,11 @@
+--- a/Fixed16Dot16.cs
++++ b/Fixed16Dot16.cs
+@@ -735,7 +735,7 @@
+ 		/// </summary>
+ 		/// <param name="obj">The object to compare with the current object.</param>
+ 		/// <returns>A value indicating equality between the two objects.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			if (obj is Fixed16Dot16)
+ 				return this.Equals((Fixed16Dot16)obj);

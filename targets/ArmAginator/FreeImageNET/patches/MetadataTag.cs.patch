@@ -1,0 +1,145 @@
+--- a/Classes/MetadataTag.cs
++++ b/Classes/MetadataTag.cs
+@@ -211,14 +211,14 @@
+ 		/// <returns>
+ 		/// <b>true</b> if the value of left is the same as the value of right; otherwise, <b>false</b>.
+ 		/// </returns>
++		public static bool operator ==(MetadataTag? left, MetadataTag? right)
+-		public static bool operator ==(MetadataTag left, MetadataTag right)
+ 		{
+ 			// Check whether both are null
++			if ((object?)left == (object?)right)
+-			if ((object)left == (object)right)
+ 			{
+ 				return true;
+ 			}
++			else if ((object?)left == null || (object?)right == null)
+-			else if ((object)left == null || (object)right == null)
+ 			{
+ 				return false;
+ 			}
+@@ -252,7 +252,7 @@
+ 		/// <returns>
+ 		/// true if the value of left is different from the value of right; otherwise, <b>false</b>.
+ 		/// </returns>
++		public static bool operator !=(MetadataTag? left, MetadataTag? right)
+-		public static bool operator !=(MetadataTag left, MetadataTag right)
+ 		{
+ 			return !(left == right);
+ 		}
+@@ -310,7 +310,7 @@
+ 		/// <summary>
+ 		/// Gets or sets the key of the metadata.
+ 		/// </summary>
++		public string? Key
+-		public string Key
+ 		{
+ 			get { CheckDisposed(); return FreeImage.GetTagKey(tag); }
+ 			set
+@@ -326,7 +326,7 @@
+ 		/// <summary>
+ 		/// Gets or sets the description of the metadata.
+ 		/// </summary>
++		public string? Description
+-		public string Description
+ 		{
+ 			get { CheckDisposed(); return FreeImage.GetTagDescription(tag); }
+ 			set { CheckDisposed(); FreeImage.SetTagDescription(tag, value); }
+@@ -383,7 +383,8 @@
+ 		/// <summary>
+ 		/// Gets or sets the value of the metadata.
+ 		/// </summary>
++		[System.Diagnostics.CodeAnalysis.DisallowNull]
++		public object? Value
+-		public object Value
+ 		{
+ 			get
+ 			{
+@@ -488,11 +489,11 @@
+ 				throw new ArgumentNullException("value");
+ 			}
+ 
++			byte[]? data = null;
+-			byte[] data = null;
+ 
+ 			if (type == FREE_IMAGE_MDTYPE.FIDT_ASCII)
+ 			{
++				string? tempValue = value as string;
+-				string tempValue = value as string;
+ 				if (tempValue == null)
+ 				{
+ 					throw new ArgumentException("value");
+@@ -512,14 +513,14 @@
+ 			}
+ 			else
+ 			{
++				Array? array = value as Array;
+-				Array array = value as Array;
+ 				if (array == null)
+ 				{
+ 					throw new ArgumentException("value");
+ 				}
+ 
+ 				if (array.Length != 0)
++					if (!CheckType(FreeImageNullable.Argument(array.GetValue(0), nameof(value)).GetType(), type)) // ArmAgedon seam
+-					if (!CheckType(array.GetValue(0).GetType(), type))
+ 						throw new ArgumentException("The type of value is incorrect.");
+ 
+ 				Type = type;
+@@ -613,7 +614,7 @@
+ 		/// <returns>The .NET PropertyItem.</returns>
+ 		public unsafe System.Drawing.Imaging.PropertyItem GetPropertyItem()
+ 		{
++			System.Drawing.Imaging.PropertyItem? item = FreeImage.CreatePropertyItem();
+-			System.Drawing.Imaging.PropertyItem item = FreeImage.CreatePropertyItem();
+ 			item.Id = ID;
+ 			item.Len = (int)Length;
+ 			item.Type = (short)Type;
+@@ -629,7 +630,7 @@
+ 		public override string ToString()
+ 		{
+ 			CheckDisposed();
++			string? fiString = FreeImage.TagToString(model, tag, 0);
+-			string fiString = FreeImage.TagToString(model, tag, 0);
+ 
+ 			if (String.IsNullOrEmpty(fiString))
+ 			{
+@@ -662,7 +663,7 @@
+ 		/// <param name="obj">The object to test.</param>
+ 		/// <returns><b>true</b> if <paramref name="obj"/> is a <see cref="MetadataTag"/> instance
+ 		/// equivalent to this <see cref="MetadataTag"/> instance; otherwise, <b>false</b>.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			return ((obj is MetadataTag) && (Equals((MetadataTag)obj)));
+ 		}
+@@ -673,7 +674,7 @@
+ 		/// <param name="other">A <see cref="MetadataTag"/> instance to compare to this instance.</param>
+ 		/// <returns><b>true</b> if <paramref name="obj"/> equivalent to this <see cref="MetadataTag"/> instance;
+ 		/// otherwise, <b>false</b>.</returns>
++		public bool Equals(MetadataTag? other)
+-		public bool Equals(MetadataTag other)
+ 		{
+ 			return (this == other);
+ 		}
+@@ -693,7 +694,7 @@
+ 		/// <param name="obj">An object to compare with this instance.</param>
+ 		/// <returns>A 32-bit signed integer indicating the lexical relationship between the two comparands.</returns>
+ 		/// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="MetadataTag"/>.</exception>
++		public int CompareTo(object? obj)
+-		public int CompareTo(object obj)
+ 		{
+ 			if (obj == null)
+ 			{
+@@ -711,9 +712,10 @@
+ 		/// </summary>
+ 		/// <param name="other">An object to compare with this instance.</param>
+ 		/// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
++		public int CompareTo(MetadataTag? other)
+-		public int CompareTo(MetadataTag other)
+ 		{
+ 			CheckDisposed();
++			if (FreeImageNullable.IsAbsent(other)) return 1; // ArmAgedon seam
+ 			other.CheckDisposed();
+ 			return tag.CompareTo(other.tag);
+ 		}

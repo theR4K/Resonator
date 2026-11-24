@@ -1,0 +1,285 @@
+--- a/Classes/MetadataModel.cs
++++ b/Classes/MetadataModel.cs
+@@ -160,13 +160,13 @@
+ 		/// <returns>The metadata tag.</returns>
+ 		/// <exception cref="ArgumentNullException">
+ 		/// <paramref name="key"/> is null.</exception>
++		public MetadataTag? GetTag(string key)
+-		public MetadataTag GetTag(string key)
+ 		{
+ 			if (key == null)
+ 			{
+ 				throw new ArgumentNullException("key");
+ 			}
++			MetadataTag? tag;
+-			MetadataTag tag;
+ 			return FreeImage.GetMetadata(Model, dib, key, out tag) ? tag : null;
+ 		}
+ 
+@@ -183,7 +183,7 @@
+ 			{
+ 				throw new ArgumentNullException("key");
+ 			}
++			MetadataTag? tag;
+-			MetadataTag tag;
+ 			return FreeImage.GetMetadata(Model, dib, key, out tag);
+ 		}
+ 
+@@ -195,13 +195,13 @@
+ 			get
+ 			{
+ 				List<MetadataTag> list = new List<MetadataTag>((int)FreeImage.GetMetadataCount(Model, dib));
++				MetadataTag? tag;
+-				MetadataTag tag;
+ 				FIMETADATA mdHandle = FreeImage.FindFirstMetadata(Model, dib, out tag);
+ 				if (!mdHandle.IsNull)
+ 				{
+ 					do
+ 					{
++						list.Add(FreeImageNullable.Native(tag, "The metadata search returned no tag.")); // ArmAgedon seam
+-						list.Add(tag);
+ 					}
+ 					while (FreeImage.FindNextMetadata(mdHandle, out tag));
+ 					FreeImage.FindCloseMetadata(mdHandle);
+@@ -215,13 +215,13 @@
+ 		/// </summary>
+ 		/// <param name="index">Index of the tag to return.</param>
+ 		/// <returns>The tag at the given index.</returns>
++		protected MetadataTag? GetTagFromIndex(int index)
+-		protected MetadataTag GetTagFromIndex(int index)
+ 		{
+ 			if (index >= Count || index < 0)
+ 			{
+ 				throw new ArgumentOutOfRangeException("index");
+ 			}
++			MetadataTag? tag;
+-			MetadataTag tag;
+ 			int count = 0;
+ 			FIMETADATA mdHandle = FreeImage.FindFirstMetadata(Model, dib, out tag);
+ 			if (!mdHandle.IsNull)
+@@ -253,7 +253,7 @@
+ 		/// <exception cref="ArgumentOutOfRangeException">
+ 		/// <paramref name="index"/> is greater or equal <b>Count</b>
+ 		/// or index is less than zero.</exception>
++		public MetadataTag? this[int index]
+-		public MetadataTag this[int index]
+ 		{
+ 			get
+ 			{
+@@ -315,12 +315,12 @@
+ 			List<MetadataTag> list = List;
+ 			foreach (MetadataTag tag in list)
+ 			{
++				if (((flags & MD_SEARCH_FLAGS.KEY) > 0) && FreeImageNullable.Matches(regex, tag.Key)) // ArmAgedon seam
+-				if (((flags & MD_SEARCH_FLAGS.KEY) > 0) && regex.Match(tag.Key).Success)
+ 				{
+ 					result.Add(tag);
+ 					continue;
+ 				}
++				if (((flags & MD_SEARCH_FLAGS.DESCRIPTION) > 0) && FreeImageNullable.Matches(regex, tag.Description)) // ArmAgedon seam
+-				if (((flags & MD_SEARCH_FLAGS.DESCRIPTION) > 0) && regex.Match(tag.Description).Success)
+ 				{
+ 					result.Add(tag);
+ 					continue;
+@@ -347,10 +347,10 @@
+ 			{
+ 				throw new ArgumentNullException("key");
+ 			}
++			MetadataTag? tag = GetTag(key);
+-			MetadataTag tag = GetTag(key);
+ 			if (tag != null)
+ 			{
++				T[]? value = tag.Value as T[];
+-				T[] value = tag.Value as T[];
+ 				if ((value != null) && (value.Length != 0))
+ 				{
+ 					return value[0];
+@@ -365,13 +365,13 @@
+ 		/// <typeparam name="T">The type of the tag's data.</typeparam>
+ 		/// <param name="key">The key of the tag.</param>
+ 		/// <returns>An array containing the data of the specified tag.</returns>
++		protected T[]? GetTagArray<T>(string key) where T : struct
+-		protected T[] GetTagArray<T>(string key) where T : struct
+ 		{
+ 			if (string.IsNullOrEmpty(key))
+ 			{
+ 				throw new ArgumentNullException("key");
+ 			}
++			MetadataTag? tag = GetTag(key);
+-			MetadataTag tag = GetTag(key);
+ 			return (tag == null) ? null : tag.Value as T[];
+ 		}
+ 
+@@ -380,13 +380,13 @@
+ 		/// </summary>
+ 		/// <param name="key">The key of the tag.</param>
+ 		/// <returns>The string contained by the specified tag.</returns>
++		protected string? GetTagText(string key)
+-		protected string GetTagText(string key)
+ 		{
+ 			if (string.IsNullOrEmpty(key))
+ 			{
+ 				throw new ArgumentNullException("key");
+ 			}
++			MetadataTag? tag = GetTag(key);
+-			MetadataTag tag = GetTag(key);
+ 			return (tag == null) ? null : tag.Value as string;
+ 		}
+ 
+@@ -397,17 +397,17 @@
+ 		/// <param name="key">The key of the tag.</param>
+ 		/// <returns>An array containg the data of the specified tag
+ 		/// as unsigned 32bit integer.</returns>
++		protected uint[]? GetUInt32Array(string key)
+-		protected uint[] GetUInt32Array(string key)
+ 		{
+ 			if (string.IsNullOrEmpty(key))
+ 			{
+ 				throw new ArgumentNullException("key");
+ 			}
++			uint[]? result = null;
++			MetadataTag? tag = GetTag(key);
+-			uint[] result = null;
+-			MetadataTag tag = GetTag(key);
+ 			if (tag != null)
+ 			{
++				object? value = tag.Value;
+-				object value = tag.Value;
+ 				if (value != null)
+ 				{
+ 					if (value is ushort[])
+@@ -435,7 +435,7 @@
+ 		/// <returns>The value of the tag as unsigned 32bit integer.</returns>
+ 		protected uint? GetUInt32Value(string key)
+ 		{
++			uint[]? value = GetUInt32Array(key);
+-			uint[] value = GetUInt32Array(key);
+ 			return value == null ? default(uint?) : value[0];
+ 		}	
+ 
+@@ -455,7 +455,7 @@
+ 		/// </summary>
+ 		/// <param name="key">The key of the tag.</param>
+ 		/// <param name="value">The new value of the specified tag or null.</param>
++		protected void SetTagValue(string key, object? value)
+-		protected void SetTagValue(string key, object value)
+ 		{
+ 			if (string.IsNullOrEmpty(key))
+ 			{
+@@ -467,7 +467,7 @@
+ 			}
+ 			else
+ 			{
++				MetadataTag? tag = GetTag(key);
+-				MetadataTag tag = GetTag(key);
+ 				if (tag == null)
+ 				{
+ 					tag = new MetadataTag(Model);
+@@ -487,7 +487,7 @@
+ 		/// </summary>
+ 		/// <param name="key">The key of the tag.</param>
+ 		/// <param name="value">The new value of the specified tag or null.</param>
++		protected void SetTagValueUndefined(string key, byte[]? value)
+-		protected void SetTagValueUndefined(string key, byte[] value)
+ 		{
+ 			if (string.IsNullOrEmpty(key))
+ 			{
+@@ -499,7 +499,7 @@
+ 			}
+ 			else
+ 			{
++				MetadataTag? tag = GetTag(key);
+-				MetadataTag tag = GetTag(key);
+ 				if (tag == null)
+ 				{
+ 					tag = new MetadataTag(Model);
+@@ -521,7 +521,7 @@
+ 		/// <param name="s">The string containing the <see cref="DirectionReference"/>.</param>
+ 		/// <returns>The equivalent <see cref="DirectionReference"/> for the
+ 		/// specified <see cref="String"/>.</returns>
++		protected static DirectionReference? ToDirectionType(string? s)
+-		protected static DirectionReference? ToDirectionType(string s)
+ 		{
+ 			if (string.IsNullOrEmpty(s))
+ 				return null;
+@@ -543,7 +543,7 @@
+ 		/// <param name="type">The <see cref="DirectionReference"/> to convert.</param>
+ 		/// <returns>The equivalent <see cref="String"/> for the
+ 		/// specified <see cref="DirectionReference"/>.</returns>
++		protected static string? ToString(DirectionReference? type)
+-		protected static string ToString(DirectionReference? type)
+ 		{
+ 			if (type.HasValue)
+ 			{
+@@ -567,7 +567,7 @@
+ 		/// <param name="s">The string containing the <see cref="VelocityUnit"/>.</param>
+ 		/// <returns>The equivalent <see cref="VelocityUnit"/> for the
+ 		/// specified <see cref="String"/>.</returns>
++		protected static VelocityUnit? ToUnitType(string? s)
+-		protected static VelocityUnit? ToUnitType(string s)
+ 		{
+ 			if (string.IsNullOrEmpty(s))
+ 				return null;
+@@ -591,7 +591,7 @@
+ 		/// <param name="type">The <see cref="VelocityUnit"/> to convert.</param>
+ 		/// <returns>The equivalent <see cref="String"/> for the
+ 		/// specified <see cref="VelocityUnit"/>.</returns>
++		protected static string? ToString(VelocityUnit? type)
+-		protected static string ToString(VelocityUnit? type)
+ 		{
+ 			if (type.HasValue)
+ 			{
+@@ -617,7 +617,7 @@
+ 		/// <param name="s">The string containing the <see cref="LongitudeType"/>.</param>
+ 		/// <returns>The equivalent <see cref="LongitudeType"/> for the
+ 		/// specified <see cref="String"/>.</returns>
++		protected static LongitudeType? ToLongitudeType(string? s)
+-		protected static LongitudeType? ToLongitudeType(string s)
+ 		{
+ 			if (string.IsNullOrEmpty(s))
+ 				return null;
+@@ -639,7 +639,7 @@
+ 		/// <param name="type">The <see cref="LongitudeType"/> to convert.</param>
+ 		/// <returns>The equivalent <see cref="String"/> for the
+ 		/// specified <see cref="LongitudeType"/>.</returns>
++		protected static string? ToString(LongitudeType? type)
+-		protected static string ToString(LongitudeType? type)
+ 		{
+ 			if (type.HasValue)
+ 			{
+@@ -663,7 +663,7 @@
+ 		/// <param name="s">The string containing the <see cref="LatitudeType"/>.</param>
+ 		/// <returns>The equivalent <see cref="LatitudeType"/> for the
+ 		/// specified <see cref="String"/>.</returns>
++		protected static LatitudeType? ToLatitudeType(string? s)
+-		protected static LatitudeType? ToLatitudeType(string s)
+ 		{
+ 			if (string.IsNullOrEmpty(s))
+ 				return null;
+@@ -685,7 +685,7 @@
+ 		/// <param name="type">The <see cref="LatitudeType"/> to convert.</param>
+ 		/// <returns>The equivalent <see cref="String"/> for the
+ 		/// specified <see cref="LatitudeType"/>.</returns>
++		protected static string? ToString(LatitudeType? type)
+-		protected static string ToString(LatitudeType? type)
+ 		{
+ 			if (type.HasValue)
+ 			{
+@@ -709,7 +709,7 @@
+ 		/// <param name="s">The string containing the <see cref="InteroperabilityMode"/>.</param>
+ 		/// <returns>The equivalent <see cref="InteroperabilityMode"/> for the
+ 		/// specified <see cref="String"/>.</returns>
++		protected static InteroperabilityMode? ToInteroperabilityType(string? s)
+-		protected static InteroperabilityMode? ToInteroperabilityType(string s)
+ 		{
+ 			if (string.IsNullOrEmpty(s))
+ 				return null;
+@@ -727,7 +727,7 @@
+ 		/// <param name="type">The <see cref="InteroperabilityMode"/> to convert.</param>
+ 		/// <returns>The equivalent <see cref="String"/> for the
+ 		/// specified <see cref="InteroperabilityMode"/>.</returns>
++		protected static string? ToString(InteroperabilityMode? type)
+-		protected static string ToString(InteroperabilityMode? type)
+ 		{
+ 			if (type.HasValue)
+ 			{

@@ -1,0 +1,38 @@
+--- a/Structs/RGBQUAD.cs
++++ b/Structs/RGBQUAD.cs
+@@ -235,7 +235,7 @@
+ 		/// </summary>
+ 		/// <param name="array">The array to convert.</param>
+ 		/// <returns>An array of <see cref="RGBQUAD"/>.</returns>
++		public static RGBQUAD[]? ToRGBQUAD(Color[] array)
+-		public static RGBQUAD[] ToRGBQUAD(Color[] array)
+ 		{
+ 			if (array == null)
+ 				return null;
+@@ -254,7 +254,7 @@
+ 		/// </summary>
+ 		/// <param name="array">The array to convert.</param>
+ 		/// <returns>An array of <see cref="RGBQUAD"/>.</returns>
++		public static Color[]? ToColor(RGBQUAD[] array)
+-		public static Color[] ToColor(RGBQUAD[] array)
+ 		{
+ 			if (array == null)
+ 				return null;
+@@ -273,7 +273,7 @@
+ 		/// <param name="obj">An object to compare with this instance.</param>
+ 		/// <returns>A 32-bit signed integer indicating the lexical relationship between the two comparands.</returns>
+ 		/// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="RGBQUAD"/>.</exception>
++		public int CompareTo(object? obj)
+-		public int CompareTo(object obj)
+ 		{
+ 			if (obj == null)
+ 			{
+@@ -304,7 +304,7 @@
+ 		/// <param name="obj">The object to test.</param>
+ 		/// <returns><b>true</b> if <paramref name="obj"/> is a <see cref="RGBQUAD"/> structure
+ 		/// equivalent to this <see cref="RGBQUAD"/> structure; otherwise, <b>false</b>.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			return ((obj is RGBQUAD) && (this == ((RGBQUAD)obj)));
+ 		}

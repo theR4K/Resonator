@@ -1,0 +1,291 @@
+--- a/FreeImageWrapper.cs
++++ b/FreeImageWrapper.cs
+@@ -69,7 +69,7 @@
+ 		/// <summary>
+ 		/// Version of the wrapper library.
+ 		/// </summary>
++		private static Version? WrapperVersion;
+-		private static Version WrapperVersion;
+ 
+ 		private const int DIB_RGB_COLORS = 0;
+ 		private const int DIB_PAL_COLORS = 1;
+@@ -123,11 +123,11 @@
+ 			{
+ 				try
+ 				{
++					object[] attributes = typeof(FreeImage).Assembly
+-					object[] attributes = Assembly.GetAssembly(typeof(FreeImage))
+ 					.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false);
+ 					if ((attributes != null) && (attributes.Length != 0))
+ 					{
++						AssemblyFileVersionAttribute? attribute =
+-						AssemblyFileVersionAttribute attribute =
+ 						attributes[0] as AssemblyFileVersionAttribute;
+ 						if ((attribute != null) && (attribute.Version != null))
+ 						{
+@@ -152,7 +152,7 @@
+ 		/// <returns>The version of the native FreeImage library.</returns>
+ 		public static Version GetNativeVersion()
+ 		{
++			return new Version(FreeImageNullable.Native(GetVersion(), "FreeImage returned no version.")); // ArmAgedon seam
+-			return new Version(GetVersion());
+ 		}
+ 
+ 		/// <summary>
+@@ -175,7 +175,7 @@
+ 			try
+ 			{
+ 				// Call a static fast executing function
++				Version nativeVersion = new Version(FreeImageNullable.Native(GetVersion(), "FreeImage returned no version.")); // ArmAgedon seam
+-				Version nativeVersion = new Version(GetVersion());
+ 				Version wrapperVersion = GetWrapperVersion();
+ 				// No exception thrown, the library seems to be present
+ 				return
+@@ -659,7 +659,7 @@
+ 						if (mData.IsNull) continue;
+ 						do
+ 						{
++							PropertyItem? propItem = CreatePropertyItem();
+-							PropertyItem propItem = CreatePropertyItem();
+ 							propItem.Len = (int)GetTagLength(tag);
+ 							propItem.Id = (int)GetTagID(tag);
+ 							propItem.Type = (short)GetTagType(tag);
+@@ -1337,7 +1337,7 @@
+ 					// Check valid filename and correct it if needed
+ 					if (!IsFilenameValidForFIF(format, filename))
+ 					{
++						string? extension = GetPrimaryExtensionFromFIF(format);
+-						string extension = GetPrimaryExtensionFromFIF(format);
+ 						filename = Path.ChangeExtension(filename, extension);
+ 					}
+ 
+@@ -1723,7 +1723,7 @@
+ 			}
+ 			bool result = false;
+ 			// Split up the string and compare each with the given extension
++			string? tempList = GetFIFExtensionList(fif);
+-			string tempList = GetFIFExtensionList(fif);
+ 			if (tempList != null)
+ 			{
+ 				string[] extensionList = tempList.Split(',');
+@@ -1785,10 +1785,10 @@
+ 		/// That assumes, that the plugin returns the extensions in ordered form.</summary>
+ 		/// <param name="fif">The image format to obtain the primary extension for.</param>
+ 		/// <returns>The primary extension of the specified image format.</returns>
++		public static string? GetPrimaryExtensionFromFIF(FREE_IMAGE_FORMAT fif)
+-		public static string GetPrimaryExtensionFromFIF(FREE_IMAGE_FORMAT fif)
+ 		{
++			string? result = null;
++			string? extensions = GetFIFExtensionList(fif);
+-			string result = null;
+-			string extensions = GetFIFExtensionList(fif);
+ 			if (extensions != null)
+ 			{
+ 				int position = extensions.IndexOf(',');
+@@ -2035,8 +2035,7 @@
+ 				if (!mdib.IsNull)
+ 					CloseMultiBitmap(mdib, FREE_IMAGE_SAVE_FLAGS.DEFAULT);
+ 
++				handle.Dispose();
+-				if (handle != null)
+-					handle.Dispose();
+ 
+ 				throw;
+ 			}
+@@ -2125,7 +2124,7 @@
+ 		/// <returns>List containing the indexes of the locked pages.</returns>
+ 		/// <exception cref="ArgumentNullException">
+ 		/// <paramref name="dib"/> is null.</exception>
++		public static int[]? GetLockedPages(FIMULTIBITMAP dib)
+-		public static int[] GetLockedPages(FIMULTIBITMAP dib)
+ 		{
+ 			if (dib.IsNull)
+ 			{
+@@ -2133,7 +2132,7 @@
+ 			}
+ 			// Get the number of pages and create an array to save the information
+ 			int count = 0;
++			int[]? result = null;
+-			int[] result = null;
+ 			// Get count
+ 			if (GetLockedPageNumbers(dib, result, ref count))
+ 			{
+@@ -3063,7 +3062,7 @@
+ 
+ 		private static bool CompareMetadata(FIBITMAP dib1, FIBITMAP dib2)
+ 		{
++			MetadataTag? tag1, tag2;
+-			MetadataTag tag1, tag2;
+ 
+ 			foreach (FREE_IMAGE_MDMODEL metadataModel in FREE_IMAGE_MDMODELS)
+ 			{
+@@ -3084,7 +3083,7 @@
+ 				}
+ 				do
+ 				{
++					if ((!GetMetadata(metadataModel, dib2, FreeImageNullable.Native(FreeImageNullable.Native(tag1, "The metadata search returned no tag.").Key, "The metadata tag has no key."), out tag2)) || (tag1 != tag2)) // ArmAgedon seam
+-					if ((!GetMetadata(metadataModel, dib2, tag1.Key, out tag2)) || (tag1 != tag2))
+ 					{
+ 						FindCloseMetadata(mdHandle);
+ 						return false;
+@@ -3176,7 +3175,7 @@
+ 					case 1:
+ 
+ 						result = 1;
++						lut = FreeImageNullable.Native(CreateShrunkenPaletteLUT(dib, out uniquePalEnts), "The bitmap has no indexed palette."); // ArmAgedon seam
+-						lut = CreateShrunkenPaletteLUT(dib, out uniquePalEnts);
+ 						if (uniquePalEnts == 1)
+ 						{
+ 							break;
+@@ -3219,7 +3218,7 @@
+ 					case 4:
+ 
+ 						bitArray = new BitArray(0x10);
++						lut = FreeImageNullable.Native(CreateShrunkenPaletteLUT(dib, out uniquePalEnts), "The bitmap has no indexed palette."); // ArmAgedon seam
+-						lut = CreateShrunkenPaletteLUT(dib, out uniquePalEnts);
+ 						if (uniquePalEnts == 1)
+ 						{
+ 							result = 1;
+@@ -3253,7 +3252,7 @@
+ 					case 8:
+ 
+ 						bitArray = new BitArray(0x100);
++						lut = FreeImageNullable.Native(CreateShrunkenPaletteLUT(dib, out uniquePalEnts), "The bitmap has no indexed palette."); // ArmAgedon seam
+-						lut = CreateShrunkenPaletteLUT(dib, out uniquePalEnts);
+ 						if (uniquePalEnts == 1)
+ 						{
+ 							result = 1;
+@@ -3861,7 +3860,7 @@
+ 		/// <param name="ReservePalette">The provided palette.</param>
+ 		/// <param name="bpp">The desired color depth of the created image.</param>
+ 		/// <returns>Handle to a FreeImage bitmap.</returns>
++		public static FIBITMAP ColorQuantizeEx(FIBITMAP dib, FREE_IMAGE_QUANTIZE quantize, int PaletteSize, RGBQUAD[]? ReservePalette, int bpp)
+-		public static FIBITMAP ColorQuantizeEx(FIBITMAP dib, FREE_IMAGE_QUANTIZE quantize, int PaletteSize, RGBQUAD[] ReservePalette, int bpp)
+ 		{
+ 			unsafe
+ 			{
+@@ -3968,7 +3967,7 @@
+ 				if (mData.IsNull) continue;
+ 				do
+ 				{
++					string? key = GetTagKey(tag);
+-					string key = GetTagKey(tag);
+ 					if (!(keep && GetMetadata(model, dst, key, out tag2)))
+ 					{
+ 						if (SetMetadata(model, dst, key, tag))
+@@ -3991,9 +3990,9 @@
+ 		/// <returns>Comment of the FreeImage bitmp, or null in case no comment exists.</returns>
+ 		/// <exception cref="ArgumentNullException">
+ 		/// <paramref name="dib"/> is null.</exception>
++		public static string? GetImageComment(FIBITMAP dib)
+-		public static string GetImageComment(FIBITMAP dib)
+ 		{
++			string? result = null;
+-			string result = null;
+ 			if (dib.IsNull)
+ 			{
+ 				throw new ArgumentNullException("dib");
+@@ -4001,7 +4000,7 @@
+ 			FITAG tag;
+ 			if (GetMetadata(FREE_IMAGE_MDMODEL.FIMD_COMMENTS, dib, "Comment", out tag))
+ 			{
++				MetadataTag? metadataTag = new MetadataTag(tag, FREE_IMAGE_MDMODEL.FIMD_COMMENTS);
+-				MetadataTag metadataTag = new MetadataTag(tag, FREE_IMAGE_MDMODEL.FIMD_COMMENTS);
+ 				result = metadataTag.Value as string;
+ 			}
+ 			return result;
+@@ -4016,7 +4015,7 @@
+ 		/// <returns>Returns true on success, false on failure.</returns>
+ 		/// <exception cref="ArgumentNullException">
+ 		/// <paramref name="dib"/> is null.</exception>
++		public static bool SetImageComment(FIBITMAP dib, string? comment)
+-		public static bool SetImageComment(FIBITMAP dib, string comment)
+ 		{
+ 			if (dib.IsNull)
+ 			{
+@@ -4052,7 +4051,7 @@
+ 			FREE_IMAGE_MDMODEL model,
+ 			FIBITMAP dib,
+ 			string key,
++			[System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out MetadataTag? tag)
+-			out MetadataTag tag)
+ 		{
+ 			if (dib.IsNull)
+ 			{
+@@ -4110,14 +4109,14 @@
+ 		public static FIMETADATA FindFirstMetadata(
+ 			FREE_IMAGE_MDMODEL model,
+ 			FIBITMAP dib,
++			out MetadataTag? tag)
+-			out MetadataTag tag)
+ 		{
+ 			if (dib.IsNull)
+ 			{
+ 				throw new ArgumentNullException("dib");
+ 			}
+ 			FITAG _tag;
++			FIMETADATA result = FreeImageNullable.FirstMetadata(model, dib, out _tag); // ArmAgedon seam
+-			FIMETADATA result = FindFirstMetadata(model, dib, out _tag);
+ 			if (result.IsNull)
+ 			{
+ 				tag = null;
+@@ -4142,7 +4141,7 @@
+ 		/// <param name="mdhandle">Unique search handle provided by FindFirstMetadata.</param>
+ 		/// <param name="tag">Tag that matches the metadata model.</param>
+ 		/// <returns>Returns true on success, false on failure.</returns>
++		public static bool FindNextMetadata(FIMETADATA mdhandle, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out MetadataTag? tag)
+-		public static bool FindNextMetadata(FIMETADATA mdhandle, out MetadataTag tag)
+ 		{
+ 			FITAG _tag;
+ 			bool result;
+@@ -4605,9 +4604,9 @@
+ 		/// </summary>
+ 		/// <param name="ptr">Pointer to the first char of the string.</param>
+ 		/// <returns>The converted string.</returns>
++		internal static unsafe string? PtrToStr(byte* ptr)
+-		internal static unsafe string PtrToStr(byte* ptr)
+ 		{
++			string? result = null;
+-			string result = null;
+ 			if (ptr != null)
+ 			{
+ 				System.Text.StringBuilder sb = new System.Text.StringBuilder();
+@@ -4621,9 +4620,9 @@
+ 			return result;
+ 		}
+ 
++		internal static unsafe byte[]? CreateShrunkenPaletteLUT(FIBITMAP dib, out int uniqueColors)
+-		internal static unsafe byte[] CreateShrunkenPaletteLUT(FIBITMAP dib, out int uniqueColors)
+ 		{
++			byte[]? result = null;
+-			byte[] result = null;
+ 			uniqueColors = 0;
+ 
+ 			if ((!dib.IsNull) && (GetImageType(dib) == FREE_IMAGE_TYPE.FIT_BITMAP) && (GetBPP(dib) <= 8))
+@@ -4659,7 +4658,7 @@
+ 
+ 		internal static PropertyItem CreatePropertyItem()
+ 		{
++			return FreeImageNullable.Native(Activator.CreateInstance(typeof(PropertyItem), true) as PropertyItem, "A metadata property could not be created."); // ArmAgedon seam
+-			return (PropertyItem)Activator.CreateInstance(typeof(PropertyItem), true);
+ 		}
+ 
+ 		private static unsafe void CopyPalette(FIBITMAP src, FIBITMAP dst)
+@@ -5125,7 +5124,7 @@
+ 			}
+ 		}
+ 
++		internal static void Resize<T>(ref T[]? array, int length)
+-		internal static void Resize<T>(ref T[] array, int length)
+ 		{
+ 			if ((array != null) && (length >= 0) && (array.Length != length))
+ 			{
+@@ -5133,7 +5132,7 @@
+ 			}
+ 		}
+ 
++		internal static void Resize<T>(ref T[]? array, int min, int max)
+-		internal static void Resize<T>(ref T[] array, int min, int max)
+ 		{
+ 			if ((array != null) && (min >= 0) && (max >= 0) && (min <= max))
+ 			{

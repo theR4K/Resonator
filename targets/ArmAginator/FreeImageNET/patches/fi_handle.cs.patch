@@ -1,0 +1,32 @@
+--- a/Structs/fi_handle.cs
++++ b/Structs/fi_handle.cs
+@@ -145,9 +145,9 @@
+ 		/// was created by managed code.
+ 		/// </summary>
+ 		/// <returns><see cref="Object"/> assigned to this handle or null on failure.</returns>
++		internal object? GetObject()
+-		internal object GetObject()
+ 		{
++			object? result = null;
+-			object result = null;
+ 			if (handle != IntPtr.Zero)
+ 			{
+ 				try
+@@ -187,7 +187,7 @@
+ 		/// <param name="obj">The object to test.</param>
+ 		/// <returns><b>true</b> if <paramref name="obj"/> is a <see cref="fi_handle"/> structure
+ 		/// equivalent to this <see cref="fi_handle"/> structure; otherwise, <b>false</b>.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			return ((obj is fi_handle) && (this == ((fi_handle)obj)));
+ 		}
+@@ -208,7 +208,7 @@
+ 		/// <param name="obj">An object to compare with this instance.</param>
+ 		/// <returns>A 32-bit signed integer indicating the lexical relationship between the two comparands.</returns>
+ 		/// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="fi_handle"/>.</exception>
++		public int CompareTo(object? obj)
+-		public int CompareTo(object obj)
+ 		{
+ 			if (obj == null)
+ 			{

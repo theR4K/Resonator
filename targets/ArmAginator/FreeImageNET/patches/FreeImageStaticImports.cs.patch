@@ -1,0 +1,188 @@
+--- a/FreeImageStaticImports.cs
++++ b/FreeImageStaticImports.cs
+@@ -197,7 +197,7 @@
+ 		/// Returns a string containing the current version of the library.
+ 		/// </summary>
+ 		/// <returns>The current version of the library.</returns>
++		public static unsafe string? GetVersion() { return PtrToStr(GetVersion_()); }
+-		public static unsafe string GetVersion() { return PtrToStr(GetVersion_()); }
+ 		[DllImport(FreeImageLibrary, CharSet = CharSet.Ansi, EntryPoint = "FreeImage_GetVersion")]
+ 		private static unsafe extern byte* GetVersion_();
+ 
+@@ -205,7 +205,7 @@
+ 		/// Returns a string containing a standard copyright message.
+ 		/// </summary>
+ 		/// <returns>A standard copyright message.</returns>
++		public static unsafe string? GetCopyrightMessage() { return PtrToStr(GetCopyrightMessage_()); }
+-		public static unsafe string GetCopyrightMessage() { return PtrToStr(GetCopyrightMessage_()); }
+ 		[DllImport(FreeImageLibrary, CharSet = CharSet.Ansi, EntryPoint = "FreeImage_GetCopyrightMessage")]
+ 		private static unsafe extern byte* GetCopyrightMessage_();
+ 
+@@ -272,12 +272,12 @@
+ 
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_AllocateEx")]
+ 		internal static extern FIBITMAP AllocateEx(int width, int height, int bpp,
++			IntPtr color, FREE_IMAGE_COLOR_OPTIONS options, RGBQUAD[]? palette,
+-			IntPtr color, FREE_IMAGE_COLOR_OPTIONS options, RGBQUAD[] palette,
+ 			uint red_mask, uint green_mask, uint blue_mask);
+ 
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_AllocateExT")]
+ 		internal static extern FIBITMAP AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp,
++			IntPtr color, FREE_IMAGE_COLOR_OPTIONS options, RGBQUAD[]? palette,
+-			IntPtr color, FREE_IMAGE_COLOR_OPTIONS options, RGBQUAD[] palette,
+ 			uint red_mask, uint green_mask, uint blue_mask);
+ 
+ 		/// <summary>
+@@ -486,7 +486,7 @@
+ 		/// <returns>The format idientifier assigned by FreeImage.</returns>
+ 		[DllImport(FreeImageLibrary, CharSet = CharSet.Ansi, EntryPoint = "FreeImage_RegisterLocalPlugin")]
+ 		public static extern FREE_IMAGE_FORMAT RegisterLocalPlugin(InitProc proc_address,
++			string? format, string? description, string? extension, string? regexpr);
+-			string format, string description, string extension, string regexpr);
+ 
+ 		/// <summary>
+ 		/// Registers a new plugin to be used in FreeImage. The plugin is residing in a DLL.
+@@ -549,7 +549,7 @@
+ 		/// </summary>
+ 		/// <param name="fif">The assigned <see cref="FREE_IMAGE_FORMAT"/>.</param>
+ 		/// <returns>The string that was used to register the plugin.</returns>
++		public static unsafe string? GetFormatFromFIF(FREE_IMAGE_FORMAT fif) { return PtrToStr(GetFormatFromFIF_(fif)); }
+-		public static unsafe string GetFormatFromFIF(FREE_IMAGE_FORMAT fif) { return PtrToStr(GetFormatFromFIF_(fif)); }
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_GetFormatFromFIF")]
+ 		private static unsafe extern byte* GetFormatFromFIF_(FREE_IMAGE_FORMAT fif);
+ 
+@@ -558,7 +558,7 @@
+ 		/// </summary>
+ 		/// <param name="fif">The desired <see cref="FREE_IMAGE_FORMAT"/>.</param>
+ 		/// <returns>A comma-delimited file extension list.</returns>
++		public static unsafe string? GetFIFExtensionList(FREE_IMAGE_FORMAT fif) { return PtrToStr(GetFIFExtensionList_(fif)); }
+-		public static unsafe string GetFIFExtensionList(FREE_IMAGE_FORMAT fif) { return PtrToStr(GetFIFExtensionList_(fif)); }
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_GetFIFExtensionList")]
+ 		private static unsafe extern byte* GetFIFExtensionList_(FREE_IMAGE_FORMAT fif);
+ 
+@@ -567,7 +567,7 @@
+ 		/// </summary>
+ 		/// <param name="fif">The desired <see cref="FREE_IMAGE_FORMAT"/>.</param>
+ 		/// <returns>A descriptive string that describes the bitmap formats.</returns>
++		public static unsafe string? GetFIFDescription(FREE_IMAGE_FORMAT fif) { return PtrToStr(GetFIFDescription_(fif)); }
+-		public static unsafe string GetFIFDescription(FREE_IMAGE_FORMAT fif) { return PtrToStr(GetFIFDescription_(fif)); }
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_GetFIFDescription")]
+ 		private static unsafe extern byte* GetFIFDescription_(FREE_IMAGE_FORMAT fif);
+ 
+@@ -577,7 +577,7 @@
+ 		/// </summary>
+ 		/// <param name="fif">The desired <see cref="FREE_IMAGE_FORMAT"/>.</param>
+ 		/// <returns>A regular expression string.</returns>
++		public static unsafe string? GetFIFRegExpr(FREE_IMAGE_FORMAT fif) { return PtrToStr(GetFIFRegExpr_(fif)); }
+-		public static unsafe string GetFIFRegExpr(FREE_IMAGE_FORMAT fif) { return PtrToStr(GetFIFRegExpr_(fif)); }
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_GetFIFRegExpr")]
+ 		private static unsafe extern byte* GetFIFRegExpr_(FREE_IMAGE_FORMAT fif);
+ 
+@@ -586,7 +586,7 @@
+ 		/// </summary>
+ 		/// <param name="fif">The desired <see cref="FREE_IMAGE_FORMAT"/>.</param>
+ 		/// <returns>A MIME content type string.</returns>
++		public static unsafe string? GetFIFMimeType(FREE_IMAGE_FORMAT fif) { return PtrToStr(GetFIFMimeType_(fif)); }
+-		public static unsafe string GetFIFMimeType(FREE_IMAGE_FORMAT fif) { return PtrToStr(GetFIFMimeType_(fif)); }
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_GetFIFMimeType")]
+ 		private static unsafe extern byte* GetFIFMimeType_(FREE_IMAGE_FORMAT fif);
+ 
+@@ -773,7 +773,7 @@
+ 		/// <param name="count">If <paramref name="pages"/> is set to null count will contain the number of locked pages.</param>
+ 		/// <returns>Returns true on success, false on failure.</returns>
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_GetLockedPageNumbers")]
++		public static extern bool GetLockedPageNumbers(FIMULTIBITMAP bitmap, int[]? pages, ref int count);
+-		public static extern bool GetLockedPageNumbers(FIMULTIBITMAP bitmap, int[] pages, ref int count);
+ 
+ 		#endregion
+ 
+@@ -1175,7 +1175,7 @@
+ 		/// </code>
+ 		/// </example>
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_SetBackgroundColor")]
++		public static unsafe extern bool SetBackgroundColor(FIBITMAP dib, RGBQUAD[]? bkcolor);
+-		public static unsafe extern bool SetBackgroundColor(FIBITMAP dib, RGBQUAD[] bkcolor);
+ 
+ 		/// <summary>
+ 		/// Sets the index of the palette entry to be used as transparent color
+@@ -1328,7 +1328,7 @@
+ 		/// <param name="ReservePalette">The provided palette.</param>
+ 		/// <returns>Handle to a FreeImage bitmap.</returns>
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_ColorQuantizeEx")]
++		public static extern FIBITMAP ColorQuantizeEx(FIBITMAP dib, FREE_IMAGE_QUANTIZE quantize, int PaletteSize, int ReserveSize, RGBQUAD[]? ReservePalette);
+-		public static extern FIBITMAP ColorQuantizeEx(FIBITMAP dib, FREE_IMAGE_QUANTIZE quantize, int PaletteSize, int ReserveSize, RGBQUAD[] ReservePalette);
+ 
+ 		/// <summary>
+ 		/// Converts a bitmap to 1-bit monochrome bitmap using a threshold T between [0..255].
+@@ -1619,7 +1619,7 @@
+ 		/// </summary>
+ 		/// <param name="tag">The tag field.</param>
+ 		/// <returns>The field name.</returns>
++		public static unsafe string? GetTagKey(FITAG tag) { return PtrToStr(GetTagKey_(tag)); }
+-		public static unsafe string GetTagKey(FITAG tag) { return PtrToStr(GetTagKey_(tag)); }
+ 		[DllImport(FreeImageLibrary, CharSet = CharSet.Ansi, EntryPoint = "FreeImage_GetTagKey")]
+ 		private static unsafe extern byte* GetTagKey_(FITAG tag);
+ 
+@@ -1628,7 +1628,7 @@
+ 		/// </summary>
+ 		/// <param name="tag">The tag field.</param>
+ 		/// <returns>The description or NULL if unavailable.</returns>
++		public static unsafe string? GetTagDescription(FITAG tag) { return PtrToStr(GetTagDescription_(tag)); }
+-		public static unsafe string GetTagDescription(FITAG tag) { return PtrToStr(GetTagDescription_(tag)); }
+ 		[DllImport(FreeImageLibrary, CharSet = CharSet.Ansi, EntryPoint = "FreeImage_GetTagDescription")]
+ 		private static unsafe extern byte* GetTagDescription_(FITAG tag);
+ 
+@@ -1681,7 +1681,7 @@
+ 		/// <param name="key">The new name.</param>
+ 		/// <returns>Returns true on success, false on failure.</returns>
+ 		[DllImport(FreeImageLibrary, CharSet = CharSet.Ansi, EntryPoint = "FreeImage_SetTagKey")]
++		public static extern bool SetTagKey(FITAG tag, string? key);
+-		public static extern bool SetTagKey(FITAG tag, string key);
+ 
+ 		/// <summary>
+ 		/// Sets the tag description.
+@@ -1690,7 +1690,7 @@
+ 		/// <param name="description">The new description.</param>
+ 		/// <returns>Returns true on success, false on failure.</returns>
+ 		[DllImport(FreeImageLibrary, CharSet = CharSet.Ansi, EntryPoint = "FreeImage_SetTagDescription")]
++		public static extern bool SetTagDescription(FITAG tag, string? description);
+-		public static extern bool SetTagDescription(FITAG tag, string description);
+ 
+ 		/// <summary>
+ 		/// Sets the tag ID.
+@@ -1782,7 +1782,7 @@
+ 		/// <param name="tag">A FITAG structure returned by the function.</param>
+ 		/// <returns>Returns true on success, false on failure.</returns>
+ 		[DllImport(FreeImageLibrary, CharSet = CharSet.Ansi, EntryPoint = "FreeImage_GetMetadata")]
++		public static extern bool GetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP dib, string? key, out FITAG tag);
+-		public static extern bool GetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP dib, string key, out FITAG tag);
+ 
+ 		/// <summary>
+ 		/// Attach a new FreeImage tag to a dib.
+@@ -1793,7 +1793,7 @@
+ 		/// <param name="tag">The FreeImage tag to be attached.</param>
+ 		/// <returns>Returns true on success, false on failure.</returns>
+ 		[DllImport(FreeImageLibrary, CharSet = CharSet.Ansi, EntryPoint = "FreeImage_SetMetadata")]
++		public static extern bool SetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP dib, string? key, FITAG tag);
+-		public static extern bool SetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP dib, string key, FITAG tag);
+ 
+ 		#endregion
+ 
+@@ -1825,7 +1825,7 @@
+ 		/// <param name="tag">The interpreted tag value.</param>
+ 		/// <param name="Make">Reserved.</param>
+ 		/// <returns>The representing string.</returns>
++		public static unsafe string? TagToString(FREE_IMAGE_MDMODEL model, FITAG tag, uint Make) { return PtrToStr(TagToString_(model, tag, Make)); }
+-		public static unsafe string TagToString(FREE_IMAGE_MDMODEL model, FITAG tag, uint Make) { return PtrToStr(TagToString_(model, tag, Make)); }
+ 		[DllImport(FreeImageLibrary, CharSet = CharSet.Ansi, EntryPoint = "FreeImage_TagToString")]
+ 		private static unsafe extern byte* TagToString_(FREE_IMAGE_MDMODEL model, FITAG tag, uint Make);
+ 
+@@ -2086,7 +2086,7 @@
+ 		/// and appBkColor is null.</param>
+ 		/// <returns>Handle to a FreeImage bitmap.</returns>
+ 		[DllImport(FreeImageLibrary, EntryPoint = "FreeImage_Composite")]
++		public static extern FIBITMAP Composite(FIBITMAP fg, bool useFileBkg, RGBQUAD[]? appBkColor, FIBITMAP bg);
+-		public static extern FIBITMAP Composite(FIBITMAP fg, bool useFileBkg, RGBQUAD[] appBkColor, FIBITMAP bg);
+ 
+ 		/// <summary>
+ 		/// Performs a lossless crop on a JPEG file.

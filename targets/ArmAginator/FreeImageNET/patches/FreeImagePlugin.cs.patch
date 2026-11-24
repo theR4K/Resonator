@@ -1,0 +1,47 @@
+--- a/Classes/FreeImagePlugin.cs
++++ b/Classes/FreeImagePlugin.cs
+@@ -49,7 +49,7 @@
+ 		/// <summary>
+ 		/// Gets a string describing the format.
+ 		/// </summary>
++		public string? Format
+-		public string Format
+ 		{
+ 			get
+ 			{
+@@ -61,7 +61,7 @@
+ 		/// Gets a comma-delimited file extension list describing the bitmap formats
+ 		/// this plugin can read and/or write.
+ 		/// </summary>
++		public string? ExtentsionList
+-		public string ExtentsionList
+ 		{
+ 			get
+ 			{
+@@ -73,7 +73,7 @@
+ 		/// Gets a descriptive string that describes the bitmap formats
+ 		/// this plugin can read and/or write.
+ 		/// </summary>
++		public string? Description
+-		public string Description
+ 		{
+ 			get
+ 			{
+@@ -86,7 +86,7 @@
+ 		/// a regular expression engine to identify the bitmap.
+ 		/// FreeImageQt makes use of this function.
+ 		/// </summary>
++		public string? RegExpr
+-		public string RegExpr
+ 		{
+ 			get
+ 			{
+@@ -194,7 +194,7 @@
+ 		/// this plugin can read and/or write.
+ 		/// </summary>
+ 		/// <returns>A descriptive string that describes the bitmap formats.</returns>
++		public override string? ToString()
+-		public override string ToString()
+ 		{
+ 			return Description;
+ 		}

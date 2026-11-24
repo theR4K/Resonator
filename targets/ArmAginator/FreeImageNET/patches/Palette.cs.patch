@@ -1,0 +1,25 @@
+--- a/Classes/Palette.cs
++++ b/Classes/Palette.cs
+@@ -18,7 +18,7 @@
+ 		private GCHandle paletteHandle;
+ 
+ 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
++		private RGBQUAD[]? array;
+-		private RGBQUAD[] array;
+ 
+ 		/// <summary>
+ 		/// Initializes a new instance for the given FreeImage bitmap.
+@@ -84,11 +84,11 @@
+ 		/// a palette.
+ 		/// </summary>
+ 		/// <param name="palette">A RGBQUAD array containing the palette data to initialize this instance.</param>
++		public Palette(RGBQUAD[]? palette)
+-		public Palette(RGBQUAD[] palette)
+ 		{
+ 			unsafe
+ 			{
++				this.array = (RGBQUAD[])FreeImageNullable.Argument(palette, nameof(palette)).Clone(); // ArmAgedon seam
+-				this.array = (RGBQUAD[])palette.Clone();
+ 				this.paletteHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+ 
+ 				base.baseAddress = (byte*)this.paletteHandle.AddrOfPinnedObject();

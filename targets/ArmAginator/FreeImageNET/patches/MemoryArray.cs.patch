@@ -1,0 +1,78 @@
+--- a/Classes/MemoryArray.cs
++++ b/Classes/MemoryArray.cs
+@@ -41,7 +41,7 @@
+ 		/// The array is used as a workaround, because there are no pointer for generic types.
+ 		/// </summary>
+ 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
++		protected T[]? buffer;
+-		protected T[] buffer;
+ 
+ 		/// <summary>
+ 		/// Pointer to the element of <b>buffer</b>.
+@@ -71,7 +71,7 @@
+ 		/// An object that can be used to synchronize access to the <see cref="MemoryArray&lt;T&gt;"/>.
+ 		/// </summary>
+ 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
++		protected object? syncRoot = null;
+-		protected object syncRoot = null;
+ 
+ 		static MemoryArray()
+ 		{
+@@ -180,7 +180,7 @@
+ 		/// <returns>
+ 		/// <b>true</b> if the two <see cref="MemoryArray&lt;T&gt;"/> structures are equal; otherwise, <b>false</b>.
+ 		/// </returns>
++		public static bool operator ==(MemoryArray<T>? left, MemoryArray<T>? right)
+-		public static bool operator ==(MemoryArray<T> left, MemoryArray<T> right)
+ 		{
+ 			if (object.ReferenceEquals(left, right))
+ 			{
+@@ -207,7 +207,7 @@
+ 		/// <returns>
+ 		/// <b>true</b> if the two <see cref="MemoryArray&lt;T&gt;"/> structures are different; otherwise, <b>false</b>.
+ 		/// </returns>
++		public static bool operator !=(MemoryArray<T>? left, MemoryArray<T>? right)
+-		public static bool operator !=(MemoryArray<T> left, MemoryArray<T> right)
+ 		{
+ 			return (!(left == right));
+ 		}
+@@ -245,7 +245,7 @@
+ 			else
+ 			{
+ 				CopyMemory(ptr, baseAddress + (index * size), size);
++				return FreeImageNullable.Native(buffer, "The memory array buffer is unavailable.")[0]; // ArmAgedon seam
+-				return buffer[0];
+ 			}
+ 		}
+ 
+@@ -294,7 +294,7 @@
+ 			}
+ 			else
+ 			{
++				FreeImageNullable.Native(buffer, "The memory array buffer is unavailable.")[0] = value; // ArmAgedon seam
+-				buffer[0] = value;
+ 				CopyMemory(baseAddress + (index * size), ptr, size);
+ 			}
+ 		}
+@@ -746,7 +746,7 @@
+ 		/// <returns><b>true</b> if <paramref name="obj"/> is a <see cref="MemoryArray&lt;T&gt;"/>
+ 		/// instance equivalent to this <see cref="MemoryArray&lt;T&gt;"/> structure; otherwise,
+ 		/// <b>false</b>.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			EnsureNotDisposed();
+ 			return ((obj is MemoryArray<T>) && Equals((MemoryArray<T>)obj));
+@@ -760,10 +760,10 @@
+ 		/// <returns><b>true</b> if <paramref name="other"/> is equivalent to this
+ 		/// <see cref="MemoryArray&lt;T&gt;"/> structure; otherwise,
+ 		/// <b>false</b>.</returns>
++		public bool Equals(MemoryArray<T>? other)
+-		public bool Equals(MemoryArray<T> other)
+ 		{
+ 			EnsureNotDisposed();
++			return !FreeImageNullable.IsAbsent(other) && ((this.baseAddress == other.baseAddress) && (this.length == other.length)); // ArmAgedon seam
+-			return ((this.baseAddress == other.baseAddress) && (this.length == other.length));
+ 		}
+ 
+ 		/// <summary>

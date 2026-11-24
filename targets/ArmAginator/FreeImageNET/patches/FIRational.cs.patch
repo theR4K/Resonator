@@ -1,0 +1,128 @@
+--- a/Structs/FIRational.cs
++++ b/Structs/FIRational.cs
+@@ -392,7 +392,7 @@
+ 		/// <param name="obj">The object to test.</param>
+ 		/// <returns><b>true</b> if <paramref name="obj"/> is a <see cref="FIRational"/> structure
+ 		/// equivalent to this <see cref="FIRational"/> structure; otherwise, <b>false</b>.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			return ((obj is FIRational) && (this == ((FIRational)obj)));
+ 		}
+@@ -850,82 +850,82 @@
+ 			return TypeCode.Double;
+ 		}
+ 
++		bool IConvertible.ToBoolean(IFormatProvider? provider)
+-		bool IConvertible.ToBoolean(IFormatProvider provider)
+ 		{
+ 			return (bool)this;
+ 		}
+ 
++		byte IConvertible.ToByte(IFormatProvider? provider)
+-		byte IConvertible.ToByte(IFormatProvider provider)
+ 		{
+ 			return (byte)this;
+ 		}
+ 
++		char IConvertible.ToChar(IFormatProvider? provider)
+-		char IConvertible.ToChar(IFormatProvider provider)
+ 		{
+ 			return (char)this;
+ 		}
+ 
++		DateTime IConvertible.ToDateTime(IFormatProvider? provider)
+-		DateTime IConvertible.ToDateTime(IFormatProvider provider)
+ 		{
+ 			return Convert.ToDateTime(((IConvertible)this).ToDouble(provider));
+ 		}
+ 
++		decimal IConvertible.ToDecimal(IFormatProvider? provider)
+-		decimal IConvertible.ToDecimal(IFormatProvider provider)
+ 		{
+ 			return this;
+ 		}
+ 
++		double IConvertible.ToDouble(IFormatProvider? provider)
+-		double IConvertible.ToDouble(IFormatProvider provider)
+ 		{
+ 			return this;
+ 		}
+ 
++		short IConvertible.ToInt16(IFormatProvider? provider)
+-		short IConvertible.ToInt16(IFormatProvider provider)
+ 		{
+ 			return (short)this;
+ 		}
+ 
++		int IConvertible.ToInt32(IFormatProvider? provider)
+-		int IConvertible.ToInt32(IFormatProvider provider)
+ 		{
+ 			return (int)this;
+ 		}
+ 
++		long IConvertible.ToInt64(IFormatProvider? provider)
+-		long IConvertible.ToInt64(IFormatProvider provider)
+ 		{
+ 			return (long)this;
+ 		}
+ 
++		sbyte IConvertible.ToSByte(IFormatProvider? provider)
+-		sbyte IConvertible.ToSByte(IFormatProvider provider)
+ 		{
+ 			return (sbyte)this;
+ 		}
+ 
++		float IConvertible.ToSingle(IFormatProvider? provider)
+-		float IConvertible.ToSingle(IFormatProvider provider)
+ 		{
+ 			return this;
+ 		}
+ 
++		string IConvertible.ToString(IFormatProvider? provider)
+-		string IConvertible.ToString(IFormatProvider provider)
+ 		{
+ 			return ToString(((double)this).ToString(), provider);
+ 		}
+ 
++		object IConvertible.ToType(Type conversionType, IFormatProvider? provider)
+-		object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+ 		{
+ 			return Convert.ChangeType(((IConvertible)this).ToDouble(provider), conversionType, provider);
+ 		}
+ 
++		ushort IConvertible.ToUInt16(IFormatProvider? provider)
+-		ushort IConvertible.ToUInt16(IFormatProvider provider)
+ 		{
+ 			return (ushort)this;
+ 		}
+ 
++		uint IConvertible.ToUInt32(IFormatProvider? provider)
+-		uint IConvertible.ToUInt32(IFormatProvider provider)
+ 		{
+ 			return (uint)this;
+ 		}
+ 
++		ulong IConvertible.ToUInt64(IFormatProvider? provider)
+-		ulong IConvertible.ToUInt64(IFormatProvider provider)
+ 		{
+ 			return (ulong)this;
+ 		}
+@@ -940,7 +940,7 @@
+ 		/// <param name="obj">An object to compare with this instance.</param>
+ 		/// <returns>A 32-bit signed integer indicating the lexical relationship between the two comparands.</returns>
+ 		/// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="FIRational"/>.</exception>
++		public int CompareTo(object? obj)
+-		public int CompareTo(object obj)
+ 		{
+ 			if (obj == null)
+ 			{
+@@ -963,7 +963,7 @@
+ 		/// <param name="format">The String specifying the format to use.</param>
+ 		/// <param name="formatProvider">The IFormatProvider to use to format the value.</param>
+ 		/// <returns>A String containing the value of the current instance in the specified format.</returns>
++		public string ToString(string? format, IFormatProvider? formatProvider)
+-		public string ToString(string format, IFormatProvider formatProvider)
+ 		{
+ 			if (format == null)
+ 			{

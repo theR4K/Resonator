@@ -1,0 +1,20 @@
+--- a/Structs/FI16RGB555.cs
++++ b/Structs/FI16RGB555.cs
+@@ -208,7 +208,7 @@
+ 		/// <param name="obj">An object to compare with this instance.</param>
+ 		/// <returns>A 32-bit signed integer indicating the lexical relationship between the two comparands.</returns>
+ 		/// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="FI16RGB555"/>.</exception>
++		public int CompareTo(object? obj)
+-		public int CompareTo(object obj)
+ 		{
+ 			if (obj == null)
+ 			{
+@@ -239,7 +239,7 @@
+ 		/// <param name="obj">The object to test.</param>
+ 		/// <returns><b>true</b> if <paramref name="obj"/> is a <see cref="FI16RGB555"/> structure
+ 		/// equivalent to this <see cref="FI16RGB555"/> structure; otherwise, <b>false</b>.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			return base.Equals(obj);
+ 		}

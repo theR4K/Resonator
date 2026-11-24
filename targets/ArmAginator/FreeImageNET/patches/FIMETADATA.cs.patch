@@ -1,0 +1,20 @@
+--- a/Structs/FIMETADATA.cs
++++ b/Structs/FIMETADATA.cs
+@@ -130,7 +130,7 @@
+ 		/// </summary>
+ 		/// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Object"/>.</param>
+ 		/// <returns><b>true</b> if the specified <see cref="Object"/> is equal to the current <see cref="Object"/>; otherwise, <b>false</b>.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			return ((obj is FIMETADATA) && (this == ((FIMETADATA)obj)));
+ 		}
+@@ -151,7 +151,7 @@
+ 		/// <param name="obj">An object to compare with this instance.</param>
+ 		/// <returns>A 32-bit signed integer indicating the lexical relationship between the two comparands.</returns>
+ 		/// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="FIMETADATA"/>.</exception>
++		public int CompareTo(object? obj)
+-		public int CompareTo(object obj)
+ 		{
+ 			if (obj == null)
+ 			{

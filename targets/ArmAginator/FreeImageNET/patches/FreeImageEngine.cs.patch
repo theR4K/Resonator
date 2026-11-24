@@ -1,0 +1,46 @@
+--- a/Classes/FreeImageEngine.cs
++++ b/Classes/FreeImageEngine.cs
+@@ -13,7 +13,7 @@
+ 
+ 		// Callback delegate
+ 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
++		private static readonly OutputMessageFunction? outputMessageFunction;
+-		private static readonly OutputMessageFunction outputMessageFunction;
+ 
+ 		static FreeImageEngine()
+ 		{
+@@ -34,7 +34,7 @@
+ 		private static void OnMessage(FREE_IMAGE_FORMAT fif, string message)
+ 		{
+ 			// Get a local copy of the multicast-delegate
++			OutputMessageFunction? m = Message;
+-			OutputMessageFunction m = Message;
+ 
+ 			// Check the local copy instead of the static instance
+ 			// to prevent a second thread from setting the delegate
+@@ -61,14 +61,14 @@
+ 		/// Internal errors in FreeImage generate a logstring that can be
+ 		/// captured by this event.
+ 		/// </summary>
++		public static event OutputMessageFunction? Message;
+-		public static event OutputMessageFunction Message;
+ 
+ 		#endregion
+ 
+ 		/// <summary>
+ 		/// Gets a string containing the current version of the library.
+ 		/// </summary>
++		public static string? Version
+-		public static string Version
+ 		{
+ 			get
+ 			{
+@@ -79,7 +79,7 @@
+ 		/// <summary>
+ 		/// Gets a string containing a standard copyright message.
+ 		/// </summary>
++		public static string? CopyrightMessage
+-		public static string CopyrightMessage
+ 		{
+ 			get
+ 			{

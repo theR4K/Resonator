@@ -1,0 +1,41 @@
+--- a/Classes/ImageMetadata.cs
++++ b/Classes/ImageMetadata.cs
+@@ -96,7 +96,7 @@
+ 		/// </summary>
+ 		/// <param name="model">Type of the model.</param>
+ 		/// <returns>The <see cref="FreeImageAPI.Metadata.MetadataModel"/> object of the specified type.</returns>
++		public MetadataModel? this[FREE_IMAGE_MDMODEL model]
+-		public MetadataModel this[FREE_IMAGE_MDMODEL model]
+ 		{
+ 			get
+ 			{
+@@ -125,7 +125,7 @@
+ 		/// this instance.</param>
+ 		/// <returns>The <see cref="FreeImageAPI.Metadata.MetadataModel"/>
+ 		/// object at the specified index.</returns>
++		public MetadataModel? this[int index]
+-		public MetadataModel this[int index]
+ 		{
+ 			get
+ 			{
+@@ -259,7 +259,7 @@
+ 		/// <param name="obj">An object to compare with this instance.</param>
+ 		/// <returns>A 32-bit signed integer indicating the lexical relationship between the two comparands.</returns>
+ 		/// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="ImageMetadata"/>.</exception>
++		public int CompareTo(object? obj)
+-		public int CompareTo(object obj)
+ 		{
+ 			if (obj == null)
+ 			{
+@@ -278,9 +278,9 @@
+ 		/// <param name="other">A <see cref="ImageMetadata"/> to compare.</param>
+ 		/// <returns>A signed number indicating the relative values of this instance
+ 		/// and <paramref name="other"/>.</returns>
++		public int CompareTo(ImageMetadata? other)
+-		public int CompareTo(ImageMetadata other)
+ 		{
++			return FreeImageNullable.IsAbsent(other) ? 1 : this.dib.CompareTo(other.dib); // ArmAgedon seam
+-			return this.dib.CompareTo(other.dib);
+ 		}
+ 	}
+ }

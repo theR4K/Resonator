@@ -1,0 +1,1283 @@
+--- a/Classes/MetadataModels.cs
++++ b/Classes/MetadataModels.cs
+@@ -120,16 +120,16 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public Palette? GlobalPalette
+-        public Palette GlobalPalette
+         {
+             get
+             {
++                MetadataTag? mdtag = GetTag("GlobalPalette");
+-                MetadataTag mdtag = GetTag("GlobalPalette");
+                 return (mdtag == null) ? null : new Palette(mdtag);
+             }
+             set
+             {
++                SetTagValue("GlobalPalette", FreeImageNullable.PaletteData(value)); // ArmAgedon seam
+-                SetTagValue("GlobalPalette", (value != null) ? null : value.Data);
+             }
+         }
+ 
+@@ -350,7 +350,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Comment
+-        public string Comment
+         {
+             get
+             {
+@@ -417,7 +417,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? ExifVersion
+-        public byte[] ExifVersion
+         {
+             get
+             {
+@@ -443,7 +443,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? FlashpixVersion
+-        public byte[] FlashpixVersion
+         {
+             get
+             {
+@@ -616,7 +616,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? ComponentsConfiguration
+-        public byte[] ComponentsConfiguration
+         {
+             get
+             {
+@@ -668,7 +668,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? MakerNote
+-        public byte[] MakerNote
+         {
+             get
+             {
+@@ -698,7 +698,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? UserComment
+-        public byte[] UserComment
+         {
+             get
+             {
+@@ -725,11 +725,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? RelatedSoundFile
+-        public string RelatedSoundFile
+         {
+             get
+             {
++                string? text = GetTagText("RelatedSoundFile");
+-                string text = GetTagText("RelatedSoundFile");
+                 if (!string.IsNullOrEmpty(text))
+                 {
+                     text = text.Substring(0, text.Length - 1);
+@@ -764,7 +764,7 @@
+             get
+             {
+                 DateTime? result = null;
++                string? text = GetTagText("DateTimeOriginal");
+-                string text = GetTagText("DateTimeOriginal");
+                 if (text != null)
+                 {
+                     try
+@@ -779,7 +779,7 @@
+             }
+             set
+             {
++                string? val = null;
+-                string val = null;
+                 if (value.HasValue)
+                 {
+                     try
+@@ -811,7 +811,7 @@
+             get
+             {
+                 DateTime? result = null;
++                string? text = GetTagText("DateTimeDigitized");
+-                string text = GetTagText("DateTimeDigitized");
+                 if (text != null)
+                 {
+                     try
+@@ -826,7 +826,7 @@
+             }
+             set
+             {
++                string? val = null;
+-                string val = null;
+                 if (value.HasValue)
+                 {
+                     try
+@@ -853,11 +853,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? SubsecTime
+-        public string SubsecTime
+         {
+             get
+             {
++                string? text = GetTagText("SubsecTime");
+-                string text = GetTagText("SubsecTime");
+                 if (!string.IsNullOrEmpty(text))
+                 {
+                     text = text.Substring(0, text.Length - 1);
+@@ -886,11 +886,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? SubsecTimeOriginal
+-        public string SubsecTimeOriginal
+         {
+             get
+             {
++                string? text = GetTagText("SubsecTimeOriginal");
+-                string text = GetTagText("SubsecTimeOriginal");
+                 if (!string.IsNullOrEmpty(text))
+                 {
+                     text = text.Substring(0, text.Length - 1);
+@@ -919,11 +919,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? SubsecTimeDigitized
+-        public string SubsecTimeDigitized
+         {
+             get
+             {
++                string? text = GetTagText("SubsecTimeDigitized");
+-                string text = GetTagText("SubsecTimeDigitized");
+                 if (!string.IsNullOrEmpty(text))
+                 {
+                     text = text.Substring(0, text.Length - 1);
+@@ -1074,11 +1074,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? SpectralSensitivity
+-        public string SpectralSensitivity
+         {
+             get
+             {
++                string? text = GetTagText("SpectralSensitivity");
+-                string text = GetTagText("SpectralSensitivity");
+                 if (!string.IsNullOrEmpty(text))
+                 {
+                     text = text.Substring(0, text.Length - 1);
+@@ -1108,7 +1108,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public ushort[]? ISOSpeedRatings
+-        public ushort[] ISOSpeedRatings
+         {
+             get
+             {
+@@ -1133,7 +1133,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? OECF
+-        public byte[] OECF
+         {
+             get
+             {
+@@ -1524,7 +1524,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public ushort[]? SubjectArea
+-        public ushort[] SubjectArea
+         {
+             get
+             {
+@@ -1601,7 +1601,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? SpatialFrequencyResponse
+-        public byte[] SpatialFrequencyResponse
+         {
+             get
+             {
+@@ -1868,7 +1868,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? CFAPattern
+-        public byte[] CFAPattern
+         {
+             get
+             {
+@@ -2346,7 +2346,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? DeviceSettingDescription
+-        public byte[] DeviceSettingDescription
+         {
+             get
+             {
+@@ -2425,11 +2425,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ImageUniqueID
+-        public string ImageUniqueID
+         {
+             get
+             {
++                string? text = GetTagText("ImageUniqueID");
+-                string text = GetTagText("ImageUniqueID");
+                 if (!string.IsNullOrEmpty(text))
+                 {
+                     text = text.Substring(0, text.Length - 1);
+@@ -2480,7 +2480,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? VersionID
+-        public byte[] VersionID
+         {
+             get
+             {
+@@ -2532,7 +2532,7 @@
+         /// metadata tag from the metadata model.
+         /// </remarks>
+         /// <seealso cref="LatitudeDirection"/>
++        public FIURational[]? Latitude
+-        public FIURational[] Latitude
+         {
+             get
+             {
+@@ -2584,7 +2584,7 @@
+         /// metadata tag from the metadata model.
+         /// </remarks>
+         /// <seealso cref="LongitudeDirection"/>
++        public FIURational[]? Longitude
+-        public FIURational[] Longitude
+         {
+             get
+             {
+@@ -2789,7 +2789,7 @@
+         {
+             get
+             {
++                FIURational[]? stamp = GetTagArray<FIURational>("GPSTimeStamp");
+-                FIURational[] stamp = GetTagArray<FIURational>("GPSTimeStamp");
+                 if ((stamp == null) || stamp.Length != 3)
+                 {
+                     return null;
+@@ -2801,7 +2801,7 @@
+             }
+             set
+             {
++                FIURational[]? stamp = null;
+-                FIURational[] stamp = null;
+                 if (value.HasValue)
+                 {
+                     TimeSpan span = value.Value;
+@@ -2828,11 +2828,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Satellites
+-        public string Satellites
+         {
+             get
+             {
++                string? result = GetTagText("GPSSatellites");
+-                string result = GetTagText("GPSSatellites");
+                 if (!string.IsNullOrEmpty(result))
+                 {
+                     result = result.Substring(0, result.Length - 1);
+@@ -2867,7 +2867,7 @@
+         {
+             get
+             {
++                string? text = GetTagText("GPSStatus");
+-                string text = GetTagText("GPSStatus");
+                 return string.IsNullOrEmpty(text) ? default(bool?) : text[0] == 'A';
+             }
+             set
+@@ -2894,7 +2894,7 @@
+         {
+             get
+             {
++                string? text = GetTagText("GPSMeasureMode");
+-                string text = GetTagText("GPSMeasureMode");
+                 return string.IsNullOrEmpty(text) ? default(bool?) : text[0] == '3';
+             }
+             set
+@@ -3093,11 +3093,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? MapDatum
+-        public string MapDatum
+         {
+             get
+             {
++                string? result = GetTagText("GPSMapDatum");
+-                string result = GetTagText("GPSMapDatum");
+                 if (!string.IsNullOrEmpty(result))
+                 {
+                     result = result.Substring(0, result.Length - 1);
+@@ -3150,7 +3150,7 @@
+         /// metadata tag from the metadata model.
+         /// </remarks>
+         /// <seealso cref="DestinationLatitudeDirection"/>
++        public FIURational[]? DestinationLatitude
+-        public FIURational[] DestinationLatitude
+         {
+             get
+             {
+@@ -3202,7 +3202,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public FIURational[]? DestinationLongitude
+-        public FIURational[] DestinationLongitude
+         {
+             get
+             {
+@@ -3306,7 +3306,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? ProcessingMethod
+-        public byte[] ProcessingMethod
+         {
+             get
+             {
+@@ -3333,7 +3333,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public byte[]? AreaInformation
+-        public byte[] AreaInformation
+         {
+             get
+             {
+@@ -3414,7 +3414,7 @@
+         {
+             get
+             {
++                string? stamp = GetTagText("GPSDateStamp");
+-                string stamp = GetTagText("GPSDateStamp");
+                 if (stamp != null)
+                 {
+                     try
+@@ -3429,7 +3429,7 @@
+             }
+             set
+             {
++                string? val = null;
+-                string val = null;
+                 if (value.HasValue)
+                 {
+                     try
+@@ -3625,7 +3625,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public ushort[]? BitsPerSample
+-        public ushort[] BitsPerSample
+         {
+             get
+             {
+@@ -3841,7 +3841,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public ushort[]? YCbCrSubSampling
+-        public ushort[] YCbCrSubSampling
+         {
+             get
+             {
+@@ -4027,7 +4027,7 @@
+         /// </remarks>
+         /// <seealso cref="RowsPerStrip"/>
+         /// <see cref="StripByteCounts"/>
++        public uint[]? StripOffsets
+-        public uint[] StripOffsets
+         {
+             get
+             {
+@@ -4088,7 +4088,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public uint[]? StripByteCounts
+-        public uint[] StripByteCounts
+         {
+             get
+             {
+@@ -4172,7 +4172,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public ushort[]? TransferFunction
+-        public ushort[] TransferFunction
+         {
+             get
+             {
+@@ -4198,7 +4198,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public FIURational[]? WhitePoint
+-        public FIURational[] WhitePoint
+         {
+             get
+             {
+@@ -4224,7 +4224,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public FIURational[]? PrimaryChromaticities
+-        public FIURational[] PrimaryChromaticities
+         {
+             get
+             {
+@@ -4250,7 +4250,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public FIURational[]? YCbCrCoefficients
+-        public FIURational[] YCbCrCoefficients
+         {
+             get
+             {
+@@ -4276,7 +4276,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public FIURational[]? ReferenceBlackWhite
+-        public FIURational[] ReferenceBlackWhite
+         {
+             get
+             {
+@@ -4306,7 +4306,7 @@
+             get
+             {
+                 DateTime? result = null;
++                string? text = GetTagText("DateTime");
+-                string text = GetTagText("DateTime");
+                 if (text != null)
+                 {
+                     try
+@@ -4321,7 +4321,7 @@
+             }
+             set
+             {
++                string? val = null;
+-                string val = null;
+                 if (value.HasValue)
+                 {
+                     try
+@@ -4348,11 +4348,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ImageDescription
+-        public string ImageDescription
+         {
+             get
+             {
++                string? result = GetTagText("ImageDescription");
+-                string result = GetTagText("ImageDescription");
+                 if (!string.IsNullOrEmpty(result))
+                 {
+                     result = result.Substring(0, result.Length - 1);
+@@ -4381,11 +4381,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Make
+-        public string Make
+         {
+             get
+             {
++                string? result = GetTagText("Make");
+-                string result = GetTagText("Make");
+                 if (!string.IsNullOrEmpty(result))
+                 {
+                     result = result.Substring(0, result.Length - 1);
+@@ -4414,11 +4414,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? EquipmentModel
+-        public string EquipmentModel
+         {
+             get
+             {
++                string? result = GetTagText("Model");
+-                string result = GetTagText("Model");
+                 if (!string.IsNullOrEmpty(result))
+                 {
+                     result = result.Substring(0, result.Length - 1);
+@@ -4448,11 +4448,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Software
+-        public string Software
+         {
+             get
+             {
++                string? result = GetTagText("Software");
+-                string result = GetTagText("Software");
+                 if (!string.IsNullOrEmpty(result))
+                 {
+                     result = result.Substring(0, result.Length - 1);
+@@ -4481,11 +4481,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Artist
+-        public string Artist
+         {
+             get
+             {
++                string? result = GetTagText("Artist");
+-                string result = GetTagText("Artist");
+                 if (!string.IsNullOrEmpty(result))
+                 {
+                     result = result.Substring(0, result.Length - 1);
+@@ -4515,12 +4515,12 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string[]? Copyright
+-        public string[] Copyright
+         {
+             get
+             {
++                string[]? result = null;
++                string? text = GetTagText("Copyright");
+-                string[] result = null;
+-                string text = GetTagText("Copyright");
+                 if (!string.IsNullOrEmpty(text))
+                 {
+                     result = text.Split(new char[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
+@@ -4529,7 +4529,7 @@
+             }
+             set
+             {
++                string? val = null;
+-                string val = null;
+                 if (value != null)
+                 {
+                     if (value.Length == 1)
+@@ -4627,11 +4627,11 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? GeoASCIIParams
+-        public string GeoASCIIParams
+         {
+             get
+             {
++                string? text = GetTagText("GeoASCIIParams");
+-                string text = GetTagText("GeoASCIIParams");
+                 if (!string.IsNullOrEmpty(text))
+                 {
+                     text = text.Substring(0, text.Length - 1);
+@@ -4666,7 +4666,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public double[]? GeoDoubleParams
+-        public double[] GeoDoubleParams
+         {
+             get
+             {
+@@ -4743,7 +4743,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public ushort[]? GeoKeyDirectory
+-        public ushort[] GeoKeyDirectory
+         {
+             get
+             {
+@@ -4802,7 +4802,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public double[]? ModelPixelScale
+-        public double[] ModelPixelScale
+         {
+             get
+             {
+@@ -4866,7 +4866,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public double[]? ModelTiePoints
+-        public double[] ModelTiePoints
+         {
+             get
+             {
+@@ -4901,7 +4901,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public double[]? ModelTransformationMatrix
+-        public double[] ModelTransformationMatrix
+         {
+             get
+             {
+@@ -4931,7 +4931,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public double[]? IntergraphTransformationMatrix
+-        public double[] IntergraphTransformationMatrix
+         {
+             get
+             {
+@@ -5029,7 +5029,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ObjectTypeReference
+-        public string ObjectTypeReference
+         {
+             get
+             {
+@@ -5053,7 +5053,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ObjectAttributeReference
+-        public string ObjectAttributeReference
+         {
+             get
+             {
+@@ -5078,7 +5078,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ObjectName
+-        public string ObjectName
+         {
+             get
+             {
+@@ -5102,7 +5102,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? EditStatus
+-        public string EditStatus
+         {
+             get
+             {
+@@ -5126,7 +5126,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? EditorialUpdate
+-        public string EditorialUpdate
+         {
+             get
+             {
+@@ -5150,7 +5150,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Urgency
+-        public string Urgency
+         {
+             get
+             {
+@@ -5174,7 +5174,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? SubjectReference
+-        public string SubjectReference
+         {
+             get
+             {
+@@ -5198,7 +5198,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Category
+-        public string Category
+         {
+             get
+             {
+@@ -5222,7 +5222,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? SupplementalCategories
+-        public string SupplementalCategories
+         {
+             get
+             {
+@@ -5246,7 +5246,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? FixtureIdentifier
+-        public string FixtureIdentifier
+         {
+             get
+             {
+@@ -5270,7 +5270,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Keywords
+-        public string Keywords
+         {
+             get
+             {
+@@ -5294,7 +5294,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ContentLocationCode
+-        public string ContentLocationCode
+         {
+             get
+             {
+@@ -5318,7 +5318,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ContentLocationName
+-        public string ContentLocationName
+         {
+             get
+             {
+@@ -5342,7 +5342,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ReleaseDate
+-        public string ReleaseDate
+         {
+             get
+             {
+@@ -5366,7 +5366,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ReleaseTime
+-        public string ReleaseTime
+         {
+             get
+             {
+@@ -5390,7 +5390,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ExpirationDate
+-        public string ExpirationDate
+         {
+             get
+             {
+@@ -5414,7 +5414,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ExpirationTime
+-        public string ExpirationTime
+         {
+             get
+             {
+@@ -5438,7 +5438,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? SpecialInstructions
+-        public string SpecialInstructions
+         {
+             get
+             {
+@@ -5462,7 +5462,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ActionAdvised
+-        public string ActionAdvised
+         {
+             get
+             {
+@@ -5486,7 +5486,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ReferenceService
+-        public string ReferenceService
+         {
+             get
+             {
+@@ -5510,7 +5510,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ReferenceDate
+-        public string ReferenceDate
+         {
+             get
+             {
+@@ -5534,7 +5534,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ReferenceNumber
+-        public string ReferenceNumber
+         {
+             get
+             {
+@@ -5558,7 +5558,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? DateCreated
+-        public string DateCreated
+         {
+             get
+             {
+@@ -5582,7 +5582,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? TimeCreated
+-        public string TimeCreated
+         {
+             get
+             {
+@@ -5606,7 +5606,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? DigitalCreationDate
+-        public string DigitalCreationDate
+         {
+             get
+             {
+@@ -5630,7 +5630,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? DigitalCreationTime
+-        public string DigitalCreationTime
+         {
+             get
+             {
+@@ -5654,7 +5654,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? OriginatingProgram
+-        public string OriginatingProgram
+         {
+             get
+             {
+@@ -5678,7 +5678,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ProgramVersion
+-        public string ProgramVersion
+         {
+             get
+             {
+@@ -5702,7 +5702,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ObjectCycle
+-        public string ObjectCycle
+         {
+             get
+             {
+@@ -5727,7 +5727,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ByLine
+-        public string ByLine
+         {
+             get
+             {
+@@ -5752,7 +5752,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ByLineTitle
+-        public string ByLineTitle
+         {
+             get
+             {
+@@ -5776,7 +5776,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? City
+-        public string City
+         {
+             get
+             {
+@@ -5800,7 +5800,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? SubLocation
+-        public string SubLocation
+         {
+             get
+             {
+@@ -5824,7 +5824,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ProvinceState
+-        public string ProvinceState
+         {
+             get
+             {
+@@ -5848,7 +5848,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? CountryPrimaryLocationCode
+-        public string CountryPrimaryLocationCode
+         {
+             get
+             {
+@@ -5872,7 +5872,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? CountryPrimaryLocationName
+-        public string CountryPrimaryLocationName
+         {
+             get
+             {
+@@ -5896,7 +5896,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? OriginalTransmissionReference
+-        public string OriginalTransmissionReference
+         {
+             get
+             {
+@@ -5920,7 +5920,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Headline
+-        public string Headline
+         {
+             get
+             {
+@@ -5944,7 +5944,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Credit
+-        public string Credit
+         {
+             get
+             {
+@@ -5968,7 +5968,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Source
+-        public string Source
+         {
+             get
+             {
+@@ -5992,7 +5992,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? CopyrightNotice
+-        public string CopyrightNotice
+         {
+             get
+             {
+@@ -6016,7 +6016,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Contact
+-        public string Contact
+         {
+             get
+             {
+@@ -6040,7 +6040,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? CaptionAbstract
+-        public string CaptionAbstract
+         {
+             get
+             {
+@@ -6065,7 +6065,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? WriterEditor
+-        public string WriterEditor
+         {
+             get
+             {
+@@ -6089,7 +6089,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? RasterizedCaption
+-        public string RasterizedCaption
+         {
+             get
+             {
+@@ -6113,7 +6113,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ImageType
+-        public string ImageType
+         {
+             get
+             {
+@@ -6137,7 +6137,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ImageOrientation
+-        public string ImageOrientation
+         {
+             get
+             {
+@@ -6161,7 +6161,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? LanguageIdentifier
+-        public string LanguageIdentifier
+         {
+             get
+             {
+@@ -6185,7 +6185,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? AudioType
+-        public string AudioType
+         {
+             get
+             {
+@@ -6209,7 +6209,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? AudioSamplingRate
+-        public string AudioSamplingRate
+         {
+             get
+             {
+@@ -6233,7 +6233,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? AudioSamplingResolution
+-        public string AudioSamplingResolution
+         {
+             get
+             {
+@@ -6257,7 +6257,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? AudioDuration
+-        public string AudioDuration
+         {
+             get
+             {
+@@ -6281,7 +6281,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? AudioOutcue
+-        public string AudioOutcue
+         {
+             get
+             {
+@@ -6305,7 +6305,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? JobID
+-        public string JobID
+         {
+             get
+             {
+@@ -6329,7 +6329,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? MasterDocumentID
+-        public string MasterDocumentID
+         {
+             get
+             {
+@@ -6353,7 +6353,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ShortDocumentID
+-        public string ShortDocumentID
+         {
+             get
+             {
+@@ -6377,7 +6377,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? UniqueDocumentID
+-        public string UniqueDocumentID
+         {
+             get
+             {
+@@ -6401,7 +6401,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? OwnerID
+-        public string OwnerID
+         {
+             get
+             {
+@@ -6425,7 +6425,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ObjectPreviewFileFormat
+-        public string ObjectPreviewFileFormat
+         {
+             get
+             {
+@@ -6449,7 +6449,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ObjectPreviewFileVersion
+-        public string ObjectPreviewFileVersion
+         {
+             get
+             {
+@@ -6474,7 +6474,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ObjectPreviewData
+-        public string ObjectPreviewData
+         {
+             get
+             {
+@@ -6499,7 +6499,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Prefs
+-        public string Prefs
+         {
+             get
+             {
+@@ -6523,7 +6523,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ClassifyState
+-        public string ClassifyState
+         {
+             get
+             {
+@@ -6547,7 +6547,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? SimilarityIndex
+-        public string SimilarityIndex
+         {
+             get
+             {
+@@ -6571,7 +6571,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? DocumentNotes
+-        public string DocumentNotes
+         {
+             get
+             {
+@@ -6595,7 +6595,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? DocumentHistory
+-        public string DocumentHistory
+         {
+             get
+             {
+@@ -6619,7 +6619,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? ExifCameraInfo
+-        public string ExifCameraInfo
+         {
+             get
+             {
+@@ -6685,7 +6685,7 @@
+         /// Setting this property's value to a null reference deletes the
+         /// metadata tag from the metadata model.
+         /// </remarks>
++        public string? Xml
+-        public string Xml
+         {
+             get
+             {
+@@ -6702,11 +6702,11 @@
+         /// Returns null, if the metadata tag <i>XMLPacket</i> is not present in
+         /// this model.
+         /// </summary>
++        public XmlReader? XmlReader
+-        public XmlReader XmlReader
+         {
+             get
+             {
++                string? xmlString = Xml;
+-                string xmlString = Xml;
+                 if (xmlString == null)
+                 {
+                     return null;

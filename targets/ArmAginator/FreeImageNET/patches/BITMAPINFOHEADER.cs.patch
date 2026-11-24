@@ -1,0 +1,11 @@
+--- a/Structs/BITMAPINFOHEADER.cs
++++ b/Structs/BITMAPINFOHEADER.cs
+@@ -335,7 +335,7 @@
+ 		/// <param name="obj">The object to test.</param>
+ 		/// <returns><b>true</b> if <paramref name="obj"/> is a <see cref="BITMAPINFOHEADER"/> structure
+ 		/// equivalent to this <see cref="BITMAPINFOHEADER"/> structure; otherwise, <b>false</b>.</returns>
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			return ((obj is BITMAPINFOHEADER) && (this == (BITMAPINFOHEADER)obj));
+ 		}

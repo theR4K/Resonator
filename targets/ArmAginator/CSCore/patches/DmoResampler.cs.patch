@@ -1,0 +1,92 @@
+--- a/DSP/DmoResampler.cs
++++ b/DSP/DmoResampler.cs
+@@ -9,17 +9,17 @@
+     /// </summary>
+     public class DmoResampler : WaveAggregatorBase
+     {
++        internal MediaBuffer? InputBuffer;
+-        internal MediaBuffer InputBuffer;
+         internal object LockObj = new object();
+         internal DmoOutputDataBuffer OutputBuffer;
+         internal WaveFormat Outputformat;
+         private readonly bool _ignoreBaseStreamPosition;
+ 
+         internal decimal Ratio;
++        internal WMResampler? Resampler;
+-        internal WMResampler Resampler;
+         private bool _disposed;
+         private int _quality = 30;
++        private byte[]? _readBuffer;
+-        private byte[] _readBuffer;
+ 
+         private long _position;
+ 
+@@ -133,9 +133,9 @@
+                 if (value < 1 || value > 60)
+                     throw new ArgumentOutOfRangeException("value");
+                 _quality = value;
++                using (CSCoreNullable.Require(CSCoreNullable.Require(Resampler).MediaObject).Lock()) // ArmAgedon seam
+-                using (Resampler.MediaObject.Lock())
+                 {
++                    CSCoreNullable.Require(Resampler.ResamplerProps).SetHalfFilterLength(value); // ArmAgedon seam
+-                    Resampler.ResamplerProps.SetHalfFilterLength(value);
+                 }
+             }
+         }
+@@ -147,8 +147,8 @@
+             {
+                 Resampler = new WMResampler();
+ 
++                MediaObject? mediaObject = Resampler.MediaObject;
++                if (!CSCoreNullable.Require(mediaObject).SupportsInputFormat(0, inputformat)) // ArmAgedon seam
+-                MediaObject mediaObject = Resampler.MediaObject;
+-                if (!mediaObject.SupportsInputFormat(0, inputformat))
+                     throw new NotSupportedException("Inputformat not supported.");
+                 mediaObject.SetInputType(0, inputformat);
+ 
+@@ -185,8 +185,8 @@
+                 int read = 0;
+                 while (read < count)
+                 {
++                    MediaObject? mediaObject = CSCoreNullable.Require(Resampler).MediaObject; // ArmAgedon seam
++                    if (CSCoreNullable.Require(mediaObject).IsReadyForInput(0)) // ArmAgedon seam
+-                    MediaObject mediaObject = Resampler.MediaObject;
+-                    if (mediaObject.IsReadyForInput(0))
+                     {
+                         var bytesToRead = (int) OutputToInput(count - read);
+                         bytesToRead = Math.Min(WaveFormat.BytesPerSecond * 2, bytesToRead);
+@@ -200,7 +200,7 @@
+                         if (_disposed)
+                             break;
+ 
++                        if (CSCoreNullable.Require(InputBuffer).MaxLength < bytesRead) // ArmAgedon seam
+-                        if (InputBuffer.MaxLength < bytesRead)
+                         {
+                             InputBuffer.Dispose();
+                             InputBuffer = new MediaBuffer(bytesRead);
+@@ -212,13 +212,13 @@
+                         OutputBuffer.Reset();
+                         do
+                         {
++                            var outputBuffer = (MediaBuffer?) OutputBuffer.Buffer;
++                            if (CSCoreNullable.Require(outputBuffer).MaxLength < count) // ArmAgedon seam
+-                            var outputBuffer = (MediaBuffer) OutputBuffer.Buffer;
+-                            if (outputBuffer.MaxLength < count)
+                             {
+                                 outputBuffer.Dispose();
+                                 OutputBuffer.Buffer = new MediaBuffer(count);
+                             }
++                            CSCoreNullable.Require(OutputBuffer.Buffer).SetLength(0); // ArmAgedon seam
+-                            OutputBuffer.Buffer.SetLength(0);
+ 
+                             mediaObject.ProcessOutput(ProcessOutputFlags.None, new[] {OutputBuffer}, 1);
+ 
+@@ -293,7 +293,7 @@
+             _disposed = true;
+         }
+ 
++        private void DisposeAndReset<T>(ref T? obj) where T : class, IDisposable
+-        private void DisposeAndReset<T>(ref T obj) where T : class, IDisposable
+         {
+             if (obj != null)
+             {

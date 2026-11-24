@@ -1,0 +1,32 @@
+--- a/SampleAggregatorBase.cs
++++ b/SampleAggregatorBase.cs
+@@ -8,7 +8,7 @@
+     public class SampleAggregatorBase : ISampleAggregator
+     {
+         private bool _disposed;
++        private ISampleSource? _baseSource;
+-        private ISampleSource _baseSource;
+ 
+         /// <summary>
+         ///     Creates a new instance of the <see cref="SampleAggregatorBase" /> class.
+@@ -97,7 +97,7 @@
+         /// </summary>
+         public virtual ISampleSource BaseSource
+         {
++            get { return CSCoreNullable.Require(_baseSource); } // ArmAgedon seam
+-            get { return _baseSource; }
+             set
+             {
+                 if (value == null)
+@@ -135,9 +135,9 @@
+         /// </param>
+         protected virtual void Dispose(bool disposing)
+         {
++            if (DisposeBaseSource && _baseSource != null)
+-            if (DisposeBaseSource && BaseSource != null)
+             {
++                _baseSource.Dispose();
+-                BaseSource.Dispose();
+                 _baseSource = null;
+             }
+         }

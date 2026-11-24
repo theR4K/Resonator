@@ -1,0 +1,29 @@
+--- a/Tags/ID3/Frames/FrameIDFactory.cs
++++ b/Tags/ID3/Frames/FrameIDFactory.cs
+@@ -1015,13 +1015,13 @@
+         {
+             public FrameID ID { get; set; }
+ 
++            public string? ID3v4ID { get; set; }
+-            public string ID3v4ID { get; set; }
+ 
++            public string? ID3v3ID { get; set; }
+-            public string ID3v3ID { get; set; }
+ 
++            public string? ID3v2ID { get; set; }
+-            public string ID3v2ID { get; set; }
+ 
++            public string? Desc { get; set; }
+-            public string Desc { get; set; }
+         }
+ 
+         internal static string GetID(FrameID id, ID3Version version)
+@@ -1030,7 +1030,7 @@
+             if (entry != null && entry.Count() > 0)
+             {
+                 var e = entry.First();
++                string? sid = null;
+-                string sid = null;
+                 if (version == ID3Version.ID3v2_2)
+                     sid = e.ID3v2ID;
+                 else if (version == ID3Version.ID3v2_3)

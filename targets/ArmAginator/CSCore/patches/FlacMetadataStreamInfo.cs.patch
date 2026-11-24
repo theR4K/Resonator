@@ -1,0 +1,10 @@
+--- a/Codecs/FLAC/Metadata/FlacMetadataStreamInfo.cs
++++ b/Codecs/FLAC/Metadata/FlacMetadataStreamInfo.cs
+@@ -123,6 +123,6 @@
+         /// <value>
+         /// The MD5 signature of the unencoded audio data.
+         /// </value>
++        public string? Md5 { get; private set; }
+-        public string Md5 { get; private set; }
+     }
+ }

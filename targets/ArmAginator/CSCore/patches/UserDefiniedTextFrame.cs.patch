@@ -1,0 +1,11 @@
+--- a/Tags/ID3/Frames/UserDefiniedTextFrame.cs
++++ b/Tags/ID3/Frames/UserDefiniedTextFrame.cs
+@@ -4,7 +4,7 @@
+ {
+     public class UserDefiniedTextFrame : TextFrame
+     {
++        public string? Description { get; private set; }
+-        public string Description { get; private set; }
+ 
+         public UserDefiniedTextFrame(FrameHeader header)
+             : base(header)

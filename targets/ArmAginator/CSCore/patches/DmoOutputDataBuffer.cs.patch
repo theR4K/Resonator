@@ -1,0 +1,56 @@
+--- a/DMO/DmoOutputDataBuffer.cs
++++ b/DMO/DmoOutputDataBuffer.cs
+@@ -12,7 +12,7 @@
+         /// <summary>
+         ///     Pointer to the <see cref="IMediaBuffer"/> interface of a buffer allocated by the application.
+         /// </summary>
++        [MarshalAs(UnmanagedType.Interface)] public IMediaBuffer? Buffer;
+-        [MarshalAs(UnmanagedType.Interface)] public IMediaBuffer Buffer;
+ 
+         /// <summary>
+         ///     Status flags. After processing output, the DMO sets this member to a bitwise combination
+@@ -56,7 +56,7 @@
+         /// </summary>
+         public int Length
+         {
++            get { return (CSCoreNullable.Require((MediaBuffer?) Buffer)).Length; } // ArmAgedon seam
+-            get { return ((MediaBuffer) Buffer).Length; }
+         }
+ 
+         /// <summary>
+@@ -70,7 +70,7 @@
+         /// <returns>The number of read bytes.</returns>        
+         public void Read(byte[] buffer, int offset)
+         {
++            (CSCoreNullable.Require((MediaBuffer?) Buffer)).Read(buffer, offset); // ArmAgedon seam
+-            ((MediaBuffer) Buffer).Read(buffer, offset);
+         }
+ 
+         /// <summary>
+@@ -87,7 +87,7 @@
+         {
+             count = Math.Min(count, Length);
+ 
++            (CSCoreNullable.Require((MediaBuffer?) Buffer)).Read(buffer, offset, count); // ArmAgedon seam
+-            ((MediaBuffer) Buffer).Read(buffer, offset, count);
+ 
+             return count;
+         }
+@@ -107,7 +107,7 @@
+         {
+             count = Math.Min(count, Length - sourceOffset);
+ 
++            (CSCoreNullable.Require((MediaBuffer?) Buffer)).Read(buffer, offset, count, sourceOffset); // ArmAgedon seam
+-            ((MediaBuffer) Buffer).Read(buffer, offset, count, sourceOffset);
+ 
+             return count;
+         }
+@@ -118,7 +118,7 @@
+         /// </summary>
+         public void Reset()
+         {
++            CSCoreNullable.Require(Buffer).SetLength(0); // ArmAgedon seam
+-            Buffer.SetLength(0);
+             Status = OutputDataBufferFlags.None;
+         }
+ 

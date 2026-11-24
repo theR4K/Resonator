@@ -1,0 +1,309 @@
+--- a/SoundOut/WasapiOut.cs
++++ b/SoundOut/WasapiOut.cs
+@@ -22,22 +22,22 @@
+         private readonly bool _eventSync;
+         private readonly ThreadPriority _playbackThreadPriority;
+         private readonly AudioClientShareMode _shareMode;
++        private readonly SynchronizationContext? _syncContext;
++        private AudioClient? _audioClient;
+-        private readonly SynchronizationContext _syncContext;
+-        private AudioClient _audioClient;
+         private bool _createdResampler;
++        private MMDevice? _device;
+-        private MMDevice _device;
+         private bool _disposed;
++        private EventWaitHandle? _eventWaitHandle;
+-        private EventWaitHandle _eventWaitHandle;
+         private bool _isInitialized;
+ 
+         private int _latency;
+         private int? _computeLatency;
++        private WaveFormat? _outputFormat;
+-        private WaveFormat _outputFormat;
+         private volatile PlaybackState _playbackState;
++        private Thread? _playbackThread;
++        private AudioRenderClient? _renderClient;
++        private VolumeSource? _volumeSource;
++        private IWaveSource? _source;
+-        private Thread _playbackThread;
+-        private AudioRenderClient _renderClient;
+-        private VolumeSource _volumeSource;
+-        private IWaveSource _source;
+         private StreamRoutingOptions _streamRoutingOptions = StreamRoutingOptions.OnFormatChange | StreamRoutingOptions.OnDeviceDisconnect;
+         private bool _abortOnZero = true;
+ 
+@@ -117,7 +117,7 @@
+         ///     If the passed value is not null, the events will be called async through the <see cref="SynchronizationContext.Post"/> method.
+         /// </param>
+         public WasapiOut(bool eventSync, AudioClientShareMode shareMode, int latency,
++            ThreadPriority playbackThreadPriority, SynchronizationContext? eventSyncContext)
+-            ThreadPriority playbackThreadPriority, SynchronizationContext eventSyncContext)
+         {
+             if (!IsSupportedOnCurrentPlatform)
+                 throw new PlatformNotSupportedException("Wasapi is only supported on Windows Vista and above.");
+@@ -262,15 +262,15 @@
+         public int ActualBufferSize { get; private set; }
+         public int CurrentPadding { get; private set; }
+ 
++        public WaveFormat? ActualOutputFormat { get; private set; }
+-        public WaveFormat ActualOutputFormat { get; private set; }
+ 
++        public Action<WasapiOut>? OnPlaybackUpdateBegin;
++        public Action<WasapiOut>? OnPlaybackUpdateEnd;
+-        public Action<WasapiOut> OnPlaybackUpdateBegin;
+-        public Action<WasapiOut> OnPlaybackUpdateEnd;
+ 
+         /// <summary>
+         ///     Occurs when the playback stops.
+         /// </summary>
++        public event EventHandler<PlaybackStoppedEventArgs>? Stopped;
+-        public event EventHandler<PlaybackStoppedEventArgs> Stopped;
+ 
+         /// <summary>
+         ///     Initializes WasapiOut instance and prepares all resources for playback.
+@@ -441,7 +441,7 @@
+             {
+                 CheckForDisposed();
+                 CheckForIsInitialized();
++                CSCoreNullable.Require(_volumeSource).Volume = value; // ArmAgedon seam
+-                _volumeSource.Volume = value;
+             }
+         }
+ 
+@@ -453,7 +453,7 @@
+         ///     The value of the WaveSource might not be the value which was passed to the <see cref="Initialize"/> method, because
+         ///     WasapiOut (depending on the waveformat of the source) has to use a DmoResampler.
+         /// </remarks>
++        public IWaveSource? WaveSource
+-        public IWaveSource WaveSource
+         {
+             get { return _source; }
+         }
+@@ -472,11 +472,11 @@
+             GC.SuppressFinalize(this);
+         }
+ 
++        private void PlaybackProc(object? playbackStartedEventWaithandle)
+-        private void PlaybackProc(object playbackStartedEventWaithandle)
+         {
+             var intervalLatency = _computeLatency ?? _latency;
+ 
++            Exception? exception = null;
+-            Exception exception = null;
+             IntPtr avrtHandle = IntPtr.Zero;
+             string mmcssType = intervalLatency > 25 ? "Audio" : "Pro Audio";
+             int taskIndex = 0;
+@@ -485,7 +485,7 @@
+             {
+                 //we need a least one wait handle for the streamrouting stuff
+                 //if eventsync is configured, we're using a second event for refilling the buffer
++                var eventWaitHandleArray = _eventSync ? new WaitHandle[] { CSCoreNullable.Require(_streamSwitchEvent), CSCoreNullable.Require(_eventWaitHandle) } : new WaitHandle[] { CSCoreNullable.Require(_streamSwitchEvent) }; // ArmAgedon seam
+-                var eventWaitHandleArray = _eventSync ? new WaitHandle[] { _streamSwitchEvent, _eventWaitHandle } : new WaitHandle[] { _streamSwitchEvent };
+ 
+                 //the wait time for event sync has the default value of latency * 3
+                 //if we're using a pure render loop, the wait time has to be much lower
+@@ -495,7 +495,7 @@
+ 
+ 
+                 //start the audio client
++                CSCoreNullable.Require(_audioClient).Start(); // ArmAgedon seam
+-                _audioClient.Start();
+ 
+                 //update the playbackstate of the wasapiout instance
+                 _playbackState = PlaybackState.Playing;
+@@ -514,7 +514,7 @@
+ 
+                 bool isAudioClientStopped = false;
+ 
++                byte[]? buffer = null;
+-                byte[] buffer = null;
+                 int bufferSize = 0;
+                 int frameSize = 0;
+ 
+@@ -530,7 +530,7 @@
+                         if (buffer == null)
+                         {
+                             bufferSize = _audioClient.BufferSize;
++                            frameSize = CSCoreNullable.Require(_outputFormat).Channels * _outputFormat.BytesPerSample; // ArmAgedon seam
+-                            frameSize = _outputFormat.Channels * _outputFormat.BytesPerSample;
+ 
+                             buffer = new byte[bufferSize * frameSize];
+ 
+@@ -614,7 +614,7 @@
+                                  ((DmoResampler)_source).OutputToInput(framesReadyToFill * frameSize) <= 0))
+                                 continue;
+ 
++                            if (!FeedBuffer(CSCoreNullable.Require(_renderClient), buffer, framesReadyToFill, frameSize)) // ArmAgedon seam
+-                            if (!FeedBuffer(_renderClient, buffer, framesReadyToFill, frameSize))
+                                 _playbackState = PlaybackState.Stopped; //source is eof
+ 
+                             OnPlaybackUpdateEnd?.Invoke(this);
+@@ -712,7 +712,7 @@
+             const int reftimesPerMillisecond = 10000;
+ 
+             _audioClient = AudioClient.FromMMDevice(Device);
++            _outputFormat = SetupWaveFormat(CSCoreNullable.Require(_source), _audioClient); // ArmAgedon seam
+-            _outputFormat = SetupWaveFormat(_source, _audioClient);
+ 
+             ActualOutputFormat = _outputFormat;
+ 
+@@ -746,7 +746,7 @@
+                     const long reftimesPerSec = 10000000;
+                     int framesInBuffer = _audioClient.GetBufferSize();
+                     // ReSharper disable once PossibleLossOfFraction
++                    latency = (int)(reftimesPerSec * framesInBuffer / CSCoreNullable.Require(_outputFormat).SampleRate + 0.5); // ArmAgedon seam
+-                    latency = (int)(reftimesPerSec * framesInBuffer / _outputFormat.SampleRate + 0.5);
+                     goto AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED_TRY_AGAIN;
+                 }
+                 throw;
+@@ -782,7 +782,7 @@
+                 //dispose the source -> the volume source won't get touched
+                 //because of the interruption
+                 _source.Dispose();
++                _source = streamSwitch ? WrapVolumeSource(CSCoreNullable.Require(_volumeSource)) : null; // ArmAgedon seam
+-                _source = streamSwitch ? WrapVolumeSource(_volumeSource) : null;
+             }
+ 
+             if (_renderClient != null)
+@@ -819,7 +819,7 @@
+         private WaveFormat SetupWaveFormat(IWaveSource source, AudioClient audioClient)
+         {
+             WaveFormat waveFormat = source.WaveFormat;
++            WaveFormat? closestMatch;
+-            WaveFormat closestMatch;
+             WaveFormat finalFormat = waveFormat;
+             //check whether initial format is supported
+             if (!audioClient.IsFormatSupported(_shareMode, waveFormat, out closestMatch))
+@@ -830,7 +830,7 @@
+                 {
+                     //no match ... check whether the format of the windows audio mixer is supported
+                     //yes ... this gets executed for shared and exclusive mode streams
++                    WaveFormat? mixformat = audioClient.GetMixFormat();
+-                    WaveFormat mixformat = audioClient.GetMixFormat();
+                     if (_shareMode == AudioClientShareMode.Exclusive)
+                         mixformat = Device.DeviceFormat;
+                     if (mixformat == null || !audioClient.IsFormatSupported(_shareMode, mixformat))
+@@ -847,7 +847,7 @@
+                             var deviceFormat = Device.DeviceFormat;
+ 
+                             //generate some possible formats based on the samplerate of the DeviceFormat
++                            possibleFormats = GetPossibleFormats(CSCoreNullable.Require(deviceFormat).SampleRate, deviceFormat.Channels); // ArmAgedon seam
+-                            possibleFormats = GetPossibleFormats(deviceFormat.SampleRate, deviceFormat.Channels);
+                             if (!CheckForSupportedFormat(audioClient, possibleFormats, out mixformat))
+                             {
+                                 //none of the tested formats were supported
+@@ -948,7 +948,7 @@
+         }
+ 
+         private bool CheckForSupportedFormat(AudioClient audioClient, IEnumerable<WaveFormatExtensible> waveFormats,
++            [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out WaveFormat? foundMatch)
+-            out WaveFormat foundMatch)
+         {
+             foundMatch = null;
+             foreach (WaveFormatExtensible format in waveFormats)
+@@ -966,7 +966,7 @@
+         {
+             //calculate the number of bytes to "feed"
+             int count = numFramesCount * frameSize;
++            count -= (count % CSCoreNullable.Require(_source).WaveFormat.BlockAlign); // ArmAgedon seam
+-            count -= (count % _source.WaveFormat.BlockAlign);
+             //if the driver did not request enough data, return true to continue playback
+             if (count <= 0)
+                 return true;
+@@ -1006,9 +1006,9 @@
+             return true;
+         }
+ 
++        private void RaiseStopped(Exception? exception)
+-        private void RaiseStopped(Exception exception)
+         {
++            EventHandler<PlaybackStoppedEventArgs>? handler = Stopped;
+-            EventHandler<PlaybackStoppedEventArgs> handler = Stopped;
+             if (handler != null)
+             {
+                 if (_syncContext != null)
+@@ -1019,15 +1019,15 @@
+             }
+         }
+ 
++        private EventWaitHandle? _streamSwitchCompleteEvent;
++        private AudioSessionControl? _audioSessionControl;
++        private MMDeviceEnumerator? _deviceEnumerator;
+-        private EventWaitHandle _streamSwitchCompleteEvent;
+-        private AudioSessionControl _audioSessionControl;
+-        private MMDeviceEnumerator _deviceEnumerator;
+         private bool _inStreamSwitch;
++        private EventWaitHandle? _streamSwitchEvent;
+-        private EventWaitHandle _streamSwitchEvent;
+ 
+         private void InitializeStreamRouting()
+         {
++            _audioSessionControl = new AudioSessionControl(CSCoreNullable.Require(_audioClient)); // ArmAgedon seam
+-            _audioSessionControl = new AudioSessionControl(_audioClient);
+             _deviceEnumerator = new MMDeviceEnumerator();
+ 
+             if (_streamSwitchCompleteEvent == null)
+@@ -1039,7 +1039,7 @@
+             _deviceEnumerator.DefaultDeviceChanged += OnDefaultDeviceChanged;
+         }
+ 
++        private void OnDefaultDeviceChanged(object? sender, DefaultDeviceChangedEventArgs e)
+-        private void OnDefaultDeviceChanged(object sender, DefaultDeviceChangedEventArgs e)
+         {
+             var dataFlow = e.DataFlow;
+             var role = e.Role;
+@@ -1056,7 +1056,7 @@
+                 {
+                     //we're not in stream switch already ... initiate stream switch
+                     _inStreamSwitch = true;
++                    CSCoreNullable.Require(_streamSwitchEvent).Set(); // ArmAgedon seam
+-                    _streamSwitchEvent.Set();
+                 }
+ 
+                 //signal the render thread to re-initialize the audio renderer
+@@ -1065,12 +1065,12 @@
+                     //if defaultDeviceSwitching is not enabled, inStreamSwitch is always false
+                     //except the DeviceRemoval event was triggered
+                     //for that case, set the streamSwitchCompleteEvent
++                    CSCoreNullable.Require(_streamSwitchCompleteEvent).Set(); // ArmAgedon seam
+-                    _streamSwitchCompleteEvent.Set();
+                 }
+             }
+         }
+ 
++        private void OnAudioSessionDisconnected(object? sender, AudioSessionDisconnectedEventArgs e)
+-        private void OnAudioSessionDisconnected(object sender, AudioSessionDisconnectedEventArgs e)
+         {
+             var disconnectReason = e.DisconnectReason;
+             if (_streamSwitchEvent != null && !_inStreamSwitch)
+@@ -1092,7 +1092,7 @@
+                     //otherwise wait for the final DefaultDeviceSwitch
+                     if (!IsDefaultDevice(Device, DataFlow.Render, DeviceRole))
+                     {
++                        CSCoreNullable.Require(_streamSwitchCompleteEvent).Set(); // ArmAgedon seam
+-                        _streamSwitchCompleteEvent.Set();
+                     }
+                 }
+                 if (disconnectReason == AudioSessionDisconnectReason.DisconnectReasonFormatChanged)
+@@ -1103,7 +1103,7 @@
+ 
+                     _inStreamSwitch = true;
+                     _streamSwitchEvent.Set();
++                    CSCoreNullable.Require(_streamSwitchCompleteEvent).Set(); // ArmAgedon seam
+-                    _streamSwitchCompleteEvent.Set();
+                 }
+             }
+         }
+@@ -1132,10 +1132,10 @@
+             Debug.Assert(_inStreamSwitch);
+ 
+             //Step 1: Stop rendering
++            CSCoreNullable.Require(_audioClient).Stop(); // ArmAgedon seam
+-            _audioClient.Stop();
+ 
+             //Step 3: Wait for the default device to change.
++            if (!CSCoreNullable.Require(_streamSwitchCompleteEvent).WaitOne(750)) // ArmAgedon seam
+-            if (!_streamSwitchCompleteEvent.WaitOne(750))
+             {
+                 Debug.WriteLine("Stream switch timeout - aborting...");
+                 goto StreamSwitchErrorExit;

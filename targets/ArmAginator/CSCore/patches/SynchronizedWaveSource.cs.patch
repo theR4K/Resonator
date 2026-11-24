@@ -1,0 +1,40 @@
+--- a/Streams/SynchronizedWaveSource.cs
++++ b/Streams/SynchronizedWaveSource.cs
+@@ -11,7 +11,7 @@
+         : IAggregator<T, TBaseSource> where TBaseSource : class, IReadableAudioSource<T>
+     {
+         private readonly object _lockObj = new object();
++        private TBaseSource? _baseSource;
+-        private TBaseSource _baseSource;
+         private bool _disposed;
+ 
+         /// <summary>
+@@ -96,7 +96,7 @@
+             {
+                 lock (_lockObj)
+                 {
++                    return CSCoreNullable.Require(_baseSource); // ArmAgedon seam
+-                    return _baseSource;
+                 }
+             }
+             set
+@@ -139,7 +139,7 @@
+         /// </summary>
+         /// <param name="synchronizedWaveSource">Instance of the <see cref="SynchronizedWaveSource{TBaseStream,T}" />.</param>
+         /// <returns>The <see cref="BaseSource" /> of the <paramref name="synchronizedWaveSource" />.</returns>
++        public static explicit operator TBaseSource?(SynchronizedWaveSource<TBaseSource, T> synchronizedWaveSource)
+-        public static explicit operator TBaseSource(SynchronizedWaveSource<TBaseSource, T> synchronizedWaveSource)
+         {
+             if (synchronizedWaveSource == null)
+                 throw new ArgumentNullException("synchronizedWaveSource");
+@@ -157,8 +157,8 @@
+         {
+             lock (_lockObj)
+             {
++                if(_baseSource != null)
++                    _baseSource.Dispose();
+-                if(BaseSource != null)
+-                    BaseSource.Dispose();
+                 _baseSource = null;
+             }
+         }

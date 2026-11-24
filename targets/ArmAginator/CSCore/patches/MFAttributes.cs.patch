@@ -1,0 +1,97 @@
+--- a/MediaFoundation/MFAttributes.cs
++++ b/MediaFoundation/MFAttributes.cs
+@@ -67,7 +67,7 @@
+         ///     Gets or sets an item specified by its key.
+         /// </summary>
+         /// <param name="key">The key of the item.</param>
++        public object? this[Guid key]
+-        public object this[Guid key]
+         {
+             get { return Get(key); }
+             set { Set(key, value); }
+@@ -449,7 +449,7 @@
+         ///     If the key is found and the data type is <see cref="MFAttributeType.String" />, the method returns the
+         ///     associated value.
+         /// </returns>
++        public unsafe string? GetString(Guid key)
+-        public unsafe string GetString(Guid key)
+         {
+             int stringLength = GetStringLength(key);
+             char* value = stackalloc char[stringLength + 1];
+@@ -551,7 +551,7 @@
+         /// <returns>The object associated with the <paramref name="key"/>.</returns>
+         /// <exception cref="ArgumentNullException">Type is null.</exception>
+         /// <remarks>Internally this method retrieves a byte-array with gets converted to a instance of the specified <paramref name="type"/>.</remarks>
++        public object? GetBlob(Guid key, Type type)
+-        public object GetBlob(Guid key, Type type)
+         {
+             if (type == null)
+                 throw new ArgumentNullException("type");
+@@ -963,7 +963,7 @@
+         /// <param name="key">The key of the item.</param>
+         /// <returns>The item which got associated with the specified <paramref name="key" />.</returns>
+         /// <exception cref="NotSupportedException">The value type of the associated item is not supported.</exception>
++        public object? Get(Guid key)
+-        public object Get(Guid key)
+         {
+             MFAttributeType itemType = GetItemType(key);
+             MFAttributeType mfAttributeType = itemType;
+@@ -1001,7 +1001,7 @@
+         /// <typeparam name="TValueType">Type of the returned item.</typeparam>
+         /// <returns>The item which got associated with the specified <paramref name="key" />.</returns>
+         /// <exception cref="NotSupportedException">The specified <typeparamref name="TValueType" /> is not supported.</exception>
++        public TValueType? Get<TValueType>(Guid key)
+-        public TValueType Get<TValueType>(Guid key)
+         {
+             if (typeof (TValueType) == typeof (int) || typeof (TValueType) == typeof (bool) ||
+                 typeof (TValueType) == typeof (byte) || typeof (TValueType) == typeof (uint) ||
+@@ -1017,7 +1017,7 @@
+             if (typeof (TValueType) == typeof (Guid))
+                 return (TValueType) ((object) GetGuid(key));
+             if (typeof (TValueType) == typeof (string))
++                return (TValueType?) ((object?) GetString(key));
+-                return (TValueType) ((object) GetString(key));
+             if (typeof (TValueType) == typeof (double) || typeof (TValueType) == typeof (float))
+                 return (TValueType) Convert.ChangeType(GetDouble(key), typeof (TValueType));
+             if (typeof (TValueType) == typeof (byte[]))
+@@ -1026,7 +1026,7 @@
+             }
+             if (typeof (TValueType).IsValueType)
+             {
++                return (TValueType?) GetBlob(key, typeof (TValueType));
+-                return (TValueType) GetBlob(key, typeof (TValueType));
+             }
+             //currently not supported
+             /*if (typeof (TValueType) == typeof (ComObject))
+@@ -1053,6 +1053,7 @@
+         /// <exception cref="NotSupportedException">The specified <typeparamref name="TValueType" /> is not supported.</exception>
+         public void Set<TValueType>(Guid key, TValueType value)
+         {
++            CSCoreNullable.Argument(value); // ArmAgedon seam
+             if (typeof (TValueType) == typeof (int) || typeof (TValueType) == typeof (bool) ||
+                 typeof (TValueType) == typeof (byte) || typeof (TValueType) == typeof (uint) ||
+                 typeof (TValueType) == typeof (short) || typeof (TValueType) == typeof (ushort) ||
+@@ -1062,11 +1063,11 @@
+             else if (typeof (TValueType) == typeof (long) || typeof (TValueType) == typeof (ulong))
+                 SetUINT64(key, Convert.ToInt64(value));
+             else if (typeof (TValueType) == typeof (IntPtr))
++                SetUINT64(key, ((IntPtr) CSCoreNullable.Require(((object?) value))).ToInt64()); // ArmAgedon seam
+-                SetUINT64(key, ((IntPtr) ((object) value)).ToInt64());
+             else if (typeof (TValueType) == typeof (Guid))
++                SetGuid(key, (Guid) CSCoreNullable.Require(((object?) value))); // ArmAgedon seam
+-                SetGuid(key, (Guid) ((object) value));
+             else if (typeof (TValueType) == typeof (string))
++                SetString(key, (string)(object)value); // ArmAgedon seam
+-                SetString(key, value.ToString());
+             else if (typeof (TValueType) == typeof (double) || typeof (TValueType) == typeof (float))
+                 SetDouble(key, Convert.ToDouble(value));
+             else if (typeof (TValueType) == typeof (byte[]))
+@@ -1101,7 +1102,7 @@
+                 throw new ArgumentException("The type of the value is not supported");
+         }
+ 
++        internal bool TryGet<T>(Guid key, out T? value)
+-        internal bool TryGet<T>(Guid key, out T value)
+         {
+             try
+             {

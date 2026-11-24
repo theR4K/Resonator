@@ -1,0 +1,23 @@
+--- a/MediaFoundation/MFSourceReader.cs
++++ b/MediaFoundation/MFSourceReader.cs
+@@ -222,7 +222,7 @@
+         /// <returns>
+         /// HRESULT
+         /// </returns>
++        public unsafe int ReadSampleNative(int streamIndex, int controlFlags, out int actualStreamIndex, out MFSourceReaderFlags streamFlags, out long timestamp, out MFSample? sample)
+-        public unsafe int ReadSampleNative(int streamIndex, int controlFlags, out int actualStreamIndex, out MFSourceReaderFlags streamFlags, out long timestamp, out MFSample sample)
+         {
+             IntPtr psample = IntPtr.Zero;
+             fixed (void* ptr0 = &actualStreamIndex, ptr1 = &streamFlags, ptr2 = &timestamp)
+@@ -242,9 +242,9 @@
+         /// <param name="streamFlags">Receives a bitwise OR of zero or more flags from the <see cref="MFSourceReaderFlags"/> enumeration.</param>
+         /// <param name="timestamp">Receives the time stamp of the sample, or the time of the stream event indicated in <paramref name="streamFlags"/>. The time is given in 100-nanosecond units.</param>
+         /// <returns>The <see cref="MFSample"/> instance or null. If this parameter receives a non-null value, the caller must release the received <see cref="MFSample"/>.</returns>
++        public MFSample? ReadSample(int streamIndex, int controlFlags, out int actualStreamIndex, out MFSourceReaderFlags streamFlags, out long timestamp)
+-        public MFSample ReadSample(int streamIndex, int controlFlags, out int actualStreamIndex, out MFSourceReaderFlags streamFlags, out long timestamp)
+         {
++            MFSample? sample;
+-            MFSample sample;
+             MediaFoundationException.Try(ReadSampleNative(streamIndex, controlFlags, out actualStreamIndex, out streamFlags, out timestamp, out sample), InterfaceName, "ReadSample");
+             return sample;
+         }

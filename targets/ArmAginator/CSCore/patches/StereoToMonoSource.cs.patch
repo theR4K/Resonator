@@ -1,0 +1,11 @@
+--- a/Streams/StereoToMonoSource.cs
++++ b/Streams/StereoToMonoSource.cs
+@@ -10,7 +10,7 @@
+     public class StereoToMonoSource : SampleAggregatorBase
+     {
+         private readonly WaveFormat _waveFormat;
++        private float[]? _buffer;
+-        private float[] _buffer;
+ 
+         /// <summary>
+         /// Initializes a new instance of the <see cref="StereoToMonoSource"/> class.

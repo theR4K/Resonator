@@ -1,0 +1,17 @@
+--- a/Codecs/FLAC/FlacPartitionedRice.cs
++++ b/Codecs/FLAC/FlacPartitionedRice.cs
+@@ -26,12 +26,12 @@
+                     samplesPerPartition = (header.BlockSize >> partitionOrder) - order;
+ 
+                 var riceParameter = reader.ReadBits(riceParameterLength);
++                CSCoreNullable.Require(data.Content.Parameters)[p] = (int)riceParameter; // ArmAgedon seam
+-                data.Content.Parameters[p] = (int)riceParameter;
+ 
+                 if (riceParameter >= escapeCode)
+                 {
+                     var raw = reader.ReadBits(5); //raw is always 5 bits (see ...(+5))
++                    CSCoreNullable.Require(data.Content.RawBits)[p] = (int)raw; // ArmAgedon seam
+-                    data.Content.RawBits[p] = (int)raw;
+                     for (int i = 0; i < samplesPerPartition; i++)
+                     {
+                         int sample = reader.ReadBitsSigned((int)raw);

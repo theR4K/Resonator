@@ -1,0 +1,11 @@
+--- a/DMO/Effects/DirectSoundFXBase.cs
++++ b/DMO/Effects/DirectSoundFXBase.cs
+@@ -73,7 +73,7 @@
+             {
+                 int hresult = InteropCalls.CalliMethodPtr(UnsafeBasePtr, p.ToPointer(), ((void**) (*(void**) UnsafeBasePtr))[4]);
+ 
++                parameters = (T) CSCoreNullable.Require(Marshal.PtrToStructure(p, typeof (T))); // ArmAgedon seam
+-                parameters = (T) Marshal.PtrToStructure(p, typeof (T));
+                 return hresult;
+             }
+             finally

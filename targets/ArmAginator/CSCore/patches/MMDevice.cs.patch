@@ -1,0 +1,114 @@
+--- a/CoreAudioAPI/MMDevice.cs
++++ b/CoreAudioAPI/MMDevice.cs
+@@ -14,7 +14,7 @@
+     {
+         private const string InterfaceName = "IMMDevice";
+ 
++        private PropertyStore? _propertyStore;
+-        private PropertyStore _propertyStore;
+ 
+         /// <summary>
+         /// Initializes a new instance of the <see cref="MMDevice"/> class. 
+@@ -39,11 +39,11 @@
+         /// <summary>
+         /// Gets the device id. For information, see <see href="http://msdn.microsoft.com/en-us/library/windows/desktop/dd370837(v=vs.85).aspx"/>.
+         /// </summary>
++        public string? DeviceID
+-        public string DeviceID
+         {
+             get
+             {
++                string? id;
+-                string id;
+                 CoreAudioAPIException.Try(GetIdNative(out id), InterfaceName, "GetId");
+                 return id;
+             }
+@@ -53,7 +53,7 @@
+         /// Gets the friendly name of the device.
+         /// </summary>
+         /// <remarks>This value is stored in the <see cref="PropertyStore"/>.</remarks>
++        public string? FriendlyName
+-        public string FriendlyName
+         {
+             get { return PropertyStore[PropertyStore.FriendlyName].ToString(); }
+         }
+@@ -65,9 +65,9 @@
+         ///     This value is stored in the <see cref="PropertyStore"/>.
+         ///     Use this value as the deviceid for XAudio2.8 device selection.
+         /// </remarks>
++        public string? DevicePath
+-        public string DevicePath
+         {
++            get { return (string?) PropertyStore[PropertyStore.AudioEndpointPath].GetValue(); }
+-            get { return (string) PropertyStore[PropertyStore.AudioEndpointPath].GetValue(); }
+         }
+ 
+         /// <summary>
+@@ -104,7 +104,7 @@
+         /// Gets the device format.
+         /// </summary>
+         /// <remarks>Specifies the device format, which is the format that the user has selected for the stream that flows between the audio engine and the audio endpoint device when the device operates in shared mode.</remarks>
++        public WaveFormat? DeviceFormat
+-        public WaveFormat DeviceFormat
+         {
+             get
+             {
+@@ -181,7 +181,7 @@
+         /// </summary>
+         /// <param name="deviceid">The variable which will receive the id of the device.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int GetIdNative(out string? deviceid)
+-        public unsafe int GetIdNative(out string deviceid)
+         {
+             IntPtr pdeviceid = IntPtr.Zero;
+             deviceid = null;
+@@ -233,12 +233,12 @@
+         /// Returns the <see cref="FriendlyName"/> of the <see cref="MMDevice"/>.
+         /// </summary>
+         /// <returns>The <see cref="FriendlyName"/>.</returns>
++        public override string? ToString()
+-        public override string ToString()
+         {
+             return PropertyStore[PropertyStore.FriendlyName].ToString();
+         }
+ 
++        public bool Equals(MMDevice? other)
+-        public bool Equals(MMDevice other)
+         {
+             if (other is null)
+                 return false;
+@@ -247,7 +247,7 @@
+                 FriendlyName == other.FriendlyName;
+         }
+ 
++        public override bool Equals(object? obj)
+-        public override bool Equals(object obj)
+         {
+             if (obj is MMDevice device)
+                 return Equals(device);
+@@ -255,7 +255,7 @@
+             return false;
+         }
+ 
++        public static bool operator ==(MMDevice a, MMDevice? b)
+-        public static bool operator ==(MMDevice a, MMDevice b)
+         {
+             if (a is null && b is null)
+                 return true;
+@@ -266,13 +266,13 @@
+             return a.Equals(b);
+         }
+ 
++        public static bool operator !=(MMDevice a, MMDevice? b) => !(a == b);
+-        public static bool operator !=(MMDevice a, MMDevice b) => !(a == b);
+ 
+         public override int GetHashCode()
+         {
+             int hashCode = 908866859;
++            hashCode = hashCode * -1521134295 + CSCoreNullable.TextHash(DeviceID) /* ArmAgedon seam */;
++            hashCode = hashCode * -1521134295 + CSCoreNullable.TextHash(FriendlyName) /* ArmAgedon seam */;
+-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(DeviceID);
+-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FriendlyName);
+             return hashCode;
+         }
+     }

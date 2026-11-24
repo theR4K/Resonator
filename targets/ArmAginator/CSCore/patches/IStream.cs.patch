@@ -1,0 +1,10 @@
+--- a/Win32/IStream.cs
++++ b/Win32/IStream.cs
+@@ -110,6 +110,6 @@
+         /// <param name="ppstm">When this method returns, contains the new stream object. This parameter is passed uninitialized.</param>
+         /// <returns>HRESULT</returns>
+         [PreserveSig]
++        HResult Clone(out IStream? ppstm);
+-        HResult Clone(out IStream ppstm);
+     }
+ }

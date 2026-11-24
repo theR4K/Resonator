@@ -1,0 +1,11 @@
+--- a/FluentExtensions.cs
++++ b/FluentExtensions.cs
+@@ -156,7 +156,7 @@
+             if (input.WaveFormat.Channels == 2)
+                 return new StereoToMonoSource(input.ToSampleSource()).ToWaveSource(input.WaveFormat.BitsPerSample);
+ 
++            WaveFormatExtensible? format = input.WaveFormat as WaveFormatExtensible;
+-            WaveFormatExtensible format = input.WaveFormat as WaveFormatExtensible;
+             if (format != null)
+             {
+                 ChannelMask channelMask = format.ChannelMask;

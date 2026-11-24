@@ -1,0 +1,47 @@
+--- a/CoreAudioAPI/AudioSessionEvents.cs
++++ b/CoreAudioAPI/AudioSessionEvents.cs
+@@ -13,37 +13,37 @@
+         /// <summary>
+         /// Occurs when the display name for the session has changed.
+         /// </summary>
++        public event EventHandler<AudioSessionDisplayNameChangedEventArgs>? DisplayNameChanged;
+-        public event EventHandler<AudioSessionDisplayNameChangedEventArgs> DisplayNameChanged;
+ 
+         /// <summary>
+         /// Occurs when the display icon for the session has changed.
+         /// </summary>
++        public event EventHandler<AudioSessionIconPathChangedEventArgs>? IconPathChanged;
+-        public event EventHandler<AudioSessionIconPathChangedEventArgs> IconPathChanged;
+ 
+         /// <summary>
+         /// Occurs when the volume level or muting state of the session has changed.
+         /// </summary>
++        public event EventHandler<AudioSessionSimpleVolumeChangedEventArgs>? SimpleVolumeChanged;
+-        public event EventHandler<AudioSessionSimpleVolumeChangedEventArgs> SimpleVolumeChanged;
+ 
+         /// <summary>
+         /// Occurs when the volume level of an audio channel in the session submix has changed.
+         /// </summary>
++        public event EventHandler<AudioSessionChannelVolumeChangedEventArgs>? ChannelVolumeChanged;
+-        public event EventHandler<AudioSessionChannelVolumeChangedEventArgs> ChannelVolumeChanged;
+ 
+         /// <summary>
+         /// Occurs when the grouping parameter for the session has changed.
+         /// </summary>
++        public event EventHandler<AudioSessionGroupingParamChangedEventArgs>? GroupingParamChanged;
+-        public event EventHandler<AudioSessionGroupingParamChangedEventArgs> GroupingParamChanged;
+ 
+         /// <summary>
+         /// Occurs when the stream-activity state of the session has changed.
+         /// </summary>
++        public event EventHandler<AudioSessionStateChangedEventArgs>? StateChanged;
+-        public event EventHandler<AudioSessionStateChangedEventArgs> StateChanged;
+ 
+         /// <summary>
+         /// Occurs when the session has been disconnected.
+         /// </summary>
++        public event EventHandler<AudioSessionDisconnectedEventArgs>? SessionDisconnected;
+-        public event EventHandler<AudioSessionDisconnectedEventArgs> SessionDisconnected;
+ 
+         /// <summary>
+         /// Notifies the client that the display name for the session has changed.

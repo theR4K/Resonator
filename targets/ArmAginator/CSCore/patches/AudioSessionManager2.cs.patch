@@ -1,0 +1,119 @@
+--- a/CoreAudioAPI/AudioSessionManager2.cs
++++ b/CoreAudioAPI/AudioSessionManager2.cs
+@@ -15,8 +15,8 @@
+         private const string InterfaceName = "IAudioSessionManager2";
+         // ReSharper disable once InconsistentNaming
+         private static readonly Guid IID_IAudioSessionManager2 = new Guid("77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F");
++        private readonly List<IAudioSessionNotification?> _sessionNotifications;
++        private readonly List<IAudioVolumeDuckNotification?> _volumeDuckNotifications;
+-        private readonly List<IAudioSessionNotification> _sessionNotifications;
+-        private readonly List<IAudioVolumeDuckNotification> _volumeDuckNotifications;
+ 
+         private readonly AudioSessionNotification _audioSessionNotification = new AudioSessionNotification();
+         private readonly AudioVolumeDuckNotification _audioVolumeDuckNotification = new AudioVolumeDuckNotification();
+@@ -66,8 +66,8 @@
+         public AudioSessionManager2(IntPtr ptr)
+             : base(ptr)
+         {
++            _sessionNotifications = new List<IAudioSessionNotification?>();
++            _volumeDuckNotifications = new List<IAudioVolumeDuckNotification?>();
+-            _sessionNotifications = new List<IAudioSessionNotification>();
+-            _volumeDuckNotifications = new List<IAudioVolumeDuckNotification>();
+ 
+             RegisterSessionNotification(_audioSessionNotification);
+             RegisterDuckNotification(null, _audioVolumeDuckNotification);
+@@ -80,7 +80,7 @@
+         /// <param name="sessionEnumerator">Retrieves a session enumerator object that the client can use to enumerate audio sessions on the audio device.</param>
+         /// <returns>HRESULT</returns>
+         /// <remarks>The client is responsible for releasing the <paramref name="sessionEnumerator"/>.</remarks>
++        public unsafe int GetSessionEnumeratorNative(out AudioSessionEnumerator? sessionEnumerator)
+-        public unsafe int GetSessionEnumeratorNative(out AudioSessionEnumerator sessionEnumerator)
+         {
+             IntPtr ptr = IntPtr.Zero;
+             int result = InteropCalls.CallI(UnsafeBasePtr, &ptr, ((void**)(*(void**)UnsafeBasePtr))[5]);
+@@ -93,9 +93,9 @@
+         /// </summary>
+         /// <returns>a session enumerator object that the client can use to enumerate audio sessions on the audio device.</returns>
+         /// <remarks>The client is responsible for releasing the returned <see cref="AudioSessionEnumerator"/>.</remarks>
++        public AudioSessionEnumerator? GetSessionEnumerator()
+-        public AudioSessionEnumerator GetSessionEnumerator()
+         {
++            AudioSessionEnumerator? sessionEnumerator;
+-            AudioSessionEnumerator sessionEnumerator;
+             CoreAudioAPIException.Try(GetSessionEnumeratorNative(out sessionEnumerator), InterfaceName,
+                 "GetSessionEnumerator");
+             return sessionEnumerator;
+@@ -112,7 +112,7 @@
+         /// 
+         /// <c>Note:</c> Make sure to call the <see cref="RegisterSessionNotificationNative"/> from an MTA-Thread. Also make sure to enumerate all sessions after calling this method. 
+         /// </remarks>
++        public unsafe int RegisterSessionNotificationNative(IAudioSessionNotification? sessionNotification)
+-        public unsafe int RegisterSessionNotificationNative(IAudioSessionNotification sessionNotification)
+         {
+             int result = 0;
+             if (!_sessionNotifications.Contains(sessionNotification))
+@@ -148,7 +148,7 @@
+         /// 
+         /// <c>Note:</c> Make sure to call the <see cref="RegisterSessionNotification"/> from an MTA-Thread. Also make sure to enumerate all sessions after calling this method. 
+         /// </remarks>
++        public void RegisterSessionNotification(IAudioSessionNotification? sessionNotification)
+-        public void RegisterSessionNotification(IAudioSessionNotification sessionNotification)
+         {
+             if (Thread.CurrentThread.GetApartmentState() != ApartmentState.MTA)
+                 throw new InvalidOperationException("RegisterSessionNotification has to be called from an MTA-Thread.");
+@@ -164,7 +164,7 @@
+         /// The application's implementation of the <see cref="IAudioSessionNotification"/> interface. 
+         /// Pass the same object that was specified to the session manager in a previous call <see cref="RegisterSessionNotification"/> to register for notification.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int UnregisterSessionNotificationNative(IAudioSessionNotification? sessionNotification)
+-        public unsafe int UnregisterSessionNotificationNative(IAudioSessionNotification sessionNotification)
+         {
+             int result = 0;
+             if (_sessionNotifications.Contains(sessionNotification))
+@@ -197,7 +197,7 @@
+         /// <param name="sessionNotification">
+         /// The application's implementation of the <see cref="IAudioSessionNotification"/> interface. 
+         /// Pass the same object that was specified to the session manager in a previous call <see cref="RegisterSessionNotification"/> to register for notification.</param>
++        public void UnregisterSessionNotification(IAudioSessionNotification? sessionNotification)
+-        public void UnregisterSessionNotification(IAudioSessionNotification sessionNotification)
+         {
+             CoreAudioAPIException.Try(UnregisterSessionNotificationNative(sessionNotification), InterfaceName,
+                 "UnregisterSessionNotification");
+@@ -213,8 +213,8 @@
+         /// Other applications that do not want to alter their streams but want to get all the ducking notifications must pass NULL.</param>
+         /// <param name="sessionNotification">Instance of any object which implements the <see cref="IAudioVolumeDuckNotification"/> and which should receive duck notifications.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int RegisterDuckNotificationNative(string? sessionId,
++            IAudioVolumeDuckNotification? sessionNotification)
+-        public unsafe int RegisterDuckNotificationNative(string sessionId,
+-            IAudioVolumeDuckNotification sessionNotification)
+         {
+             int result = 0;
+             if (!_volumeDuckNotifications.Contains(sessionNotification))
+@@ -247,7 +247,7 @@
+         /// <param name="sessionId">A string that contains a session instance identifier. Applications that are playing a media stream and want to provide custom stream attenuation or ducking behavior, pass their own session instance identifier.
+         /// Other applications that do not want to alter their streams but want to get all the ducking notifications must pass NULL.</param>
+         /// <param name="sessionNotification">Instance of any object which implements the <see cref="IAudioVolumeDuckNotification"/> and which should receive duck notifications.</param>
++        public void RegisterDuckNotification(string? sessionId, IAudioVolumeDuckNotification? sessionNotification)
+-        public void RegisterDuckNotification(string sessionId, IAudioVolumeDuckNotification sessionNotification)
+         {
+             CoreAudioAPIException.Try(RegisterDuckNotificationNative(sessionId, sessionNotification), InterfaceName,
+                 "RegisterDuckNotification");
+@@ -261,7 +261,7 @@
+         /// The <see cref="IAudioVolumeDuckNotification"/> interface that is implemented by the application. Pass the same interface pointer that was specified to the session manager in a previous call to the <see cref="RegisterDuckNotification"/> method.
+         /// </param>
+         /// <returns>HRESULT</returns>
++        public unsafe int UnregisterDuckNotificationNative(IAudioVolumeDuckNotification? sessionNotification)
+-        public unsafe int UnregisterDuckNotificationNative(IAudioVolumeDuckNotification sessionNotification)
+         {
+             int result = 0;
+             if (_volumeDuckNotifications.Contains(sessionNotification))
+@@ -291,7 +291,7 @@
+         /// <param name="sessionNotification">
+         /// The <see cref="IAudioVolumeDuckNotification"/> interface that is implemented by the application. Pass the same interface pointer that was specified to the session manager in a previous call to the <see cref="RegisterDuckNotification"/> method.
+         /// </param>
++        public void UnregisterDuckNotification(IAudioVolumeDuckNotification? sessionNotification)
+-        public void UnregisterDuckNotification(IAudioVolumeDuckNotification sessionNotification)
+         {
+             CoreAudioAPIException.Try(UnregisterDuckNotificationNative(sessionNotification), InterfaceName,
+                 "UnregisterDuckNotification");

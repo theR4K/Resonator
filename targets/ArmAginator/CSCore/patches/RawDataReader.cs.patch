@@ -1,0 +1,29 @@
+--- a/Codecs/RAW/RawDataReader.cs
++++ b/Codecs/RAW/RawDataReader.cs
+@@ -12,7 +12,7 @@
+         private readonly long _startPosition;
+         private readonly WaveFormat _waveFormat;
+         private bool _disposed;
++        private Stream? _stream;
+-        private Stream _stream;
+ 
+         /// <summary>
+         ///     Initializes a new instance of the <see cref="RawDataReader" /> class.
+@@ -59,7 +59,7 @@
+         {
+             CheckForDisposed();
+             count -= (count % WaveFormat.BlockAlign);
++            return CSCoreNullable.Require(_stream).Read(buffer, offset, count); // ArmAgedon seam
+-            return _stream.Read(buffer, offset, count);
+         }
+ 
+         /// <summary>
+@@ -88,7 +88,7 @@
+             {
+                 CheckForDisposed();
+                 value -= (value % WaveFormat.BlockAlign);
++                CSCoreNullable.Require(_stream).Position = _startPosition + value; // ArmAgedon seam
+-                _stream.Position = _startPosition + value;
+             }
+         }
+ 

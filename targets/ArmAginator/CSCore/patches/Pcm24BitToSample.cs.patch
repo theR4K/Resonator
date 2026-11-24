@@ -1,0 +1,11 @@
+--- a/Streams/SampleConverter/Pcm24BitToSample.cs
++++ b/Streams/SampleConverter/Pcm24BitToSample.cs
+@@ -41,7 +41,7 @@
+         {
+             int bytesToRead = count * 3;
+             Buffer = Buffer.CheckBuffer(bytesToRead);
++            int read = CSCoreNullable.Require(Source).Read(Buffer, 0, bytesToRead); // ArmAgedon seam
+-            int read = Source.Read(Buffer, 0, bytesToRead);
+             unsafe
+             {
+                 fixed (float* ptrBuffer = buffer)

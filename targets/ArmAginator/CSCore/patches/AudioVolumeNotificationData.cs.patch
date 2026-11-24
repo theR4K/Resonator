@@ -1,0 +1,11 @@
+--- a/CoreAudioAPI/AudioVolumeNotificationData.cs
++++ b/CoreAudioAPI/AudioVolumeNotificationData.cs
+@@ -67,7 +67,7 @@
+                         ((long) ptr + (long) Marshal.OffsetOf(typeof (AudioVolumeNotificationData), "ChannelVolumes"));
+                 for (int i = 0; i < Channels; i++)
+                 {
++                    result[i] = (float) CSCoreNullable.Require(Marshal.PtrToStructure(pchannels, typeof (float))); // ArmAgedon seam
+-                    result[i] = (float) Marshal.PtrToStructure(pchannels, typeof (float));
+                     int size = Marshal.SizeOf(typeof (float));
+                     pchannels = new IntPtr((byte*) pchannels.ToPointer() + size);
+                 }

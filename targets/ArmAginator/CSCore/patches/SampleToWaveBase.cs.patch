@@ -1,0 +1,11 @@
+--- a/Streams/SampleConverter/SampleToWaveBase.cs
++++ b/Streams/SampleConverter/SampleToWaveBase.cs
+@@ -15,7 +15,7 @@
+         /// <summary>
+         /// The buffer to use for reading from the <see cref="Source"/>.
+         /// </summary>
++        protected internal float[]? Buffer;
+-        protected internal float[] Buffer;
+         private readonly double _ratio;
+ 
+         /// <summary>

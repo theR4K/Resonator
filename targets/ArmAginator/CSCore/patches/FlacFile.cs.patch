@@ -1,0 +1,70 @@
+--- a/Codecs/FLAC/FlacFile.cs
++++ b/Codecs/FLAC/FlacFile.cs
+@@ -18,14 +18,14 @@
+         private readonly Stream _stream;
+         private readonly WaveFormat _waveFormat;
+         private readonly FlacMetadataStreamInfo _streamInfo;
++        private readonly FlacPreScan? _scan;
+-        private readonly FlacPreScan _scan;
+ 
+         private readonly object _bufferLock = new object();
+ 
+         private readonly bool _closeStream;
+ 
+         //overflow:
++        private byte[]? _overflowBuffer;
+-        private byte[] _overflowBuffer;
+ 
+         private int _overflowCount;
+         private int _overflowOffset;
+@@ -54,7 +54,7 @@
+             get { return _scan != null; }
+         }
+ 
++        private FlacFrame? _frame;
+-        private FlacFrame _frame;
+ 
+         private FlacFrame Frame
+         {
+@@ -100,7 +100,7 @@
+         ///     <paramref name="scanFlag" /> argument is set the <see cref="FlacPreScanMode.Async" />.
+         /// </param>
+         public FlacFile(Stream stream, FlacPreScanMode scanFlag,
++            Action<FlacPreScanFinishedEventArgs>? onscanFinished)
+-            Action<FlacPreScanFinishedEventArgs> onscanFinished)
+         {
+             if (stream == null)
+                 throw new ArgumentNullException();
+@@ -244,9 +244,9 @@
+                     {
+                         if (CanSeek) //go to next frame
+                         {
++                            if (++_frameIndex >= CSCoreNullable.Require(CSCoreNullable.Require(_scan).Frames).Count) // ArmAgedon seam
+-                            if (++_frameIndex >= _scan.Frames.Count)
+                                 return read;
++                            _stream.Position = CSCoreNullable.Require(_scan.Frames)[_frameIndex].StreamOffset; // ArmAgedon seam
+-                            _stream.Position = _scan.Frames[_frameIndex].StreamOffset;
+                         }
+                     }
+                     _frameIndex++;
+@@ -320,9 +320,9 @@
+                     value = Math.Max(Math.Min(value, Length), 0);
+                     value -= (value % WaveFormat.BlockAlign);
+ 
++                    for (int i = 0; i < CSCoreNullable.Require(CSCoreNullable.Require(_scan).Frames).Count; i++) // ArmAgedon seam
+-                    for (int i = 0; i < _scan.Frames.Count; i++)
+                     {
++                        if ((value / WaveFormat.BlockAlign) <= CSCoreNullable.Require(_scan.Frames)[i].SampleOffset) // ArmAgedon seam
+-                        if ((value / WaveFormat.BlockAlign) <= _scan.Frames[i].SampleOffset)
+                         {
+                             if (i != 0)
+                                 i--;
+@@ -361,7 +361,7 @@
+                 if (_disposed)
+                     return 0;
+                 if (CanSeek)
++                    return CSCoreNullable.Require(_scan).TotalSamples * WaveFormat.BlockAlign; // ArmAgedon seam
+-                    return _scan.TotalSamples * WaveFormat.BlockAlign;
+                 return -1;
+             }
+         }

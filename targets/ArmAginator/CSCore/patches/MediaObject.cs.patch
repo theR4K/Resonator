@@ -1,0 +1,47 @@
+--- a/DMO/MediaObject.cs
++++ b/DMO/MediaObject.cs
+@@ -56,7 +56,7 @@
+         /// </remarks>
+         /// <param name="comObject">The COM Object to cast to a <see cref="MediaObject"/>.</param>
+         /// <returns>The <see cref="MediaObject"/>.</returns>
++        public static MediaObject? FromComObject(ComObject comObject)
+-        public static MediaObject FromComObject(ComObject comObject)
+         {
+             if (comObject == null)
+                 throw new ArgumentNullException("comObject");
+@@ -278,7 +278,7 @@
+         {
+             //experimental
+             if (waveFormat is WaveFormatExtensible)
++                waveFormat = CSCoreNullable.Require(waveFormat as WaveFormatExtensible).ToWaveFormat(); // ArmAgedon seam
+-                waveFormat = (waveFormat as WaveFormatExtensible).ToWaveFormat();
+ 
+             using (MediaType mediaType = MediaType.FromWaveFormat(waveFormat))
+             {
+@@ -296,7 +296,7 @@
+         {
+             //experimental
+             if (waveFormat is WaveFormatExtensible)
++                waveFormat = CSCoreNullable.Require(waveFormat as WaveFormatExtensible).ToWaveFormat(); // ArmAgedon seam
+-                waveFormat = (waveFormat as WaveFormatExtensible).ToWaveFormat();
+ 
+             using (MediaType mediaType = MediaType.FromWaveFormat(waveFormat))
+             {
+@@ -378,7 +378,7 @@
+         {
+             //experimental
+             if (waveFormat is WaveFormatExtensible)
++                waveFormat = CSCoreNullable.Require(waveFormat as WaveFormatExtensible).ToWaveFormat(); // ArmAgedon seam
+-                waveFormat = (waveFormat as WaveFormatExtensible).ToWaveFormat();
+ 
+             using (MediaType mediaType = MediaType.FromWaveFormat(waveFormat))
+             {
+@@ -396,7 +396,7 @@
+         {
+             //experimental
+             if (waveFormat is WaveFormatExtensible)
++                waveFormat = CSCoreNullable.Require(waveFormat as WaveFormatExtensible).ToWaveFormat(); // ArmAgedon seam
+-                waveFormat = (waveFormat as WaveFormatExtensible).ToWaveFormat();
+ 
+             using (MediaType mediaType = MediaType.FromWaveFormat(waveFormat))
+             {

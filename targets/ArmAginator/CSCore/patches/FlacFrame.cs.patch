@@ -1,0 +1,109 @@
+--- a/Codecs/FLAC/FlacFrame.cs
++++ b/Codecs/FLAC/FlacFrame.cs
+@@ -12,21 +12,21 @@
+     /// </summary>
+     public sealed partial class FlacFrame : IDisposable
+     {
++        private List<FlacSubFrameData>? _subFrameData;
+-        private List<FlacSubFrameData> _subFrameData;
+ #if FLAC_DEBUG
+         private System.Collections.ObjectModel.ReadOnlyCollection<FlacSubFrameBase> _subFrames;  
+ #endif
+         private Stream _stream;
++        private FlacMetadataStreamInfo? _streamInfo;
+-        private FlacMetadataStreamInfo _streamInfo;
+ 
+         private GCHandle _handle1, _handle2;
++        private int[]? _destBuffer;
++        private int[]? _residualBuffer;
+-        private int[] _destBuffer;
+-        private int[] _residualBuffer;
+ 
+         /// <summary>
+         /// Gets the header of the flac frame.
+         /// </summary>
++        public FlacFrameHeader? Header { get; private set; }
+-        public FlacFrameHeader Header { get; private set; }
+ 
+         /// <summary>
+         /// Gets the CRC16-checksum.
+@@ -59,14 +59,14 @@
+         /// <param name="stream">The stream which contains the flac frame.</param>
+         /// <param name="streamInfo">Some basic information about the flac stream.</param>
+         /// <returns>A new instance of the <see cref="FlacFrame"/> class.</returns>
++        public static FlacFrame FromStream(Stream stream, FlacMetadataStreamInfo? streamInfo)
+-        public static FlacFrame FromStream(Stream stream, FlacMetadataStreamInfo streamInfo)
+         {
+             FlacFrame frame = new FlacFrame(stream, streamInfo);
+             return frame;
+             //return frame.HasError ? null : frame;
+         }
+ 
++        private FlacFrame(Stream stream, FlacMetadataStreamInfo? streamInfo = null)
+-        private FlacFrame(Stream stream, FlacMetadataStreamInfo streamInfo = null)
+         {
+             if (stream == null) 
+                 throw new ArgumentNullException("stream");
+@@ -87,7 +87,7 @@
+             return !HasError;
+         }
+ 
++        private void Decode(Stream stream, FlacMetadataStreamInfo? streamInfo)
+-        private void Decode(Stream stream, FlacMetadataStreamInfo streamInfo)
+         {
+             Header = new FlacFrameHeader(stream, streamInfo);
+             _stream = stream;
+@@ -102,6 +102,7 @@
+ 
+         private unsafe void ReadSubFrames()
+         {
++            EnsureHeaderState(); // ArmAgedon seam
+             List<FlacSubFrameBase> subFrames = new List<FlacSubFrameBase>();
+ 
+             //alocateOutput
+@@ -109,9 +110,9 @@
+             _subFrameData = data;
+ 
+             byte[] buffer = new byte[0x20000];
++            if ((MaximumFrameSize * Header.Channels * Header.BitsPerSample * 2 >> 3) > buffer.Length)
+-            if ((_streamInfo.MaxFrameSize * Header.Channels * Header.BitsPerSample * 2 >> 3) > buffer.Length)
+             {
++                buffer = new byte[(MaximumFrameSize * Header.Channels * Header.BitsPerSample * 2 >> 3) - FlacConstant.FrameHeaderSize];
+-                buffer = new byte[(_streamInfo.MaxFrameSize * Header.Channels * Header.BitsPerSample * 2 >> 3) - FlacConstant.FrameHeaderSize];
+             }
+ 
+             int read = _stream.Read(buffer, 0, (int)Math.Min(buffer.Length, _stream.Length - _stream.Position));
+@@ -128,7 +129,7 @@
+                         bitsPerSample += 1 - c;
+ 
+                     var subframe = FlacSubFrameBase.GetSubFrame(reader, data[c], Header, bitsPerSample);
++                    subFrames.Add(CSCoreNullable.Require(subframe)); // ArmAgedon seam
+-                    subFrames.Add(subframe);
+                 }
+ 
+                 reader.Flush(); //Zero-padding to byte alignment.
+@@ -147,6 +148,7 @@
+ 
+         private unsafe void MapToChannels(List<FlacSubFrameData> subFrames)
+         {
++            EnsureHeaderState(); // ArmAgedon seam
+             if (Header.ChannelAssignment == ChannelAssignment.LeftSide)
+             {
+                 for (int i = 0; i < Header.BlockSize; i++)
+@@ -185,7 +187,7 @@
+ #if FLAC_DEBUG && !GET_BUFFER_INTERNAL
+             unsafe 
+ #endif
++ int GetBuffer([System.Diagnostics.CodeAnalysis.NotNull] ref byte[]? buffer)
+- int GetBuffer(ref byte[] buffer)
+         {
+ #if !FLAC_DEBUG || GET_BUFFER_INTERNAL
+             return GetBufferInternal(ref buffer);
+@@ -244,6 +246,7 @@
+ 
+         private unsafe List<FlacSubFrameData> AllocOuputMemory()
+         {
++            EnsureHeaderState(); // ArmAgedon seam
+             if (_destBuffer == null || _destBuffer.Length < (Header.Channels * Header.BlockSize))
+                 _destBuffer = new int[Header.Channels * Header.BlockSize];
+             if (_residualBuffer == null || _residualBuffer.Length < (Header.Channels * Header.BlockSize))

@@ -1,0 +1,17 @@
+--- a/Tags/ID3/Frames/CommentAndLyricsFrame.cs
++++ b/Tags/ID3/Frames/CommentAndLyricsFrame.cs
+@@ -4,11 +4,11 @@
+ {
+     public class CommentAndLyricsFrame : Frame
+     {
++        public string? Language { get; private set; }
+-        public string Language { get; private set; }
+ 
++        public string? Description { get; private set; }
+-        public string Description { get; private set; }
+ 
++        public string? Text { get; private set; }
+-        public string Text { get; private set; }
+ 
+         public CommentAndLyricsFrame(FrameHeader header)
+             : base(header)

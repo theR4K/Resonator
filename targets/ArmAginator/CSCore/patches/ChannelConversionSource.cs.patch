@@ -1,0 +1,11 @@
+--- a/Streams/ChannelConversionSource.cs
++++ b/Streams/ChannelConversionSource.cs
+@@ -31,7 +31,7 @@
+             _ratio = (float)_waveFormat.Channels / source.WaveFormat.Channels;
+         }
+ 
++        private float[]? _buffer;
+-        private float[] _buffer;
+ 
+         /// <summary>
+         ///     Reads a sequence of samples from the <see cref="ChannelConversionSource" /> and advances the position within the stream by

@@ -1,0 +1,11 @@
+--- a/Streams/BufferSource.cs
++++ b/Streams/BufferSource.cs
+@@ -89,7 +89,7 @@
+             }
+         }
+ 
++        private void BufferProc(object? o)
+-        private void BufferProc(object o)
+         {
+             byte[] byteBuffer = new byte[WaveFormat.BytesPerSecond / 2];
+             do

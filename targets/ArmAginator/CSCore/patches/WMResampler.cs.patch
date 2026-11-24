@@ -1,0 +1,37 @@
+--- a/DMO/WMResampler.cs
++++ b/DMO/WMResampler.cs
+@@ -6,9 +6,9 @@
+     internal sealed class WMResampler : IDisposable
+     {
+         private bool _disposed;
++        private MediaObject? _mediaObject;
++        private WMResamplerObject? _obj;
++        private WMResamplerProps? _resamplerprops;
+-        private MediaObject _mediaObject;
+-        private WMResamplerObject _obj;
+-        private WMResamplerProps _resamplerprops;
+ 
+         public WMResampler()
+         {
+@@ -17,18 +17,18 @@
+ 
+             _mediaObject = new MediaObject(Marshal.GetComInterfaceForObject((IMediaObject) obj, typeof (IMediaObject)));
+             _resamplerprops =
++                new WMResamplerProps(Marshal.GetComInterfaceForObject(CSCoreNullable.Require(obj as IWMResamplerProps) /* ArmAgedon seam */,
+-                new WMResamplerProps(Marshal.GetComInterfaceForObject(obj as IWMResamplerProps,
+                     typeof (IWMResamplerProps)));
+ 
+             _obj = obj;
+         }
+ 
++        public WMResamplerProps? ResamplerProps
+-        public WMResamplerProps ResamplerProps
+         {
+             get { return _resamplerprops; }
+         }
+ 
++        public MediaObject? MediaObject
+-        public MediaObject MediaObject
+         {
+             get { return _mediaObject; }
+         }

@@ -1,0 +1,14 @@
+--- a/DMO/NativeMethods.cs
++++ b/DMO/NativeMethods.cs
+@@ -17,9 +17,9 @@
+             ref Guid guidCategory,
+             DmoEnumFlags flags,
+             int numberOfInputTypes,
++            [In] DmoPartialMediaType[]? inputTypes,
+-            [In] DmoPartialMediaType[] inputTypes,
+             int numberOfOutputTypes,
++            [In] DmoPartialMediaType[]? outputTypes,
+-            [In] DmoPartialMediaType[] outputTypes,
+             out IntPtr dmoEnum
+             );
+     }

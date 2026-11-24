@@ -1,0 +1,11 @@
+--- a/CoreAudioAPI/AudioClock2.cs
++++ b/CoreAudioAPI/AudioClock2.cs
+@@ -38,7 +38,7 @@
+                 throw new ArgumentNullException("audioClock");
+ 
+             IntPtr ptr = audioClock.QueryInterface(typeof (AudioClock2));
++            if (CSCoreNullable.IsNullPointer(ptr)) // ArmAgedon seam
+-            if (ptr == null)
+                 throw new NotSupportedException("The IAudioClock2 COM object is not supported on current platform.");
+             BasePtr = ptr;
+         }

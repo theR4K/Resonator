@@ -1,0 +1,11 @@
+--- a/SoundOut/PlaybackStoppedEventArgs.cs
++++ b/SoundOut/PlaybackStoppedEventArgs.cs
+@@ -19,7 +19,7 @@
+         ///     Initializes a new instance of the <see cref="PlaybackStoppedEventArgs" /> class.
+         /// </summary>
+         /// <param name="exception">The associated exception. Can be null.</param>
++        public PlaybackStoppedEventArgs(Exception? exception)
+-        public PlaybackStoppedEventArgs(Exception exception)
+             : base(exception)
+         {
+         }

@@ -1,0 +1,10 @@
+--- a/DMO/DmoEnumItem.cs
++++ b/DMO/DmoEnumItem.cs
+@@ -14,6 +14,6 @@
+         /// <summary>
+         /// Gets or sets the friendly name of the dmo.
+         /// </summary>
++        public string? Name { get; set; }
+-        public string Name { get; set; }
+     }
+ }

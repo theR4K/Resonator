@@ -1,0 +1,29 @@
+--- a/Codecs/MP3/XingHeader.cs
++++ b/Codecs/MP3/XingHeader.cs
+@@ -30,7 +30,7 @@
+         /// </summary>
+         /// <param name="frame"><see cref="Mp3Frame"/> which should get checked whether it contains a <see cref="XingHeader"/>.</param>
+         /// <returns><see cref="XingHeader"/> of the specified <paramref name="frame"/> or null.</returns>
++        public static XingHeader? FromFrame(Mp3Frame frame)
+-        public static XingHeader FromFrame(Mp3Frame frame)
+         {
+             XingHeader header = new XingHeader();
+             int offset = CalcOffset(frame);
+@@ -101,7 +101,7 @@
+ 
+         private static bool CheckForValidXingHeader(Mp3Frame frame, int offset)
+         {
++            byte[]? data = null;
+-            byte[] data = null;
+             if (frame.ReadData(ref data, 0) < 4)
+                 return false;
+             if ((data[offset + 0] == 'X' && data[offset + 1] == 'i' && data[offset + 2] == 'n' && data[offset + 3] == 'g') ||
+@@ -114,7 +114,7 @@
+ 
+         private static int ReadHeaderFlags(Mp3Frame frame, int offset)
+         {
++            byte[]? data = null;
+-            byte[] data = null;
+             if (frame.ReadData(ref data, 0) < 4)
+                 throw new System.IO.EndOfStreamException();
+             int i = 0;

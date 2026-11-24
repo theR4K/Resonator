@@ -1,0 +1,11 @@
+--- a/Streams/SampleConverter/IeeeFloatToSample.cs
++++ b/Streams/SampleConverter/IeeeFloatToSample.cs
+@@ -42,7 +42,7 @@
+         {
+             int bytesToRead = count * 4;
+             Buffer = Buffer.CheckBuffer(bytesToRead);
++            int read = CSCoreNullable.Require(Source).Read(Buffer, 0, bytesToRead); // ArmAgedon seam
+-            int read = Source.Read(Buffer, 0, bytesToRead);
+             System.Buffer.BlockCopy(Buffer, 0, buffer, offset * 4, read);
+ 
+             return read / 4;

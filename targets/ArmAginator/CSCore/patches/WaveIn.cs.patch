@@ -1,0 +1,115 @@
+--- a/SoundIn/WaveIn.cs
++++ b/SoundIn/WaveIn.cs
+@@ -17,9 +17,9 @@
+         private readonly WaveCallback _callback;
+         private readonly object _lockObj = new object();
+         private int _activeBuffers;
++        private WaveInBuffer[]? _buffers;
++        private Thread? _callbackThread;
++        private WaveInDevice? _device;
+-        private WaveInBuffer[] _buffers;
+-        private Thread _callbackThread;
+-        private WaveInDevice _device;
+ 
+         private bool _disposed;
+         private bool _isInitialized;
+@@ -34,7 +34,7 @@
+         ///     of the <see cref="Device" /> property.
+         /// </summary>
+         /// <exception cref="ArgumentNullException">The value must not be null.</exception>
++        public WaveInDevice? Device
+-        public WaveInDevice Device
+         {
+             get { return _device; }
+             set
+@@ -86,12 +86,12 @@
+         /// <summary>
+         /// Occurs when new data got captured and is available.
+         /// </summary>
++        public event EventHandler<DataAvailableEventArgs>? DataAvailable;
+-        public event EventHandler<DataAvailableEventArgs> DataAvailable;
+ 
+         /// <summary>
+         /// Occurs when the recording stopped.
+         /// </summary>
++        public event EventHandler<RecordingStoppedEventArgs>? Stopped;
+-        public event EventHandler<RecordingStoppedEventArgs> Stopped;
+ 
+         /// <summary>
+         /// Gets the format of the captured audio data.
+@@ -135,7 +135,7 @@
+ 
+                 if (RecordingState == RecordingState.Stopped)
+                 {
++                    foreach (WaveInBuffer buffer in CSCoreNullable.Require(_buffers)) // ArmAgedon seam
+-                    foreach (WaveInBuffer buffer in _buffers)
+                     {
+                         if (!buffer.IsInQueue)
+                             FireUpBuffer(buffer);
+@@ -185,7 +185,7 @@
+ 
+         private void InitializeInternal()
+         {
++            var supportedFormats = new Queue<WaveFormat>(CSCoreNullable.Require(Device).SupportedFormats // ArmAgedon seam
+-            var supportedFormats = new Queue<WaveFormat>(Device.SupportedFormats
+                 .OrderBy(x => Math.Abs(x.SampleRate - WaveFormat.SampleRate))
+                 .ThenBy(x => Math.Abs(x.BitsPerSample - WaveFormat.BitsPerSample))
+                 .ThenBy(x => Math.Abs(x.Channels - WaveFormat.Channels)));
+@@ -225,7 +225,7 @@
+         {
+             IntPtr handle;
+             MmException.Try(
++                NativeMethods.waveInOpen(out handle, (IntPtr)CSCoreNullable.Require(_device).DeviceId, waveFormat, _callback, IntPtr.Zero, // ArmAgedon seam
+-                NativeMethods.waveInOpen(out handle, (IntPtr)_device.DeviceId, waveFormat, _callback, IntPtr.Zero,
+                     NativeMethods.WaveInOutOpenFlags.CALLBACK_FUNCTION), "waveInOpen");
+             return handle;
+         }
+@@ -246,7 +246,7 @@
+                     Debugger.Break();
+ 
+                 var index = (int) header.userData;
++                WaveInBuffer buffer = CSCoreNullable.Require(_buffers)[index]; // ArmAgedon seam
+-                WaveInBuffer buffer = _buffers[index];
+ 
+                 Interlocked.Decrement(ref _activeBuffers);
+ 
+@@ -312,20 +312,20 @@
+             Interlocked.Increment(ref _activeBuffers);
+         }
+ 
++        private void StopFromCallback(Exception? exception)
+-        private void StopFromCallback(Exception exception)
+         {
+             RecordingState = RecordingState.Stopped;
+             RaiseStopped(exception);
+         }
+ 
++        private void RaiseStopped(Exception? exception)
+-        private void RaiseStopped(Exception exception)
+         {
+             Stopped?.Invoke(this, new RecordingStoppedEventArgs(exception));
+         }
+ 
+         private void RaiseDataAvailable(WaveInBuffer buffer)
+         {
++            EventHandler<DataAvailableEventArgs>? handler = DataAvailable;
+-            EventHandler<DataAvailableEventArgs> handler = DataAvailable;
+             if (handler != null && buffer.WaveHeader.bytesRecorded > 0)
+             {
+                 handler(this,
+@@ -348,14 +348,7 @@
+ 
+         private void DisposeBuffers()
+         {
++            CSCoreNullable.DisposeBuffers(ref _buffers); // ArmAgedon seam
+-            for (int i = 0; i < _buffers.Length; i++)
+-            {
+-                if (_buffers[i] != null)
+-                {
+-                    _buffers[i].Dispose();
+-                    _buffers[i] = null;
+-                }
+-            }
+         }
+ 
+         private void WaitForBuffersToFinish()

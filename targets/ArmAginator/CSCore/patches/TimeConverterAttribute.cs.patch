@@ -1,0 +1,11 @@
+--- a/TimeConverterAttribute.cs
++++ b/TimeConverterAttribute.cs
+@@ -16,7 +16,7 @@
+         /// <summary>
+         /// Gets or sets the arguments to pass to the constructor of the <see cref="TimeConverter"/>. For more information, see <see cref="Activator.CreateInstance(System.Type,object[])"/>.
+         /// </summary>
++        public object[]? Args { get; set; }
+-        public object[] Args { get; set; }
+ 
+         /// <summary>
+         /// Gets or sets a value indicating whether a new instance of the specified <see cref="TimeConverter"/> should be created each time the <see cref="TimeConverterFactory"/> queries the <see cref="TimeConverter"/>.

@@ -1,0 +1,29 @@
+--- a/MediaFoundation/MFSinkWriter.cs
++++ b/MediaFoundation/MFSinkWriter.cs
+@@ -36,7 +36,7 @@
+ 	    /// </summary>
+ 	    /// <param name="byteStream">The underlying <see cref="MFByteStream"/> to use.</param>
+         /// <param name="attributes">Attributes to configure the <see cref="MFSinkWriter"/>. For more information, see <see href="https://msdn.microsoft.com/en-us/library/windows/desktop/dd389284(v=vs.85).aspx"/>. Use null/nothing as the default value.</param>
++	    public MFSinkWriter(MFByteStream byteStream, MFAttributes? attributes = null)
+-	    public MFSinkWriter(MFByteStream byteStream, MFAttributes attributes = null)
+             : this(MediaFoundationCore.CreateSinkWriterFromMFByteStreamNative(byteStream, attributes))
+ 	    {
+ 	    }
+@@ -77,7 +77,7 @@
+ 		/// <param name="inputMediaType">The input media type that specifies the input format.</param>
+ 		/// <param name="encodingParameters">An attribute store. Use the attribute store to configure the encoder. This parameter can be NULL.</param>
+ 		/// <returns>HRESULT</returns>
++		public unsafe int SetInputMediaTypeNative(int streamIndex, MFMediaType inputMediaType, MFAttributes? encodingParameters)
+-		public unsafe int SetInputMediaTypeNative(int streamIndex, MFMediaType inputMediaType, MFAttributes encodingParameters)
+ 		{
+ 			void* imt = (void*)(inputMediaType == null ? IntPtr.Zero : inputMediaType.BasePtr);
+ 			void* ep = (void*)(encodingParameters == null ? IntPtr.Zero : encodingParameters.BasePtr);
+@@ -90,7 +90,7 @@
+ 		/// <param name="streamIndex">The zero-based index of the stream. The index is returned by the <see cref="AddStream"/> method.</param>
+ 		/// <param name="inputMediaType">The input media type that specifies the input format.</param>
+ 		/// <param name="encodingParameters">An attribute store. Use the attribute store to configure the encoder. This parameter can be NULL.</param>
++		public void SetInputMediaType(int streamIndex, MFMediaType inputMediaType, MFAttributes? encodingParameters)
+-		public void SetInputMediaType(int streamIndex, MFMediaType inputMediaType, MFAttributes encodingParameters)
+ 		{
+ 			MediaFoundationException.Try(SetInputMediaTypeNative(streamIndex, inputMediaType, encodingParameters), InterfaceName, "SetInputMediaType");
+ 		}

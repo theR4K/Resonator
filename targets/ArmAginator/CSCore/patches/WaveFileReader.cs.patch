@@ -1,0 +1,60 @@
+--- a/Codecs/WAV/WaveFileReader.cs
++++ b/Codecs/WAV/WaveFileReader.cs
+@@ -17,9 +17,9 @@
+         private readonly object _lockObj = new object();
+ 
+         private bool _disposed;
++        private Stream? _stream;
++        private WaveFormat? _waveFormat;
++        private readonly DataChunk? _dataChunk;
+-        private Stream _stream;
+-        private WaveFormat _waveFormat;
+-        private readonly DataChunk _dataChunk;
+         private readonly bool _closeStream;
+ 
+         /// <summary>
+@@ -53,7 +53,7 @@
+             }
+ 
+             _chunks = ReadChunks(stream);
++            _dataChunk = (DataChunk?)_chunks.FirstOrDefault(x => x is DataChunk);
+-            _dataChunk = (DataChunk)_chunks.FirstOrDefault(x => x is DataChunk);
+             if (_dataChunk == null)
+                 throw new ArgumentException("The specified stream does not contain any data chunks.", "stream");
+ 
+@@ -89,7 +89,7 @@
+             {
+                 CheckForDisposed();
+ 
++                count = (int) Math.Min(count, CSCoreNullable.Require(_dataChunk).DataEndPosition - CSCoreNullable.Require(_stream).Position); // ArmAgedon seam
+-                count = (int) Math.Min(count, _dataChunk.DataEndPosition - _stream.Position);
+                 count -= count % WaveFormat.BlockAlign;
+                 if (count <= 0)
+                     return 0;
+@@ -103,7 +103,7 @@
+         /// </summary>
+         public WaveFormat WaveFormat
+         {
++            get { return CSCoreNullable.Require(_waveFormat); } // ArmAgedon seam
+-            get { return _waveFormat; }
+         }
+ 
+         /// <summary>
+@@ -111,7 +111,7 @@
+         /// </summary>
+         public long Position
+         {
++            get { return _stream != null ? _stream.Position - CSCoreNullable.Require(_dataChunk).DataStartPosition : 0; } // ArmAgedon seam
+-            get { return _stream != null ? _stream.Position - _dataChunk.DataStartPosition : 0; }
+             set
+             {
+                 lock (_lockObj)
+@@ -121,7 +121,7 @@
+                     if (value > Length || value < 0)
+                         throw new ArgumentOutOfRangeException("value", "The position must not be bigger than the length or less than zero.");
+                     value -= (value % WaveFormat.BlockAlign);
++                    CSCoreNullable.Require(_stream).Position = value + CSCoreNullable.Require(_dataChunk).DataStartPosition; // ArmAgedon seam
+-                    _stream.Position = value + _dataChunk.DataStartPosition;
+                 }
+             }
+         }

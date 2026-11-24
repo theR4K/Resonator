@@ -1,0 +1,11 @@
+--- a/Tags/ID3/Frames/BinaryFrame.cs
++++ b/Tags/ID3/Frames/BinaryFrame.cs
+@@ -4,7 +4,7 @@
+ {
+     public class BinaryFrame : Frame
+     {
++        public Byte[]? Data { get; private set; }
+-        public Byte[] Data { get; private set; }
+ 
+         public BinaryFrame(FrameHeader header)
+             : base(header)

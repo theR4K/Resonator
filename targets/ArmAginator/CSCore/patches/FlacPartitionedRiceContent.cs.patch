@@ -1,0 +1,13 @@
+--- a/Codecs/FLAC/FlacPartitionedRiceContent.cs
++++ b/Codecs/FLAC/FlacPartitionedRiceContent.cs
+@@ -2,8 +2,8 @@
+ {
+     internal class FlacPartitionedRiceContent
+     {
++        public int[]? Parameters;
++        public int[]? RawBits;
+-        public int[] Parameters;
+-        public int[] RawBits;
+ 
+         private int _capByOrder = -1;
+ 

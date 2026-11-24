@@ -1,0 +1,14 @@
+--- a/WaveFormat.cs
++++ b/WaveFormat.cs
+@@ -206,9 +206,9 @@
+         /// </summary>
+         /// <param name="other">The <see cref="WaveFormat"/> to compare with this <see cref="WaveFormat"/>.</param>
+         /// <returns>true if the current object is equal to the other parameter; otherwise, false.</returns>
++        public virtual bool Equals(WaveFormat? other)
+-        public virtual bool Equals(WaveFormat other)
+         {
++            return !CSCoreNullable.IsAbsent(other) && Channels == other.Channels && // ArmAgedon seam
+-            return Channels == other.Channels &&
+                    SampleRate == other.SampleRate &&
+                    BytesPerSecond == other.BytesPerSecond &&
+                    BlockAlign == other.BlockAlign &&

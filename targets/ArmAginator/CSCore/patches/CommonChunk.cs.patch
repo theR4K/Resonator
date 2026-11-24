@@ -1,0 +1,11 @@
+--- a/Codecs/AIFF/CommonChunk.cs
++++ b/Codecs/AIFF/CommonChunk.cs
+@@ -59,7 +59,7 @@
+         ///     Gets the compression type.
+         /// </summary>
+         /// <remarks>All compression types except PCM are currently <b>not</b> supported.</remarks>
++        public string? CompressionType { get; private set; }
+-        public string CompressionType { get; private set; }
+ 
+         /// <summary>
+         ///     Gets the wave format.

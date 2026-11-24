@@ -1,0 +1,51 @@
+--- a/MediaFoundation/MFActivate.cs
++++ b/MediaFoundation/MFActivate.cs
+@@ -43,7 +43,7 @@
+         /// <typeparam name="T">The type of the com object to create.</typeparam>
+         /// <param name="riid">Interface identifier (IID) of the requested interface.</param>
+         /// <returns>An instance of the requested interface.</returns>
++        public T? ActivateObject<T>(Guid riid) where T : ComObject
+-        public T ActivateObject<T>(Guid riid) where T : ComObject
+         {
+             IntPtr ptr = ActivateObject(riid);
+             return QueryInterfaceStatic<T>(riid, ptr);
+@@ -100,11 +100,11 @@
+         /// <summary>
+         /// Gets the name of the MFT.
+         /// </summary>
++        public string? FriendlyName
+-        public string FriendlyName
+         {
+             get
+             {
++                string? value;
+-                string value;
+                 if (TryGet(MediaFoundationAttributes.MFT_FRIENDLY_NAME, out value))
+                 {
+                     return value;
+@@ -120,10 +120,10 @@
+         {
+             get
+             {
++                byte[]? bytes;
+-                byte[] bytes;
+                 if (TryGet(MediaFoundationAttributes.MFT_INPUT_TYPES, out bytes))
+                 {
++                    return RegisterTypeInfo.FromByteArray(CSCoreNullable.Require(bytes)); // ArmAgedon seam
+-                    return RegisterTypeInfo.FromByteArray(bytes);
+                 }
+                 return new RegisterTypeInfo[0];
+             }
+@@ -136,10 +136,10 @@
+         {
+             get
+             {
++                byte[]? bytes;
+-                byte[] bytes;
+                 if (TryGet(MediaFoundationAttributes.MFT_OUTPUT_TYPES_Attributes, out bytes))
+                 {
++                    return RegisterTypeInfo.FromByteArray(CSCoreNullable.Require(bytes)); // ArmAgedon seam
+-                    return RegisterTypeInfo.FromByteArray(bytes);
+                 }
+                 return new RegisterTypeInfo[0];
+             }

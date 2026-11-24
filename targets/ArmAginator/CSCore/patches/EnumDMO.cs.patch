@@ -1,0 +1,31 @@
+--- a/DMO/EnumDMO.cs
++++ b/DMO/EnumDMO.cs
+@@ -33,8 +33,8 @@
+         /// <param name="inputTypes">Array of input-Mediatypes.</param>
+         /// <param name="outputTypes">Array of output-Mediatypes.</param>
+         /// <returns>EnumDMO</returns>
++        public static EnumDmo EnumerateDMOs(Guid category, DmoEnumFlags flags, DmoPartialMediaType[]? inputTypes,
++            DmoPartialMediaType[]? outputTypes)
+-        public static EnumDmo EnumerateDMOs(Guid category, DmoEnumFlags flags, DmoPartialMediaType[] inputTypes,
+-            DmoPartialMediaType[] outputTypes)
+         {
+             IntPtr ptr;
+             int numberOfInputTypes = 0;
+@@ -86,7 +86,7 @@
+         /// <param name="names">Array that is filled with the friendly names of the enumerated DMOs.</param>
+         /// <param name="itemsFetched">Actual number of items retrieved.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int NextNative(int itemsToFetch, out Guid[] clsids, out string?[] names, out int itemsFetched)
+-        public unsafe int NextNative(int itemsToFetch, out Guid[] clsids, out string[] names, out int itemsFetched)
+         {
+             if (itemsToFetch <= 0)
+                 throw new ArgumentOutOfRangeException("itemsToFetch");
+@@ -123,7 +123,7 @@
+         public DmoEnumItem[] Next(int itemsToFetch)
+         {
+             Guid[] clsids;
++            string?[] names;
+-            string[] names;
+             int itemsFetched;
+ 
+             int result = NextNative(itemsToFetch, out clsids, out names, out itemsFetched);

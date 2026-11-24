@@ -1,0 +1,23 @@
+--- a/Codecs/MP3/FrameInfoCollection.cs
++++ b/Codecs/MP3/FrameInfoCollection.cs
+@@ -7,7 +7,7 @@
+     internal class FrameInfoCollection : Collection<Mp3FrameInfo>, IDisposable
+     {
+         private bool _disposed;
++        private Mp3Frame? _frame;
+-        private Mp3Frame _frame;
+ 
+         public FrameInfoCollection()
+         {
+@@ -58,10 +58,7 @@
+             {
+                 if (disposing)
+                 {
++                    Clear();
+-                    for (int i = 0; i < Count; i++)
+-                    {
+-                        this[i] = null;
+-                    }
+                     _frame = null;
+                 }
+             }

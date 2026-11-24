@@ -1,0 +1,29 @@
+--- a/XAudio2/XAudio2_8.cs
++++ b/XAudio2/XAudio2_8.cs
+@@ -204,7 +204,7 @@
+             IntPtr sourceFormat,
+             VoiceFlags flags,
+             float maxFrequencyRatio,
++            IXAudio2VoiceCallback? voiceCallback,
+-            IXAudio2VoiceCallback voiceCallback,
+             VoiceSends? sendList, //out
+             EffectChain? effectChain
+             )
+@@ -331,7 +331,7 @@
+         /// <returns>HRESULT</returns>
+         public override unsafe int CreateMasteringVoiceNative(out IntPtr pMasteringVoice, int inputChannels,
+             int inputSampleRate, int flags,
++            object? deviceId, EffectChain? effectChain, AudioStreamCategory streamCategory)
+-            object deviceId, EffectChain? effectChain, AudioStreamCategory streamCategory)
+         {
+             if (deviceId != null && !(deviceId is string))
+                 throw new ArgumentException("DeviceId has to be a string.", "deviceId");
+@@ -427,7 +427,7 @@
+         /// Returns the default device.
+         /// </summary>
+         /// <returns>The default device.</returns>
++        protected override object? GetDefaultDevice()
+-        protected override object GetDefaultDevice()
+         {
+             return null;
+         }

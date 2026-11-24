@@ -1,0 +1,11 @@
+--- a/Tags/ID3/Frames/TimestampTextFrame.cs
++++ b/Tags/ID3/Frames/TimestampTextFrame.cs
+@@ -5,7 +5,7 @@
+ {
+     public class TimestampTextFrame : MultiStringTextFrame
+     {
++        private List<DateTime>? _dateTimes;
+-        private List<DateTime> _dateTimes;
+ 
+         public List<DateTime> DateTimes
+         {

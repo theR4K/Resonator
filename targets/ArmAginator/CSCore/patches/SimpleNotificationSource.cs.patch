@@ -1,0 +1,29 @@
+--- a/Streams/SimpleNotificationSource.cs
++++ b/Streams/SimpleNotificationSource.cs
+@@ -55,7 +55,7 @@
+         /// <summary>
+         ///     Occurs when the <see cref="Read" /> method got called.
+         /// </summary>
++        public event EventHandler? DataRead;
+-        public event EventHandler DataRead;
+ 
+         /// <summary>
+         ///     Occurs when a specified amount of data got read.
+@@ -64,7 +64,7 @@
+         ///     The <see cref="Interval" />- or the <see cref="BlockCount" />-property specifies how many samples have to get
+         ///     read to trigger the <see cref="BlockRead" /> event.
+         /// </remarks>
++        public event EventHandler? BlockRead;
+-        public event EventHandler BlockRead;
+ 
+         /// <summary>
+         ///     Reads a sequence of samples from the <see cref="SampleAggregatorBase" /> and advances the position within the
+@@ -91,7 +91,7 @@
+             int read = base.Read(buffer, offset, count);
+             int channels = WaveFormat.Channels;
+ 
++            EventHandler? blockRead = BlockRead;
+-            EventHandler blockRead = BlockRead;
+             if (blockRead != null)
+             {
+                 for (int i = 0; i < read / channels; i++)

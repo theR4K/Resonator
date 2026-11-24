@@ -1,0 +1,105 @@
+--- a/Codecs/MP3/DmoMP3Decoder.cs
++++ b/Codecs/MP3/DmoMP3Decoder.cs
+@@ -12,11 +12,11 @@
+     /// </summary>
+     public class DmoMp3Decoder : DmoStream
+     {
++        private Stream? _stream;
+-        private Stream _stream;
+ 
++        private DmoMP3DecoderObject? _comObj;
++        private FrameInfoCollection? _frameInfoCollection;
++        private Mp3Format? _inputFormat;
+-        private DmoMP3DecoderObject _comObj;
+-        private FrameInfoCollection _frameInfoCollection;
+-        private Mp3Format _inputFormat;
+ 
+         private long _position;
+         private readonly bool _canSeek;
+@@ -79,7 +79,7 @@
+         /// </summary>
+         public override long Length
+         {
++            get { return CSCoreNullable.Require(_frameInfoCollection).TotalSamples * WaveFormat.BytesPerBlock; } // ArmAgedon seam
+-            get { return _frameInfoCollection.TotalSamples * WaveFormat.BytesPerBlock; }
+         }
+ 
+         /// <summary>
+@@ -92,7 +92,7 @@
+ 
+         private void ParseForMp3Frames(Stream stream, bool enableSeeking)
+         {
++            Mp3Frame? frame = null;
+-            Mp3Frame frame = null;
+             long offsetOfFirstFrame = 0;
+             stream = new BufferedStream(stream);
+ 
+@@ -123,7 +123,7 @@
+ 
+             if (enableSeeking)
+             {
++                XingHeader? xingHeader = XingHeader.FromFrame(frame);
+-                XingHeader xingHeader = XingHeader.FromFrame(frame);
+                 if (xingHeader != null)
+                     offsetOfFirstFrame = stream.Position;
+             }
+@@ -188,7 +188,7 @@
+         /// <returns>Input format.</returns>
+         protected override WaveFormat GetInputFormat()
+         {
++            return CSCoreNullable.Require(_inputFormat); // ArmAgedon seam
+-            return _inputFormat;
+         }
+ 
+         /// <summary>
+@@ -197,7 +197,7 @@
+         /// <returns>Output format.</returns>
+         protected override WaveFormat GetOutputFormat()
+         {
++            return new WaveFormat(CSCoreNullable.Require(_inputFormat).SampleRate, 16, _inputFormat.Channels); // ArmAgedon seam
+-            return new WaveFormat(_inputFormat.SampleRate, 16, _inputFormat.Channels);
+         }
+ 
+         /// <summary>
+@@ -206,9 +206,9 @@
+         /// <param name="inputDataBuffer">Byte array which will hold the raw mp3 data to decode.</param>
+         /// <param name="requested">Number of requested bytes.</param>
+         /// <returns>Total amount of read bytes.</returns>
++        protected override int GetInputData([System.Diagnostics.CodeAnalysis.NotNull] ref byte[]? inputDataBuffer, int requested)
+-        protected override int GetInputData(ref byte[] inputDataBuffer, int requested)
+         {
++            Mp3Frame? frame = ReadNextMP3Frame(ref inputDataBuffer);
+-            Mp3Frame frame = ReadNextMP3Frame(ref inputDataBuffer);
+             if (frame == null)
+             {
+                 inputDataBuffer = new byte[0];
+@@ -226,7 +226,7 @@
+             value = Math.Max(Math.Min(value, Length), 0);
+             value -= (value % WaveFormat.BlockAlign);
+ 
++            for (int i = 0; i < CSCoreNullable.Require(_frameInfoCollection).Count; i++) // ArmAgedon seam
+-            for (int i = 0; i < _frameInfoCollection.Count; i++)
+             {
+                 if (value / WaveFormat.BytesPerBlock <= _frameInfoCollection[i].SampleIndex ||
+                     i == _frameInfoCollection.Count - 1)
+@@ -235,7 +235,7 @@
+                     if (value / WaveFormat.BytesPerBlock < _frameInfoCollection[i].SampleIndex)
+                         index = Math.Max(0, i - 1);
+ 
++                    CSCoreNullable.Require(_stream).Position = _frameInfoCollection[index].StreamPosition; // ArmAgedon seam
+-                    _stream.Position = _frameInfoCollection[index].StreamPosition;
+                     _frameInfoCollection.PlaybackIndex = index;
+ 
+                     _position = _frameInfoCollection[index].SampleIndex * WaveFormat.BlockAlign;
+@@ -254,9 +254,9 @@
+         }
+ 
+ // ReSharper disable once InconsistentNaming
++        private Mp3Frame? ReadNextMP3Frame([System.Diagnostics.CodeAnalysis.NotNull] ref byte[]? frameBuffer)
+-        private Mp3Frame ReadNextMP3Frame(ref byte[] frameBuffer)
+         {
++            Mp3Frame? frame = Mp3Frame.FromStream(CSCoreNullable.Require(_stream), ref frameBuffer); // ArmAgedon seam
+-            Mp3Frame frame = Mp3Frame.FromStream(_stream, ref frameBuffer);
+             if (frame != null && _frameInfoCollection != null)
+                 _frameInfoCollection.PlaybackIndex++;
+ 

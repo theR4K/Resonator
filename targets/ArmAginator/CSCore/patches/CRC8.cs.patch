@@ -1,0 +1,29 @@
+--- a/Utils/CRC8.cs
++++ b/Utils/CRC8.cs
+@@ -6,7 +6,7 @@
+     /// </summary>
+     internal class CRC8 : CRCBase<byte>
+     {
++        private static CRC8? _instance;
+-        private static CRC8 _instance;
+ 
+         public CRC8()
+         {
+@@ -23,7 +23,7 @@
+             int res = 0;
+             for (int i = offset; i < offset + count; i++)
+             {
++                res = CSCoreNullable.Require(crc_table)[res ^ buffer[i]]; // ArmAgedon seam
+-                res = crc_table[res ^ buffer[i]];
+             }
+ 
+             return (byte) res;
+@@ -37,7 +37,7 @@
+             int res = 0;
+             for (int i = offset; i < offset + count; i++)
+             {
++                res = CSCoreNullable.Require(crc_table)[res ^ buffer[i]]; // ArmAgedon seam
+-                res = crc_table[res ^ buffer[i]];
+             }
+             return (byte) res;
+         }

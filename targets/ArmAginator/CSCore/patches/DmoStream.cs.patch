@@ -1,0 +1,94 @@
+--- a/DMO/DmoStream.cs
++++ b/DMO/DmoStream.cs
+@@ -21,22 +21,22 @@
+ 
+         private bool _disposed;
+ 
++        private byte[]? _inputBuffer;
++        private MediaBuffer? _inputDataBuffer;
++        private WaveFormat? _inputFormat;
+-        private byte[] _inputBuffer;
+-        private MediaBuffer _inputDataBuffer;
+-        private WaveFormat _inputFormat;
+         private bool _isInitialized;
++        private MediaObject? _mediaObject;
+-        private MediaObject _mediaObject;
+         private DmoOutputDataBuffer _outputDataBuffer;
+ 
+         private int _outputDataBufferOffset;
+         private int _outputDataBufferOverflows;
++        private WaveFormat? _outputFormat;
+-        private WaveFormat _outputFormat;
+         private double _ratio;
+ 
+         /// <summary>
+         ///     Gets the input format of the <see cref="DmoStream" />.
+         /// </summary>
++        public WaveFormat? InputFormat
+-        public WaveFormat InputFormat
+         {
+             get { return _inputFormat; }
+         }
+@@ -75,7 +75,7 @@
+ 
+                 bool isIncomplete = (_outputDataBuffer.Status & OutputDataBufferFlags.Incomplete) ==
+                                     OutputDataBufferFlags.Incomplete;
++                bool isReadyForInput = CSCoreNullable.Require(_mediaObject).IsReadyForInput(InputIndex); // ArmAgedon seam
+-                bool isReadyForInput = _mediaObject.IsReadyForInput(InputIndex);
+ 
+                 //Process data if
+                 //  the MediaObject is ready for input
+@@ -90,7 +90,7 @@
+                     if (_disposed)
+                         break;
+ 
++                    if (CSCoreNullable.Require(_inputDataBuffer).MaxLength < bytesRead) // ArmAgedon seam
+-                    if (_inputDataBuffer.MaxLength < bytesRead)
+                     {
+                         _inputDataBuffer.Dispose();
+                         _inputDataBuffer = new MediaBuffer(bytesRead);
+@@ -157,7 +157,7 @@
+         /// </summary>
+         public WaveFormat WaveFormat
+         {
++            get { return CSCoreNullable.Require(_outputFormat); } // ArmAgedon seam
+-            get { return _outputFormat; }
+         }
+ 
+         /// <summary>
+@@ -169,7 +169,7 @@
+         /// </param>
+         /// <param name="requested">The requested number of bytes.</param>
+         /// <returns>The number of bytes read. The number of actually read bytes does not have to be the number of requested bytes.</returns>
++        protected abstract int GetInputData([System.Diagnostics.CodeAnalysis.NotNull] ref byte[]? inputDataBuffer, int requested);
+-        protected abstract int GetInputData(ref byte[] inputDataBuffer, int requested);
+ 
+         /// <summary>
+         ///     Creates and returns a new <see cref="MediaObject"/> instance to use for processing audio data. This can be a decoder, effect, ...
+@@ -228,7 +228,7 @@
+         {
+             //long result = (long)(position * _ratio);
+             var result = (long) (position * _ratio);
++            result -= (result % CSCoreNullable.Require(_outputFormat).BlockAlign); // ArmAgedon seam
+-            result -= (result % _outputFormat.BlockAlign);
+             return result;
+         }
+ 
+@@ -241,7 +241,7 @@
+         {
+             //long result = (long)(position * _ratio);
+             var result = (long) (position / _ratio);
++            result -= (result % CSCoreNullable.Require(_inputFormat).BlockAlign); // ArmAgedon seam
+-            result -= (result % _inputFormat.BlockAlign);
+             return result;
+         }
+ 
+@@ -279,7 +279,7 @@
+             Dispose(false);
+         }
+ 
++        private void DisposeAndResetObject<T>(ref T? disposable) where T : class, IDisposable
+-        private void DisposeAndResetObject<T>(ref T disposable) where T : class, IDisposable
+         {
+             if (disposable != null)
+             {

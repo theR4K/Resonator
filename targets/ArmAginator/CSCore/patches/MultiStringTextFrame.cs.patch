@@ -1,0 +1,11 @@
+--- a/Tags/ID3/Frames/MultiStringTextFrame.cs
++++ b/Tags/ID3/Frames/MultiStringTextFrame.cs
+@@ -6,7 +6,7 @@
+ {
+     public class MultiStringTextFrame : TextFrame
+     {
++        private List<string>? _strings;
+-        private List<string> _strings;
+ 
+         public List<string> Strings
+         {

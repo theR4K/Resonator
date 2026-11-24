@@ -1,0 +1,29 @@
+--- a/Win32/PropertyVariant.cs
++++ b/Win32/PropertyVariant.cs
+@@ -168,7 +168,7 @@
+         /// </summary>
+         /// <returns>The associated value of the <see cref="PropertyVariant"/>. If the datatype is not supported, the <see cref="GetValue"/> method will return null.</returns>
+         /// <remarks>Not all datatypes are supported.</remarks>
++        public object? GetValue()
+-        public object GetValue()
+         {
+             switch (DataType)
+             {
+@@ -210,7 +210,7 @@
+                     return BlobValue.GetData();
+ 
+                 case VarEnum.VT_CLSID:
++                    return (Guid)CSCoreNullable.Require(Marshal.PtrToStructure(PointerValue, typeof(Guid))); // ArmAgedon seam
+-                    return (Guid)Marshal.PtrToStructure(PointerValue, typeof(Guid));
+ 
+                 case VarEnum.VT_BOOL:
+                     return BoolValue;
+@@ -247,7 +247,7 @@
+         /// <returns>
+         /// A <see cref="System.String" /> that represents the value of this instance.
+         /// </returns>
++        public override string? ToString()
+-        public override string ToString()
+         {
+             var value = GetValue();
+             return value == null ? "null" : value.ToString();

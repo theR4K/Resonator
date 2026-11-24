@@ -1,0 +1,11 @@
+--- a/Streams/PeakMeter.cs
++++ b/Streams/PeakMeter.cs
+@@ -47,7 +47,7 @@
+         /// <summary>
+         /// Event which gets raised when a new peak value is available. 
+         /// </summary>
++        public event EventHandler<PeakEventArgs>? PeakCalculated;
+-        public event EventHandler<PeakEventArgs> PeakCalculated;
+ 
+         private int _blocksToProcess = 0;
+         private int _blocksProcessed = 0;

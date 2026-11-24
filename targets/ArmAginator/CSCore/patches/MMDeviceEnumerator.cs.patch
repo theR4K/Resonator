@@ -1,0 +1,20 @@
+--- a/CoreAudioAPI/MMDeviceEnumerator.cs
++++ b/CoreAudioAPI/MMDeviceEnumerator.cs
+@@ -35,7 +35,7 @@
+         /// <param name="dataFlow">The data-flow direction for the endpoint device.</param>
+         /// <param name="role">The role of the endpoint device.</param>
+         /// <returns><see cref="MMDevice"/> instance of the endpoint object for the default audio endpoint device. If no device is available the <see cref="TryGetDefaultAudioEndpoint"/> method returns null.</returns>
++        public static MMDevice? TryGetDefaultAudioEndpoint(DataFlow dataFlow, Role role)
+-        public static MMDevice TryGetDefaultAudioEndpoint(DataFlow dataFlow, Role role)
+         {
+             try
+             {
+@@ -78,7 +78,7 @@
+         private static IntPtr CreateMmDeviceEnumerator()
+         {
+             var mmde = new MMDeviceEnumeratorObject() as IMMDeviceEnumerator;
++            return Marshal.GetComInterfaceForObject(CSCoreNullable.Require(mmde), typeof(IMMDeviceEnumerator)); // ArmAgedon seam
+-            return Marshal.GetComInterfaceForObject(mmde, typeof(IMMDeviceEnumerator));
+         }
+ 
+         /// <summary>

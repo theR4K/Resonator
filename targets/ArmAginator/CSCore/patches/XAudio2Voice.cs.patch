@@ -1,0 +1,11 @@
+--- a/XAudio2/XAudio2Voice.cs
++++ b/XAudio2/XAudio2Voice.cs
+@@ -86,7 +86,7 @@
+         /// <returns>HRESULT</returns>
+         public unsafe int GetVoiceDetailsNative(out VoiceDetails voiceDetails)
+         {
++
+-            voiceDetails = default(VoiceDetails);
+             int result;
+             if (_version == XAudio2Version.XAudio2_7)
+             {

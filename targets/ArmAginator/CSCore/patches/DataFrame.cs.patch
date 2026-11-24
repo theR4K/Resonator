@@ -1,0 +1,14 @@
+--- a/Tags/ID3/Frames/DataFrame.cs
++++ b/Tags/ID3/Frames/DataFrame.cs
+@@ -5,9 +5,9 @@
+     //UFID or PRIV
+     public class DataFrame : Frame
+     {
++        public string? OwnerIdentifier { get; private set; }
+-        public string OwnerIdentifier { get; private set; }
+ 
++        public byte[]? Data { get; private set; }
+-        public byte[] Data { get; private set; }
+ 
+         public DataFrame(FrameHeader header)
+             : base(header)

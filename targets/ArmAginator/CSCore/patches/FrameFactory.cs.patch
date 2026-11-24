@@ -1,0 +1,36 @@
+--- a/Tags/ID3/Frames/FrameFactory.cs
++++ b/Tags/ID3/Frames/FrameFactory.cs
+@@ -5,7 +5,7 @@
+ {
+     public class FrameFactory
+     {
++        private static FrameFactory? _instance;
+-        private static FrameFactory _instance;
+ 
+         public static FrameFactory Instance
+         {
+@@ -18,12 +18,12 @@
+ 
+         public Frame GetFrame(FrameHeader header, ID3Version version, Stream stream)
+         {
++            var frame = GetFrame(CSCoreNullable.Require(header.FrameID), version, header); // ArmAgedon seam
++            CSCoreNullable.Require(frame).DecodeContent(ID3Utils.Read(stream, header.FrameSize)); // ArmAgedon seam
+-            var frame = GetFrame(header.FrameID, version, header);
+-            frame.DecodeContent(ID3Utils.Read(stream, header.FrameSize));
+             return frame;
+         }
+ 
++        public Frame? TryGetFrame(FrameHeader header, ID3Version version, Stream stream, out bool result)
+-        public Frame TryGetFrame(FrameHeader header, ID3Version version, Stream stream, out bool result)
+         {
+             try
+             {
+@@ -38,7 +38,7 @@
+             }
+         }
+ 
++        private Frame? GetFrame(string id, ID3Version version, FrameHeader header)
+-        private Frame GetFrame(string id, ID3Version version, FrameHeader header)
+         {
+             FrameID frameID = FrameIDFactory.GetFrameEntry(id, version).ID;
+             switch (frameID)

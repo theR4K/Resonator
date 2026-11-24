@@ -1,0 +1,11 @@
+--- a/DirectSound/DirectSoundDeviceEnumerator.cs
++++ b/DirectSound/DirectSoundDeviceEnumerator.cs
+@@ -33,7 +33,7 @@
+         {
+             byte[] guidBuffer = new byte[16];
+             Guid guid = Guid.Empty;
++            string? desc = String.Empty, module = String.Empty;
+-            string desc = String.Empty, module = String.Empty;
+ 
+             if (lpGuid != IntPtr.Zero)
+             {

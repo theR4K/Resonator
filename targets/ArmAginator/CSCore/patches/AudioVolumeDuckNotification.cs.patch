@@ -1,0 +1,17 @@
+--- a/CoreAudioAPI/AudioVolumeDuckNotification.cs
++++ b/CoreAudioAPI/AudioVolumeDuckNotification.cs
+@@ -16,12 +16,12 @@
+         /// <summary>
+         /// Occurs when a pending system ducking event gets fired.
+         /// </summary>
++        public event EventHandler<VolumeDuckNotificationEventArgs>? VolumeDuckNotification;
+-        public event EventHandler<VolumeDuckNotificationEventArgs> VolumeDuckNotification;
+ 
+         /// <summary>
+         /// Occurs when a pending system unducking event gets fired.
+         /// </summary>
++        public event EventHandler<VolumeDuckNotificationEventArgs>? VolumeUnDuckNotification;
+-        public event EventHandler<VolumeDuckNotificationEventArgs> VolumeUnDuckNotification;
+ 
+         /// <summary>
+         /// Sends a notification about a pending system ducking event.

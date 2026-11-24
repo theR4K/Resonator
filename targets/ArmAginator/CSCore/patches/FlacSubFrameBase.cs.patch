@@ -1,0 +1,11 @@
+--- a/Codecs/FLAC/SubFrames/FlacSubFrameBase.cs
++++ b/Codecs/FLAC/SubFrames/FlacSubFrameBase.cs
+@@ -5,7 +5,7 @@
+ {
+     internal class FlacSubFrameBase
+     {
++        public unsafe static FlacSubFrameBase? GetSubFrame(FlacBitReader reader, FlacSubFrameData data, FlacFrameHeader header, int bitsPerSample)
+-        public unsafe static FlacSubFrameBase GetSubFrame(FlacBitReader reader, FlacSubFrameData data, FlacFrameHeader header, int bitsPerSample)
+         {
+             int wastedBits = 0, order;
+ 

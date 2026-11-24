@@ -1,0 +1,136 @@
+--- a/Tags/ID3/ID3v2QuickInfo.cs
++++ b/Tags/ID3/ID3v2QuickInfo.cs
+@@ -10,68 +10,68 @@
+     {
+         private ID3v2 _id3;
+ 
++        public string? Title
+-        public string Title
+         {
+             get
+             {
++                Frame? f;
+-                Frame f;
+                 if ((f = _id3[FrameID.Title]) != null)
++                    return (f as TextFrame)?.Text;
+-                    return (f as TextFrame).Text;
+                 return String.Empty;
+             }
+         }
+ 
++        public string? Album
+-        public string Album
+         {
+             get
+             {
++                Frame? f;
+-                Frame f;
+                 if ((f = _id3[FrameID.Album]) != null)
++                    return (f as TextFrame)?.Text;
+-                    return (f as TextFrame).Text;
+                 return String.Empty;
+             }
+         }
+ 
++        public string? Artist
+-        public string Artist
+         {
+             get
+             {
++                Frame? f;
+-                Frame f;
+                 if ((f = _id3[FrameID.OriginalArtist]) != null)
++                    return (f as TextFrame)?.Text;
+-                    return (f as TextFrame).Text;
+                 return String.Empty;
+             }
+         }
+ 
++        public string? LeadPerformers
+-        public string LeadPerformers
+         {
+             get
+             {
++                Frame? f;
+-                Frame f;
+                 if ((f = _id3[FrameID.LeadPerformers]) != null)
++                    return (f as TextFrame)?.Text;
+-                    return (f as TextFrame).Text;
+                 return String.Empty;
+             }
+         }
+ 
++        public string? Comments
+-        public string Comments
+         {
+             get
+             {
++                Frame? f;
+-                Frame f;
+                 if ((f = _id3[FrameID.Comments]) != null)
++                    return (f as CommentAndLyricsFrame)?.Text;
+-                    return (f as CommentAndLyricsFrame).Text;
+                 return String.Empty;
+             }
+         }
+ 
++        public System.Drawing.Image? Image
+-        public System.Drawing.Image Image
+         {
+             get
+             {
++                Frame? f;
+-                Frame f;
+                 if ((f = _id3[FrameID.AttachedPicutre]) != null)
++                    return (f as PictureFrame)?.Image;
+-                    return (f as PictureFrame).Image;
+                 return null;
+             }
+         }
+@@ -80,10 +80,10 @@
+         {
+             get
+             {
++                Frame? f;
+-                Frame f;
+                 int result;
+                 if ((f = _id3[FrameID.Year]) != null &&
++                     Int32.TryParse((f as NumericTextFrame)?.Text, out result))
+-                     Int32.TryParse((f as NumericTextFrame).Text, out result))
+                     return result;
+                 return null;
+             }
+@@ -94,10 +94,10 @@
+         {
+             get
+             {
++                Frame? f;
+-                Frame f;
+                 int result;
+                 if ((f = _id3[FrameID.TrackNumber]) != null &&
++                     Int32.TryParse((f as MultiStringTextFrame)?.Text, out result))
+-                     Int32.TryParse((f as MultiStringTextFrame).Text, out result))
+                     return result;
+                 return null;
+             }
+@@ -107,9 +107,9 @@
+         {
+             get
+             {
++                Frame? f;
+-                Frame f;
+                 if ((f = _id3[FrameID.OriginalReleaseYear]) != null)
++                    return CSCoreNullable.ParseYear((f as NumericTextFrame)?.Text); // ArmAgedon seam
+-                    return Int32.Parse((f as NumericTextFrame).Text);
+                 return null;
+             }
+         }
+@@ -118,7 +118,7 @@
+         {
+             get
+             {
++                MultiStringTextFrame? f = _id3[FrameID.ContentType] as MultiStringTextFrame;
+-                MultiStringTextFrame f = _id3[FrameID.ContentType] as MultiStringTextFrame;
+                 if (f == null)
+                     return null;
+ 

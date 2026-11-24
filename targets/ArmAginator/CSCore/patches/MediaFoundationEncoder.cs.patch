@@ -1,0 +1,100 @@
+--- a/MediaFoundation/MediaFoundationEncoder.cs
++++ b/MediaFoundation/MediaFoundationEncoder.cs
+@@ -17,12 +17,12 @@
+     {
+         private bool _disposed;
+         private long _position;
++        private MFSinkWriter? _sinkWriter;
+-        private MFSinkWriter _sinkWriter;
+         private int _sourceBytesPerSecond;
+         private int _streamIndex;
++        private ComStream? _targetBaseStream;
++        private MFMediaType? _targetMediaType;
++        private MFByteStream? _targetStream;
+-        private ComStream _targetBaseStream;
+-        private MFMediaType _targetMediaType;
+-        private MFByteStream _targetStream;
+ 
+         private bool _disposeBaseStream = true;
+ 
+@@ -76,7 +76,7 @@
+         /// <summary>
+         ///     Gets the underlying stream which operates as encoding target.
+         /// </summary>
++        public Stream? TargetBaseStream
+-        public Stream TargetBaseStream
+         {
+             get { return _targetBaseStream; }
+         }
+@@ -84,7 +84,7 @@
+         /// <summary>
+         ///     Gets the media type of the encoded data.
+         /// </summary>
++        public MFMediaType? OutputMediaType
+-        public MFMediaType OutputMediaType
+         {
+             get { return _targetMediaType; }
+         }
+@@ -92,7 +92,7 @@
+         /// <summary>
+         ///     Gets the <see cref="MFSinkWriter" /> which is used to write to the <see cref="TargetStream"/>.
+         /// </summary>
++        protected MFSinkWriter? SinkWriter
+-        protected MFSinkWriter SinkWriter
+         {
+             get { return _sinkWriter; }
+             set { _sinkWriter = value; }
+@@ -101,7 +101,7 @@
+         /// <summary>
+         ///     Gets the destination stream which is used to store the encoded audio data.
+         /// </summary>
++        protected MFByteStream? TargetStream
+-        protected MFByteStream TargetStream
+         {
+             get { return _targetStream; }
+             set { _targetStream = value; }
+@@ -148,7 +148,7 @@
+         protected void SetTargetStream(Stream stream, MFMediaType inputMediaType, MFMediaType targetMediaType,
+             Guid containerType)
+         {
++            MFAttributes? attributes = null;
+-            MFAttributes attributes = null;
+             try
+             {
+                 _targetBaseStream = new ComStream(stream, _disposeBaseStream);
+@@ -210,7 +210,7 @@
+ 
+                     sample.SetSampleTime(positionInTicks);
+                     sample.SetSampleDuration(ticks);
++                    CSCoreNullable.Require(_sinkWriter).WriteSample(streamIndex, sample); // ArmAgedon seam
+-                    _sinkWriter.WriteSample(streamIndex, sample);
+ 
+                     return ticks;
+                 }
+@@ -331,7 +331,7 @@
+             if (targetStream.CanWrite != true)
+                 throw new ArgumentException("Stream not writeable.", "targetStream");
+ 
++            MFMediaType? targetMediaType = FindBestMediaType(AudioSubTypes.MpegLayer3, sourceFormat.SampleRate,
+-            MFMediaType targetMediaType = FindBestMediaType(AudioSubTypes.MpegLayer3, sourceFormat.SampleRate,
+                 sourceFormat.Channels, bitRate);
+             MFMediaType sourceMediaType = MediaFoundationCore.MediaTypeFromWaveFormat(sourceFormat);
+ 
+@@ -377,7 +377,7 @@
+             if (targetStream.CanWrite != true)
+                 throw new ArgumentException("Stream not writeable.", "targetStream");
+ 
++            MFMediaType? targetMediaType = FindBestMediaType(AudioSubTypes.WindowsMediaAudio,
+-            MFMediaType targetMediaType = FindBestMediaType(AudioSubTypes.WindowsMediaAudio,
+                 sourceFormat.SampleRate, sourceFormat.Channels, bitRate);
+             MFMediaType sourceMediaType = MediaFoundationCore.MediaTypeFromWaveFormat(sourceFormat);
+ 
+@@ -433,7 +433,7 @@
+         ///     A <see cref="MediaType" /> which fits best the requested format. If no mediatype could be found the
+         ///     <see cref="FindBestMediaType" /> method returns null.
+         /// </returns>
++        protected static MFMediaType? FindBestMediaType(Guid audioSubType, int sampleRate, int channels, int bitRate)
+-        protected static MFMediaType FindBestMediaType(Guid audioSubType, int sampleRate, int channels, int bitRate)
+         {
+             MFMediaType[] mediaTypes = GetEncoderMediaTypes(audioSubType);
+             IEnumerable<MFMediaType> n = mediaTypes.Where(x => x.SampleRate == sampleRate && x.Channels == channels);

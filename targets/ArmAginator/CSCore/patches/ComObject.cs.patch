@@ -1,0 +1,39 @@
+--- a/Win32/ComObject.cs
++++ b/Win32/ComObject.cs
+@@ -55,21 +55,21 @@
+         /// </summary>
+         /// <typeparam name="T">The <see cref="ComObject"/> being requested.</typeparam>
+         /// <returns>The queried com interface/object.</returns>
++        public T? QueryInterface<T>() where T : ComObject
+-        public T QueryInterface<T>() where T : ComObject
+         {
+             return QueryInterface1<T>();
+         }
+ 
++        internal T? QueryInterface1<T>()
+-        internal T QueryInterface1<T>()
+         {
++            return (T?)Activator.CreateInstance(typeof(T), QueryInterface(typeof(T)));
+-            return (T)Activator.CreateInstance(typeof(T), QueryInterface(typeof(T)));
+         }
+ 
++        internal static T? QueryInterfaceStatic<T>(Guid guid, IntPtr ptr) where T : ComObject
+-        internal static T QueryInterfaceStatic<T>(Guid guid, IntPtr ptr) where T : ComObject
+         {
+             IntPtr p0;
++            Marshal.QueryInterface(ptr, in guid, out p0);
++            return (T?) Activator.CreateInstance(typeof (T), p0);
+-            Marshal.QueryInterface(ptr, ref guid, out p0);
+-            return (T) Activator.CreateInstance(typeof (T), p0);
+         }
+ 
+         internal IntPtr QueryInterfacePtr(Guid riid)
+@@ -100,7 +100,7 @@
+         /// <returns>This method returns S_OK if the interface is supported, and E_NOINTERFACE otherwise. If ppvObject is NULL, this method returns E_POINTER.</returns>
+         int IUnknown.QueryInterface(ref Guid riid, out IntPtr ppvObject)
+         {
++            return Marshal.QueryInterface(BasePtr, in riid, out ppvObject);
+-            return Marshal.QueryInterface(BasePtr, ref riid, out ppvObject);
+         }
+ 
+         /// <summary>

@@ -1,0 +1,56 @@
+--- a/Utils/Buffer/FixedSizeBuffer.cs
++++ b/Utils/Buffer/FixedSizeBuffer.cs
+@@ -9,7 +9,7 @@
+     /// <typeparam name="T">Specifies the type of the elements to store.</typeparam>
+     public class FixedSizeBuffer<T> : IDisposable
+     {
++        private T[]? _buffer; 
+-        private T[] _buffer; 
+         private int _bufferedElements;
+         private int _writeOffset;
+         private int _readOffset;
+@@ -38,7 +38,7 @@
+             lock (_lockObj)
+             {
+                 //number of elements writeOffset is ahead of readOffset
++                int readWriteDelta = ((CSCoreNullable.Require(_buffer).Length - _readOffset) + _writeOffset) % _buffer.Length; // ArmAgedon seam
+-                int readWriteDelta = ((_buffer.Length - _readOffset) + _writeOffset) % _buffer.Length;
+ 
+                 do
+                 {
+@@ -103,7 +103,7 @@
+             lock (_lockObj)
+             {
+                 count = Math.Min(count, _bufferedElements);
++                int length = Math.Min(count, CSCoreNullable.Require(_buffer).Length - _readOffset); // ArmAgedon seam
+-                int length = Math.Min(count, _buffer.Length - _readOffset);
+                 Array.Copy(_buffer, _readOffset, buffer, offset, length); //copy to buffer
+                 read += length;
+                 _readOffset += read;
+@@ -125,7 +125,7 @@
+         /// <summary>
+         /// Gets the size of the internal buffer.
+         /// </summary>
++        public int Length { get { return CSCoreNullable.Require(_buffer).Length; } } // ArmAgedon seam
+-        public int Length { get { return _buffer.Length; } }
+ 
+         /// <summary>
+         /// Gets the number of buffered elements.
+@@ -137,7 +137,7 @@
+         /// </summary>
+         public void Clear()
+         {
++            Array.Clear(CSCoreNullable.Require(_buffer), 0, CSCoreNullable.Require(_buffer).Length); // ArmAgedon seam // ArmAgedon seam
+-            Array.Clear(_buffer, 0, _buffer.Length);
+             //reset all offsets
+             _bufferedElements = 0;
+             _writeOffset = 0;
+@@ -184,7 +184,7 @@
+         {
+             if(typeof(T) != typeof(byte))
+                 throw new NotSupportedException("Only byte buffers are supported.");
++            return new FixedSizeByteStream((FixedSizeBuffer<byte>)(object)this);
+-            return new FixedSizeByteStream(this as FixedSizeBuffer<byte>);
+         }
+ 
+         private class FixedSizeByteStream : Stream

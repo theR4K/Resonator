@@ -1,0 +1,10 @@
+--- a/DirectSound/NativeMethods.cs
++++ b/DirectSound/NativeMethods.cs
+@@ -19,6 +19,6 @@
+         public static extern IntPtr GetDesktopWindow();
+ 
+         [DllImport("user32.dll", CharSet = CharSet.Auto, ThrowOnUnmappableChar = true, BestFitMapping = false)]
++        public static extern IntPtr FindWindow([MarshalAs(UnmanagedType.LPTStr)] String? atom, [MarshalAs(UnmanagedType.LPTStr)] String title);
+-        public static extern IntPtr FindWindow([MarshalAs(UnmanagedType.LPTStr)] String atom, [MarshalAs(UnmanagedType.LPTStr)] String title);
+     }
+ }

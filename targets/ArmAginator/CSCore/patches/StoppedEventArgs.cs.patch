@@ -1,0 +1,29 @@
+--- a/StoppedEventArgs.cs
++++ b/StoppedEventArgs.cs
+@@ -7,7 +7,7 @@
+     /// </summary>
+     public class StoppedEventArgs : EventArgs
+     {
++        private readonly Exception? _exception;
+-        private readonly Exception _exception;
+ 
+ 
+         /// <summary>
+@@ -22,7 +22,7 @@
+         ///     Initializes a new instance of the <see cref="StoppedEventArgs" /> class.
+         /// </summary>
+         /// <param name="exception">The associated exception. Can be null.</param>
++        public StoppedEventArgs(Exception? exception)
+-        public StoppedEventArgs(Exception exception)
+         {
+             _exception = exception;
+         }
+@@ -40,7 +40,7 @@
+         ///     Gets the associated <see cref="Exception" /> which caused the operation to stop.
+         /// </summary>
+         /// <value>Can be null.</value>
++        public virtual Exception? Exception
+-        public virtual Exception Exception
+         {
+             get { return _exception; }
+         }

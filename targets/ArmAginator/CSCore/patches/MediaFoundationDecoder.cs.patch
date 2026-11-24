@@ -1,0 +1,99 @@
+--- a/MediaFoundation/MediaFoundationDecoder.cs
++++ b/MediaFoundation/MediaFoundationDecoder.cs
+@@ -12,9 +12,9 @@
+     {
+         private readonly bool _hasFixedLength;
+         private readonly Object _lockObj = new Object();
++        private MFByteStream? _byteStream;
+-        private MFByteStream _byteStream;
+ 
++        private byte[]? _decoderBuffer;
+-        private byte[] _decoderBuffer;
+         private int _decoderBufferCount;
+         private int _decoderBufferOffset;
+         private bool _disposed;
+@@ -23,9 +23,9 @@
+         //could not find a possibility to find out the position -> we have to track the position ourselves.
+         private long _position;
+ 
++        private MFSourceReader? _reader;
++        private Stream? _stream;
++        private WaveFormat? _waveFormat;
+-        private MFSourceReader _reader;
+-        private Stream _stream;
+-        private WaveFormat _waveFormat;
+         private bool _positionChanged;
+ 
+         static MediaFoundationDecoder()
+@@ -117,12 +117,12 @@
+                     long timestamp;
+                     int actualStreamIndex;
+                     using (
++                        MFSample? sample = _reader.ReadSample(NativeMethods.MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0,
+-                        MFSample sample = _reader.ReadSample(NativeMethods.MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0,
+                             out actualStreamIndex, out flags, out timestamp))
+                     {
+                         if (flags != MFSourceReaderFlags.None)
+                             break;
++                        var sampleTime = CSCoreNullable.Require(sample).GetSampleTime(); // ArmAgedon seam
+-                        var sampleTime = sample.GetSampleTime();
+                         if (_positionChanged && timestamp > 0)
+                         {
+                             long actualPosition = NanoSecond100UnitsToBytes(sampleTime);
+@@ -133,9 +133,9 @@
+                             SkipBytes(bytesToSkip);
+                         }
+ 
++                        using (MFMediaBuffer? mediaBuffer = sample.ConvertToContiguousBuffer())
+-                        using (MFMediaBuffer mediaBuffer = sample.ConvertToContiguousBuffer())
+                         {
++                            using (MFMediaBuffer.LockDisposable @lock = CSCoreNullable.Require(mediaBuffer).Lock()) // ArmAgedon seam
+-                            using (MFMediaBuffer.LockDisposable @lock = mediaBuffer.Lock())
+                             {
+                                 _decoderBuffer = _decoderBuffer.CheckBuffer(@lock.CurrentLength);
+                                 Marshal.Copy(@lock.Buffer, _decoderBuffer, 0, @lock.CurrentLength);
+@@ -193,7 +193,7 @@
+         /// </summary>
+         public WaveFormat WaveFormat
+         {
++            get { return CSCoreNullable.Require(_waveFormat); } // ArmAgedon seam
+-            get { return _waveFormat; }
+         }
+ 
+         /// <summary>
+@@ -220,7 +220,7 @@
+                     return 0;
+                 if (_hasFixedLength)
+                     return _length;
++                return GetLength(CSCoreNullable.Require(_reader)); // ArmAgedon seam
+-                return GetLength(_reader);
+             }
+         }
+ 
+@@ -230,7 +230,7 @@
+         /// </summary>
+         public bool CanSeek
+         {
++            get { return CSCoreNullable.Require(_reader).CanSeek; } // ArmAgedon seam
+-            get { return _reader.CanSeek; }
+         }
+ 
+         private MFSourceReader Initialize(MFByteStream byteStream)
+@@ -328,7 +328,7 @@
+                     value -= (value % WaveFormat.BlockAlign);
+                     long hnsPos = BytesToNanoSecond100Units(value);
+                     var propertyVariant = new PropertyVariant {HValue = hnsPos, DataType = VarEnum.VT_I8};
++                    CSCoreNullable.Require(_reader).SetCurrentPosition(Guid.Empty, propertyVariant); // ArmAgedon seam
+-                    _reader.SetCurrentPosition(Guid.Empty, propertyVariant);
+                     _decoderBufferCount = 0;
+                     _decoderBufferOffset = 0;
+                     _position = value;
+@@ -341,7 +341,7 @@
+         private int CopyDecoderBuffer(byte[] destBuffer, int offset, int count)
+         {
+             count = Math.Min(count, _decoderBufferCount);
++            Array.Copy(CSCoreNullable.Require(_decoderBuffer), _decoderBufferOffset, destBuffer, offset, count); // ArmAgedon seam
+-            Array.Copy(_decoderBuffer, _decoderBufferOffset, destBuffer, offset, count);
+             _decoderBufferCount -= count;
+             _decoderBufferOffset += count;
+ 

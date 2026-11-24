@@ -1,0 +1,32 @@
+--- a/Codecs/FLAC/FlacPreScan.cs
++++ b/Codecs/FLAC/FlacPreScan.cs
+@@ -12,9 +12,9 @@
+         private readonly Stream _stream;
+         private bool _isRunning;
+ 
++        public event EventHandler<FlacPreScanFinishedEventArgs>? ScanFinished;
+-        public event EventHandler<FlacPreScanFinishedEventArgs> ScanFinished;
+ 
++        public List<FlacFrameInformation>? Frames { get; private set; }
+-        public List<FlacFrameInformation> Frames { get; private set; }
+ 
+         public long TotalLength { get; private set; }
+ 
+@@ -35,7 +35,7 @@
+             _stream.Position = saveOffset;
+ 
+             long totalLength = 0, totalsamples = 0;
++            foreach (var frame in CSCoreNullable.Require(Frames)) // ArmAgedon seam
+-            foreach (var frame in Frames)
+             {
+                 totalLength += frame.Header.BlockSize * frame.Header.BitsPerSample * frame.Header.Channels;
+                 totalsamples += frame.Header.BlockSize;
+@@ -107,7 +107,7 @@
+             FlacFrameInformation frameInfo = new FlacFrameInformation();
+             frameInfo.IsFirstFrame = true;
+ 
++            FlacFrameHeader? baseHeader = null;
+-            FlacFrameHeader baseHeader = null;
+ 
+             while (true)
+             {

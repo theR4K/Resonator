@@ -1,0 +1,11 @@
+--- a/CoreAudioAPI/AudioSessionNotification.cs
++++ b/CoreAudioAPI/AudioSessionNotification.cs
+@@ -14,7 +14,7 @@
+         /// <summary>
+         /// Occurs when the audio session has been created.
+         /// </summary>
++        public event EventHandler<SessionCreatedEventArgs>? SessionCreated;
+-        public event EventHandler<SessionCreatedEventArgs> SessionCreated;
+ 
+         /// <summary>
+         /// Notifies the registered processes that the audio session has been created.

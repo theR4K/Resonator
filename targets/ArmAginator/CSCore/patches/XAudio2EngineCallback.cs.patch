@@ -1,0 +1,22 @@
+--- a/XAudio2/XAudio2EngineCallback.cs
++++ b/XAudio2/XAudio2EngineCallback.cs
+@@ -27,16 +27,16 @@
+         /// <summary>
+         ///     Fired by XAudio2 just before an audio processing pass begins.
+         /// </summary>
++        public event EventHandler? ProcessingPassStart;
+-        public event EventHandler ProcessingPassStart;
+ 
+         /// <summary>
+         ///     Fired by XAudio2 just after an audio processing pass ends.
+         /// </summary>
++        public event EventHandler? ProcessingPassEnd;
+-        public event EventHandler ProcessingPassEnd;
+ 
+         /// <summary>
+         ///     Fired if a critical system error occurs that requires XAudio2 to be closed down and restarted.
+         /// </summary>
++        public event EventHandler<XAudio2CriticalErrorEventArgs>? CriticalError;
+-        public event EventHandler<XAudio2CriticalErrorEventArgs> CriticalError;
+     }
+ }

@@ -1,0 +1,17 @@
+--- a/DirectSound/DirectSoundBase.cs
++++ b/DirectSound/DirectSoundBase.cs
+@@ -156,12 +156,12 @@
+         /// <param name="bufferOriginal">The buffer to duplicate.</param>
+         /// <returns>The duplicated buffer.</returns>
+         /// <remarks>For more information, see <see href="https://msdn.microsoft.com/en-us/library/windows/desktop/microsoft.directx_sdk.idirectsound8.idirectsound8.duplicatesoundbuffer(v=vs.85).aspx"/>.</remarks>        
++        public T? DuplicateSoundBuffer<T>(T bufferOriginal) where T : DirectSoundBuffer
+-        public T DuplicateSoundBuffer<T>(T bufferOriginal) where T : DirectSoundBuffer
+         {
+             IntPtr resultPtr;
+             DirectSoundException.Try(DuplicateSoundBufferNative(bufferOriginal.BasePtr, out resultPtr), "IDirectSound8",
+                 "DuplicateSoundBuffer");
++            return (T?)Activator.CreateInstance(typeof(T), resultPtr);
+-            return (T)Activator.CreateInstance(typeof(T), resultPtr);
+         }
+ 
+         /// <summary>

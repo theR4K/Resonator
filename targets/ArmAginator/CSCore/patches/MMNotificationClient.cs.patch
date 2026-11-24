@@ -1,0 +1,42 @@
+--- a/CoreAudioAPI/MMNotificationClient.cs
++++ b/CoreAudioAPI/MMNotificationClient.cs
+@@ -15,33 +15,33 @@
+     [Guid("7991EEC9-7E89-4D85-8390-6C703CEC60C0")]
+     public sealed class MMNotificationClient : IMMNotificationClient, IDisposable
+     {
++        private readonly MMDeviceEnumerator? _deviceEnumerator;
+-        private readonly MMDeviceEnumerator _deviceEnumerator;
+         private const string InterfaceName = "IMMNotificationClient";
+ 
+         /// <summary>
+         /// Occurs when the state of an audio endpoint device has changed.
+         /// </summary>
++        public event EventHandler<DeviceStateChangedEventArgs>? DeviceStateChanged;
+-        public event EventHandler<DeviceStateChangedEventArgs> DeviceStateChanged;
+ 
+         /// <summary>
+         /// Occurs when a new audio endpoint device has been added.
+         /// </summary>
++        public event EventHandler<DeviceNotificationEventArgs>? DeviceAdded;
+-        public event EventHandler<DeviceNotificationEventArgs> DeviceAdded;
+ 
+         /// <summary>
+         /// Occurs when an audio endpoint device has been removed.
+         /// </summary>
++        public event EventHandler<DeviceNotificationEventArgs>? DeviceRemoved;
+-        public event EventHandler<DeviceNotificationEventArgs> DeviceRemoved;
+ 
+         /// <summary>
+         /// Occurs when the default audio endpoint device for a particular device role has changed.
+         /// </summary>
++        public event EventHandler<DefaultDeviceChangedEventArgs>? DefaultDeviceChanged;
+-        public event EventHandler<DefaultDeviceChangedEventArgs> DefaultDeviceChanged;
+ 
+         /// <summary>
+         /// Occurs when the value of a property belonging to an audio endpoint device has changed.
+         /// </summary>
++        public event EventHandler<DevicePropertyChangedEventArgs>? DevicePropertyChanged;
+-        public event EventHandler<DevicePropertyChangedEventArgs> DevicePropertyChanged;
+ 
+         /// <summary>
+         /// Initializes a new instance of the <see cref="MMNotificationClient"/> class.

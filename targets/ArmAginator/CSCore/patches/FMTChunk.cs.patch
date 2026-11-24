@@ -1,0 +1,20 @@
+--- a/Codecs/WAV/FMTChunk.cs
++++ b/Codecs/WAV/FMTChunk.cs
+@@ -14,7 +14,7 @@
+         /// </summary>
+         public const int FmtChunkID = 0x20746D66;
+ 
++        private readonly WaveFormat? _waveFormat;
+-        private readonly WaveFormat _waveFormat;
+ 
+         /// <summary>
+         ///     Initializes a new instance of the <see cref="FmtChunk" /> class.
+@@ -67,7 +67,7 @@
+         /// <summary>
+         ///     Gets the <see cref="WaveFormat" /> specified by the <see cref="FmtChunk" />.
+         /// </summary>
++        public WaveFormat? WaveFormat
+-        public WaveFormat WaveFormat
+         {
+             get { return _waveFormat; }
+         }

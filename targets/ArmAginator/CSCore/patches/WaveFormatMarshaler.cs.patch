@@ -1,0 +1,36 @@
+--- a/Win32/WaveFormatMarshaler.cs
++++ b/Win32/WaveFormatMarshaler.cs
+@@ -5,7 +5,7 @@
+ {
+     internal class WaveFormatMarshaler : ICustomMarshaler
+     {
++        private static readonly WaveFormatMarshaler? Instance = null;
+-        private static readonly WaveFormatMarshaler Instance = null;
+ 
+         public static ICustomMarshaler GetInstance(string cookie)
+         {
+@@ -33,7 +33,7 @@
+ 
+         public object MarshalNativeToManaged(IntPtr pNativeData)
+         {
++            return CSCoreNullable.Require(PointerToWaveFormat(pNativeData)); // ArmAgedon seam
+-            return PointerToWaveFormat(pNativeData);
+         }
+ 
+         public static IntPtr WaveFormatToPointer(WaveFormat format)
+@@ -43,11 +43,11 @@
+             return formatPointer;
+         }
+ 
++        public static WaveFormat? PointerToWaveFormat(IntPtr pointer)
+-        public static WaveFormat PointerToWaveFormat(IntPtr pointer)
+         {
++            WaveFormat? waveFormat = (WaveFormat?)Marshal.PtrToStructure(pointer, typeof(WaveFormat));
++            if (CSCoreNullable.Require(waveFormat).WaveFormatTag == AudioEncoding.Extensible) // ArmAgedon seam
++                waveFormat = (WaveFormatExtensible?) Marshal.PtrToStructure(pointer, typeof (WaveFormatExtensible));
+-            WaveFormat waveFormat = (WaveFormat)Marshal.PtrToStructure(pointer, typeof(WaveFormat));
+-            if (waveFormat.WaveFormatTag == AudioEncoding.Extensible)
+-                waveFormat = (WaveFormatExtensible) Marshal.PtrToStructure(pointer, typeof (WaveFormatExtensible));
+             return waveFormat;
+         }
+     }

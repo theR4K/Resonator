@@ -1,0 +1,44 @@
+--- a/DirectSound/DirectSoundDevice.cs
++++ b/DirectSound/DirectSoundDevice.cs
+@@ -17,7 +17,7 @@
+         /// <summary>
+         /// Gets the default playback device.
+         /// </summary>
++        public static DirectSoundDevice? DefaultDevice
+-        public static DirectSoundDevice DefaultDevice
+         {
+             get
+             {
+@@ -40,12 +40,12 @@
+         /// <summary>
+         /// Gets the textual description of the DirectSound device.
+         /// </summary>
++        public string? Description { get; private set; }
+-        public string Description { get; private set; }
+ 
+         /// <summary>
+         /// Gets the module name of the DirectSound driver corresponding to this device.
+         /// </summary>
++        public string? Module { get; private set; }
+-        public string Module { get; private set; }
+ 
+         /// <summary>
+         /// The <see cref="System.Guid"/> that identifies the device being enumerated.
+@@ -58,7 +58,7 @@
+         /// <param name="description">The description.</param>
+         /// <param name="module">The module.</param>
+         /// <param name="guid">The unique identifier.</param>
++        public DirectSoundDevice(string? description, string? module, Guid guid)
+-        public DirectSoundDevice(string description, string module, Guid guid)
+         {
+             Description = description;
+             Module = module;
+@@ -85,7 +85,7 @@
+         /// </returns>
+         public override string ToString()
+         {
++            return Description ?? Guid.ToString(); // ArmAgedon seam
+-            return Description;
+         }
+     }
+ }

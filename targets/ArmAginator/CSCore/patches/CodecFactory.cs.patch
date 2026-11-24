@@ -1,0 +1,32 @@
+--- a/Codecs/CodecFactory.cs
++++ b/Codecs/CodecFactory.cs
+@@ -152,9 +152,9 @@
+             return GetCodec(stream, extension)??Default(filename);
+         }
+ 
++        public IWaveSource? GetCodec(Stream stream, string extension)
+-        public IWaveSource GetCodec(Stream stream, string extension)
+         {
++            IWaveSource? source = null;
+-            IWaveSource source = null;
+             try
+             {
+                 foreach (var codecEntry in _codecs)
+@@ -283,7 +283,7 @@
+             return stringBuilder.ToString();
+         }
+ 
++        private string? TryFindFilename(Uri uri)
+-        private string TryFindFilename(Uri uri)
+         {
+             if (File.Exists(uri.LocalPath))
+                 return uri.LocalPath;
+@@ -326,7 +326,7 @@
+ 
+         private class DisposeFileStreamSource : WaveAggregatorBase
+         {
++            private Stream? _stream;
+-            private Stream _stream;
+ 
+             public DisposeFileStreamSource(IWaveSource source, Stream stream)
+                 : base(source)

@@ -1,0 +1,11 @@
+--- a/Win32/NativeMethods.cs
++++ b/Win32/NativeMethods.cs
+@@ -36,7 +36,7 @@
+         [DllImport("shlwapi.dll", SetLastError = true)]
+         public static extern int PathCreateFromUrl([In]string url, [Out] StringBuilder path, [In, Out]ref uint pathLength, [In]uint reserved);
+ 
++        public static string? PathCreateFromUrl(string url)
+-        public static string PathCreateFromUrl(string url)
+         {
+             const int internetMaxPathLength = 2048;
+             StringBuilder stringBuilder = new StringBuilder(internetMaxPathLength);

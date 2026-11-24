@@ -1,0 +1,11 @@
+--- a/Tags/ID3/Frames/Popularimeter.cs
++++ b/Tags/ID3/Frames/Popularimeter.cs
+@@ -2,7 +2,7 @@
+ {
+     public class Popularimeter : Frame
+     {
++        public string? UserEmail { get; private set; }
+-        public string UserEmail { get; private set; }
+ 
+         /// <summary>
+         /// Range from 1(worst) to 255(best). Zero -> Rating disabled.

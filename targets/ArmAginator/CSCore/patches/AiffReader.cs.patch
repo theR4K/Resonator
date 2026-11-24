@@ -1,0 +1,43 @@
+--- a/Codecs/AIFF/AiffReader.cs
++++ b/Codecs/AIFF/AiffReader.cs
+@@ -11,7 +11,7 @@
+     public class AiffReader : IWaveSource
+     {
+         private readonly AiffChunkContainer _chunkContainer;
++        private readonly SoundDataChunk? _soundDataChunk;
+-        private readonly SoundDataChunk _soundDataChunk;
+         private readonly Stream _stream;
+         private bool _disposed;
+         private readonly bool _closeStream;
+@@ -63,11 +63,11 @@
+             _closeStream = true;
+ 
+             _chunkContainer = new AiffChunkContainer(new BinaryReader(_stream));
++            var commonChunk = (CommonChunk?) _chunkContainer.Chunks.FirstOrDefault(x => x is CommonChunk);
+-            var commonChunk = (CommonChunk) _chunkContainer.Chunks.FirstOrDefault(x => x is CommonChunk);
+             if (commonChunk == null)
+                 throw new AiffException("No COMM Chunk found.");
+             _soundDataChunk =
++                (SoundDataChunk?) _chunkContainer.Chunks.FirstOrDefault(x => x is SoundDataChunk);
+-                (SoundDataChunk) _chunkContainer.Chunks.FirstOrDefault(x => x is SoundDataChunk);
+             if (_soundDataChunk == null)
+                 throw new AiffException("No SSND Chunk found.");
+ 
+@@ -205,7 +205,7 @@
+             {
+                 if (_disposed)
+                     return 0;
++                return _stream.Position - CSCoreNullable.Require(_soundDataChunk).AudioDataStartPosition; // ArmAgedon seam
+-                return _stream.Position - _soundDataChunk.AudioDataStartPosition;
+             }
+             set
+             {
+@@ -213,7 +213,7 @@
+                 if (value > Length || value < 0)
+                     throw new ArgumentOutOfRangeException("value");
+                 value -= (value % WaveFormat.BlockAlign);
++                _stream.Position = value + CSCoreNullable.Require(_soundDataChunk).AudioDataStartPosition; // ArmAgedon seam
+-                _stream.Position = value + _soundDataChunk.AudioDataStartPosition;
+             }
+         }
+ 

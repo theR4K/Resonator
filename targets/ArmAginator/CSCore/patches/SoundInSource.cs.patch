@@ -1,0 +1,72 @@
+--- a/Streams/SoundInSource.cs
++++ b/Streams/SoundInSource.cs
+@@ -8,18 +8,18 @@
+     /// </summary>
+     public class SoundInSource : IWaveSource
+     {
++        private ISoundIn? _soundIn;
++        private WriteableBufferingSource? _buffer;
+-        private ISoundIn _soundIn;
+-        private WriteableBufferingSource _buffer;
+ 
+         /// <summary>
+         /// Occurs when new data is available.
+         /// </summary>
++        public event EventHandler<DataAvailableEventArgs>? DataAvailable;
+-        public event EventHandler<DataAvailableEventArgs> DataAvailable;
+ 
+         /// <summary>
+         /// Gets the underlying <see cref="ISoundIn"/> instance.
+         /// </summary>
++        public ISoundIn? SoundIn
+-        public ISoundIn SoundIn
+         {
+             get { return _soundIn; }
+         }
+@@ -34,7 +34,7 @@
+         /// For example, if the bufferSize is about 5 seconds big, data which got recorded 6 seconds ago, won't be available anymore.
+         /// </remarks>
+         public SoundInSource(ISoundIn soundIn)
++            : this(ThrowIfSoundInNotInitialized(soundIn), CSCoreNullable.Require(soundIn.WaveFormat).BytesPerSecond * 5) // ArmAgedon seam
+-            : this(ThrowIfSoundInNotInitialized(soundIn), soundIn.WaveFormat.BytesPerSecond * 5)
+         {
+         }
+ 
+@@ -54,15 +54,15 @@
+                 throw new ArgumentNullException("soundIn");
+             ThrowIfSoundInNotInitialized(soundIn);
+ 
++            _buffer = new WriteableBufferingSource(CSCoreNullable.Require(soundIn.WaveFormat), bufferSize) {FillWithZeros = false}; // ArmAgedon seam
+-            _buffer = new WriteableBufferingSource(soundIn.WaveFormat, bufferSize) {FillWithZeros = false};
+             _soundIn = soundIn;
+             _soundIn.DataAvailable += OnDataAvailable;
+         }
+ 
++        private void OnDataAvailable(object? sender, DataAvailableEventArgs e)
+-        private void OnDataAvailable(object sender, DataAvailableEventArgs e)
+         {
++            CSCoreNullable.Require(_buffer).Write(e.Data, 0, e.ByteCount); // ArmAgedon seam
++            EventHandler<DataAvailableEventArgs>? dataAvailable = DataAvailable;
+-            _buffer.Write(e.Data, 0, e.ByteCount);
+-            EventHandler<DataAvailableEventArgs> dataAvailable = DataAvailable;
+             if (e.ByteCount > 0 && dataAvailable != null)
+                 dataAvailable(this, e);
+         }
+@@ -84,7 +84,7 @@
+         /// <returns>The total number of bytes read into the buffer.</returns>
+         public int Read(byte[] buffer, int offset, int count)
+         {
++            int read = CSCoreNullable.Require(_buffer).Read(buffer, offset, count); // ArmAgedon seam
+-            int read = _buffer.Read(buffer, offset, count);
+ 
+             if(FillWithZeros && read < count)
+                 Array.Clear(buffer, offset + read, count - read);
+@@ -97,7 +97,7 @@
+         /// </summary>
+         public WaveFormat WaveFormat
+         {
++            get { return CSCoreNullable.Require(CSCoreNullable.Require(SoundIn).WaveFormat); } // ArmAgedon seam
+-            get { return SoundIn.WaveFormat; }
+         }
+ 
+         /// <summary>

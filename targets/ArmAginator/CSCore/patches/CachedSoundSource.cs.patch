@@ -1,0 +1,45 @@
+--- a/Streams/CachedSoundSource.cs
++++ b/Streams/CachedSoundSource.cs
+@@ -8,7 +8,7 @@
+     /// </summary>
+     public class CachedSoundSource : IWaveSource
+     {
++        private Stream? _cache;
+-        private Stream _cache;
+         private readonly WaveFormat _waveFormat;
+ 
+         /// <summary>
+@@ -82,7 +82,7 @@
+         {
+             CheckForDisposed();
+ 
++            return CSCoreNullable.Require(_cache).Read(buffer, offset, count); // ArmAgedon seam
+-            return _cache.Read(buffer, offset, count);
+         }
+ 
+         /// <summary>
+@@ -100,13 +100,13 @@
+         {
+             get
+             {
++                return CSCoreNullable.Require(_cache).Position; // ArmAgedon seam
+-                return _cache.Position;
+             }
+             set
+             {
+                 CheckForDisposed();
+                 value -= (value % WaveFormat.BlockAlign);
++                CSCoreNullable.Require(_cache).Position = value; // ArmAgedon seam
+-                _cache.Position = value;
+             }
+         }
+ 
+@@ -123,7 +123,7 @@
+         /// </summary>
+         public long Length
+         {
++            get { return CSCoreNullable.Require(_cache).Length; } // ArmAgedon seam
+-            get { return _cache.Length; }
+         }
+ 
+         private bool _disposed;

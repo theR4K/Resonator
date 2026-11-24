@@ -1,0 +1,25 @@
+--- a/Codecs/FLAC/FlacException.cs
++++ b/Codecs/FLAC/FlacException.cs
+@@ -45,12 +45,13 @@
+         ///     The StreamingContext object that supplies the contextual information about the source or
+         ///     destination.
+         /// </param>
++        [Obsolete("Formatter-based serialization is obsolete.")]
+         protected FlacException(SerializationInfo info, StreamingContext context)
+         {
+             if (info == null)
+                 throw new ArgumentNullException("info");
+ 
++            Layer = (FlacLayer) CSCoreNullable.Require(info.GetValue("Layer", typeof (FlacLayer))); // ArmAgedon seam
+-            Layer = (FlacLayer) info.GetValue("Layer", typeof (FlacLayer));
+         }
+ 
+         /// <summary>
+@@ -62,6 +63,7 @@
+         ///   <IPermission class="System.Security.Permissions.FileIOPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Read="*AllFiles*" PathDiscovery="*AllFiles*" />
+         ///   <IPermission class="System.Security.Permissions.SecurityPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Flags="SerializationFormatter" />
+         /// </PermissionSet>
++        [Obsolete("Formatter-based serialization is obsolete.")]
+         public override void GetObjectData(SerializationInfo info, StreamingContext context)
+         {
+             base.GetObjectData(info, context);

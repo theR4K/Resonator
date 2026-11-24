@@ -1,0 +1,11 @@
+--- a/Utils/CRCBase.cs
++++ b/Utils/CRCBase.cs
+@@ -9,7 +9,7 @@
+     internal abstract class CRCBase<T> where T : struct
+     {
+         protected readonly int tableSize = 256;
++        protected ushort[]? crc_table;
+-        protected ushort[] crc_table;
+ 
+         protected void CalcTable(int bits)
+         {

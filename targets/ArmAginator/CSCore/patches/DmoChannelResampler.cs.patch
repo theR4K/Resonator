@@ -1,0 +1,16 @@
+--- a/DSP/DmoChannelResampler.cs
++++ b/DSP/DmoChannelResampler.cs
+@@ -107,10 +107,10 @@
+         /// </summary>
+         public void CommitChannelMatrixChanges()
+         {
++            using (CSCoreNullable.Require(CSCoreNullable.Require(Resampler).MediaObject).Lock()) // ArmAgedon seam
+-            using (Resampler.MediaObject.Lock())
+             {
++                CSCoreNullable.Require(Resampler.MediaObject).SetOutputType(0, Resampler.MediaObject.GetOutputCurrentType(0), SetTypeFlags.None); // ArmAgedon seam
++                CSCoreNullable.Require(Resampler.ResamplerProps).SetUserChannelMtx(_channelMatrix.GetOneDimensionalMatrix()); // ArmAgedon seam
+-                Resampler.MediaObject.SetOutputType(0, Resampler.MediaObject.GetOutputCurrentType(0), SetTypeFlags.None);
+-                Resampler.ResamplerProps.SetUserChannelMtx(_channelMatrix.GetOneDimensionalMatrix());
+             }
+         }
+     }

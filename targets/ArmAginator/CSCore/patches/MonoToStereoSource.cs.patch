@@ -1,0 +1,11 @@
+--- a/Streams/MonoToStereoSource.cs
++++ b/Streams/MonoToStereoSource.cs
+@@ -7,7 +7,7 @@
+     /// </summary>
+     public sealed class MonoToStereoSource : SampleAggregatorBase
+     {
++        private float[]? _buffer;
+-        private float[] _buffer;
+ 
+         private readonly WaveFormat _waveFormat;
+ 

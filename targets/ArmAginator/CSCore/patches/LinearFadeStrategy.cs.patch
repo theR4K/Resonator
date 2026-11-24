@@ -1,0 +1,11 @@
+--- a/Streams/LinearFadeStrategy.cs
++++ b/Streams/LinearFadeStrategy.cs
+@@ -32,7 +32,7 @@
+         /// <summary>
+         ///     Occurs when the fading process has reached its target volume.
+         /// </summary>
++        public event EventHandler? FadingFinished;
+-        public event EventHandler FadingFinished;
+ 
+         /// <summary>
+         ///     Gets a value which indicates whether the <see cref="LinearFadeStrategy" /> class is fading.

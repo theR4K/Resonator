@@ -1,0 +1,56 @@
+--- a/XAudio2/VoiceCallback.cs
++++ b/XAudio2/VoiceCallback.cs
+@@ -56,38 +56,38 @@
+         ///     Note: In a situation where there is always plenty of data available on the source voice, BytesRequired should
+         ///     always report zero, because it doesn't need any samples immediately to avoid glitching.
+         /// </summary>
++        public event EventHandler<XAudio2ProcessingPassStartEventArgs>? ProcessingPassStart;
+-        public event EventHandler<XAudio2ProcessingPassStartEventArgs> ProcessingPassStart;
+ 
+         /// <summary>
+         ///     Called just after the processing pass for the voice ends.
+         /// </summary>
++        public event EventHandler? ProcessingPassEnd;
+-        public event EventHandler ProcessingPassEnd;
+ 
+         /// <summary>
+         ///     Called when the voice has just finished playing a contiguous audio stream.
+         /// </summary>
++        public event EventHandler? StreamEnd;
+-        public event EventHandler StreamEnd;
+ 
+         /// <summary>
+         ///     Called when the voice is about to start processing a new audio buffer.
+         ///     The only argument passed to the eventhandler is a context pointer that was assigned to the pContext member of the
+         ///     <see cref="XAudio2Buffer" /> structure when the buffer was submitted.
+         /// </summary>
++        public event EventHandler<XAudio2BufferEventArgs>? BufferStart;
+-        public event EventHandler<XAudio2BufferEventArgs> BufferStart;
+ 
+         /// <summary>
+         ///     Called when the voice finishes processing a buffer.
+         ///     The only argument passed to the eventhandler is a context pointer that was assigned to the pContext member of the
+         ///     <see cref="XAudio2Buffer" /> structure when the buffer was submitted.
+         /// </summary>
++        public event EventHandler<XAudio2BufferEventArgs>? BufferEnd;
+-        public event EventHandler<XAudio2BufferEventArgs> BufferEnd;
+ 
+         /// <summary>
+         ///     Called when the voice reaches the end position of a loop.
+         ///     The only argument passed to the eventhandler is a context pointer that was assigned to the pContext member of the
+         ///     <see cref="XAudio2Buffer" /> structure when the buffer was submitted.
+         /// </summary>
++        public event EventHandler<XAudio2BufferEventArgs>? LoopEnd;
+-        public event EventHandler<XAudio2BufferEventArgs> LoopEnd;
+ 
+         /// <summary>
+         ///     Called when a critical error occurs during voice processing.
+@@ -95,7 +95,7 @@
+         ///     <see cref="XAudio2Buffer" /> structure when the buffer was submitted.
+         ///     The second argument passed to the eventhandler is the HRESULT error code of the critical error.
+         /// </summary>
++        public event EventHandler<XAudio2VoiceErrorEventArgs>? VoiceError;
+-        public event EventHandler<XAudio2VoiceErrorEventArgs> VoiceError;
+ 
+         /// <summary>
+         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

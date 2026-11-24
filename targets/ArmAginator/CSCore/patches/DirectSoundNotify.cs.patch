@@ -1,0 +1,11 @@
+--- a/DirectSound/DirectSoundNotify.cs
++++ b/DirectSound/DirectSoundNotify.cs
+@@ -18,7 +18,7 @@
+         /// <param name="directSoundBuffer">The <see cref="DirectSoundBuffer"/> to create a <see cref="DirectSoundNotify"/> instance for.</param>
+         /// <returns>A new instance of the <see cref="DirectSoundNotify"/> class for the specified <paramref name="directSoundBuffer"/></returns>
+         /// <exception cref="ArgumentNullException"><paramref name="directSoundBuffer"/> is null.</exception>
++        public static DirectSoundNotify? FromBuffer(DirectSoundBuffer directSoundBuffer)
+-        public static DirectSoundNotify FromBuffer(DirectSoundBuffer directSoundBuffer)
+         {
+             if (directSoundBuffer == null) 
+                 throw new ArgumentNullException("directSoundBuffer");

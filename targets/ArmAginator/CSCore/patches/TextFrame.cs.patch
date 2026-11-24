@@ -1,0 +1,11 @@
+--- a/Tags/ID3/Frames/TextFrame.cs
++++ b/Tags/ID3/Frames/TextFrame.cs
+@@ -4,7 +4,7 @@
+ {
+     public class TextFrame : Frame
+     {
++        public virtual string? Text { get; protected set; }
+-        public virtual string Text { get; protected set; }
+ 
+         public TextFrame(FrameHeader header)
+             : base(header)

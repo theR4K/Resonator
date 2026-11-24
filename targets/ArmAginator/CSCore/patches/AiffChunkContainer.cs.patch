@@ -1,0 +1,20 @@
+--- a/Codecs/AIFF/AiffChunkContainer.cs
++++ b/Codecs/AIFF/AiffChunkContainer.cs
+@@ -30,7 +30,7 @@
+             if (FormType != "AIFF" && FormType != "AIFC")
+                 throw new AiffException("Invalid Formtype. Formtype is: " + FormType);
+ 
++            AiffChunk? chunk;
+-            AiffChunk chunk;
+             while ((chunk = GetNextChunk(binaryReader)) != null)
+             {
+                 chunk.SkipChunk();
+@@ -58,7 +58,7 @@
+             get { return _chunks.AsReadOnly(); }
+         }
+ 
++        private AiffChunk? GetNextChunk(BinaryReader binaryReader)
+-        private AiffChunk GetNextChunk(BinaryReader binaryReader)
+         {
+             try
+             {

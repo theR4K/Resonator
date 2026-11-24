@@ -1,0 +1,33 @@
+--- a/Win32/Win32ComException.cs
++++ b/Win32/Win32ComException.cs
+@@ -27,12 +27,12 @@
+         /// <summary>
+         /// Name of the Cominterface which caused the error.
+         /// </summary>
++        public string? InterfaceName { get; private set; }
+-        public string InterfaceName { get; private set; }
+ 
+         /// <summary>
+         /// Name of the member of the Cominterface which caused the error.
+         /// </summary>
++        public string? Member { get; private set; }
+-        public string Member { get; private set; }
+ 
+         /// <summary>
+         /// Initializes a new instance of the <see cref="Win32ComException"/> class.
+@@ -52,6 +52,7 @@
+         /// </summary>
+         /// <param name="info">The <see cref="SerializationInfo"/> object that holds the serialized object data.</param>
+         /// <param name="context">The StreamingContext object that supplies the contextual information about the source or destination.</param>
++        [Obsolete("Formatter-based serialization is obsolete.")]
+         protected Win32ComException(SerializationInfo info, StreamingContext context)
+             : base(info, context)
+         {
+@@ -83,6 +84,7 @@
+         /// </summary>
+         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+         /// <param name="context">The destination (see StreamingContext) for this serialization.</param>
++        [Obsolete("Formatter-based serialization is obsolete.")]
+         public override void GetObjectData(SerializationInfo info, StreamingContext context)
+         {
+             base.GetObjectData(info, context);

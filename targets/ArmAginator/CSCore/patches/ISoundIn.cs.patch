@@ -1,0 +1,11 @@
+--- a/SoundIn/ISoundIn.cs
++++ b/SoundIn/ISoundIn.cs
+@@ -20,7 +20,7 @@
+         /// <summary>
+         /// Gets the format of the captured audio data.
+         /// </summary>
++        WaveFormat? WaveFormat { get; }
+-        WaveFormat WaveFormat { get; }
+ 
+         /// <summary>
+         /// Initializes the <see cref="ISoundIn"/> instance.

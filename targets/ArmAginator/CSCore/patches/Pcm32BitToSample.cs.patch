@@ -1,0 +1,11 @@
+--- a/Streams/SampleConverter/Pcm32BitToSample.cs
++++ b/Streams/SampleConverter/Pcm32BitToSample.cs
+@@ -41,7 +41,7 @@
+         {
+             int bytesToRead = count * 4;
+             Buffer = Buffer.CheckBuffer(bytesToRead);
++            int read = CSCoreNullable.Require(Source).Read(Buffer, 0, bytesToRead); // ArmAgedon seam
+-            int read = Source.Read(Buffer, 0, bytesToRead);
+ 
+             int startIndex = offset;
+             for (int i = 0; i < read; i += 4)

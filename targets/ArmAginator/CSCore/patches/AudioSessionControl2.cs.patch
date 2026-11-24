@@ -1,0 +1,57 @@
+--- a/CoreAudioAPI/AudioSessionControl2.cs
++++ b/CoreAudioAPI/AudioSessionControl2.cs
+@@ -28,11 +28,11 @@
+         /// Gets the session identifier.
+         /// </summary>
+         /// <remarks>For more information, see <see href="http://msdn.microsoft.com/en-us/library/windows/desktop/dd368252(v=vs.85).aspx"/>.</remarks>
++        public string? SessionIdentifier
+-        public string SessionIdentifier
+         {
+             get
+             {
++                string? str;
+-                string str;
+                 CoreAudioAPIException.Try(GetSessionIdentifierNative(out str), InterfaceName, "GetSessionIdentifier");
+                 return str;
+             }
+@@ -42,11 +42,11 @@
+         /// Gets the identifier of the audio session instance.
+         /// </summary>
+         /// <remarks>For more information, see <see href="http://msdn.microsoft.com/en-us/library/windows/desktop/dd368255(v=vs.85).aspx"/>.</remarks>        
++        public string? SessionInstanceIdentifier
+-        public string SessionInstanceIdentifier
+         {
+             get
+             {
++                string? str;
+-                string str;
+                 CoreAudioAPIException.Try(GetSessionInstanceIdentifierNative(out str), InterfaceName, "GetSessionInstanceIdentifier");
+                 return str;
+             }
+@@ -87,7 +87,7 @@
+         /// In the case of that the session is no SingleProcessSession (see <see cref="IsSingleProcessSession"/>), the Process is the process that created the session.
+         /// If the process that created the session is not available anymore, the value is null.
+         /// </summary>
++        public Process? Process
+-        public Process Process
+         {
+             get
+             {
+@@ -126,7 +126,7 @@
+         /// <seealso cref="SessionIdentifier"/>
+         /// <param name="sessionId">A variable which retrieves the session identifier.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int GetSessionIdentifierNative(out string? sessionId)
+-        public unsafe int GetSessionIdentifierNative(out string sessionId)
+         {
+             sessionId = null;
+             IntPtr ptr = IntPtr.Zero;
+@@ -150,7 +150,7 @@
+         /// </summary>
+         /// <param name="sessionInstanceId">A variable which retrieves the identifier of a particular instance of the audio session.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int GetSessionInstanceIdentifierNative(out string? sessionInstanceId)
+-        public unsafe int GetSessionInstanceIdentifierNative(out string sessionInstanceId)
+         {
+             sessionInstanceId = null;
+             IntPtr ptr = IntPtr.Zero;

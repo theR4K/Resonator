@@ -1,0 +1,29 @@
+--- a/SoundIn/WasapiLoopbackCapture.cs
++++ b/SoundIn/WasapiLoopbackCapture.cs
+@@ -36,7 +36,7 @@
+         /// Note: The <paramref name="defaultFormat"/> is just a suggestion. If the driver does not support this format, 
+         /// any other format will be picked. After calling <see cref="WasapiCapture.Initialize"/>, the <see cref="WasapiCapture.WaveFormat"/> 
+         /// property will return the actually picked <see cref="WaveFormat"/>.</param>
++        public WasapiLoopbackCapture(int latency, WaveFormat? defaultFormat)
+-        public WasapiLoopbackCapture(int latency, WaveFormat defaultFormat)
+             : this(latency, defaultFormat, ThreadPriority.AboveNormal)
+         {
+         }
+@@ -51,7 +51,7 @@
+         /// any other format will be picked. After calling <see cref="WasapiCapture.Initialize"/>, the <see cref="WasapiCapture.WaveFormat"/> 
+         /// property will return the actually picked <see cref="WaveFormat"/>.</param>
+         /// <param name="captureThreadPriority">The <see cref="ThreadPriority"/>, the internal capture thread will run on.</param>
++        public WasapiLoopbackCapture(int latency, WaveFormat? defaultFormat, ThreadPriority captureThreadPriority)
+-        public WasapiLoopbackCapture(int latency, WaveFormat defaultFormat, ThreadPriority captureThreadPriority)
+             : base(false, AudioClientShareMode.Shared, latency, defaultFormat, captureThreadPriority)
+         {
+         }
+@@ -65,7 +65,7 @@
+         /// <param name="latency">Latency of the capture specified in milliseconds.</param>
+         /// <param name="captureThreadPriority">ThreadPriority of the capturethread which runs in background and provides the audiocapture itself.</param>
+         /// <param name="defaultFormat">The default WaveFormat to use for the capture. If this parameter is set to null, the best available format will be chosen automatically.</param>
++        public WasapiLoopbackCapture(int latency, WaveFormat? defaultFormat, ThreadPriority captureThreadPriority,
+-        public WasapiLoopbackCapture(int latency, WaveFormat defaultFormat, ThreadPriority captureThreadPriority,
+             bool eventSync)
+             : base(eventSync, AudioClientShareMode.Shared, latency, defaultFormat, captureThreadPriority)
+         {

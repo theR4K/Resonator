@@ -1,0 +1,53 @@
+--- a/Codecs/FLAC/FlacFrameHeader.cs
++++ b/Codecs/FLAC/FlacFrameHeader.cs
+@@ -121,7 +121,7 @@
+         /// </summary>
+         /// <param name="stream">The underlying stream which contains the <see cref="FlacFrameHeader"/>.</param>
+         /// <param name="streamInfo">The stream-info-metadata-block of the flac stream which provides some basic information about the flac framestream. Can be set to null.</param>
++        public FlacFrameHeader(Stream stream, FlacMetadataStreamInfo? streamInfo)
+-        public FlacFrameHeader(Stream stream, FlacMetadataStreamInfo streamInfo)
+             : this(stream, streamInfo, true)
+         {
+         }
+@@ -132,7 +132,7 @@
+         /// <param name="stream">The underlying stream which contains the <see cref="FlacFrameHeader"/>.</param>
+         /// <param name="streamInfo">The stream-info-metadata-block of the flac stream which provides some basic information about the flac framestream. Can be set to null.</param>
+         /// <param name="doCrc">A value which indicates whether the crc8 checksum of the <see cref="FlacFrameHeader"/> should be calculated.</param>
++        public FlacFrameHeader(Stream stream, FlacMetadataStreamInfo? streamInfo, bool doCrc)
+-        public FlacFrameHeader(Stream stream, FlacMetadataStreamInfo streamInfo, bool doCrc)
+         {
+             if (stream == null) throw new ArgumentNullException("stream");
+             if (stream.CanRead == false) throw new ArgumentException("stream is not readable");
+@@ -151,12 +151,12 @@
+         /// <param name="streamInfo">The stream-info-metadata-block of the flac stream which provides some basic information about the flac framestream. Can be set to null.</param>
+         /// <param name="doCrc">A value which indicates whether the crc8 checksum of the <see cref="FlacFrameHeader"/> should be calculated.</param>
+         [CLSCompliant(false)]
++        public unsafe FlacFrameHeader(ref byte* buffer, FlacMetadataStreamInfo? streamInfo, bool doCrc)
+-        public unsafe FlacFrameHeader(ref byte* buffer, FlacMetadataStreamInfo streamInfo, bool doCrc)
+             : this(ref buffer, streamInfo, doCrc, true)
+         {
+         }
+ 
++        internal unsafe FlacFrameHeader(ref byte* buffer, FlacMetadataStreamInfo? streamInfo, bool doCrc, bool logError)
+-        internal unsafe FlacFrameHeader(ref byte* buffer, FlacMetadataStreamInfo streamInfo, bool doCrc, bool logError)
+         {
+             PrintErrors = logError; //optimized for prescan
+ 
+@@ -166,7 +166,7 @@
+             HasError = !ParseHeader(ref buffer, streamInfo);
+         }
+ 
++        private unsafe bool ParseHeader(Stream stream, FlacMetadataStreamInfo? streamInfo)
+-        private unsafe bool ParseHeader(Stream stream, FlacMetadataStreamInfo streamInfo)
+         {
+             const string loggerLocation = "FlacFrameHeader.ParseHeader(Stream, FlacMetadataStreamInfo)";
+ 
+@@ -190,7 +190,7 @@
+             }
+         }
+ 
++        private unsafe bool ParseHeader(ref byte* headerBuffer, FlacMetadataStreamInfo? streamInfo)
+-        private unsafe bool ParseHeader(ref byte* headerBuffer, FlacMetadataStreamInfo streamInfo)
+         {
+             const string loggerLocation = "FlacFrameHeader.ParseHeader(byte*, FlacMetadataStreamInfo)";
+             int val;

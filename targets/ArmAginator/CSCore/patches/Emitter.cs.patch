@@ -1,0 +1,41 @@
+--- a/XAudio2/X3DAudio/Emitter.cs
++++ b/XAudio2/X3DAudio/Emitter.cs
+@@ -150,32 +150,32 @@
+         /// <summary>
+         /// Gets or sets the table of channel positions, expressed as an azimuth in radians along the channel radius with respect to the front orientation vector in the plane orthogonal to the top orientation vector. An azimuth of 2*<see cref="Math.PI"/> specifies a channel is a low-frequency effects (LFE) channel. LFE channels are positioned at the emitter base and are calculated with respect to <see cref="LowFrequencyEffectCurve"/> only, never <see cref="VolumeCurve"/>. <see cref="ChannelAzimuths"/> must have at least <see cref="ChannelCount"/> elements, but can be NULL if <see cref="ChannelCount"/> = 1. The table values must be within 0.0f to 2*<see cref="Math.PI"/>. <see cref="ChannelAzimuths"/> is used with multi-channel emitters for matrix calculations.
+         /// </summary>
++        public float[]? ChannelAzimuths { get; set; }
+-        public float[] ChannelAzimuths { get; set; }
+ 
+         /// <summary>
+         /// Gets or sets the volume-level distance curve, which is used only for matrix calculations. NULL specifies a specialized default curve that conforms to the inverse square law, such that when distance is between 0.0f and <see cref="CurveDistanceScaler" />� 1.0f, no attenuation is applied. When distance is greater than <see cref="CurveDistanceScaler" />� 1.0f, the amplification factor is (<see cref="CurveDistanceScaler" />� 1.0f)/distance. At a distance of <see cref="CurveDistanceScaler" />� 2.0f, the sound will be at half volume or -6 dB, at a distance of <see cref="CurveDistanceScaler" />� 4.0f, the sound will be at one quarter volume or -12 dB, and so on. <see cref="VolumeCurve" /> and <see cref="LowFrequencyEffectCurve"/> are independent of each other. <see cref="VolumeCurve" /> does not affect LFE channel volume.
+         /// </summary>
++        public CurvePoint[]? VolumeCurve { get; set; }
+-        public CurvePoint[] VolumeCurve { get; set; }
+ 
+         /// <summary>
+         /// Gets or sets the LFE roll-off distance curve, or NULL to use default curve: [0.0f, <see cref="CurveDistanceScaler" /> �1.0f], [<see cref="CurveDistanceScaler" /> �1.0f, 0.0f]. A NULL value for <see cref="LowFrequencyEffectCurve"/> specifies a default curve that conforms to the inverse square law with distances &lt;= <see cref="CurveDistanceScaler" /> clamped to no attenuation. <see cref="VolumeCurve" /> and <see cref="LowFrequencyEffectCurve"/> are independent of each other. <see cref="LowFrequencyEffectCurve"/> does not affect non LFE channel volume.
+         /// </summary>
++        public CurvePoint[]? LowFrequencyEffectCurve { get; set; }
+-        public CurvePoint[] LowFrequencyEffectCurve { get; set; }
+ 
+         /// <summary>
+         /// Gets or sets the low-pass filter (LPF) direct-path coefficient distance curve, or NULL to use the default curve: [0.0f, 1.0f], [1.0f, 0.75f]. <see cref="LowPassFilterDirectCurve"/> is only used for LPF direct-path calculations.
+         /// </summary>
++        public CurvePoint[]? LowPassFilterDirectCurve { get; set; }
+-        public CurvePoint[] LowPassFilterDirectCurve { get; set; }
+ 
+         /// <summary>
+         /// Gets or sets the LPF reverb-path coefficient distance curve, or NULL to use default curve: [0.0f, 0.75f], [1.0f, 0.75f]. <see cref="LowPassFilterReverbCurve"/> is only used for LPF reverb path calculations.
+         /// </summary>
++        public CurvePoint[]? LowPassFilterReverbCurve { get; set; }
+-        public CurvePoint[] LowPassFilterReverbCurve { get; set; }
+ 
+         /// <summary>
+         /// Gets or sets the reverb send level distance curve, or NULL to use default curve: [0.0f, 1.0f], [1.0f, 0.0f].
+         /// </summary>
++        public CurvePoint[]? ReverbCurve;
+-        public CurvePoint[] ReverbCurve;
+ 
+         /// <summary>
+         /// Gets or sets the curve distance scaler that is used to scale normalized distance curves to user-defined world units, and/or to exaggerate their effect. This does not affect any other calculations. The value must be within the range FLT_MIN to FLT_MAX. <see cref="CurveDistanceScaler"/> is only used for matrix, LPF (both direct and reverb paths), and reverb calculations.

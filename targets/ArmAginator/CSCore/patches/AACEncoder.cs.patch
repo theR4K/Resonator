@@ -1,0 +1,34 @@
+--- a/Codecs/AAC/AACEncoder.cs
++++ b/Codecs/AAC/AACEncoder.cs
+@@ -11,7 +11,7 @@
+     {
+ // ReSharper disable once InconsistentNaming
+         private static readonly Guid MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION = new Guid("7632F0E6-9538-4d61-ACDA-EA29C8C14456");
++        private MFAttributes? _outputTypeAttributes;
+-        private MFAttributes _outputTypeAttributes;
+ 
+         /// <summary>
+         /// Initializes a new instance of the <see cref="AacEncoder"/> class.
+@@ -57,7 +57,7 @@
+             SetTargetStream(targetStream, sourceMediaType, targetMediaType, containerType);
+         }
+ 
++        private MFAttributes? OutputTypeAttributes
+-        private MFAttributes OutputTypeAttributes
+         {
+             get
+             {
+@@ -83,11 +83,11 @@
+         {
+             get
+             {
++                return (AacAudioProfileLevelIndication)CSCoreNullable.Require(OutputTypeAttributes).GetUINT32(MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION); // ArmAgedon seam
+-                return (AacAudioProfileLevelIndication)OutputTypeAttributes.GetUINT32(MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION);
+             }
+             set
+             {
++                CSCoreNullable.Require(OutputTypeAttributes).Set(MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION, (int)value); // ArmAgedon seam
+-                OutputTypeAttributes.Set(MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION, (int)value);
+             }
+         }
+     }

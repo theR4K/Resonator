@@ -1,0 +1,84 @@
+--- a/TimeConverterFactory.cs
++++ b/TimeConverterFactory.cs
+@@ -7,7 +7,7 @@
+     /// <summary>
+     /// Provides <see cref="TimeConverter"/>s for converting raw time values (e.g. bytes, samples,...) to a <see cref="TimeSpan"/> and back.
+     /// </summary>
++    public sealed partial class TimeConverterFactory
+-    public sealed class TimeConverterFactory
+     {
+ // ReSharper disable once InconsistentNaming
+         private readonly static TimeConverterFactory _instance = new TimeConverterFactory();
+@@ -145,7 +145,7 @@
+ 
+             //we may got it already in the cache
+             if (_cache.ContainsKey(sourceType))
++                return CSCoreNullable.Require(_cache[sourceType].GetTimeConverter()); // ArmAgedon seam
+-                return _cache[sourceType].GetTimeConverter();
+ 
+             //nope, there is nothing in the cache
+ 
+@@ -154,7 +154,7 @@
+                 sourceType.GetCustomAttributes(typeof (TimeConverterAttribute), false).FirstOrDefault() as
+                     TimeConverterAttribute;
+ 
++            TimeConverter? timeConverter = null;
+-            TimeConverter timeConverter = null;
+             try
+             {
+                 if (attribute == null)
+@@ -166,7 +166,7 @@
+                     if (baseTypes.Length == 1)
+                     {
+                         timeConverter = _timeConverters[baseTypes.First()];
++                        return CSCoreNullable.Require(timeConverter); // ArmAgedon seam
+-                        return timeConverter;
+                     }
+                     //we've got no match
+                     if (baseTypes.Length == 0)
+@@ -178,9 +178,9 @@
+                 }
+ 
+                 var timeConverterType = attribute.TimeConverterType;
++                timeConverter = (TimeConverter?) Activator.CreateInstance(timeConverterType, attribute.Args);
+-                timeConverter = (TimeConverter) Activator.CreateInstance(timeConverterType, attribute.Args);
+ 
++                return CSCoreNullable.Require(timeConverter); // ArmAgedon seam
+-                return timeConverter;
+             }
+             finally
+             {
+@@ -213,28 +213,21 @@
+ 
+         private IEnumerable<Type> GetTypes(Type type)
+         {
++            return GetBaseTypes(type); // ArmAgedon seam
+-            //copied from dadhi see http://stackoverflow.com/questions/1823655/given-a-c-sharp-type-get-its-base-classes-and-implemented-interfaces
+-            return type.BaseType == typeof(object)
+-                ? type.GetInterfaces()
+-                : Enumerable
+-                    .Repeat(type.BaseType, 1)
+-                    .Concat(type.GetInterfaces())
+-                    .Concat(GetTypes(type.BaseType))
+-                    .Distinct();
+         }
+ 
+         private class CacheItem
+         {
++            public TimeConverter? TimeConverter { get; set; }
+-            public TimeConverter TimeConverter { get; set; }
+ 
++            public TimeConverterAttribute? TimeConverterAttribute { get; set; }
+-            public TimeConverterAttribute TimeConverterAttribute { get; set; }
+ 
+             public bool CreateNewInstance { get; set; }
+ 
++            public TimeConverter? GetTimeConverter()
+-            public TimeConverter GetTimeConverter()
+             {
+                 if(CreateNewInstance)
++                    return (TimeConverter?)Activator.CreateInstance(CSCoreNullable.Require(TimeConverterAttribute).TimeConverterType, TimeConverterAttribute.Args); // ArmAgedon seam
+-                    return (TimeConverter)Activator.CreateInstance(TimeConverterAttribute.TimeConverterType, TimeConverterAttribute.Args);
+                 return TimeConverter;
+             }
+         }

@@ -1,0 +1,24 @@
+--- a/MediaFoundation/MediaFoundationCore.cs
++++ b/MediaFoundation/MediaFoundationCore.cs
+@@ -35,10 +35,10 @@
+             }
+         }
+ 
++        public static IntPtr CreateSinkWriterFromMFByteStreamNative(MFByteStream byteStream, MFAttributes? attributes)
+-        public static IntPtr CreateSinkWriterFromMFByteStreamNative(MFByteStream byteStream, MFAttributes attributes)
+         {
+             IntPtr p;
++            int result = NativeMethods.ExternMFCreateSinkWriterFromURL(null, byteStream.BasePtr, CSCoreNullable.NativePointer(attributes), out p); // ArmAgedon seam
+-            int result = NativeMethods.ExternMFCreateSinkWriterFromURL(null, byteStream.BasePtr, attributes.BasePtr, out p);
+             MediaFoundationException.Try(result, "Interops", "MFCreateSinkWriterFromURL");
+             return p;
+         }
+@@ -48,7 +48,7 @@
+             try
+             {
+                 return
++                    transforms.Select(t => (Guid) CSCoreNullable.Require(t[MediaFoundationAttributes.MFT_TRANSFORM_CLSID_Attribute])) // ArmAgedon seam
+-                    transforms.Select(t => (Guid) t[MediaFoundationAttributes.MFT_TRANSFORM_CLSID_Attribute])
+                         .Any(value => value == transformGuid);
+             }
+             catch (Exception)

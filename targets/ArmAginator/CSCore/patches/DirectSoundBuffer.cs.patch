@@ -1,0 +1,11 @@
+--- a/DirectSound/DirectSoundBuffer.cs
++++ b/DirectSound/DirectSoundBuffer.cs
+@@ -533,7 +533,7 @@
+         /// Returns a description of the format of the sound data in the buffer.
+         /// </summary>
+         /// <returns>A description of the format of the sound data in the buffer. The returned description is either of the type <see cref="WaveFormat"/> or of the type <see cref="WaveFormatExtensible"/>.</returns>
++        public WaveFormat? GetWaveFormat()
+-        public WaveFormat GetWaveFormat()
+         {
+             int size;
+             DSResult result = GetFormatNative(IntPtr.Zero, 0, out size);

@@ -1,0 +1,11 @@
+--- a/CoreAudioAPI/DeviceNotificationEventArgs.cs
++++ b/CoreAudioAPI/DeviceNotificationEventArgs.cs
+@@ -27,7 +27,7 @@
+         /// </summary>
+         /// <param name="device">The device associated with the <see cref="DeviceId"/>. If the return value is <c>false</c>, the <paramref name="device"/> will be null.</param>
+         /// <returns><c>true</c> if the associated device be successfully retrieved; false otherwise.</returns>
++        public bool TryGetDevice(out MMDevice? device)
+-        public bool TryGetDevice(out MMDevice device)
+         {
+             try
+             {

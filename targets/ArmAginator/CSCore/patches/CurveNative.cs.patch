@@ -1,0 +1,11 @@
+--- a/XAudio2/X3DAudio/CurveNative.cs
++++ b/XAudio2/X3DAudio/CurveNative.cs
+@@ -12,7 +12,7 @@
+         public IntPtr CurvePointsPtr;
+         public int PointCount;
+ 
++        public static unsafe IntPtr AllocMemoryAndBuildCurve(IEnumerable<CurvePoint>? points)
+-        public static unsafe IntPtr AllocMemoryAndBuildCurve(IEnumerable<CurvePoint> points)
+         {
+             if (points == null)
+                 return IntPtr.Zero;

@@ -1,0 +1,40 @@
+--- a/Tags/ID3/Frames/PictureFrame.cs
++++ b/Tags/ID3/Frames/PictureFrame.cs
+@@ -6,15 +6,15 @@
+ {
+     public class PictureFrame : Frame
+     {
++        public string? MimeType { get; private set; }
+-        public string MimeType { get; private set; }
+ 
+         public PictureFormat Format { get; set; }
+ 
++        public string? Description { get; private set; }
+-        public string Description { get; private set; }
+ 
++        internal byte[]? RawData { get; private set; }
+-        internal byte[] RawData { get; private set; }
+ 
++        private Image? _image;
+-        private Image _image;
+ 
+         /// <summary>
+         /// WARNING: If MimeType equals "-->" the picture will be downloaded from the web.
+@@ -28,7 +28,7 @@
+ 
+         private Image DecodeImage()
+         {
++            return ID3Utils.DecodeImage(CSCoreNullable.Require(RawData), CSCoreNullable.Require(MimeType)); // ArmAgedon seam
+-            return ID3Utils.DecodeImage(RawData, MimeType);
+         }
+ 
+         private ID3Version _version;
+@@ -81,7 +81,7 @@
+ 
+         public string GetURL()
+         {
++            return ID3Utils.GetURL(CSCoreNullable.Require(RawData), CSCoreNullable.Require(MimeType)); // ArmAgedon seam
+-            return ID3Utils.GetURL(RawData, MimeType);
+         }
+     }
+ }

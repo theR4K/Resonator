@@ -1,0 +1,50 @@
+--- a/Streams/SampleConverter/WaveToSampleBase.cs
++++ b/Streams/SampleConverter/WaveToSampleBase.cs
+@@ -11,11 +11,11 @@
+         /// <summary>
+         /// The underlying source which provides the raw data.
+         /// </summary>
++        protected internal IWaveSource? Source;
+-        protected internal IWaveSource Source;
+         /// <summary>
+         /// The buffer to use for reading from the <see cref="Source"/>.
+         /// </summary>
++        protected internal byte[]? Buffer;
+-        protected internal byte[] Buffer;
+ 
+         /// <summary>
+         /// Initializes a new instance of the <see cref="WaveToSampleBase"/> class.
+@@ -63,13 +63,13 @@
+         /// </summary>
+         public long Position
+         {
++            get { return CanSeek ? CSCoreNullable.Require(Source).Position / Source.WaveFormat.BytesPerSample :0; } // ArmAgedon seam
+-            get { return CanSeek ? Source.Position / Source.WaveFormat.BytesPerSample :0; }
+             set
+             {
+                 if (CanSeek)
+                 {
+                     value -= (value % WaveFormat.BlockAlign);
++                    CSCoreNullable.Require(Source).Position = value * Source.WaveFormat.BytesPerSample; // ArmAgedon seam
+-                    Source.Position = value * Source.WaveFormat.BytesPerSample;
+                 }
+                 else
+                 {
+@@ -83,7 +83,7 @@
+         /// </summary>
+         public long Length
+         {
++            get { return CanSeek && CSCoreNullable.Require(Source).Length != 0 ? Source.Length / Source.WaveFormat.BytesPerSample : 0; } // ArmAgedon seam
+-            get { return CanSeek && Source.Length != 0 ? Source.Length / Source.WaveFormat.BytesPerSample : 0; }
+         }
+ 
+         /// <summary>
+@@ -91,7 +91,7 @@
+         /// </summary>
+         public bool CanSeek
+         {
++            get { return CSCoreNullable.Require(Source).CanSeek; } // ArmAgedon seam
+-            get { return Source.CanSeek; }
+         }
+ 
+         /// <summary>

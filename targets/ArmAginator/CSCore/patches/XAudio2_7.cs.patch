@@ -1,0 +1,29 @@
+--- a/XAudio2/XAudio2_7.cs
++++ b/XAudio2/XAudio2_7.cs
+@@ -156,7 +156,7 @@
+                 int result = InteropCalls.CallI(UnsafeBasePtr, deviceIndex, ptr.ToPointer(),
+                     ((void**) (*(void**) UnsafeBasePtr))[4]);
+ 
++                deviceDetails = (DeviceDetails) CSCoreNullable.Require(Marshal.PtrToStructure(ptr, typeof (DeviceDetails))); // ArmAgedon seam
+-                deviceDetails = (DeviceDetails) Marshal.PtrToStructure(ptr, typeof (DeviceDetails));
+                 return result;
+             }
+             finally
+@@ -316,7 +316,7 @@
+             IntPtr sourceFormat,
+             VoiceFlags flags,
+             float maxFrequencyRatio,
++            IXAudio2VoiceCallback? voiceCallback,
+-            IXAudio2VoiceCallback voiceCallback,
+             VoiceSends? sendList, //out
+             EffectChain? effectChain
+             )
+@@ -443,7 +443,7 @@
+         /// <returns>HRESULT</returns>
+         public override unsafe int CreateMasteringVoiceNative(out IntPtr pMasteringVoice, int inputChannels,
+             int inputSampleRate, int flags,
++            object? deviceId, EffectChain? effectChain, AudioStreamCategory streamCategory)
+-            object deviceId, EffectChain? effectChain, AudioStreamCategory streamCategory)
+         {
+             if (!(deviceId is int))
+                 throw new ArgumentException("DeviceId has to be an integer.", "deviceId");

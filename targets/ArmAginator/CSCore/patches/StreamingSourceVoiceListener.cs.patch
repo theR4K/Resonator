@@ -1,0 +1,20 @@
+--- a/XAudio2/StreamingSourceVoiceListener.cs
++++ b/XAudio2/StreamingSourceVoiceListener.cs
+@@ -17,7 +17,7 @@
+         /// <remarks>Limited by the <see cref="WaitHandle.WaitAny(System.Threading.WaitHandle[],int,bool)" /> method.</remarks>
+         public const int MaxItems = 64;
+ 
++        private static volatile StreamingSourceVoiceListener? _default;
+-        private static volatile StreamingSourceVoiceListener _default;
+ // ReSharper disable once InconsistentNaming
+         private static readonly object _singleTonSync = new object();
+ 
+@@ -113,7 +113,7 @@
+             _isRunning = true;
+         }
+ 
++        private void WorkerProc(object? o)
+-        private void WorkerProc(object o)
+         {
+             const int waitTimeout = 10;
+ 

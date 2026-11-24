@@ -1,0 +1,20 @@
+--- a/Streams/SingleBlockNotificationStream.cs
++++ b/Streams/SingleBlockNotificationStream.cs
+@@ -14,7 +14,7 @@
+         /// Occurs when the <see cref="Read"/> method reads a block.
+         /// </summary>
+         /// <remarks>If the <see cref="Read"/> method reads <c>n</c> during a single call, the <see cref="SingleBlockRead"/> event will get fired <c>n</c> times.</remarks>
++        public event EventHandler<SingleBlockReadEventArgs>? SingleBlockRead;
+-        public event EventHandler<SingleBlockReadEventArgs> SingleBlockRead;
+ 
+         /// <summary>
+         /// Initializes a new instance of the <see cref="SingleBlockNotificationStream"/> class.
+@@ -44,7 +44,7 @@
+         public override int Read(float[] buffer, int offset, int count)
+         {
+             int read = base.Read(buffer, offset, count);
++            EventHandler<SingleBlockReadEventArgs>? singleBlockRead = SingleBlockRead;
+-            EventHandler<SingleBlockReadEventArgs> singleBlockRead = SingleBlockRead;
+             if (read != 0 && singleBlockRead != null)
+             {
+                 int channels = WaveFormat.Channels;

@@ -1,0 +1,20 @@
+--- a/CoreAudioAPI/AudioEndpointVolumeCallback.cs
++++ b/CoreAudioAPI/AudioEndpointVolumeCallback.cs
+@@ -13,7 +13,7 @@
+         /// <summary>
+         /// Occurs when the volume level or the muting state of the audio endpoint device has changed.
+         /// </summary>
++        public event EventHandler<AudioEndpointVolumeCallbackEventArgs>? NotifyRecived;
+-        public event EventHandler<AudioEndpointVolumeCallbackEventArgs> NotifyRecived;
+ 
+         /// <summary>
+         /// The <see cref="IAudioEndpointVolumeCallback.OnNotify"/> method notifies the client that the volume level or muting state of the audio endpoint device has changed.
+@@ -26,7 +26,7 @@
+                 return (int) HResult.E_INVALIDARG;
+ 
+             var data =
++                (AudioVolumeNotificationData) CSCoreNullable.Require(Marshal.PtrToStructure(notifyData, typeof (AudioVolumeNotificationData))); // ArmAgedon seam
+-                (AudioVolumeNotificationData) Marshal.PtrToStructure(notifyData, typeof (AudioVolumeNotificationData));
+             NotifyRecived?.Invoke(this, new AudioEndpointVolumeCallbackEventArgs(data, notifyData));
+ 
+             return (int) HResult.S_OK;

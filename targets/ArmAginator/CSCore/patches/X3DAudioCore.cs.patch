@@ -1,0 +1,39 @@
+--- a/XAudio2/X3DAudio/X3DAudioCore.cs
++++ b/XAudio2/X3DAudio/X3DAudioCore.cs
+@@ -12,11 +12,11 @@
+     public sealed class X3DAudioCore : IDisposable
+     {
+ // ReSharper disable once InconsistentNaming
++        private X3DAudioCalculateDelegate? _calculateDelegate;
+-        private X3DAudioCalculateDelegate _calculateDelegate;
+         private IntPtr _hModule;
+         private X3DAudioHandle _handle;
+ 
++        private X3DAudioInitializeDelegate? _initializeDelegate;
+-        private X3DAudioInitializeDelegate _initializeDelegate;
+ 
+         /// <summary>
+         ///     Initializes a new instance of the <see cref="X3DAudioCore" /> class.
+@@ -163,7 +163,7 @@
+         private void X3DAudioCalculate(IntPtr instance, IntPtr listener, IntPtr emitter, CalculateFlags flags,
+             IntPtr dspSettingsPtr)
+         {
++            CSCoreNullable.Require(_calculateDelegate)(instance, listener, emitter, (int) flags, dspSettingsPtr); // ArmAgedon seam
+-            _calculateDelegate(instance, listener, emitter, (int) flags, dspSettingsPtr);
+         }
+ 
+         private unsafe void X3DAudioInitialize(ChannelMask speakerChannelMask, float speedOfSound,
+@@ -172,11 +172,11 @@
+             handle = default(X3DAudioHandle);
+             fixed (void* p = &handle)
+             {
++                CSCoreNullable.Require(_initializeDelegate)((int) speakerChannelMask, speedOfSound, (IntPtr) p); // ArmAgedon seam
+-                _initializeDelegate((int) speakerChannelMask, speedOfSound, (IntPtr) p);
+             }
+         }
+ 
++        private TDelegate? GetUnmanagedProc<TDelegate>(IntPtr hModule, string procName)
+-        private TDelegate GetUnmanagedProc<TDelegate>(IntPtr hModule, string procName)
+             where TDelegate : class
+         {
+             IntPtr procAddress = Win32.NativeMethods.GetProcAddress(hModule, procName);

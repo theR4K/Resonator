@@ -1,0 +1,13 @@
+--- a/WaveFormatExtensible.cs
++++ b/WaveFormatExtensible.cs
+@@ -147,8 +147,8 @@
+             int valuesSet = 0;
+             for (int i = 0; i < totalChannelMaskValues.Length; i++)
+             {
++                if ((channelMask & (ChannelMask) CSCoreNullable.Require(totalChannelMaskValues.GetValue(i))) == // ArmAgedon seam
++                    (ChannelMask) CSCoreNullable.Require(totalChannelMaskValues.GetValue(i))) // ArmAgedon seam
+-                if ((channelMask & (ChannelMask) totalChannelMaskValues.GetValue(i)) ==
+-                    (ChannelMask) totalChannelMaskValues.GetValue(i))
+                     valuesSet++;
+             }
+ 

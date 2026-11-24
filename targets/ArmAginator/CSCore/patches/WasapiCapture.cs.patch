@@ -1,0 +1,204 @@
+--- a/SoundIn/WasapiCapture.cs
++++ b/SoundIn/WasapiCapture.cs
+@@ -12,7 +12,7 @@
+     /// Captures audio data from a audio device (through Wasapi Apis). To capture audio from an output device, use the <see cref="WasapiLoopbackCapture"/> class.
+     /// Minimum supported OS: Windows Vista (see <see cref="IsSupportedOnCurrentPlatform"/> property).
+     /// </summary>
++    public partial class WasapiCapture : ISoundIn
+-    public class WasapiCapture : ISoundIn
+     {
+         /// <summary>
+         /// Gets a value indicating whether the <see cref="WasapiCapture"/> class is supported on the current platform.
+@@ -35,22 +35,22 @@
+         /// <summary>
+         /// Occurs when new data got captured and is available. 
+         /// </summary>
++        public event EventHandler<DataAvailableEventArgs>? DataAvailable;
+-        public event EventHandler<DataAvailableEventArgs> DataAvailable;
+ 
+         /// <summary>
+         /// Occurs when <see cref="WasapiCapture"/> stopped capturing audio.
+         /// </summary>
++        public event EventHandler<RecordingStoppedEventArgs>? Stopped;
+-        public event EventHandler<RecordingStoppedEventArgs> Stopped;
+ 
++        private AudioClient? _audioClient;
++        private AudioCaptureClient? _audioCaptureClient;
++        private MMDevice? _device;
+-        private AudioClient _audioClient;
+-        private AudioCaptureClient _audioCaptureClient;
+-        private MMDevice _device;
+         private readonly AudioClientShareMode _shareMode;
++        private WaveFormat? _waveFormat;
++        private EventWaitHandle? _eventWaitHandle;
++        private Thread? _recordThread;
+-        private WaveFormat _waveFormat;
+-        private EventWaitHandle _eventWaitHandle;
+-        private Thread _recordThread;
+         private readonly ThreadPriority _captureThreadPriority;
++        private readonly SynchronizationContext? _synchronizationContext;
+-        private readonly SynchronizationContext _synchronizationContext;
+         private volatile RecordingState _recordingState;
+ 
+         private int _latency;
+@@ -108,7 +108,7 @@
+         /// <param name="shareMode">Specifies how to open the audio device. Note that if exclusive mode is used, the device can only be used once on the whole system. Don't use exclusive mode in combination with eventSync.</param>
+         /// <param name="latency">Latency of the capture specified in milliseconds.</param>
+         /// <param name="defaultFormat">The default WaveFormat to use for the capture. If this parameter is set to null, the best available format will be chosen automatically.</param>
++        public WasapiCapture(bool eventSync, AudioClientShareMode shareMode, int latency, WaveFormat? defaultFormat)
+-        public WasapiCapture(bool eventSync, AudioClientShareMode shareMode, int latency, WaveFormat defaultFormat)
+             : this(eventSync, shareMode, latency, defaultFormat, ThreadPriority.AboveNormal)
+         {
+         }
+@@ -121,7 +121,7 @@
+         /// <param name="latency">Latency of the capture specified in milliseconds.</param>
+         /// <param name="captureThreadPriority">ThreadPriority of the capturethread which runs in background and provides the audiocapture itself.</param>
+         /// <param name="defaultFormat">The default WaveFormat to use for the capture. If this parameter is set to null, the best available format will be chosen automatically.</param>
++        public WasapiCapture(bool eventSync, AudioClientShareMode shareMode, int latency, WaveFormat? defaultFormat, ThreadPriority captureThreadPriority)
+-        public WasapiCapture(bool eventSync, AudioClientShareMode shareMode, int latency, WaveFormat defaultFormat, ThreadPriority captureThreadPriority)
+             : this(eventSync, shareMode, latency, defaultFormat, captureThreadPriority, null)
+         {
+         }
+@@ -137,8 +137,8 @@
+         /// <param name="synchronizationContext">The <see cref="SynchronizationContext"/> to use to fire events on.</param>
+         /// <exception cref="PlatformNotSupportedException">The current platform does not support Wasapi. For more details see: <see cref="IsSupportedOnCurrentPlatform"/>.</exception>
+         /// <exception cref="ArgumentException">The <paramref name="eventSync"/> parameter is set to true while the <paramref name="shareMode"/> is set to <see cref="AudioClientShareMode.Exclusive"/>.</exception>
++        public WasapiCapture(bool eventSync, AudioClientShareMode shareMode, int latency, WaveFormat? defaultFormat,
++            ThreadPriority captureThreadPriority, SynchronizationContext? synchronizationContext)
+-        public WasapiCapture(bool eventSync, AudioClientShareMode shareMode, int latency, WaveFormat defaultFormat,
+-            ThreadPriority captureThreadPriority, SynchronizationContext synchronizationContext)
+         {
+             if (!IsSupportedOnCurrentPlatform)
+                 throw new PlatformNotSupportedException("Wasapi is only supported on Windows Vista and above.");
+@@ -236,15 +236,15 @@
+         }
+ 
+         //based on http://msdn.microsoft.com/en-us/library/windows/desktop/dd370800(v=vs.85).aspx
++        private void CaptureProc(object? param)
+-        private void CaptureProc(object param)
+         {
+             var playbackStartedEventWaitHandle = param as EventWaitHandle;
+ 
++            Exception? exception = null;
+-            Exception exception = null;
+             try
+             {
++                int bufferSize = CSCoreNullable.Require(_audioClient).BufferSize; // ArmAgedon seam
++                int frameSize = CSCoreNullable.Require(WaveFormat).Channels * WaveFormat.BytesPerSample; // ArmAgedon seam
+-                int bufferSize = _audioClient.BufferSize;
+-                int frameSize = WaveFormat.Channels * WaveFormat.BytesPerSample;
+ 
+                 long actualDuration = (long) ((double) ReftimesPerSecond * bufferSize / WaveFormat.SampleRate);
+                 int actualLatency = (int) (actualDuration / ReftimesPerMillisecond);
+@@ -252,7 +252,7 @@
+ 
+                 byte[] buffer = new byte[bufferSize * frameSize];
+ 
++                WaitHandle[] eventWaitHandleArray = {CSCoreNullable.Require(_eventWaitHandle)}; // ArmAgedon seam
+-                WaitHandle[] eventWaitHandleArray = {_eventWaitHandle};
+ 
+                 _audioClient.Start();
+                 _recordingState = RecordingState.Recording;
+@@ -278,7 +278,7 @@
+ 
+                     if (RecordingState == RecordingState.Recording)
+                     {
++                        ReadData(buffer, CSCoreNullable.Require(_audioCaptureClient), (uint) frameSize); // ArmAgedon seam
+-                        ReadData(buffer, _audioCaptureClient, (uint) frameSize);
+                     }
+                 }
+ 
+@@ -346,7 +346,7 @@
+             var defaultFormat = _waveFormat;
+ 
+             _audioClient = AudioClient.FromMMDevice(Device);
++            _waveFormat = CSCoreNullable.Require(_waveFormat ?? _audioClient.MixFormat); // ArmAgedon seam
+-            _waveFormat = _waveFormat ?? _audioClient.MixFormat;
+ 
+             _waveFormat = SetupWaveFormat(_waveFormat, _audioClient);
+ 
+@@ -368,11 +368,11 @@
+                         {
+                             int bufferSize = _audioClient.BufferSize;
+                             _audioClient.Dispose();
++                            long hnsRequestedDuration = (long)(((double)ReftimesPerMillisecond * 1000 / CSCoreNullable.Require(_waveFormat).SampleRate * bufferSize) + 0.5); // ArmAgedon seam
+-                            long hnsRequestedDuration = (long)(((double)ReftimesPerMillisecond * 1000 / _waveFormat.SampleRate * bufferSize) + 0.5);
+                             _audioClient = AudioClient.FromMMDevice(Device);
+                             if (defaultFormat == null)
+                                 _waveFormat = _audioClient.MixFormat;
++                            _audioClient.Initialize(_shareMode, AudioClientStreamFlags.StreamFlagsEventCallback | GetStreamFlags(), hnsRequestedDuration, hnsRequestedDuration, CSCoreNullable.Require(_waveFormat), Guid.Empty); // ArmAgedon seam
+-                            _audioClient.Initialize(_shareMode, AudioClientStreamFlags.StreamFlagsEventCallback | GetStreamFlags(), hnsRequestedDuration, hnsRequestedDuration, _waveFormat, Guid.Empty);
+                         }
+                     }
+                 }
+@@ -397,10 +397,10 @@
+             if (count <= 0)
+                 return;
+ 
++            EventHandler<DataAvailableEventArgs>? handler = DataAvailable;
+-            EventHandler<DataAvailableEventArgs> handler = DataAvailable;
+             if (handler != null)
+             {
++                var e = new DataAvailableEventArgs(buffer, offset, count, CSCoreNullable.Require(WaveFormat)); // ArmAgedon seam
+-                var e = new DataAvailableEventArgs(buffer, offset, count, WaveFormat);
+                 if (_synchronizationContext != null)
+                     _synchronizationContext.Post(o => handler(this, e), null); //use post instead of send to avoid deadlocks
+                 else
+@@ -408,9 +408,9 @@
+             }
+         }
+ 
++        private void RaiseStopped(Exception? exception)
+-        private void RaiseStopped(Exception exception)
+         {
++            EventHandler<RecordingStoppedEventArgs>? handler = Stopped;
+-            EventHandler<RecordingStoppedEventArgs> handler = Stopped;
+             if (handler != null)
+             {
+                 var e = new RecordingStoppedEventArgs(exception);
+@@ -450,7 +450,7 @@
+         /// <summary>
+         /// Gets the OutputFormat.
+         /// </summary>
++        public WaveFormat? WaveFormat
+-        public WaveFormat WaveFormat
+         {
+             get { return _waveFormat; }
+         }
+@@ -465,13 +465,13 @@
+ 
+         private WaveFormat SetupWaveFormat(WaveFormat waveFormat, AudioClient audioClient)
+         {
++            WaveFormat? closestMatch;
+-            WaveFormat closestMatch;
+             WaveFormat finalFormat = waveFormat;
+             if (!audioClient.IsFormatSupported(_shareMode, waveFormat, out closestMatch))
+             {
+                 if (closestMatch == null)
+                 {
++                    WaveFormat? mixformat = audioClient.GetMixFormat();
+-                    WaveFormat mixformat = audioClient.GetMixFormat();
+                     if (mixformat == null || !audioClient.IsFormatSupported(_shareMode, mixformat))
+                     {
+                         WaveFormatExtensible[] possibleFormats =
+@@ -497,10 +497,7 @@
+                                 new WaveFormatExtensible(waveFormat.SampleRate, 8,  1, AudioSubTypes.Pcm)
+                             };
+ 
++                            mixformat = RequireSupportedFormat(audioClient, possibleFormats); // ArmAgedon seam
+-                            if (CheckForSupportedFormat(audioClient, possibleFormats, out mixformat))
+-                            {
+-                                throw new NotSupportedException("Could not find a supported format.");
+-                            }
+                         }
+                     }
+ 
+@@ -515,7 +512,7 @@
+             return finalFormat;
+         }
+ 
++        private bool CheckForSupportedFormat(AudioClient audioClient, IEnumerable<WaveFormatExtensible> waveFormats, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out WaveFormat? foundMatch)
+-        private bool CheckForSupportedFormat(AudioClient audioClient, IEnumerable<WaveFormatExtensible> waveFormats, out WaveFormat foundMatch)
+         {
+             foundMatch = null;
+             foreach (var format in waveFormats)

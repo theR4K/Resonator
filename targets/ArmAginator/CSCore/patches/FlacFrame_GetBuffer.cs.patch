@@ -1,0 +1,13 @@
+--- a/Codecs/FLAC/FlacFrame_GetBuffer.cs
++++ b/Codecs/FLAC/FlacFrame_GetBuffer.cs
+@@ -4,8 +4,9 @@
+ {
+     public partial class FlacFrame
+     {
++		private unsafe int GetBufferInternal([System.Diagnostics.CodeAnalysis.NotNull] ref byte[]? buffer)
+-		private unsafe int GetBufferInternal(ref byte[] buffer)
+ 		{
++			EnsureDecodedState(); // ArmAgedon seam
+ 			short vals;
+ 			int   vali;
+ 

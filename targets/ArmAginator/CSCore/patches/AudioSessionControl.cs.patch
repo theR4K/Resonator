@@ -1,0 +1,111 @@
+--- a/CoreAudioAPI/AudioSessionControl.cs
++++ b/CoreAudioAPI/AudioSessionControl.cs
+@@ -14,7 +14,7 @@
+     {
+         private const string InterfaceName = "IAudioSessionControl";
+ 
++        private readonly List<IAudioSessionEvents?> _sessionEventHandler = new List<IAudioSessionEvents?>();
+-        private readonly List<IAudioSessionEvents> _sessionEventHandler = new List<IAudioSessionEvents>();
+         private readonly AudioSessionEvents _sessionEvents = new AudioSessionEvents();
+ 
+         /// <summary>
+@@ -120,11 +120,11 @@
+         /// <summary>
+         /// Gets or sets the display name for the audio session.
+         /// </summary>
++        public string? DisplayName
+-        public string DisplayName
+         {
+             get
+             {
++                string? displayName;
+-                string displayName;
+                 CoreAudioAPIException.Try(GetDisplayNameNative(out displayName), InterfaceName, "GetDisplayName");
+                 return displayName;
+             }
+@@ -134,11 +134,11 @@
+         /// <summary>
+         /// Gets or sets the path for the display icon for the audio session.
+         /// </summary>
++        public string? IconPath
+-        public string IconPath
+         {
+             get
+             {
++                string? iconPath;
+-                string iconPath;
+                 CoreAudioAPIException.Try(GetIconPathNative(out iconPath), InterfaceName, "GetIconPath");
+                 return iconPath;
+             }
+@@ -185,7 +185,7 @@
+         /// </summary>
+         /// <param name="displayName">A variable into which the method writes the display name of the session.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int GetDisplayNameNative(out string? displayName)
+-        public unsafe int GetDisplayNameNative(out string displayName)
+         {
+             IntPtr ptr = IntPtr.Zero;
+             int result = InteropCalls.CallI(UnsafeBasePtr, &ptr, ((void**) (*(void**) UnsafeBasePtr))[4]);
+@@ -206,7 +206,7 @@
+         /// <param name="displayName">The new display name of the audio session.</param>
+         /// <param name="eventContext">EventContext which can be accessed in the event handler.</param>        
+         /// <returns>HRESULT</returns>
++        public unsafe int SetDisplayNameNative(string? displayName, Guid eventContext)
+-        public unsafe int SetDisplayNameNative(string displayName, Guid eventContext)
+         {
+             IntPtr p = displayName != null ? Marshal.StringToHGlobalUni(displayName) : IntPtr.Zero;
+             int result = InteropCalls.CallI(UnsafeBasePtr, p.ToPointer(), &eventContext,
+@@ -221,7 +221,7 @@
+         /// </summary>
+         /// <param name="iconPath">A variable into which the method writes the path and file name of an .ico, .dll, or .exe file that contains the icon.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int GetIconPathNative(out string? iconPath)
+-        public unsafe int GetIconPathNative(out string iconPath)
+         {
+             IntPtr ptr = IntPtr.Zero;
+             int result = InteropCalls.CallI(UnsafeBasePtr, &ptr, ((void**) (*(void**) UnsafeBasePtr))[6]);
+@@ -242,7 +242,7 @@
+         /// <param name="iconPath">A string that specifies the path and file name of an .ico, .dll, or .exe file that contains the icon.</param>        
+         /// <param name="eventContext">EventContext which can be accessed in the event handler.</param>        
+         /// <returns>HRESULT</returns>
++        public unsafe int SetIconPathNative(string? iconPath, Guid eventContext)
+-        public unsafe int SetIconPathNative(string iconPath, Guid eventContext)
+         {
+             IntPtr p = iconPath != null ? Marshal.StringToHGlobalUni(iconPath) : IntPtr.Zero;
+             int result = InteropCalls.CallI(UnsafeBasePtr, p.ToPointer(), &eventContext,
+@@ -286,7 +286,7 @@
+         /// </summary>
+         /// <param name="notifications">An instance of the <see cref="IAudioSessionEvents"/> object which receives the notifications.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int RegisterAudioSessionNotificationNative(IAudioSessionEvents? notifications)
+-        public unsafe int RegisterAudioSessionNotificationNative(IAudioSessionEvents notifications)
+         {
+             int result = 0;
+             if (!_sessionEventHandler.Contains(notifications))
+@@ -314,7 +314,7 @@
+         /// Registers the client to receive notifications of session events, including changes in the stream state.
+         /// </summary>
+         /// <param name="notifications">An instance of the <see cref="IAudioSessionEvents"/> object which receives the notifications.</param>
++        public void RegisterAudioSessionNotification(IAudioSessionEvents? notifications)
+-        public void RegisterAudioSessionNotification(IAudioSessionEvents notifications)
+         {
+             CoreAudioAPIException.Try(RegisterAudioSessionNotificationNative(notifications), InterfaceName,
+                 "RegisterAudioSessionNotification");
+@@ -325,7 +325,7 @@
+         /// </summary>
+         /// <param name="notifications">The instance of the <see cref="IAudioSessionEvents"/> object which got registered previously by the <see cref="RegisterAudioSessionNotification"/> method.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int UnregisterAudioSessionNotificationNative(IAudioSessionEvents? notifications)
+-        public unsafe int UnregisterAudioSessionNotificationNative(IAudioSessionEvents notifications)
+         {
+             int result = 0;
+             if (_sessionEventHandler.Contains(notifications))
+@@ -353,7 +353,7 @@
+         /// Deletes a previous registration by the client to receive notifications.
+         /// </summary>
+         /// <param name="notifications">The instance of the <see cref="IAudioSessionEvents"/> object which got registered previously by the <see cref="RegisterAudioSessionNotification"/> method.</param>
++        public void UnregisterAudioSessionNotification(IAudioSessionEvents? notifications)
+-        public void UnregisterAudioSessionNotification(IAudioSessionEvents notifications)
+         {
+             CoreAudioAPIException.Try(UnregisterAudioSessionNotificationNative(notifications), InterfaceName,
+                 "UnregisterAudioSessionNotification");

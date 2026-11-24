@@ -1,0 +1,31 @@
+--- a/WaveAggregatorBase.cs
++++ b/WaveAggregatorBase.cs
+@@ -7,7 +7,7 @@
+     /// </summary>
+     public abstract class WaveAggregatorBase : IWaveAggregator
+     {
++        private IWaveSource? _baseSource;
+-        private IWaveSource _baseSource;
+         private bool _disposed;
+ 
+         /// <summary>
+@@ -42,7 +42,7 @@
+         /// </summary>
+         public virtual IWaveSource BaseSource
+         {
++            get { return CSCoreNullable.Require(_baseSource); } // ArmAgedon seam
+-            get { return _baseSource; }
+             set
+             {
+                 if (value == null)
+@@ -142,8 +142,8 @@
+         {
+             if (DisposeBaseSource)
+             {
++                if (_baseSource != null)
++                    _baseSource.Dispose();
+-                if (BaseSource != null)
+-                    BaseSource.Dispose();
+                 _baseSource = null;
+             }
+         }

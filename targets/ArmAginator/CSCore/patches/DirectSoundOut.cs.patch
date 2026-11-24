@@ -1,0 +1,133 @@
+--- a/SoundOut/DirectSoundOut.cs
++++ b/SoundOut/DirectSoundOut.cs
+@@ -11,20 +11,20 @@
+     public class DirectSoundOut : ISoundOut
+     {
+         private readonly ThreadPriority _playbackThreadPriority;
++        private readonly SynchronizationContext? _syncContext;
+-        private readonly SynchronizationContext _syncContext;
+         private Guid _device;
+ 
++        private DirectSound8? _directSound;
+-        private DirectSound8 _directSound;
+ 
++        private DirectSoundNotify? _directSoundNotify;
+-        private DirectSoundNotify _directSoundNotify;
+         private bool _disposed;
+ 
+         private int _latency;
+         private volatile PlaybackState _playbackState;
++        private Thread? _playbackThread;
++        private DirectSoundPrimaryBuffer? _primaryBuffer;
++        private DirectSoundSecondaryBuffer? _secondaryBuffer;
++        private IWaveSource? _source;
+-        private Thread _playbackThread;
+-        private DirectSoundPrimaryBuffer _primaryBuffer;
+-        private DirectSoundSecondaryBuffer _secondaryBuffer;
+-        private IWaveSource _source;
+ 
+         private readonly object _lockObj = new object();
+         private bool _isInitialized;
+@@ -78,7 +78,7 @@
+         ///     If the passed value is not null, the events will be called async through the SynchronizationContext.Post() method.
+         /// </param>
+         public DirectSoundOut(int latency, ThreadPriority playbackThreadPriority,
++            SynchronizationContext? eventSyncContext)
+-            SynchronizationContext eventSyncContext)
+         {
+             if (latency <= 0)
+                 throw new ArgumentOutOfRangeException("latency");
+@@ -86,7 +86,7 @@
+             Latency = latency;
+             _playbackThreadPriority = playbackThreadPriority;
+             _syncContext = eventSyncContext;
++            Device = CSCoreNullable.Require(DirectSoundDevice.DefaultDevice).Guid; // ArmAgedon seam
+-            Device = DirectSoundDevice.DefaultDevice.Guid;
+         }
+ 
+         /// <summary>
+@@ -124,7 +124,7 @@
+         /// <summary>
+         ///     Occurs when the playback gets stopped.
+         /// </summary>
++        public event EventHandler<PlaybackStoppedEventArgs>? Stopped;
+-        public event EventHandler<PlaybackStoppedEventArgs> Stopped;
+ 
+         /// <summary>
+         ///     Initializes <see cref="DirectSoundOut" /> and prepares all resources for playback.
+@@ -298,7 +298,7 @@
+         ///     The currently initialized source.
+         ///     To change the WaveSource property, call <see cref="Initialize" />.
+         /// </summary>
++        public IWaveSource? WaveSource
+-        public IWaveSource WaveSource
+         {
+             get { return _source; }
+         }
+@@ -323,7 +323,7 @@
+ 
+             _directSound = new DirectSound8(pdsound);
+             _directSound.SetCooperativeLevel(handle, DSCooperativeLevelType.Normal); //use normal as default
++            if (!_directSound.SupportsFormat(CSCoreNullable.Require(_source).WaveFormat)) // ArmAgedon seam
+-            if (!_directSound.SupportsFormat(_source.WaveFormat))
+             {
+                 if (_source.WaveFormat.WaveFormatTag == AudioEncoding.IeeeFloat) //directsound does not support ieeefloat
+                     _source = _source.ToSampleSource().ToWaveSource(16);
+@@ -357,21 +357,21 @@
+             _secondaryBuffer = new DirectSoundSecondaryBuffer(_directSound, waveFormat, bufferSize * 2);
+         }
+ 
++        private void PlaybackProc(object? o)
+-        private void PlaybackProc(object o)
+         {
+             var waitHandle = o as EventWaitHandle;
++            WaitHandle[]? waitHandles = null;
+-            WaitHandle[] waitHandles = null;
+ 
++            Exception? exception = null;
+-            Exception exception = null;
+             try
+             {
+                 //004
+                 //bool flag = true;
++                int bufferSize = CSCoreNullable.Require(_secondaryBuffer).BufferCaps.BufferBytes; // ArmAgedon seam
++                var latencyBytes = (int) CSCoreNullable.Require(_source).WaveFormat.MillisecondsToBytes(_latency); // ArmAgedon seam
+-                int bufferSize = _secondaryBuffer.BufferCaps.BufferBytes;
+-                var latencyBytes = (int) _source.WaveFormat.MillisecondsToBytes(_latency);
+                 var buffer = new byte[bufferSize];
+ 
++                CSCoreNullable.Require(_primaryBuffer).Play(DSBPlayFlags.Looping); //default flags: looping // ArmAgedon seam
+-                _primaryBuffer.Play(DSBPlayFlags.Looping); //default flags: looping
+ 
+                 //003
+                 /*if (flag) //could refill buffer
+@@ -404,7 +404,7 @@
+                         EventNotifyHandle = waitHandleEnd.SafeWaitHandle.DangerousGetHandle()
+                     }
+                 };
++                CSCoreNullable.Require(_directSoundNotify).SetNotificationPositions(positionNotifies); // ArmAgedon seam
+-                _directSoundNotify.SetNotificationPositions(positionNotifies);
+                 int waitHandleTimeout = waitHandles.Length * _latency;
+ 
+                 //001
+@@ -486,7 +486,7 @@
+         {
+             int read;
+ 
++            if (CSCoreNullable.Require(_secondaryBuffer).IsBufferLost) // ArmAgedon seam
+-            if (_secondaryBuffer.IsBufferLost)
+                 _secondaryBuffer.Restore();
+ 
+             if (_playbackState == PlaybackState.Paused)
+@@ -507,9 +507,9 @@
+             return false;
+         }
+ 
++        private void RaiseStopped(Exception? exception)
+-        private void RaiseStopped(Exception exception)
+         {
++            EventHandler<PlaybackStoppedEventArgs>? handler = Stopped;
+-            EventHandler<PlaybackStoppedEventArgs> handler = Stopped;
+             if (handler != null) {
+                 if (_syncContext != null)
+                     _syncContext.Post(x => handler(this, new PlaybackStoppedEventArgs(exception)), null);

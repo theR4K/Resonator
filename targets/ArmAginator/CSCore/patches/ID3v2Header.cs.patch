@@ -1,0 +1,20 @@
+--- a/Tags/ID3/ID3v2Header.cs
++++ b/Tags/ID3/ID3v2Header.cs
+@@ -7,7 +7,7 @@
+     {
+         public const int HeaderLength = 10;
+ 
++        public static ID3v2Header? FromStream(Stream stream)
+-        public static ID3v2Header FromStream(Stream stream)
+         {
+             if (stream == null) throw new ArgumentNullException("stream");
+             if (!stream.CanRead) throw new ArgumentException("stream not readable");
+@@ -51,7 +51,7 @@
+ 
+         public ID3Version Version { get; private set; }
+ 
++        public byte[]? RawVersion { get; private set; }
+-        public byte[] RawVersion { get; private set; }
+ 
+         public int DataLength { get; private set; }
+ 

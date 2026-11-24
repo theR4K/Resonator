@@ -1,0 +1,11 @@
+--- a/Tags/ID3/Frames/TermsOfUseFrame.cs
++++ b/Tags/ID3/Frames/TermsOfUseFrame.cs
+@@ -2,7 +2,7 @@
+ {
+     public class TermsOfUseFrame : TextFrame
+     {
++        public string? Language { get; private set; }
+-        public string Language { get; private set; }
+ 
+         public TermsOfUseFrame(FrameHeader header)
+             : base(header)

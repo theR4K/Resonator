@@ -1,0 +1,47 @@
+--- a/Streams/WriteableBufferingSource.cs
++++ b/Streams/WriteableBufferingSource.cs
+@@ -9,7 +9,7 @@
+     public class WriteableBufferingSource : IWaveSource
+     {
+         private readonly WaveFormat _waveFormat;
++        private FixedSizeBuffer<byte>? _buffer;
+-        private FixedSizeBuffer<byte> _buffer;
+         private volatile object _bufferlock = new object();
+ 
+         /// <summary>
+@@ -64,7 +64,7 @@
+         {
+             lock (_bufferlock)
+             {
++                return CSCoreNullable.Require(_buffer).Write(buffer, offset, count); // ArmAgedon seam
+-                return _buffer.Write(buffer, offset, count);
+             }
+         }
+ 
+@@ -87,7 +87,7 @@
+         {
+             lock (_bufferlock)
+             {
++                int read = CSCoreNullable.Require(_buffer).Read(buffer, offset, count); // ArmAgedon seam
+-                int read = _buffer.Read(buffer, offset, count);
+                 if (FillWithZeros)
+                 {
+                     if (read < count)
+@@ -126,7 +126,7 @@
+         /// </summary>
+         public long Length
+         {
++            get { return CSCoreNullable.Require(_buffer).Buffered; } // ArmAgedon seam
+-            get { return _buffer.Buffered; }
+         }
+ 
+         /// <summary>
+@@ -162,7 +162,7 @@
+             if (disposing)
+             {
+                 //dispose managed
++                CSCoreNullable.DisposeResource(ref _buffer); // ArmAgedon seam
+-                _buffer.Dispose();
+                 _buffer = null;
+             }
+         }

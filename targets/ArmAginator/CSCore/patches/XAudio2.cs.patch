@@ -1,0 +1,138 @@
+--- a/XAudio2/XAudio2.cs
++++ b/XAudio2/XAudio2.cs
+@@ -10,10 +10,10 @@
+     ///     processing thread, the voice graph, and so forth.
+     /// </summary>
+     [Guid("60d8dac8-5aa1-4e8e-b597-2f5e2883d484")]
++    public abstract partial class XAudio2 : ComObject
+-    public abstract class XAudio2 : ComObject
+     {
+         private XAudio2Version _version;
++        private XAudio2EngineCallback? _engineCallback;
+-        private XAudio2EngineCallback _engineCallback;
+         private const string N = "IXAudio2";
+ 
+         /// <summary>
+@@ -77,8 +77,8 @@
+         /// </summary>
+         public event EventHandler ProcessingPassStart
+         {
++            add { CSCoreNullable.Require(_engineCallback).ProcessingPassStart += value; } // ArmAgedon seam
++            remove { CSCoreNullable.Require(_engineCallback).ProcessingPassStart -= value; } // ArmAgedon seam
+-            add { _engineCallback.ProcessingPassStart += value; }
+-            remove { _engineCallback.ProcessingPassStart -= value; }
+         }
+ 
+         /// <summary>
+@@ -86,8 +86,8 @@
+         /// </summary>
+         public event EventHandler ProcessingPassEnd
+         {
++            add { CSCoreNullable.Require(_engineCallback).ProcessingPassEnd += value; } // ArmAgedon seam
++            remove { CSCoreNullable.Require(_engineCallback).ProcessingPassEnd -= value; } // ArmAgedon seam
+-            add { _engineCallback.ProcessingPassEnd += value; }
+-            remove { _engineCallback.ProcessingPassEnd -= value; }
+         }
+ 
+         /// <summary>
+@@ -95,8 +95,8 @@
+         /// </summary>
+         public event EventHandler<XAudio2CriticalErrorEventArgs> CriticalError
+         {
++            add { CSCoreNullable.Require(_engineCallback).CriticalError += value; } // ArmAgedon seam
++            remove { CSCoreNullable.Require(_engineCallback).CriticalError -= value; } // ArmAgedon seam
+-            add { _engineCallback.CriticalError += value; }
+-            remove { _engineCallback.CriticalError -= value; }
+         }
+ 
+         /// <summary>
+@@ -135,7 +135,7 @@
+         /// Gets the default device which can be used to create a mastering voice.
+         /// </summary>
+         /// <value>Using XAudio2.7 the default device is 0 (as an integer). Using XAudio2.8 the default device is null.</value>
++        public object? DefaultDevice
+-        public object DefaultDevice
+         {
+             get { return GetDefaultDevice(); }
+         }
+@@ -268,7 +268,7 @@
+             IntPtr sourceFormat,
+             VoiceFlags flags,
+             float maxFrequencyRatio,
++            IXAudio2VoiceCallback? voiceCallback,
+-            IXAudio2VoiceCallback voiceCallback,
+             VoiceSends? sendList, //out
+             EffectChain? effectChain
+             );
+@@ -316,7 +316,7 @@
+         /// </param>
+         /// <returns>If successful, returns a pointer to the new <see cref="XAudio2SourceVoice" /> object.</returns>
+         public IntPtr CreateSourceVoicePtr(WaveFormat sourceFormat, VoiceFlags flags, float maxFrequencyRatio,
++            IXAudio2VoiceCallback? voiceCallback, VoiceSends? sendList, EffectChain? effectChain)
+-            IXAudio2VoiceCallback voiceCallback, VoiceSends? sendList, EffectChain? effectChain)
+         {
+             GCHandle hWaveFormat = GCHandle.Alloc(sourceFormat, GCHandleType.Pinned);
+             //todo: do we really need to use GCHandle?
+@@ -384,7 +384,7 @@
+         /// </param>
+         /// <returns>If successful, returns a new <see cref="XAudio2SourceVoice" /> object.</returns>
+         public XAudio2SourceVoice CreateSourceVoice(WaveFormat sourceFormat, VoiceFlags flags, float maxFrequencyRatio,
++            IXAudio2VoiceCallback? voiceCallback, VoiceSends? sendList, EffectChain? effectChain)
+-            IXAudio2VoiceCallback voiceCallback, VoiceSends? sendList, EffectChain? effectChain)
+         {
+             IntPtr ptr = CreateSourceVoicePtr(sourceFormat, flags, maxFrequencyRatio, voiceCallback, sendList,
+                 effectChain);
+@@ -629,7 +629,7 @@
+         public abstract int CreateMasteringVoiceNative(out IntPtr pMasteringVoice, int inputChannels,
+             int inputSampleRate,
+             int flags,
++            object? device, EffectChain? effectChain, AudioStreamCategory streamCategory);
+-            object device, EffectChain? effectChain, AudioStreamCategory streamCategory);
+ 
+         /// <summary>
+         ///     Creates and configures a mastering voice.
+@@ -665,7 +665,7 @@
+         /// <param name="streamCategory">The audio stream category to use for this mastering voice.</param>
+         /// <returns>If successful, returns a pointer to the new <see cref="XAudio2MasteringVoice" /> object.</returns>
+         public IntPtr CreateMasteringVoicePtr(int inputChannels, int inputSampleRate, int flags,
++            object? device, EffectChain? effectChain, AudioStreamCategory streamCategory)
+-            object device, EffectChain? effectChain, AudioStreamCategory streamCategory)
+         {
+             IntPtr ptr;
+             int result = CreateMasteringVoiceNative(out ptr, inputChannels, inputSampleRate, flags, device,
+@@ -707,7 +707,7 @@
+         /// <param name="streamCategory"><b>XAudio2.8 only:</b> The audio stream category to use for this mastering voice.</param>
+         /// <returns>If successful, returns a new <see cref="XAudio2MasteringVoice" /> object.</returns>
+         public XAudio2MasteringVoice CreateMasteringVoice(int inputChannels, int inputSampleRate,
++            object? device, EffectChain? effectChain, AudioStreamCategory streamCategory)
+-            object device, EffectChain? effectChain, AudioStreamCategory streamCategory)
+         {
+             return
+                 new XAudio2MasteringVoice(CreateMasteringVoicePtr(inputChannels, inputSampleRate, 0, device, effectChain,
+@@ -742,7 +742,7 @@
+         /// </param>
+         /// <returns>If successful, returns a new <see cref="XAudio2MasteringVoice" /> object.</returns>
+         public XAudio2MasteringVoice CreateMasteringVoice(int inputChannels, int inputSampleRate,
++            object? device)
+-            object device)
+         {
+             return
+                 new XAudio2MasteringVoice(CreateMasteringVoicePtr(inputChannels, inputSampleRate, 0, device, null,
+@@ -864,7 +864,7 @@
+         ///     Returns the default device.
+         /// </summary>
+         /// <returns>The default device.</returns>
++        protected abstract object? GetDefaultDevice();
+-        protected abstract object GetDefaultDevice();
+ 
+         /// <summary>
+         /// Initializes the engine callback.
+@@ -882,7 +882,7 @@
+         protected override void Dispose(bool disposing)
+         {
+             //unregister the default callback object
++            UnregisterDefaultCallbacks(); // ArmAgedon seam
+-            UnregisterForCallbacks(_engineCallback);
+ 
+             base.Dispose(disposing);
+         }

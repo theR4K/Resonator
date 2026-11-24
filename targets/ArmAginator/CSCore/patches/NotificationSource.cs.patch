@@ -1,0 +1,20 @@
+--- a/Streams/NotificationSource.cs
++++ b/Streams/NotificationSource.cs
+@@ -62,7 +62,7 @@
+         ///     The <see cref="Interval" />- or the <see cref="BlockCount" />-property specifies how many samples have to get
+         ///     read to trigger the <see cref="BlockRead" /> event.
+         /// </remarks>
++        public event EventHandler<BlockReadEventArgs<float>>? BlockRead;
+-        public event EventHandler<BlockReadEventArgs<float>> BlockRead;
+ 
+         /// <summary>
+         ///     Reads a sequence of samples from the <see cref="SampleAggregatorBase" /> and advances the position within the
+@@ -96,7 +96,7 @@
+                 }
+                 if (_buffer.Count >= BlockCount * WaveFormat.Channels)
+                 {
++                    EventHandler<BlockReadEventArgs<float>>? blockRead = BlockRead;
+-                    EventHandler<BlockReadEventArgs<float>> blockRead = BlockRead;
+                     if (blockRead != null)
+                     {
+                         float[] b = _buffer.ToArray();

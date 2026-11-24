@@ -1,0 +1,187 @@
+--- a/Codecs/MP3/Mp3WebStream.cs
++++ b/Codecs/MP3/Mp3WebStream.cs
+@@ -19,14 +19,14 @@
+     public class Mp3WebStream : IWaveSource
+     {
+         private readonly Uri _address;
++        private FixedSizeBuffer<byte>? _buffer;
+-        private FixedSizeBuffer<byte> _buffer;
+ 
++        private Thread? _bufferThread;
++        private DmoMp3Decoder? _decoder;
+-        private Thread _bufferThread;
+-        private DmoMp3Decoder _decoder;
+         private bool _disposed;
+         private bool _disposing;
++        private WebResponse? _response;
++        private Stream? _stream;
+-        private WebResponse _response;
+-        private Stream _stream;
+ 
+         /// <summary>
+         /// Initializes a new instance of the <see cref="Mp3WebStream"/> class.
+@@ -91,7 +91,7 @@
+         /// </summary>
+         public int BufferedBytes
+         {
++            get { return CSCoreNullable.Require(_buffer).Buffered; } // ArmAgedon seam
+-            get { return _buffer.Buffered; }
+         }
+ 
+         /// <summary>
+@@ -99,7 +99,7 @@
+         /// </summary>
+         public int BufferSize
+         {
++            get { return CSCoreNullable.Require(_buffer).Length; } // ArmAgedon seam
+-            get { return _buffer.Length; }
+         }
+ 
+         /// <summary>
+@@ -117,7 +117,7 @@
+         /// </summary>
+         public WaveFormat WaveFormat
+         {
++            get { return CSCoreNullable.Require(_decoder).WaveFormat; } // ArmAgedon seam
+-            get { return _decoder == null ? null : _decoder.WaveFormat; }
+         }
+ 
+         /// <summary>
+@@ -138,11 +138,11 @@
+             int read = 0;
+             Array.Clear(buffer, offset, count - offset);
+ 
++            if (CSCoreNullable.Require(_buffer).Buffered < _buffer.Length / 2) // ArmAgedon seam
+-            if (_buffer.Buffered < _buffer.Length / 2)
+                 return count;
+             do
+             {
++                read += CSCoreNullable.Require(_decoder).Read(buffer, offset + read, count - read); // ArmAgedon seam
+-                read += _decoder.Read(buffer, offset + read, count - read);
+             } while (read < count || _disposing);
+             return read;
+         }
+@@ -177,7 +177,7 @@
+         /// <summary>
+         /// Occurs when connection got established and the async argument of the constructor was set to <c>true</c>.
+         /// </summary>
++        public event EventHandler<ConnectionEstablishedEventArgs>? ConnectionEstablished;
+-        public event EventHandler<ConnectionEstablishedEventArgs> ConnectionEstablished;
+ 
+         private void CreateStream(bool async)
+         {
+@@ -195,9 +195,9 @@
+ 
+                     success = resetEvent.WaitOne();
+                     if(success)
++                        _decoder = new DmoMp3Decoder(new ReadBlockStream(CSCoreNullable.Require(_buffer).ToStream()), false); // ArmAgedon seam
+-                        _decoder = new DmoMp3Decoder(new ReadBlockStream(_buffer.ToStream()), false);
+                 }
++                EventHandler<ConnectionEstablishedEventArgs>? handler = ConnectionEstablished;
+-                EventHandler<ConnectionEstablishedEventArgs> handler = ConnectionEstablished;
+                 if (handler != null && async)
+                     handler(this, new ConnectionEstablishedEventArgs(_address, success));
+ 
+@@ -243,7 +243,7 @@
+             }
+         }
+ 
++        private void BufferProc(object? o)
+-        private void BufferProc(object o)
+         {
+             var resetEvent = o as EventWaitHandle;
+ 
+@@ -252,14 +252,14 @@
+                 if (_stream == null || _stream.CanRead == false)
+                     throw new Exception("Mp3WebStream not initialized");
+ 
++                byte[]? buffer = null;
+-                byte[] buffer = null;
+                 int read;
+ 
+                 Mp3Format format, prevFormat;
++                Mp3Frame? frame;
+-                Mp3Frame frame;
+ 
+                 read = ReadRawDataFromFrame(ref buffer, out frame);
++                format = new Mp3Format(CSCoreNullable.Require(frame).SampleRate, frame.ChannelCount, frame.FrameLength, // ArmAgedon seam
+-                format = new Mp3Format(frame.SampleRate, frame.ChannelCount, frame.FrameLength,
+                     frame.BitRate);
+ 
+                 _buffer = new FixedSizeBuffer<byte>(format.BytesPerSecond * 2);
+@@ -269,7 +269,7 @@
+                     _buffer.Write(buffer, 0, read);
+                     read = ReadRawDataFromFrame(ref buffer, out frame);
+                     prevFormat = format;
++                    format = new Mp3Format(CSCoreNullable.Require(frame).SampleRate, frame.ChannelCount, frame.FrameLength, // ArmAgedon seam
+-                    format = new Mp3Format(frame.SampleRate, frame.ChannelCount, frame.FrameLength,
+                         frame.BitRate);
+                 } while (_buffer.Buffered < _buffer.Length / 10 || !format.Equals(prevFormat));
+ 
+@@ -298,7 +298,7 @@
+             }
+         }
+ 
++        private int ReadRawDataFromFrame([System.Diagnostics.CodeAnalysis.NotNull] ref byte[]? buffer, out Mp3Frame? frame)
+-        private int ReadRawDataFromFrame(ref byte[] buffer, out Mp3Frame frame)
+         {
+             bool success = false;
+             frame = null;
+@@ -306,7 +306,7 @@
+             {
+                 try
+                 {
++                    frame = GetNextFrame(CSCoreNullable.Require(_stream), ref buffer); // ArmAgedon seam
+-                    frame = GetNextFrame(_stream, ref buffer);
+                     success = true;
+                 }
+                 catch (IOException)
+@@ -334,15 +334,15 @@
+                 return 0;
+             }
+ 
++            if (CSCoreNullable.Require(buffer).Length > frame.FrameLength) // ArmAgedon seam
+-            if (buffer.Length > frame.FrameLength)
+                 Array.Clear(buffer, frame.FrameLength, buffer.Length - frame.FrameLength);
+ 
+             return frame.FrameLength;
+         }
+ 
++        private Mp3Frame GetNextFrame(Stream stream, [System.Diagnostics.CodeAnalysis.NotNull] ref byte[]? frameBuffer)
+-        private Mp3Frame GetNextFrame(Stream stream, ref byte[] frameBuffer)
+         {
++            Mp3Frame? frame;
+-            Mp3Frame frame;
+             do
+             {
+                 frame = Mp3Frame.FromStream(stream, ref frameBuffer);
+@@ -406,24 +406,24 @@
+         public static bool SetAllowUnsafeHeaderParsing20()
+         {
+             // Get the assembly that contains the internal class
++            Assembly? assembly = Assembly.GetAssembly(typeof(HttpWebRequest));
+-            Assembly assembly = Assembly.GetAssembly(typeof(HttpWebRequest));
+ 
+             if (assembly != null)
+             {
+                 // Get the internal class type
++                Type? type = assembly.GetType("System.Net.Configuration.SettingsSectionInternal");
+-                Type type = assembly.GetType("System.Net.Configuration.SettingsSectionInternal");
+ 
+                 if (type != null)
+                 {
+                     // Get the instance of the internal class
++                    object? instance = CSCoreNullable.Require(type
++                        .GetField("section", BindingFlags.Static | BindingFlags.NonPublic)) // ArmAgedon seam
+-                    object instance = type
+-                        .GetField("section", BindingFlags.Static | BindingFlags.NonPublic)
+                         .GetValue(null);
+ 
+                     if (instance != null)
+                     {
+                         // Set the AllowUnsafeHeaderParsing property
++                        FieldInfo? allowUnsafeHeaderParsing = type
+-                        FieldInfo allowUnsafeHeaderParsing = type
+                             .GetField("useUnsafeHeaderParsing", BindingFlags.NonPublic | BindingFlags.Instance);
+ 
+                         if (allowUnsafeHeaderParsing != null)

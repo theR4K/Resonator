@@ -1,0 +1,20 @@
+--- a/Streams/LoopStream.cs
++++ b/Streams/LoopStream.cs
+@@ -33,7 +33,7 @@
+         ///     If the <see cref="EnableLoop" /> property is set to true, the Position of the
+         ///     <see cref="WaveAggregatorBase.BaseSource" /> will be reseted to zero.
+         /// </summary>
++        public event EventHandler? StreamFinished;
+-        public event EventHandler StreamFinished;
+ 
+         /// <summary>
+         ///     Reads from the underlying <see cref="WaveAggregatorBase.BaseSource" />. If the
+@@ -51,7 +51,7 @@
+                 int r = base.Read(buffer, offset + read, count - read);
+                 if (r == 0)
+                 {
++                    EventHandler? handler = StreamFinished;
+-                    EventHandler handler = StreamFinished;
+                     if (handler != null && !_raisedStreamFinishedEvent)
+                     {
+                         handler(this, EventArgs.Empty);

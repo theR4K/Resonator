@@ -1,0 +1,11 @@
+--- a/Tags/ID3/Frames/FrameHeader.cs
++++ b/Tags/ID3/Frames/FrameHeader.cs
+@@ -6,7 +6,7 @@
+ {
+     public class FrameHeader
+     {
++        public string? FrameID { get; private set; }
+-        public string FrameID { get; private set; }
+ 
+         public int FrameSize { get; private set; }
+ 

@@ -1,0 +1,20 @@
+--- a/Streams/FadeInOut.cs
++++ b/Streams/FadeInOut.cs
+@@ -7,7 +7,7 @@
+     /// </summary>
+     public class FadeInOut : SampleAggregatorBase
+     {
++        private volatile IFadeStrategy? _fadeStrategy;
+-        private volatile IFadeStrategy _fadeStrategy;
+ 
+         /// <summary>
+         ///     Initializes a new instance of the <see cref="FadeInOut" /> class.
+@@ -23,7 +23,7 @@
+         /// <summary>
+         ///     Gets or sets the fade strategy to use.
+         /// </summary>
++        public IFadeStrategy? FadeStrategy
+-        public IFadeStrategy FadeStrategy
+         {
+             get { return _fadeStrategy; }
+             set

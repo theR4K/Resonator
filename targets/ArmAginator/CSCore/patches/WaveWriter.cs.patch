@@ -1,0 +1,100 @@
+--- a/Codecs/WAV/WaveWriter.cs
++++ b/Codecs/WAV/WaveWriter.cs
+@@ -15,8 +15,8 @@
+         private readonly long _waveStartPosition;
+         private int _dataLength;
+         private bool _isDisposed;
++        private Stream? _stream;
++        private BinaryWriter? _writer;
+-        private Stream _stream;
+-        private BinaryWriter _writer;
+         private bool _isDisposing;
+ 
+         private readonly bool _closeStream;
+@@ -202,7 +202,7 @@
+         {
+             CheckObjectDisposed();
+ 
++            CSCoreNullable.Require(_stream).Write(buffer, offset, count); // ArmAgedon seam
+-            _stream.Write(buffer, offset, count);
+             _dataLength += count;
+         }
+ 
+@@ -214,7 +214,7 @@
+         {
+             CheckObjectDisposed();
+ 
++            CSCoreNullable.Require(_writer).Write(value); // ArmAgedon seam
+-            _writer.Write(value);
+             _dataLength++;
+         }
+ 
+@@ -226,7 +226,7 @@
+         {
+             CheckObjectDisposed();
+ 
++            CSCoreNullable.Require(_writer).Write(value); // ArmAgedon seam
+-            _writer.Write(value);
+             _dataLength += 2;
+         }
+ 
+@@ -238,7 +238,7 @@
+         {
+             CheckObjectDisposed();
+ 
++            CSCoreNullable.Require(_writer).Write(value); // ArmAgedon seam
+-            _writer.Write(value);
+             _dataLength += 4;
+         }
+ 
+@@ -250,15 +250,15 @@
+         {
+             CheckObjectDisposed();
+ 
++            CSCoreNullable.Require(_writer).Write(value); // ArmAgedon seam
+-            _writer.Write(value);
+             _dataLength += 4;
+         }
+ 
+         private void WriteHeader()
+         {
++            CSCoreNullable.Require(_writer).Flush(); // ArmAgedon seam
+-            _writer.Flush();
+ 
++            long currentPosition = CSCoreNullable.Require(_stream).Position; // ArmAgedon seam
+-            long currentPosition = _stream.Position;
+             _stream.Position = _waveStartPosition;
+ 
+             WriteRiffHeader();
+@@ -272,8 +272,8 @@
+ 
+         private void WriteRiffHeader()
+         {
++            CSCoreNullable.Require(_writer).Write(Encoding.UTF8.GetBytes("RIFF")); // ArmAgedon seam
++            _writer.Write((int) (CSCoreNullable.Require(_stream).Length - 8)); // ArmAgedon seam
+-            _writer.Write(Encoding.UTF8.GetBytes("RIFF"));
+-            _writer.Write((int) (_stream.Length - 8));
+             _writer.Write(Encoding.UTF8.GetBytes("WAVE"));
+         }
+ 
+@@ -281,9 +281,9 @@
+         {
+             AudioEncoding tag = _waveFormat.WaveFormatTag;
+             if (tag == AudioEncoding.Extensible && _waveFormat is WaveFormatExtensible)
++                tag = AudioSubTypes.EncodingFromSubType(CSCoreNullable.Require(_waveFormat as WaveFormatExtensible).SubFormat); // ArmAgedon seam
+-                tag = AudioSubTypes.EncodingFromSubType((_waveFormat as WaveFormatExtensible).SubFormat);
+ 
++            CSCoreNullable.Require(_writer).Write(Encoding.UTF8.GetBytes("fmt ")); // ArmAgedon seam
+-            _writer.Write(Encoding.UTF8.GetBytes("fmt "));
+             _writer.Write((int)16);
+             _writer.Write((short) tag);
+             _writer.Write((short)_waveFormat.Channels);
+@@ -295,7 +295,7 @@
+ 
+         private void WriteDataChunk()
+         {
++            CSCoreNullable.Require(_writer).Write(Encoding.UTF8.GetBytes("data")); // ArmAgedon seam
+-            _writer.Write(Encoding.UTF8.GetBytes("data"));
+             _writer.Write(_dataLength);
+         }
+ 

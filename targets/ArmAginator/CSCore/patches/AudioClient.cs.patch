@@ -1,0 +1,82 @@
+--- a/CoreAudioAPI/AudioClient.cs
++++ b/CoreAudioAPI/AudioClient.cs
+@@ -80,7 +80,7 @@
+         ///     Gets the stream format that the audio engine uses for its
+         ///     internal processing of shared-mode streams.
+         /// </summary>
++        public WaveFormat? MixFormat
+-        public WaveFormat MixFormat
+         {
+             get { return GetMixFormat(); }
+         }
+@@ -395,7 +395,7 @@
+         ///     <see href="https://msdn.microsoft.com/en-us/library/windows/desktop/dd370876(v=vs.85).aspx" />.
+         /// </remarks>
+         public unsafe int IsFormatSupportedNative(AudioClientShareMode shareMode, WaveFormat waveFormat,
++            out WaveFormat? closestMatch)
+-            out WaveFormat closestMatch)
+         {
+             closestMatch = null;
+             IntPtr pclosestMatch = IntPtr.Zero;
+@@ -409,11 +409,11 @@
+ 
+                 if (pclosestMatch != IntPtr.Zero)
+                 {
++                    closestMatch = (WaveFormat?) Marshal.PtrToStructure(pclosestMatch, typeof (WaveFormat));
++                    if (CSCoreNullable.Require(closestMatch).ExtraSize == WaveFormatExtensible.WaveFormatExtensibleExtraSize) // ArmAgedon seam
+-                    closestMatch = (WaveFormat) Marshal.PtrToStructure(pclosestMatch, typeof (WaveFormat));
+-                    if (closestMatch.ExtraSize == WaveFormatExtensible.WaveFormatExtensibleExtraSize)
+                     {
+                         closestMatch =
++                            (WaveFormatExtensible?) Marshal.PtrToStructure(pclosestMatch, typeof (WaveFormatExtensible));
+-                            (WaveFormatExtensible) Marshal.PtrToStructure(pclosestMatch, typeof (WaveFormatExtensible));
+                     }
+                 }
+             }
+@@ -449,7 +449,7 @@
+         ///     For more information, see
+         ///     <see href="https://msdn.microsoft.com/en-us/library/windows/desktop/dd370876(v=vs.85).aspx" />.
+         /// </remarks>
++        public bool IsFormatSupported(AudioClientShareMode shareMode, WaveFormat waveFormat, out WaveFormat? closestMatch)
+-        public bool IsFormatSupported(AudioClientShareMode shareMode, WaveFormat waveFormat, out WaveFormat closestMatch)
+         {
+             int result = IsFormatSupportedNative(shareMode, waveFormat, out closestMatch);
+             switch (result)
+@@ -486,14 +486,14 @@
+         /// </remarks>
+         public bool IsFormatSupported(AudioClientShareMode shareMode, WaveFormat waveFormat)
+         {
++            WaveFormat? tmp;
+-            WaveFormat tmp;
+             bool result = IsFormatSupported(shareMode, waveFormat, out tmp);
+             if (result)
+             {
+                 return true;
+             }
+ 
++            WaveFormatExtensible? waveFormatExtensible = waveFormat as WaveFormatExtensible;
+-            WaveFormatExtensible waveFormatExtensible = waveFormat as WaveFormatExtensible;
+             if (shareMode == AudioClientShareMode.Exclusive && waveFormatExtensible != null && 
+                 waveFormatExtensible.Channels <= 2)
+             {
+@@ -529,7 +529,7 @@
+         ///     <see href="https://msdn.microsoft.com/en-us/library/windows/desktop/dd370872(v=vs.85).aspx" />.
+         /// </remarks>
+         /// <returns>HRESULT</returns>
++        public unsafe int GetMixFormatNative(out WaveFormat? deviceFormat)
+-        public unsafe int GetMixFormatNative(out WaveFormat deviceFormat)
+         {
+             IntPtr pdeviceFormat = IntPtr.Zero;
+             int result;
+@@ -565,9 +565,9 @@
+         ///     <see href="https://msdn.microsoft.com/en-us/library/windows/desktop/dd370872(v=vs.85).aspx" />.
+         /// </remarks>
+         /// <returns>The mix format that the audio engine uses for its internal processing of shared-mode streams.</returns>
++        public WaveFormat? GetMixFormat()
+-        public WaveFormat GetMixFormat()
+         {
++            WaveFormat? waveFormat;
+-            WaveFormat waveFormat;
+             CoreAudioAPIException.Try(GetMixFormatNative(out waveFormat), InterfaceName, "GetMixFormat");
+             return waveFormat;
+         }

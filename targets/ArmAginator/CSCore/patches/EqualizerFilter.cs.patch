@@ -1,0 +1,11 @@
+--- a/Streams/Effects/EqualizerFilter.cs
++++ b/Streams/Effects/EqualizerFilter.cs
+@@ -62,7 +62,7 @@
+             set { SetGain(value); }
+         }
+ 
++        int IComparable<EqualizerFilter>.CompareTo(EqualizerFilter? other)
+-        int IComparable<EqualizerFilter>.CompareTo(EqualizerFilter other)
+         {
+             if (other == null)
+                 return 1;

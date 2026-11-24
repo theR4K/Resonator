@@ -1,0 +1,24 @@
+--- a/DSP/ChannelMatrix.cs
++++ b/DSP/ChannelMatrix.cs
+@@ -137,7 +137,7 @@
+         /// </returns>
+         /// <exception cref="ArgumentException">The channelmask of the input format equals the channelmask of the output format.</exception>
+         /// <exception cref="KeyNotFoundException">No accurate <see cref="ChannelMatrix"/> was found.</exception>
++        public static ChannelMatrix? GetMatrix(WaveFormat from, WaveFormat to)
+-        public static ChannelMatrix GetMatrix(WaveFormat from, WaveFormat to)
+         {
+             if (from == null)
+                 throw new ArgumentNullException("from");
+@@ -513,9 +513,9 @@
+             var values = new List<ChannelMask>();
+             for (int i = 0; i < totalChannelMaskValues.Length; i++)
+             {
++                if ((channelMask & ((ChannelMask)CSCoreNullable.Require(totalChannelMaskValues.GetValue(i)))) == // ArmAgedon seam
++                    (ChannelMask)CSCoreNullable.Require(totalChannelMaskValues.GetValue(i))) // ArmAgedon seam
++                    values.Add((ChannelMask)CSCoreNullable.Require(totalChannelMaskValues.GetValue(i))); // ArmAgedon seam
+-                if ((channelMask & ((ChannelMask)totalChannelMaskValues.GetValue(i))) ==
+-                    (ChannelMask)totalChannelMaskValues.GetValue(i))
+-                    values.Add((ChannelMask)totalChannelMaskValues.GetValue(i));
+             }
+ 
+             return values.ToArray();

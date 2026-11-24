@@ -1,0 +1,11 @@
+--- a/Streams/SampleConverter/Pcm8BitToSample.cs
++++ b/Streams/SampleConverter/Pcm8BitToSample.cs
+@@ -40,7 +40,7 @@
+         public override unsafe int Read(float[] buffer, int offset, int count)
+         {
+             Buffer = Buffer.CheckBuffer(count);
++            int read = CSCoreNullable.Require(Source).Read(Buffer, 0, count); // ArmAgedon seam
+-            int read = Source.Read(Buffer, 0, count);
+             fixed (float* ptrBuffer = buffer)
+             {
+                 float* ppbuffer = ptrBuffer + offset;

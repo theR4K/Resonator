@@ -1,0 +1,14 @@
+--- a/Tags/ID3/Frames/OwnershipFrame.cs
++++ b/Tags/ID3/Frames/OwnershipFrame.cs
+@@ -2,9 +2,9 @@
+ {
+     public class OwnershipFrame : TextFrame
+     {
++        public string? Price { get; private set; }
+-        public string Price { get; private set; }
+ 
++        public string? PurchaseDate { get; private set; }
+-        public string PurchaseDate { get; private set; }
+ 
+         public OwnershipFrame(FrameHeader header)
+             : base(header)

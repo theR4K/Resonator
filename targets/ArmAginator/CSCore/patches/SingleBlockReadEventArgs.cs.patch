@@ -1,0 +1,11 @@
+--- a/Streams/SingleBlockReadEventArgs.cs
++++ b/Streams/SingleBlockReadEventArgs.cs
+@@ -23,7 +23,7 @@
+         /// Gets the samples of all channels if the number of <see cref="Channels"/> is greater or equal to three.
+         /// </summary>
+         /// <remarks>If the number of <see cref="Channels"/> is less than three, the value of the <see cref="Samples"/> property is null.</remarks>
++        public float[]? Samples { get; private set; }
+-        public float[] Samples { get; private set; }
+ 
+         /// <summary>
+         /// Gets the number of channels.

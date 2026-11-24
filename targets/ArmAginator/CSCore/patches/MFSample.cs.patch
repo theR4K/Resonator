@@ -1,0 +1,44 @@
+--- a/MediaFoundation/MFSample.cs
++++ b/MediaFoundation/MFSample.cs
+@@ -200,7 +200,7 @@
+         /// If the sample contains more than one buffer, the <see cref="ConvertToContiguousBuffer"/> method replaces them with a single buffer, copies the original data into that buffer, and returns the new buffer to the caller. 
+         /// The copy operation occurs at most once. On subsequent calls, no data is copied.
+         /// </remarks>
++        public unsafe int GetBufferByIndexNative(int index, out MFMediaBuffer? buffer)
+-        public unsafe int GetBufferByIndexNative(int index, out MFMediaBuffer buffer)
+         {
+             IntPtr ptr = IntPtr.Zero;
+             int result = InteropCalls.CalliMethodPtr(UnsafeBasePtr, index, &ptr, ((void**)(*(void**)UnsafeBasePtr))[40]);
+@@ -218,9 +218,9 @@
+         /// If the sample contains more than one buffer, the <see cref="ConvertToContiguousBuffer"/> method replaces them with a single buffer, copies the original data into that buffer, and returns the new buffer to the caller. 
+         /// The copy operation occurs at most once. On subsequent calls, no data is copied.
+         /// </remarks>
++        public MFMediaBuffer? GetBufferByIndex(int index)
+-        public MFMediaBuffer GetBufferByIndex(int index)
+         {
++            MFMediaBuffer? buffer;
+-            MFMediaBuffer buffer;
+             MediaFoundationException.Try(GetBufferByIndexNative(index, out buffer), InterfaceName, "GetBufferByIndex");
+             return buffer;
+         }
+@@ -230,7 +230,7 @@
+         /// </summary>
+         /// <param name="buffer">Receives a <see cref="MFMediaBuffer"/> instance. The caller must release the instance.</param>
+         /// <returns>HRESULT</returns>
++        public unsafe int ConvertToContiguousBufferNative(out MFMediaBuffer? buffer)
+-        public unsafe int ConvertToContiguousBufferNative(out MFMediaBuffer buffer)
+         {
+             IntPtr ptr = IntPtr.Zero;
+             int result = InteropCalls.CalliMethodPtr(UnsafeBasePtr, &ptr, ((void**)(*(void**)UnsafeBasePtr))[41]);
+@@ -242,9 +242,9 @@
+         /// Converts a sample with multiple buffers into a sample with a single buffer. 
+         /// </summary>
+         /// <returns>A <see cref="MFMediaBuffer"/> instance. The caller must release the instance.</returns>
++        public MFMediaBuffer? ConvertToContiguousBuffer()
+-        public MFMediaBuffer ConvertToContiguousBuffer()
+         {
++            MFMediaBuffer? buffer;
+-            MFMediaBuffer buffer;
+             MediaFoundationException.Try(ConvertToContiguousBufferNative(out buffer), InterfaceName, "ConvertToContiguousBuffer");
+             return buffer;
+         }

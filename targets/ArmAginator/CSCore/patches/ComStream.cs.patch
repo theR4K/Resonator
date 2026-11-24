@@ -1,0 +1,124 @@
+--- a/Win32/ComStream.cs
++++ b/Win32/ComStream.cs
+@@ -10,7 +10,7 @@
+     /// </summary>
+     public class ComStream : Stream, IStream, IWriteable
+     {
++        private Stream? _stream;
+-        private Stream _stream;
+         private readonly bool _disposeBaseStream;
+ 
+         /// <summary>
+@@ -43,7 +43,7 @@
+         /// </summary>
+         /// <param name="ppstm">When this method returns, contains the new stream object. This parameter is passed uninitialized.</param>
+         /// <returns>HRESULT</returns>
++        HResult IStream.Clone(out IStream? ppstm)
+-        HResult IStream.Clone(out IStream ppstm)
+         {
+             ppstm = null;
+             return HResult.E_NOTIMPL;
+@@ -57,7 +57,7 @@
+         HResult IStream.Commit(int grfCommitFlags)
+         {
+             //ignore flags... just implement this method because MediaSinkWriter throws exceptions on finalize
++            CSCoreNullable.Require(_stream).Flush(); // ArmAgedon seam
+-            _stream.Flush();
+             return HResult.S_OK;
+         }
+ 
+@@ -202,7 +202,7 @@
+         /// </summary>
+         public override bool CanRead
+         {
++            get { return CSCoreNullable.Require(_stream).CanRead; } // ArmAgedon seam
+-            get { return _stream.CanRead; }
+         }
+ 
+         /// <summary>
+@@ -210,7 +210,7 @@
+         /// </summary>
+         public override bool CanSeek
+         {
++            get { return CSCoreNullable.Require(_stream).CanSeek; } // ArmAgedon seam
+-            get { return _stream.CanSeek; }
+         }
+ 
+         /// <summary>
+@@ -218,7 +218,7 @@
+         /// </summary>
+         public override bool CanWrite
+         {
++            get { return CSCoreNullable.Require(_stream).CanWrite; } // ArmAgedon seam
+-            get { return _stream.CanWrite; }
+         }
+ 
+         /// <summary>
+@@ -226,7 +226,7 @@
+         /// </summary>
+         public override void Flush()
+         {
++            CSCoreNullable.Require(_stream).Flush(); // ArmAgedon seam
+-            _stream.Flush();
+         }
+ 
+         /// <summary>
+@@ -234,7 +234,7 @@
+         /// </summary>
+         public override long Length
+         {
++            get { return CSCoreNullable.Require(_stream).Length; } // ArmAgedon seam
+-            get { return _stream.Length; }
+         }
+ 
+         /// <summary>
+@@ -244,11 +244,11 @@
+         {
+             get
+             {
++                return CSCoreNullable.Require(_stream).Position; // ArmAgedon seam
+-                return _stream.Position;
+             }
+             set
+             {
++                CSCoreNullable.Require(_stream).Position = value; // ArmAgedon seam
+-                _stream.Position = value;
+             }
+         }
+ 
+@@ -261,7 +261,7 @@
+         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
+         public override int Read(byte[] buffer, int offset, int count)
+         {
++            return CSCoreNullable.Require(_stream).Read(buffer, offset, count); // ArmAgedon seam
+-            return _stream.Read(buffer, offset, count);
+         }
+ 
+         /// <summary>
+@@ -272,7 +272,7 @@
+         /// <returns>The new position within the current stream.</returns>
+         public override long Seek(long offset, SeekOrigin origin)
+         {
++            return CSCoreNullable.Require(_stream).Seek(offset, origin); // ArmAgedon seam
+-            return _stream.Seek(offset, origin);
+         }
+ 
+         /// <summary>
+@@ -281,7 +281,7 @@
+         /// <param name="value">The desired length of the current stream in bytes. </param>
+         public override void SetLength(long value)
+         {
++            CSCoreNullable.Require(_stream).SetLength(value); // ArmAgedon seam
+-            _stream.SetLength(value);
+         }
+ 
+         /// <summary>
+@@ -292,7 +292,7 @@
+         /// <param name="count">The number of bytes to be written to the current stream. </param>
+         public override void Write(byte[] buffer, int offset, int count)
+         {
++            CSCoreNullable.Require(_stream).Write(buffer, offset, count); // ArmAgedon seam
+-            _stream.Write(buffer, offset, count);
+         }
+ 
+         /// <summary>

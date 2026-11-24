@@ -1,0 +1,11 @@
+--- a/MediaFoundation/MFMediaType.cs
++++ b/MediaFoundation/MFMediaType.cs
+@@ -258,7 +258,7 @@
+         /// </summary>
+         /// <param name="flags">Contains a flag from the <see cref="MFWaveFormatExConvertFlags"/> enumeration.</param>
+         /// <returns>The <see cref="WaveFormat"/> which got created based on the <see cref="MFMediaType"/>.</returns>
++        public unsafe WaveFormat? ToWaveFormat(MFWaveFormatExConvertFlags flags)
+-        public unsafe WaveFormat ToWaveFormat(MFWaveFormatExConvertFlags flags)
+         {
+             IntPtr pointer = IntPtr.Zero;
+             try

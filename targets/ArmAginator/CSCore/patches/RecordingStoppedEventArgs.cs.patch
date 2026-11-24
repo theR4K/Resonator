@@ -1,0 +1,11 @@
+--- a/SoundIn/RecordingStoppedEventArgs.cs
++++ b/SoundIn/RecordingStoppedEventArgs.cs
+@@ -19,7 +19,7 @@
+         ///     Initializes a new instance of the <see cref="RecordingStoppedEventArgs" /> class.
+         /// </summary>
+         /// <param name="exception">The associated exception. Can be null.</param>
++        public RecordingStoppedEventArgs(Exception? exception)
+-        public RecordingStoppedEventArgs(Exception exception)
+             : base(exception)
+         {
+         }

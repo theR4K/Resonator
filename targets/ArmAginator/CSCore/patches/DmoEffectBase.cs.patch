@@ -1,0 +1,31 @@
+--- a/Streams/Effects/DmoEffectBase.cs
++++ b/Streams/Effects/DmoEffectBase.cs
+@@ -13,8 +13,8 @@
+         where TDXEffect : DMO.Effects.DirectSoundFxBase<TDXEffectStruct>
+         where TDXEffectStruct : struct
+     {
++        private Object? _comObj;
++        private TDXEffect? _effect;
+-        private Object _comObj;
+-        private TDXEffect _effect;
+         private bool _isEnabled = true;
+ 
+         /// <summary>
+@@ -75,7 +75,7 @@
+         {
+             get
+             {
++                return CSCoreNullable.Require(_effect); // ArmAgedon seam
+-                return _effect;
+             }
+         }
+ 
+@@ -103,7 +103,7 @@
+         protected void SetValue<T>(string fieldname, T value) where T : struct
+         {
+             var p = Effect.Parameters;
++            CSCoreNullable.Require(p.GetType().GetField(fieldname)).SetValueForValueType(ref p, value); // ArmAgedon seam
+-            p.GetType().GetField(fieldname).SetValueForValueType(ref p, value);
+             Effect.Parameters = p;
+         }
+ 

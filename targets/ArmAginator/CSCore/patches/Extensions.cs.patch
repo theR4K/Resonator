@@ -1,0 +1,29 @@
+--- a/Extensions.cs
++++ b/Extensions.cs
+@@ -275,7 +275,7 @@
+         /// <param name="size">The target length of the array.</param>
+         /// <param name="exactSize">A value which indicates whether the length of the array has to fit exactly the specified <paramref name="size"/>.</param>
+         /// <returns>Array which fits the specified requirements. Note that if a new array got created, the content of the old array won't get copied to the return value.</returns>
++        public static T[] CheckBuffer<T>(this T[]? inst, long size, bool exactSize = false)
+-        public static T[] CheckBuffer<T>(this T[] inst, long size, bool exactSize = false)
+         {
+             if (inst == null || (!exactSize && inst.Length < size) || (exactSize && inst.Length != size))
+                 return new T[size];
+@@ -354,7 +354,7 @@
+             return obj.GetType().GUID;
+         }
+ 
++        internal static void WaitForExit(this Thread? thread)
+-        internal static void WaitForExit(this Thread thread)
+         {
+             if (thread == null)
+                 return;
+@@ -364,7 +364,7 @@
+             thread.Join();
+         }
+ 
++        internal static bool WaitForExit(this Thread? thread, int timeout)
+-        internal static bool WaitForExit(this Thread thread, int timeout)
+         {
+             if (thread == null)
+                 return true;

@@ -1,0 +1,38 @@
+--- a/XAudio2/StreamingSourceVoice.cs
++++ b/XAudio2/StreamingSourceVoice.cs
+@@ -21,7 +21,7 @@
+         private int _currentBufferIndex;
+ 
+         private volatile bool _disposed;
++        private EventWaitHandle? _waitHandle;
+-        private EventWaitHandle _waitHandle;
+ 
+         private static IntPtr CreateSourceVoice(XAudio2 xaudio2, IWaveSource waveSource, VoiceCallback callback)
+         {
+@@ -109,7 +109,7 @@
+             InitializeForStreaming();
+         }
+ 
++        internal EventWaitHandle? BufferEndWaitHandle
+-        internal EventWaitHandle BufferEndWaitHandle
+         {
+             get { return _waitHandle; }
+         }
+@@ -163,7 +163,7 @@
+             {
+                 if (_disposed)
+                 {
++                    CSCoreNullable.Require(_waitHandle).Close(); // ArmAgedon seam
+-                    _waitHandle.Close();
+                     return;
+                 }
+ 
+@@ -209,7 +209,7 @@
+                 if (_disposed)
+                     return;
+ 
++                CSCoreNullable.Require(_waitHandle).Reset(); // ArmAgedon seam
+-                _waitHandle.Reset();
+                 Stop(SourceVoiceStopFlags.None, XAudio2.CommitNow);
+ 
+                 foreach (XAudio2Buffer buffer in _buffers)

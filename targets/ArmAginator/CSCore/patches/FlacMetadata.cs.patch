@@ -1,0 +1,27 @@
+--- a/Codecs/FLAC/Metadata/FlacMetadata.cs
++++ b/Codecs/FLAC/Metadata/FlacMetadata.cs
+@@ -19,7 +19,7 @@
+         /// <param name="stream">The stream which contains the <see cref="FlacMetadata"/>.</param>
+         /// <returns>Returns the read <see cref="FlacMetadata"/>.</returns>
+         [Obsolete("Use FlacMetaDataFactory.ParseMetaData")]
++        public static FlacMetadata? FromStream(Stream stream)
+-        public static FlacMetadata FromStream(Stream stream)
+         {
+             return FlacMetadataFactory.Instance.ParseMetadata(stream);
+         }
+@@ -31,14 +31,7 @@
+         /// <returns>All <see cref="FlacMetadata"/>.</returns>
+         public static IEnumerable<FlacMetadata> ReadAllMetadataFromStream(Stream stream)
+         {
++            return CSCoreNullable.ReadMetadata(stream); // ArmAgedon seam
+-            while (true)
+-            {
+-                FlacMetadata data = FlacMetadataFactory.Instance.ParseMetadata(stream);
+-                yield return data;
+-
+-                if (data == null || data.IsLastMetaBlock)
+-                    break;
+-            }
+         }
+ 
+         /// <summary>

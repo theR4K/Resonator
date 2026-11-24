@@ -1,0 +1,24 @@
+--- a/Tags/ID3/Frames/Frame.cs
++++ b/Tags/ID3/Frames/Frame.cs
+@@ -5,10 +5,10 @@
+ {
+     public abstract class Frame
+     {
++        public static Frame? FromStream(Stream stream, ID3v2 tag)
+-        public static Frame FromStream(Stream stream, ID3v2 tag)
+         {
+             bool result = false;
++            FrameHeader header = new FrameHeader(stream, CSCoreNullable.Require(tag.Header).Version); // ArmAgedon seam
+-            FrameHeader header = new FrameHeader(stream, tag.Header.Version);
+             long streamPosition = stream.Position + header.FrameSize;
+             var frame = FrameFactory.Instance.TryGetFrame(header, tag.Header.Version, stream, out result);
+             stream.Position = streamPosition;
+@@ -18,7 +18,7 @@
+ 
+         public FrameHeader Header { get; private set; }
+ 
++        public string? FrameId { get { return Header.FrameID; } }
+-        public string FrameId { get { return Header.FrameID; } }
+ 
+         public int FrameSize { get { return Header.FrameSize; } }
+ 

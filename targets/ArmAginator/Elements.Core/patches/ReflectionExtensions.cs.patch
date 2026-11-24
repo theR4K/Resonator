@@ -1,0 +1,263 @@
+--- a/Elements/Core/ReflectionExtensions.cs
++++ b/Elements/Core/ReflectionExtensions.cs
+@@ -6,13 +6,13 @@
+ 
+ namespace Elements.Core;
+ 
++public static partial class ReflectionExtensions /* ArmAgedon seam */
+-public static class ReflectionExtensions
+ {
++	public readonly struct NestedTypeEntry(Type type, Type[]? directGenericArguments)
+-	public readonly struct NestedTypeEntry(Type type, Type[] directGenericArguments)
+ 	{
+ 		public readonly Type type = type;
+ 
++		public readonly Type[]? directGenericArguments = directGenericArguments;
+-		public readonly Type[] directGenericArguments = directGenericArguments;
+ 
+ 		public override string ToString()
+ 		{
+@@ -47,12 +47,12 @@
+ 		{
+ 			return !validForInstantiation;
+ 		}
++		PropertyInfo? property = type.GetProperty("IsValidGenericType", BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy);
+-		PropertyInfo property = type.GetProperty("IsValidGenericType", BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy);
+ 		if (property == null)
+ 		{
+ 			return true;
+ 		}
++		object? value = property.GetValue(null);
+-		object value = property.GetValue(null);
+ 		if (value is bool)
+ 		{
+ 			return (bool)value;
+@@ -60,9 +60,9 @@
+ 		return false;
+ 	}
+ 
++	public static IEnumerable<FieldInfo> EnumerateAllInstanceFields(this Type? type)
+-	public static IEnumerable<FieldInfo> EnumerateAllInstanceFields(this Type type)
+ 	{
++		if (EndOfHierarchy(type)) // ArmAgedon seam
+-		if (type == typeof(object))
+ 		{
+ 			yield break;
+ 		}
+@@ -77,9 +77,9 @@
+ 		}
+ 	}
+ 
++	public static IEnumerable<MethodInfo> EnumerateAllInstanceMethods(this Type? type)
+-	public static IEnumerable<MethodInfo> EnumerateAllInstanceMethods(this Type type)
+ 	{
++		if (EndOfHierarchy(type)) // ArmAgedon seam
+-		if (type == typeof(object))
+ 		{
+ 			yield break;
+ 		}
+@@ -101,7 +101,7 @@
+ 		{
+ 			yield break;
+ 		}
++		HashSet<Type>? baseSelfInterfaces = type.BaseType?.GetInterfaces().ToHashSet();
+-		HashSet<Type> baseSelfInterfaces = type.BaseType?.GetInterfaces().ToHashSet();
+ 		Type[] array = interfaces;
+ 		foreach (Type type2 in array)
+ 		{
+@@ -125,44 +125,22 @@
+ 		}
+ 	}
+ 
++	public static bool InheritsFrom(this Type? type, Type baseType)
+-	public static bool InheritsFrom(this Type type, Type baseType)
+ 	{
++		return HasBase(type, baseType, false); // ArmAgedon seam
+-		if (type.BaseType == baseType)
+-		{
+-			return true;
+-		}
+-		if (type.BaseType == typeof(object))
+-		{
+-			return false;
+-		}
+-		return type.BaseType.InheritsFrom(baseType);
+ 	}
+ 
++	public static bool InheritsFromGeneric(this Type? type, Type genericBaseType)
+-	public static bool InheritsFromGeneric(this Type type, Type genericBaseType)
+ 	{
++		return HasBase(type, genericBaseType, true); // ArmAgedon seam
+-		if (type.BaseType == typeof(object))
+-		{
+-			return false;
+-		}
+-		Type baseType = type.BaseType;
+-		Type type2 = null;
+-		if (baseType.IsGenericType)
+-		{
+-			type2 = baseType.GetGenericTypeDefinition();
+-		}
+-		if (type2 == genericBaseType)
+-		{
+-			return true;
+-		}
+-		return baseType.InheritsFromGeneric(genericBaseType);
+ 	}
+ 
+ 	public static bool OverridesMethod(this Type type, string methodName, Type methodOrigin)
+ 	{
++		return CoreContract.Required(type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy)).DeclaringType != methodOrigin; // ArmAgedon seam
+-		return type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy).DeclaringType != methodOrigin;
+ 	}
+ 
++	public static Type? FindGenericBaseClass(this Type? type, Type genericBase)
+-	public static Type FindGenericBaseClass(this Type type, Type genericBase)
+ 	{
+ 		if (type == null || type == typeof(object))
+ 		{
+@@ -177,10 +155,10 @@
+ 
+ 	public static void SetStaticField(this Type type, string fieldName, object value)
+ 	{
++		CoreContract.Required(type.GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy)).SetValue /* ArmAgedon seam */(null, value);
+-		type.GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy).SetValue(null, value);
+ 	}
+ 
++	public static Type[]? GetDirectGenericArguments(this Type type)
+-	public static Type[] GetDirectGenericArguments(this Type type)
+ 	{
+ 		if (!type.IsGenericType)
+ 		{
+@@ -275,7 +253,7 @@
+ 	{
+ 		if (type.IsArray)
+ 		{
++			Type elementType = CoreContract.Required(type.GetElementType()); // ArmAgedon seam
+-			Type? elementType = type.GetElementType();
+ 			int arrayRank = type.GetArrayRank();
+ 			string text = elementType.FormatType(typeFormatter, open, close, nested);
+ 			string text2 = "[" + new string(',', arrayRank - 1) + "]";
+@@ -301,7 +279,7 @@
+ 		}
+ 		if (type.IsNullable())
+ 		{
++			Type? underlyingType = Nullable.GetUnderlyingType(type);
+-			Type underlyingType = Nullable.GetUnderlyingType(type);
+ 			if (underlyingType == null || underlyingType.IsGenericParameter)
+ 			{
+ 				return "Nullable" + open + close;
+@@ -349,7 +327,7 @@
+ 			{
+ 				return "";
+ 			}
++			string? text = TypeHelper.TryGetAlias(t);
+-			string text = TypeHelper.TryGetAlias(t);
+ 			if (text != null)
+ 			{
+ 				return text;
+@@ -417,7 +395,7 @@
+ 		}
+ 	}
+ 
++	public static List<AttributeMethod<A, D>> FindAllStaticMethodsWithAttribute<A, D>(Predicate<Assembly>? assemblyFilter = null) where A : Attribute where D : class
+-	public static List<AttributeMethod<A, D>> FindAllStaticMethodsWithAttribute<A, D>(Predicate<Assembly> assemblyFilter = null) where A : Attribute where D : class
+ 	{
+ 		List<AttributeMethod<A, D>> list = new List<AttributeMethod<A, D>>();
+ 		Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+@@ -435,7 +413,7 @@
+ 					MethodInfo[] methods = types[j].GetMethods(BindingFlags.Static | BindingFlags.Public);
+ 					foreach (MethodInfo methodInfo in methods)
+ 					{
++						A? customAttribute = methodInfo.GetCustomAttribute<A>();
+-						A customAttribute = methodInfo.GetCustomAttribute<A>();
+ 						if (customAttribute != null && Delegate.CreateDelegate(typeof(D), methodInfo) is D method)
+ 						{
+ 							list.Add(new AttributeMethod<A, D>(customAttribute, method));
+@@ -460,7 +438,7 @@
+ 		return false;
+ 	}
+ 
++	public static T? GetCustomAttribute<T>(this Type type, bool inherit, bool fromInterfaces) where T : Attribute
+-	public static T GetCustomAttribute<T>(this Type type, bool inherit, bool fromInterfaces) where T : Attribute
+ 	{
+ 		return type.GetCustomAttributes<T>(inherit, fromInterfaces).FirstOrDefault();
+ 	}
+@@ -508,9 +486,9 @@
+ 		return list;
+ 	}
+ 
++	public static Type[]? GetGenericArgumentsFromClass(this Type? type, Type classType)
+-	public static Type[] GetGenericArgumentsFromClass(this Type type, Type classType)
+ 	{
++		if (EndOfHierarchy(type)) // ArmAgedon seam
+-		if (type == typeof(object))
+ 		{
+ 			return null;
+ 		}
+@@ -521,7 +499,7 @@
+ 		return type.BaseType.GetGenericArgumentsFromClass(classType);
+ 	}
+ 
++	public static Type[]? GetGenericArgumentsFromInterface(this Type type, Type genericInterfaceType)
+-	public static Type[] GetGenericArgumentsFromInterface(this Type type, Type genericInterfaceType)
+ 	{
+ 		foreach (Type item in type.EnumerateInterfacesRecursively())
+ 		{
+@@ -533,7 +511,7 @@
+ 		return null;
+ 	}
+ 
++	public static MethodInfo? GetGenericMethod(this Type type, string name, BindingFlags bindingFlags, params Type[] typeArguments)
+-	public static MethodInfo GetGenericMethod(this Type type, string name, BindingFlags bindingFlags, params Type[] typeArguments)
+ 	{
+ 		MethodInfo[] methods = type.GetMethods(bindingFlags);
+ 		foreach (MethodInfo methodInfo in methods)
+@@ -546,13 +524,13 @@
+ 		return null;
+ 	}
+ 
++	public static string TypeHierarchyToString(this Type? type)
+-	public static string TypeHierarchyToString(this Type type)
+ 	{
+ 		StringBuilder stringBuilder = new StringBuilder();
++		while (!EndOfHierarchy(type)) // ArmAgedon seam
+-		while (type != typeof(object))
+ 		{
+ 			stringBuilder.AppendLine(type.FullName);
++			type = type.DeclaringType ?? type.BaseType;
+-			type = type?.DeclaringType ?? type.BaseType;
+ 		}
+ 		return stringBuilder.ToString();
+ 	}
+@@ -637,18 +615,17 @@
+ 
+ 	public static int GetVectorDimensions(this Type type)
+ 	{
++		return StaticField<int>(type, "DIMENSIONS"); // ArmAgedon seam
+-		return (int)type.GetField("DIMENSIONS").GetValue(null);
+ 	}
+ 
+ 	public static Type GetVectorBaseType(this Type type)
+ 	{
++		return StaticField<Type>(type, "BASE_TYPE"); // ArmAgedon seam
+-		return (Type)type.GetField("BASE_TYPE").GetValue(null);
+ 	}
+ 
+ 	public static int2 GetMatrixDimensions(this Type type)
+ 	{
++		return new int2(StaticField<int>(type, "COLUMNS"), StaticField<int>(type, "ROWS")); // ArmAgedon seam
+-		FieldInfo field = type.GetField("ROWS", BindingFlags.Static | BindingFlags.Public);
+-		return new int2((int)type.GetField("COLUMNS", BindingFlags.Static | BindingFlags.Public).GetValue(null), (int)field.GetValue(null));
+ 	}
+ 
+ 	public static int GetElementCount(this Type type)
+@@ -677,7 +654,7 @@
+ 		throw new ArgumentException($"Cannot determine element count for type: {type}");
+ 	}
+ 
++	public static object? GetDefaultValue(this Type type)
+-	public static object GetDefaultValue(this Type type)
+ 	{
+ 		if (type.IsValueType)
+ 		{

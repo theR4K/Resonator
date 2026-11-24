@@ -1,0 +1,20 @@
+--- a/Elements/Core/NumericComparer.cs
++++ b/Elements/Core/NumericComparer.cs
+@@ -5,7 +5,7 @@
+ 
+ public class NumericComparer : IComparer, IComparer<string>
+ {
++	public int Compare(object? x, object? y)
+-	public int Compare(object x, object y)
+ 	{
+ 		if (x is string && y is string)
+ 		{
+@@ -14,7 +14,7 @@
+ 		return -1;
+ 	}
+ 
++	public int Compare(string? x, string? y)
+-	public int Compare(string x, string y)
+ 	{
+ 		return StringLogicalComparer.Compare(x, y);
+ 	}

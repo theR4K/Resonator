@@ -1,0 +1,40 @@
+--- a/Elements/Core/BinaryWriterExtensions.cs
++++ b/Elements/Core/BinaryWriterExtensions.cs
+@@ -7,15 +7,6 @@
+ 
+ public static class BinaryWriterExtensions
+ {
+-	internal struct PatternRecord
+-	{
+-		public int startIndex;
+-
+-		public int endIndex;
+-
+-		public bool isSequence;
+-	}
+-
+ 	private static Encoding _encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+ 
+ 	public static void WriteEnumBinary<E>(this BinaryWriter bw, E value)
+@@ -24,7 +15,7 @@
+ 		{
+ 			throw new Exception("Argument must be an enumeration!");
+ 		}
++		bw.Write7BitEncoded((ulong)CoreContract.Required((IConvertible?)(object?)value).ToInt64 /* ArmAgedon seam */(null));
+-		bw.Write7BitEncoded((ulong)((IConvertible)(object)value).ToInt64(null));
+ 	}
+ 
+ 	public static void WriteEnumString<E>(this BinaryWriter bw, E value) where E : struct
+@@ -33,10 +24,10 @@
+ 		{
+ 			throw new Exception("Argument must be an enumeration!");
+ 		}
++		bw.Write(CoreContract.Required(value.ToString())); // ArmAgedon seam
+-		bw.Write(value.ToString());
+ 	}
+ 
++	public static void WriteNullable(this BinaryWriter bw, string? value)
+-	public static void WriteNullable(this BinaryWriter bw, string value)
+ 	{
+ 		if (value == null)
+ 		{

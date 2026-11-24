@@ -1,0 +1,29 @@
+--- a/Elements/Core/RawList.cs
++++ b/Elements/Core/RawList.cs
+@@ -14,7 +14,7 @@
+ 
+ 		public T Current => list.Elements[index];
+ 
++		object? IEnumerator.Current => list.Elements[index];
+-		object IEnumerator.Current => list.Elements[index];
+ 
+ 		public void Dispose()
+ 		{
+@@ -115,7 +115,7 @@
+ 		{
+ 			Array.Copy(Elements, index + 1, Elements, index, Count - index);
+ 		}
++		CoreContract.ClearSlot(Elements, Count); // ArmAgedon seam
+-		Elements[Count] = default;
+ 	}
+ 
+ 	public void FastRemoveAt(int index)
+@@ -129,7 +129,7 @@
+ 		{
+ 			Elements[index] = Elements[Count];
+ 		}
++		CoreContract.ClearSlot(Elements, Count); // ArmAgedon seam
+-		Elements[Count] = default;
+ 	}
+ 
+ 	public void Add(T item)

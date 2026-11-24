@@ -1,0 +1,11 @@
+--- a/Elements/Core/Rect.cs
++++ b/Elements/Core/Rect.cs
+@@ -354,7 +354,7 @@
+ 		return new Rect(MathX.LerpUnclamped(in a.position, in b.position, lerp), MathX.LerpUnclamped(in a.size, in b.size, lerp));
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is Rect)
+ 		{

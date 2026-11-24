@@ -1,0 +1,196 @@
+--- a/Elements/Core/SlimPoolList.cs
++++ b/Elements/Core/SlimPoolList.cs
+@@ -4,9 +4,11 @@
+ 
+ namespace Elements.Core;
+ 
++public partial struct SlimPoolList<T> // ArmAgedon seam
++ : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable, IReadOnlyList<T>, IReadOnlyCollection<T>
+-public struct SlimPoolList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable, IReadOnlyList<T>, IReadOnlyCollection<T>
+ {
++	public partial struct Enumerator : // ArmAgedon seam
++ IEnumerator<T>, IEnumerator, IDisposable
+-	public struct Enumerator : IEnumerator<T>, IEnumerator, IDisposable
+ 	{
+ 		private enum Mode : byte
+ 		{
+@@ -18,20 +20,15 @@
+ 			Disposed
+ 		}
+ 
++		private T? _singleItem;
+-		private T _singleItem;
+ 
+ 		private List<T>.Enumerator _listEnumerator;
+ 
+ 		private Mode _mode;
+ 
++		public T Current => ReadCurrent(); // ArmAgedon seam
+-		public T Current => _mode switch
+-		{
+-			Mode.ItemList => _listEnumerator.Current, 
+-			Mode.SingleItemCurrent => _singleItem, 
+-			_ => default, 
+-		};
+ 
++		object? IEnumerator.Current => Current;
+-		object IEnumerator.Current => Current;
+ 
+ 		public Enumerator(SlimPoolList<T> list)
+ 		{
+@@ -103,11 +100,11 @@
+ 		}
+ 	}
+ 
++	private static List<T> SINGLE_ITEM_MARKER = CoreContract.SingleItemMarker<T>() /* ArmAgedon seam */;
+-	private static List<T> SINGLE_ITEM_MARKER = new List<T>(1) { default };
+ 
++	private List<T>? _items;
+-	private List<T> _items;
+ 
++	private T? _item;
+-	private T _item;
+ 
+ 	public bool HasSingleItem => _items == SINGLE_ITEM_MARKER;
+ 
+@@ -123,9 +120,9 @@
+ 				{
+ 					throw new ArgumentOutOfRangeException("index");
+ 				}
++				return CoreContract.Stored<T>(_item); // ArmAgedon seam
+-				return _item;
+ 			}
++			return ListStorage /* ArmAgedon seam */[index];
+-			return _items[index];
+ 		}
+ 		set
+ 		{
+@@ -139,7 +136,7 @@
+ 			}
+ 			else
+ 			{
++				ListStorage /* ArmAgedon seam */[index] = value;
+-				_items[index] = value;
+ 			}
+ 		}
+ 	}
+@@ -160,7 +157,7 @@
+ 			ConvertToListStorage();
+ 			break;
+ 		}
++		ListStorage /* ArmAgedon seam */.Add(item);
+-		_items.Add(item);
+ 	}
+ 
+ 	public void Clear()
+@@ -177,24 +174,24 @@
+ 	{
+ 		if (HasSingleItem)
+ 		{
++			return SingleItemEquals(item) /* ArmAgedon seam */;
+-			return item.Equals(_item);
+ 		}
+ 		if (_items == null)
+ 		{
+ 			return false;
+ 		}
++		return ListStorage /* ArmAgedon seam */.Contains(item);
+-		return _items.Contains(item);
+ 	}
+ 
+ 	public void CopyTo(T[] array, int arrayIndex)
+ 	{
+ 		if (HasSingleItem)
+ 		{
++			array[arrayIndex] = CoreContract.Stored<T>(_item); // ArmAgedon seam
+-			array[arrayIndex] = _item;
+ 		}
+ 		else if (_items != null)
+ 		{
++			ListStorage /* ArmAgedon seam */.CopyTo(array, arrayIndex);
+-			_items.CopyTo(array, arrayIndex);
+ 		}
+ 	}
+ 
+@@ -217,7 +214,7 @@
+ 		{
+ 			return -1;
+ 		}
++		return ListStorage /* ArmAgedon seam */.IndexOf(item);
+-		return _items.IndexOf(item);
+ 	}
+ 
+ 	public void Insert(int index, T item)
+@@ -236,7 +233,7 @@
+ 			ConvertToListStorage();
+ 			break;
+ 		}
++		ListStorage /* ArmAgedon seam */.Insert(index, item);
+-		_items.Insert(index, item);
+ 	}
+ 
+ 	public bool Remove(T item)
+@@ -254,7 +251,7 @@
+ 		{
+ 			return false;
+ 		}
++		if (ListStorage /* ArmAgedon seam */.Remove(item))
+-		if (_items.Remove(item))
+ 		{
+ 			CheckConvertToSingleItem();
+ 			return true;
+@@ -274,7 +271,7 @@
+ 		}
+ 		else if (_items != null)
+ 		{
++			ListStorage /* ArmAgedon seam */.RemoveAt(index);
+-			_items.RemoveAt(index);
+ 			CheckConvertToSingleItem();
+ 		}
+ 	}
+@@ -283,7 +280,7 @@
+ 	{
+ 		if (HasSingleItem)
+ 		{
++			if (predicate(CoreContract.Stored<T>(_item)) /* ArmAgedon seam */)
+-			if (predicate(_item))
+ 			{
+ 				Clear();
+ 				return 1;
+@@ -292,7 +289,7 @@
+ 		}
+ 		if (_items != null)
+ 		{
++			int result = ListStorage /* ArmAgedon seam */.RemoveAll(predicate);
+-			int result = _items.RemoveAll(predicate);
+ 			CheckConvertToSingleItem();
+ 			return result;
+ 		}
+@@ -303,15 +300,15 @@
+ 	{
+ 		if (Count >= 2)
+ 		{
++			ListStorage /* ArmAgedon seam */.Sort(comparison);
+-			_items.Sort(comparison);
+ 		}
+ 	}
+ 
+ 	private void CheckConvertToSingleItem()
+ 	{
++		if (ListStorage /* ArmAgedon seam */.Count == 1)
+-		if (_items.Count == 1)
+ 		{
++			_item = ListStorage /* ArmAgedon seam */[0];
+-			_item = _items[0];
+ 			Pool.Return(ref _items);
+ 			_items = SINGLE_ITEM_MARKER;
+ 		}
+@@ -324,7 +321,7 @@
+ 			throw new InvalidOperationException("Cannot convert to list storage when list is already allocated!");
+ 		}
+ 		_items = Pool.BorrowList<T>();
++		ListStorage /* ArmAgedon seam */.Add(CoreContract.Stored<T>(_item)); // ArmAgedon seam
+-		_items.Add(_item);
+ 		_item = default;
+ 	}
+ 

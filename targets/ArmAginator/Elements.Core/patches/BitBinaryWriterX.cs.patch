@@ -1,0 +1,87 @@
+--- a/Elements/Core/BitBinaryWriterX.cs
++++ b/Elements/Core/BitBinaryWriterX.cs
+@@ -5,9 +5,9 @@
+ 
+ public class BitBinaryWriterX : BinaryWriterX
+ {
++	private BitWriterStream? bitStream;
+-	private BitWriterStream bitStream;
+ 
++	public override Stream? TargetStream
+-	public override Stream TargetStream
+ 	{
+ 		get
+ 		{
+@@ -15,7 +15,7 @@
+ 		}
+ 		set
+ 		{
++			BitWriterStream? bitWriterStream = value as BitWriterStream;
+-			BitWriterStream bitWriterStream = value as BitWriterStream;
+ 			if (bitWriterStream == null && value != null)
+ 			{
+ 				throw new Exception("Stream must be BitWriterStream");
+@@ -37,49 +37,49 @@
+ 
+ 	public void WriteBit(bool bit)
+ 	{
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(bit ? ((byte)1) : ((byte)0), 1);
+-		bitStream.Write(bit ? ((byte)1) : ((byte)0), 1);
+ 	}
+ 
+ 	public void WriteBits(byte data, int bits)
+ 	{
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data, bits);
+-		bitStream.Write(data, bits);
+ 	}
+ 
+ 	public void WriteBits(ulong data, int bits)
+ 	{
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data, bits);
+-		bitStream.Write(data, bits);
+ 	}
+ 
+ 	public void WriteBits(uint2 data, int bits)
+ 	{
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data.x, bits);
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data.y, bits);
+-		bitStream.Write(data.x, bits);
+-		bitStream.Write(data.y, bits);
+ 	}
+ 
+ 	public void WriteBits(uint3 data, int bits)
+ 	{
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data.x, bits);
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data.y, bits);
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data.z, bits);
+-		bitStream.Write(data.x, bits);
+-		bitStream.Write(data.y, bits);
+-		bitStream.Write(data.z, bits);
+ 	}
+ 
+ 	public void WriteBits(uint4 data, int bits)
+ 	{
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data.x, bits);
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data.y, bits);
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data.z, bits);
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Write(data.w, bits);
+-		bitStream.Write(data.x, bits);
+-		bitStream.Write(data.y, bits);
+-		bitStream.Write(data.z, bits);
+-		bitStream.Write(data.w, bits);
+ 	}
+ 
+ 	public override void Flush()
+ 	{
+ 		base.Flush();
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Flush();
+-		bitStream.Flush();
+ 	}
+ 
+ 	public override void Close()
+ 	{
+ 		base.Close();
++		CoreContract.Required(bitStream) /* ArmAgedon seam */.Close();
+-		bitStream.Close();
+ 	}
+ }

@@ -1,0 +1,79 @@
+--- a/Elements/Core/PathDictionary.cs
++++ b/Elements/Core/PathDictionary.cs
+@@ -5,14 +5,15 @@
+ namespace Elements.Core;
+ 
+ public class PathDictionary<K, T> : IEnumerable<KeyValuePair<IReadOnlyList<K>, T>>, IEnumerable
++where K : notnull
+ {
+ 	private class Node
+ 	{
++		public T? item;
+-		public T item;
+ 
+ 		public bool itemOccupied;
+ 
++		public PathDictionary<K, T>? children;
+-		public PathDictionary<K, T> children;
+ 	}
+ 
+ 	private Dictionary<K, Node> _items;
+@@ -23,10 +24,10 @@
+ 	{
+ 		get
+ 		{
++			(T?, bool) recursive = GetRecursive(path, 0);
+-			(T, bool) recursive = GetRecursive(path, 0);
+ 			if (recursive.Item2)
+ 			{
++				return CoreContract.Stored<T>(recursive.Item1); // ArmAgedon seam
+-				return recursive.Item1;
+ 			}
+ 			throw new KeyNotFoundException();
+ 		}
+@@ -62,9 +63,9 @@
+ 		return SetRecursive(path, 0, item, allowOverwrite: false);
+ 	}
+ 
++	public bool TryGetValue(IReadOnlyList<K> path, out T? item)
+-	public bool TryGetValue(IReadOnlyList<K> path, out T item)
+ 	{
++		(T?, bool) recursive = GetRecursive(path, 0);
+-		(T, bool) recursive = GetRecursive(path, 0);
+ 		if (recursive.Item2)
+ 		{
+ 			(item, _) = recursive;
+@@ -126,7 +127,7 @@
+ 		return value.children.SetRecursive(path, pathIndex + 1, item, allowOverwrite);
+ 	}
+ 
++	private (T? item, bool occupied) GetRecursive(IReadOnlyList<K> path, int pathIndex)
+-	private (T item, bool occupied) GetRecursive(IReadOnlyList<K> path, int pathIndex)
+ 	{
+ 		K key = path[pathIndex];
+ 		if (!_items.TryGetValue(key, out var value))
+@@ -183,7 +184,7 @@
+ 
+ 	public IEnumerator<KeyValuePair<IReadOnlyList<K>, T>> GetEnumerator()
+ 	{
++		List<K>? list = Pool.BorrowList<K>();
+-		List<K> list = Pool.BorrowList<K>();
+ 		try
+ 		{
+ 			foreach (KeyValuePair<IReadOnlyList<K>, T> item in EnumerateRecursive(list))
+@@ -200,13 +201,13 @@
+ 	private IEnumerable<KeyValuePair<IReadOnlyList<K>, T>> EnumerateRecursive(List<K> path)
+ 	{
+ 		int index = path.Count;
++		CoreContract.AddPathPlaceholder(path); // ArmAgedon seam
+-		path.Add(default);
+ 		foreach (KeyValuePair<K, Node> group in _items)
+ 		{
+ 			path[index] = group.Key;
+ 			if (group.Value.itemOccupied)
+ 			{
++				yield return new KeyValuePair<IReadOnlyList<K>, T>(path, CoreContract.Stored<T>(group.Value.item)) /* ArmAgedon seam */;
+-				yield return new KeyValuePair<IReadOnlyList<K>, T>(path, group.Value.item);
+ 			}
+ 			if (group.Value.children == null)
+ 			{

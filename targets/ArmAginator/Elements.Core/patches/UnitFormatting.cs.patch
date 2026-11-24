@@ -1,0 +1,10 @@
+--- a/Elements/Core/UnitFormatting.cs
++++ b/Elements/Core/UnitFormatting.cs
+@@ -17,6 +17,6 @@
+ 			}
+ 			bytes /= 1024.0;
+ 		}
++		return CoreContract.UnreachableText(); // ArmAgedon seam
+-		return null;
+ 	}
+ }

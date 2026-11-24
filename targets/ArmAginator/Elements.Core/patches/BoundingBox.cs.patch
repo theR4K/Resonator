@@ -1,0 +1,11 @@
+--- a/Elements/Core/BoundingBox.cs
++++ b/Elements/Core/BoundingBox.cs
+@@ -553,7 +553,7 @@
+ 		return zero;
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is BoundingBox)
+ 		{

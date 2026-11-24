@@ -1,0 +1,58 @@
+--- a/Elements/Core/CryptoHelper.cs
++++ b/Elements/Core/CryptoHelper.cs
+@@ -6,8 +6,9 @@
+ 
+ namespace Elements.Core;
+ 
++public static partial class CryptoHelper /* ArmAgedon seam */
+-public static class CryptoHelper
+ {
++	[Obsolete("Use CryptoHelper.GenerateCryptoBlob or RandomNumberGenerator.Fill.")]
+ 	public static readonly RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+ 
+ 	public static string PasswordRuleDescription => "Minimum 8 characters, 1 capital letter and 1 digit.";
+@@ -16,9 +17,7 @@
+ 
+ 	public static byte[] GenerateCryptoBlob(int length)
+ 	{
++		return RandomBlob(length); // ArmAgedon seam
+-		byte[] array = new byte[length];
+-		rng.GetBytes(array);
+-		return array;
+ 	}
+ 
+ 	public static int CryptoTokenStringLength(int length)
+@@ -53,30 +52,17 @@
+ 
+ 	public static byte[] HashData(byte[] data)
+ 	{
++		return HashBytes(data); // ArmAgedon seam
+-		using SHA256Managed sHA256Managed = new SHA256Managed();
+-		return sHA256Managed.ComputeHash(data);
+ 	}
+ 
++	public static string HashIDToToken(string id, string? salt = null)
+-	public static string HashIDToToken(string id, string salt = null)
+ 	{
+ 		return BitConverter.ToString(HashID(id + salt)).Replace("-", "");
+ 	}
+ 
+ 	public static string HashPassword(string password, string salt)
+ 	{
++		return HashPasswordBytes(password, salt); // ArmAgedon seam
+-		byte[] bytes = Encoding.UTF8.GetBytes(password);
+-		byte[] array = Convert.FromBase64String(salt);
+-		byte[] array2 = new byte[bytes.Length + array.Length];
+-		for (int i = 0; i < bytes.Length; i++)
+-		{
+-			array2[i] = bytes[i];
+-		}
+-		for (int j = 0; j < array.Length; j++)
+-		{
+-			array2[j + bytes.Length] = array[j];
+-		}
+-		using SHA256Managed sHA256Managed = new SHA256Managed();
+-		return Convert.ToBase64String(sHA256Managed.ComputeHash(array2));
+ 	}
+ 
+ 	public static bool IsValidPassword(string password)

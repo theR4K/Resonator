@@ -1,0 +1,11 @@
+--- a/Elements/Core/Transform.cs
++++ b/Elements/Core/Transform.cs
+@@ -5,7 +5,7 @@
+ namespace Elements.Core;
+ 
+ [DataModelType]
++public readonly partial struct Transform /* ArmAgedon seam */(in float3 position, in floatQ rotation, in float3 scale) : IEquatable<Transform>
+-public readonly struct Transform(in float3 position, in floatQ rotation, in float3 scale) : IEquatable<Transform>
+ {
+ 	public readonly float3 position = position;
+ 

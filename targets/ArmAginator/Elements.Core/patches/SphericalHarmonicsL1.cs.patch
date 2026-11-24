@@ -1,0 +1,11 @@
+--- a/Elements/Core/SphericalHarmonicsL1.cs
++++ b/Elements/Core/SphericalHarmonicsL1.cs
+@@ -170,7 +170,7 @@
+ 		return MathX.SmoothLerp(this, other, ref intermediate, delta);
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is SphericalHarmonicsL1<T> other)
+ 		{

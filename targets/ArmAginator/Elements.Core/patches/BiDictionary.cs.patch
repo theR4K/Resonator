@@ -1,0 +1,26 @@
+--- a/Elements/Core/BiDictionary.cs
++++ b/Elements/Core/BiDictionary.cs
+@@ -5,6 +5,8 @@
+ namespace Elements.Core;
+ 
+ public class BiDictionary<A, B> : IEnumerable<ValuePair<A, B>>, IEnumerable
++where A : notnull
++where B : notnull
+ {
+ 	public struct Enumerator(Dictionary<A, B>.Enumerator dictEnumerator) : IEnumerator<ValuePair<A, B>>, IEnumerator, IDisposable
+ 	{
+@@ -69,12 +71,12 @@
+ 		return b2a[second];
+ 	}
+ 
++	public bool TryGetFirst(B second, [System.Diagnostics.CodeAnalysis.MaybeNullWhen(false)] out A first)
+-	public bool TryGetFirst(B second, out A first)
+ 	{
+ 		return b2a.TryGetValue(second, out first);
+ 	}
+ 
++	public bool TryGetSecond(A first, [System.Diagnostics.CodeAnalysis.MaybeNullWhen(false)] out B second)
+-	public bool TryGetSecond(A first, out B second)
+ 	{
+ 		return a2b.TryGetValue(first, out second);
+ 	}

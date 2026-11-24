@@ -1,0 +1,11 @@
+--- a/Elements/Core/bobool3ol.cs
++++ b/Elements/Core/bobool3ol.cs
+@@ -8,7 +8,7 @@
+ [DataModelType]
+ public readonly struct bobool3ol : IEquatable<bobool3ol>
+ {
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		return false;
+ 	}

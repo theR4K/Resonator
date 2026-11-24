@@ -1,0 +1,19 @@
+--- a/Elements/Core/BinaryReaderX.cs
++++ b/Elements/Core/BinaryReaderX.cs
+@@ -6,7 +6,7 @@
+ {
+ 	private WrappedStream _wrappedStream;
+ 
++	public virtual Stream? TargetStream
+-	public virtual Stream TargetStream
+ 	{
+ 		get
+ 		{
+@@ -21,6 +21,6 @@
+ 	public BinaryReaderX()
+ 		: base(new WrappedStream(new NullStream()))
+ 	{
++		_wrappedStream = (WrappedStream)BaseStream;
+-		_wrappedStream = BaseStream as WrappedStream;
+ 	}
+ }

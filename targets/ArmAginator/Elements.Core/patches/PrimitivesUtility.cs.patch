@@ -1,0 +1,11 @@
+--- a/Elements/Core/PrimitivesUtility.cs
++++ b/Elements/Core/PrimitivesUtility.cs
+@@ -4,7 +4,7 @@
+ 
+ public static class PrimitivesUtility
+ {
++	public static string[]? ExtractElements(string? s, int requiredCount)
+-	public static string[] ExtractElements(string s, int requiredCount)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(s))
+ 		{

@@ -1,0 +1,96 @@
+--- a/Elements/Core/ushort4.cs
++++ b/Elements/Core/ushort4.cs
+@@ -8731,12 +8731,12 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(provider) + "]";
+ 	}
+ 
++	public string ToStringBase(IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(provider) + separator + " " + y.ToString(provider) + separator + " " + z.ToString(provider) + separator + " " + w.ToString(provider);
+ 	}
+@@ -8751,48 +8751,48 @@
+ 		return x.ToString(elementFormat) + separator + " " + y.ToString(elementFormat) + separator + " " + z.ToString(elementFormat) + separator + " " + w.ToString(elementFormat);
+ 	}
+ 
++	public string ToString(string? elementFormat, IFormatProvider? provider)
+-	public string ToString(string elementFormat, IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(elementFormat, provider) + "]";
+ 	}
+ 
++	public string ToStringBase(string? elementFormat, IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(string elementFormat, IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(elementFormat, provider) + separator + " " + y.ToString(elementFormat, provider) + separator + " " + z.ToString(elementFormat, provider) + separator + " " + w.ToString(elementFormat, provider);
+ 	}
+ 
++	public string ToStringConstructor(string? overrideType = null)
+-	public string ToStringConstructor(string overrideType = null)
+ 	{
+ 		return $"new {overrideType ?? "ushort4"}({x.ToCodeLiteral() + ", " + y.ToCodeLiteral() + ", " + z.ToCodeLiteral() + ", " + w.ToCodeLiteral()})";
+ 	}
+ 
+ 	public static ushort4 Parse(string s)
+ 	{
++		string[] num2 = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] num2 = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new ushort4(ushort.Parse(num2[0]), ushort.Parse(num2[1]), ushort.Parse(num2[2]), ushort.Parse(num2[3]));
+ 	}
+ 
+ 	public static ushort4 Parse(string s, IFormatProvider provider)
+ 	{
++		string[] num = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] num = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new ushort4(ushort.Parse(num[0], provider), ushort.Parse(num[1], provider), ushort.Parse(num[2], provider), ushort.Parse(num[3], provider));
+ 	}
+ 
+ 	public static ushort4 Parse(string s, NumberStyles style)
+ 	{
++		string[] other = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] other = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new ushort4(ushort.Parse(other[0], style), ushort.Parse(other[1], style), ushort.Parse(other[2], style), ushort.Parse(other[3], style));
+ 	}
+ 
+ 	public static ushort4 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new ushort4(ushort.Parse(array[0], style, provider), ushort.Parse(array[1], style, provider), ushort.Parse(array[2], style, provider), ushort.Parse(array[3], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out ushort4 val)
+-	public static bool TryParse(string s, out ushort4 val)
+ 	{
++		string[]? num = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] num = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (num == null)
+ 		{
+ 			val = default;
+@@ -8811,9 +8811,9 @@
+ 		return false;
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider formatProvider, out ushort4 val)
+-	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out ushort4 val)
+ 	{
++		string[]? value = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] value = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (value == null)
+ 		{
+ 			val = default;
+@@ -8844,7 +8844,7 @@
+ 		return new ushort4(mask.x ? x : masked.x, mask.y ? y : masked.y, mask.z ? z : masked.z, mask.w ? w : masked.w);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is ushort4)
+ 		{

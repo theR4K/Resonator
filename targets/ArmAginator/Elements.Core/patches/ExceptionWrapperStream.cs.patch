@@ -1,0 +1,11 @@
+--- a/Elements/Core/ExceptionWrapperStream.cs
++++ b/Elements/Core/ExceptionWrapperStream.cs
+@@ -7,7 +7,7 @@
+ {
+ 	private Stream _innerStream;
+ 
++	public Exception? CaughtException { get; private set; }
+-	public Exception CaughtException { get; private set; }
+ 
+ 	public override bool CanRead
+ 	{

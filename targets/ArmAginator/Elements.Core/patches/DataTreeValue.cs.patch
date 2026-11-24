@@ -1,0 +1,134 @@
+--- a/Elements/Core/DataTreeValue.cs
++++ b/Elements/Core/DataTreeValue.cs
+@@ -5,8 +5,9 @@
+ 
+ public class DataTreeValue : DataTreeNode
+ {
++	public IConvertible? Value { get; private set; }
+-	public IConvertible Value { get; private set; }
+ 
++	[System.Diagnostics.CodeAnalysis.MemberNotNullWhen(false, nameof(Value))]
+ 	public bool IsNull => Value == null;
+ 
+ 	public bool IsURL
+@@ -35,11 +36,11 @@
+ 		Value = null;
+ 	}
+ 
++	public T? Extract<T>()
+-	public T Extract<T>()
+ 	{
+ 		if (typeof(T) == typeof(DateTime))
+ 		{
++			return (T?)Value;
+-			return (T)Value;
+ 		}
+ 		if (typeof(T) == typeof(string))
+ 		{
+@@ -59,7 +60,7 @@
+ 		}
+ 		if (typeof(T) == typeof(Uri))
+ 		{
++			return (T?)(object?)ExtractURL();
+-			return (T)(object)ExtractURL();
+ 		}
+ 		if (typeof(T) == typeof(ulong))
+ 		{
+@@ -89,10 +90,10 @@
+ 		{
+ 			return (T)(object)new TimeSpan(Extract<long>());
+ 		}
++		return (T)CoreContract.Required(Value).ToType /* ArmAgedon seam */(typeof(T), null);
+-		return (T)Value.ToType(typeof(T), null);
+ 	}
+ 
++	public Uri? TryExtractURL()
+-	public Uri TryExtractURL()
+ 	{
+ 		if (Value == null)
+ 		{
+@@ -111,7 +112,7 @@
+ 		return new Uri(text);
+ 	}
+ 
++	private Uri? ExtractURL()
+-	private Uri ExtractURL()
+ 	{
+ 		if (Value == null)
+ 		{
+@@ -125,7 +126,7 @@
+ 		return new Uri(text.Substring(1));
+ 	}
+ 
++	public DataTreeValue(Uri? url)
+-	public DataTreeValue(Uri url)
+ 	{
+ 		UpdateValue(url);
+ 	}
+@@ -135,7 +136,7 @@
+ 		Value = timespan.Ticks;
+ 	}
+ 
++	public void UpdateValue(Uri? url)
+-	public void UpdateValue(Uri url)
+ 	{
+ 		if (url == null)
+ 		{
+@@ -153,7 +154,7 @@
+ 		{
+ 			throw new Exception("Type isn't an enumeration!");
+ 		}
++		return new DataTreeValue(CoreContract.Required(val).ToString()) /* ArmAgedon seam */;
+-		return new DataTreeValue(val.ToString());
+ 	}
+ 
+ 	public E ExtractEnum<E>()
+@@ -163,10 +164,10 @@
+ 		{
+ 			throw new Exception("Type isn't an enumeration!");
+ 		}
++		return (E)Enum.Parse(typeFromHandle, CoreContract.Required(Extract<string>())) /* ArmAgedon seam */;
+-		return (E)Enum.Parse(typeFromHandle, Extract<string>());
+ 	}
+ 
++	private string? PreprocessString(string? str)
+-	private string PreprocessString(string str)
+ 	{
+ 		if (str != null && str.Length > 1 && str[0] == '@')
+ 		{
+@@ -175,7 +176,7 @@
+ 		return str;
+ 	}
+ 
++	private IConvertible? Preprocess(IConvertible? val)
+-	private IConvertible Preprocess(IConvertible val)
+ 	{
+ 		if (val is string str)
+ 		{
+@@ -184,22 +185,22 @@
+ 		return val;
+ 	}
+ 
++	public void UpdateValue(IConvertible? val)
+-	public void UpdateValue(IConvertible val)
+ 	{
+ 		Value = Preprocess(val);
+ 	}
+ 
++	public DataTreeValue(IConvertible? val)
+-	public DataTreeValue(IConvertible val)
+ 	{
+ 		Value = Preprocess(val);
+ 	}
+ 
++	public DataTreeValue(string? str)
+-	public DataTreeValue(string str)
+ 	{
+ 		Value = PreprocessString(str);
+ 	}
+ 
++	public static DataTreeValue RawString(string? str)
+-	public static DataTreeValue RawString(string str)
+ 	{
+ 		return new DataTreeValue
+ 		{

@@ -1,0 +1,46 @@
+--- a/Elements/Core/CoderNullable.cs
++++ b/Elements/Core/CoderNullable.cs
+@@ -8,8 +8,8 @@
+ {
+ 	public static Delegate GetNullableMethod(Type nullableType, Type delegateType, string name)
+ 	{
++		Type? underlyingType = Nullable.GetUnderlyingType(nullableType);
++		return CoreContract.Required(typeof(CoderNullable<>).MakeGenericType(CoreContract.Required(underlyingType)).GetMethod(name, BindingFlags.Static | BindingFlags.Public)).CreateDelegate(delegateType) /* ArmAgedon seam */;
+-		Type underlyingType = Nullable.GetUnderlyingType(nullableType);
+-		return typeof(CoderNullable<>).MakeGenericType(underlyingType).GetMethod(name, BindingFlags.Static | BindingFlags.Public).CreateDelegate(delegateType);
+ 	}
+ }
+ public static class CoderNullable<T> where T : struct
+@@ -28,7 +28,7 @@
+ 		{
+ 			return true;
+ 		}
++		return Coder<T>.Equals(a.Value, b.GetValueOrDefault()) /* ArmAgedon seam */;
+-		return Coder<T>.Equals(a.Value, b.Value);
+ 	}
+ 
+ 	public static void EncodeNullable(T? value, BinaryWriter bw)
+@@ -55,12 +55,12 @@
+ 		{
+ 			return Coder<T>.Save(value.Value);
+ 		}
++		return new DataTreeValue((IConvertible?)null);
+-		return new DataTreeValue((IConvertible)null);
+ 	}
+ 
+ 	public static T? LoadNullable(DataTreeNode node)
+ 	{
++		DataTreeValue? obj = node as DataTreeValue;
+-		DataTreeValue obj = node as DataTreeValue;
+ 		if (obj != null && obj.IsNull)
+ 		{
+ 			return null;
+@@ -68,7 +68,7 @@
+ 		return Coder<T>.Load(node);
+ 	}
+ 
++	public static string? EncodeToStringNullable(T? value)
+-	public static string EncodeToStringNullable(T? value)
+ 	{
+ 		if (value.HasValue)
+ 		{

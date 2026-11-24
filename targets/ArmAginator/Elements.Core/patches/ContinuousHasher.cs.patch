@@ -1,0 +1,11 @@
+--- a/Elements/Core/ContinuousHasher.cs
++++ b/Elements/Core/ContinuousHasher.cs
+@@ -87,7 +87,7 @@
+ 		}
+ 	}
+ 
++	public byte[]? FinalizeHash()
+-	public byte[] FinalizeHash()
+ 	{
+ 		_hash.TransformFinalBlock(_buffer, 0, _dataLength);
+ 		return _hash.Hash;

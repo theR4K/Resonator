@@ -1,0 +1,14 @@
+--- a/Elements/Core/StringOpeningTag.cs
++++ b/Elements/Core/StringOpeningTag.cs
+@@ -6,9 +6,9 @@
+ {
+ 	public StringSegmentToken Tag;
+ 
++	public StringSegmentToken? Param;
+-	public StringSegmentToken Param;
+ 
++	public StringOpeningTag(StringSegmentToken tag, StringSegmentToken? param = null)
+-	public StringOpeningTag(StringSegmentToken tag, StringSegmentToken param = null)
+ 	{
+ 		Tag = tag;
+ 		Param = param;

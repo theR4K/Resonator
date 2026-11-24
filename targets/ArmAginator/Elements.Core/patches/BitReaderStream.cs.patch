@@ -1,0 +1,17 @@
+--- a/Elements/Core/BitReaderStream.cs
++++ b/Elements/Core/BitReaderStream.cs
+@@ -102,12 +102,12 @@
+ 		throw new Exception("BitReaderStream doesn't support writing");
+ 	}
+ 
++	public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+-	public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+ 	{
+ 		throw new NotSupportedException();
+ 	}
+ 
++	public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+-	public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+ 	{
+ 		throw new NotSupportedException();
+ 	}

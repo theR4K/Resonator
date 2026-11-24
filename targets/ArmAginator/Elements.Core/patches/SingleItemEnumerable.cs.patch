@@ -1,0 +1,48 @@
+--- a/Elements/Core/SingleItemEnumerable.cs
++++ b/Elements/Core/SingleItemEnumerable.cs
+@@ -4,27 +4,21 @@
+ 
+ namespace Elements.Core;
+ 
++public readonly partial struct SingleItemEnumerable<T> /* ArmAgedon seam */(T item) : IEnumerable<T>, IEnumerable
+-public readonly struct SingleItemEnumerable<T>(T item) : IEnumerable<T>, IEnumerable
+ {
++	public partial struct Enumerator : // ArmAgedon seam
++ IEnumerator<T>, IEnumerator, IDisposable
+-	public struct Enumerator : IEnumerator<T>, IEnumerator, IDisposable
+ 	{
++		private T? _item;
+-		private T _item;
+ 
+ 		private bool? _isOnItem;
+ 
+ 		public T Current
+ 		{
++			get { return ReadCurrent(); } // ArmAgedon seam
++	}
+-			get
+-			{
+-				if (_isOnItem != true)
+-				{
+-					return default;
+-				}
+-				return _item;
+-			}
+-		}
+ 
++		object? IEnumerator.Current => Current;
+-		object IEnumerator.Current => Current;
+ 
+ 		public Enumerator(T item)
+ 		{
+@@ -34,8 +28,8 @@
+ 
+ 		public void Dispose()
+ 		{
++			DisposeCurrent(); // ArmAgedon seam
++	}
+-			_item = default;
+-		}
+ 
+ 		public bool MoveNext()
+ 		{

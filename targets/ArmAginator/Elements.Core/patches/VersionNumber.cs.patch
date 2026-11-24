@@ -1,0 +1,22 @@
+--- a/Elements/Core/VersionNumber.cs
++++ b/Elements/Core/VersionNumber.cs
+@@ -106,8 +106,9 @@
+ 		return result;
+ 	}
+ 
++	public static bool TryParse(string? str, out VersionNumber version)
+-	public static bool TryParse(string str, out VersionNumber version)
+ 	{
++		if (CoreContract.MissingText(str, out version)) return false; // ArmAgedon seam
+ 		string[] array = str.Split('.');
+ 		if (array.Length != 4)
+ 		{
+@@ -126,7 +127,7 @@
+ 		return false;
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is VersionNumber other)
+ 		{

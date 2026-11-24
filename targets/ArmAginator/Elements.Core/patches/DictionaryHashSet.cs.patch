@@ -1,0 +1,38 @@
+--- a/Elements/Core/DictionaryHashSet.cs
++++ b/Elements/Core/DictionaryHashSet.cs
+@@ -4,6 +4,7 @@
+ namespace Elements.Core;
+ 
+ public class DictionaryHashSet<K, T> : IEnumerable<KeyValuePair<K, HashSet<T>>>, IEnumerable
++where K : notnull
+ {
+ 	private Dictionary<K, HashSet<T>> dictionary = new Dictionary<K, HashSet<T>>();
+ 
+@@ -48,7 +49,7 @@
+ 	{
+ 		foreach (KeyValuePair<K, HashSet<T>> item in dictionary)
+ 		{
++			HashSet<T>? hashSet = item.Value;
+-			HashSet<T> hashSet = item.Value;
+ 			Pool.Return(ref hashSet);
+ 		}
+ 		dictionary.Clear();
+@@ -59,15 +60,15 @@
+ 		return dictionary.ContainsKey(key);
+ 	}
+ 
++	public HashSet<T>? TryGetSet(K key)
+-	public HashSet<T> TryGetSet(K key)
+ 	{
+ 		dictionary.TryGetValue(key, out var value);
+ 		return value;
+ 	}
+ 
++	private void CheckRemoveSet(K key, HashSet<T>? set)
+-	private void CheckRemoveSet(K key, HashSet<T> set)
+ 	{
++		if (CoreContract.Required(set).Count <= 0) // ArmAgedon seam
+-		if (set.Count <= 0)
+ 		{
+ 			dictionary.Remove(key);
+ 			Pool.Return(ref set);

@@ -1,0 +1,47 @@
+--- a/Elements/Core/color32.cs
++++ b/Elements/Core/color32.cs
+@@ -164,7 +164,7 @@
+ 		return this == other;
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is color32)
+ 		{
+@@ -346,7 +346,7 @@
+ 		return $"[{r}, {g}, {b}, {a}]";
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return $"[{r.ToString(provider)}, {g.ToString(provider)}, {b.ToString(provider)}, {a.ToString(provider)}]";
+ 	}
+@@ -378,7 +378,7 @@
+ 
+ 	public static color32 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (array == null)
+ 		{
+ 			throw new ArgumentException("Could not extract elements");
+@@ -386,14 +386,14 @@
+ 		return new color32(byte.Parse(array[0], style, provider), byte.Parse(array[1], style, provider), byte.Parse(array[2], style, provider), byte.Parse(array[3], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out color32 val)
+-	public static bool TryParse(string s, out color32 val)
+ 	{
+ 		return TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out val);
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles style, IFormatProvider provider, out color32 val)
+-	public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out color32 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (array == null)
+ 		{
+ 			val = default;

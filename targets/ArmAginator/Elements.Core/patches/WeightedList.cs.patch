@@ -1,0 +1,31 @@
+--- a/Elements/Core/WeightedList.cs
++++ b/Elements/Core/WeightedList.cs
+@@ -7,9 +7,9 @@
+ 
+ public class WeightedList<T> : IEnumerable<T>, IEnumerable
+ {
++	private readonly struct WeightedItem(T? item, float cumulativeWeight) : IComparable<WeightedItem>
+-	private readonly struct WeightedItem(T item, float cumulativeWeight) : IComparable<WeightedItem>
+ 	{
++		public readonly T? item = item;
+-		public readonly T item = item;
+ 
+ 		public readonly float cumulativeWeight = cumulativeWeight;
+ 
+@@ -47,14 +47,14 @@
+ 		{
+ 			throw new ArgumentOutOfRangeException("position", position, $"TotalWeight: {TotalWeight}");
+ 		}
++		return CoreContract.Stored<T>(_tree.WeakSuccessor(new WeightedItem(default, position)).item); // ArmAgedon seam
+-		return _tree.WeakSuccessor(new WeightedItem(default, position)).item;
+ 	}
+ 
+ 	public IEnumerator<T> GetEnumerator()
+ 	{
+ 		foreach (WeightedItem item in _tree)
+ 		{
++			yield return CoreContract.Stored<T>(item.item); // ArmAgedon seam
+-			yield return item.item;
+ 		}
+ 	}
+ 

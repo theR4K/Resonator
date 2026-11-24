@@ -1,0 +1,240 @@
+--- a/Elements/Core/Pool.cs
++++ b/Elements/Core/Pool.cs
+@@ -42,7 +42,7 @@
+ 		_statsLock = new object();
+ 		_defaultStringEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false);
+ 		_binaryWriterConstructor = ConstructBinaryWriter;
++		Task.Run((Func<Task>)PoolTrimWorker);
+-		Task.Run((Func<Task?>)PoolTrimWorker);
+ 	}
+ 
+ 	private static async Task PoolTrimWorker()
+@@ -82,7 +82,7 @@
+ 		}
+ 	}
+ 
++	public static void BorrowIfNull<T>([System.Diagnostics.CodeAnalysis.NotNull] ref List<T>? list)
+-	public static void BorrowIfNull<T>(ref List<T> list)
+ 	{
+ 		if (list == null)
+ 		{
+@@ -106,6 +106,7 @@
+ 	}
+ 
+ 	public static Dictionary<TKey, TValue> BorrowDictionary<TKey, TValue>()
++	where TKey : notnull
+ 	{
+ 		return Pool<Dictionary<TKey, TValue>>.Borrow();
+ 	}
+@@ -131,11 +132,13 @@
+ 	}
+ 
+ 	public static KeyCounter<T> BorrowKeyCounter<T>()
++	where T : notnull
+ 	{
+ 		return Pool<KeyCounter<T>>.Borrow();
+ 	}
+ 
+ 	public static DictionaryList<TKey, TValue> BorrowDictionaryList<TKey, TValue>()
++	where TKey : notnull
+ 	{
+ 		return Pool<DictionaryList<TKey, TValue>>.Borrow();
+ 	}
+@@ -183,120 +186,140 @@
+ 		return Pool<DataSegmentChain>.Borrow();
+ 	}
+ 
++	public static void Return<T>(ref List<T>? list)
+-	public static void Return<T>(ref List<T> list)
+ 	{
++		CoreContract.Required(list); // ArmAgedon seam
+ 		list.Clear();
+ 		Pool<List<T>>.ReturnCleaned(ref list);
+ 	}
+ 
+ 	public static void ReturnUnsafe<T>(List<T> list)
+ 	{
++		List<T>? list2 = list;
+-		List<T> list2 = list;
+ 		Return(ref list2);
+ 	}
+ 
++	public static void Return<T>(ref RawList<T>? list)
+-	public static void Return<T>(ref RawList<T> list)
+ 	{
++		CoreContract.Required(list); // ArmAgedon seam
+ 		list.Clear();
+ 		Pool<RawList<T>>.ReturnCleaned(ref list);
+ 	}
+ 
++	public static void Return<T>(ref RawValueList<T>? list) where T : struct
+-	public static void Return<T>(ref RawValueList<T> list) where T : struct
+ 	{
++		CoreContract.Required(list); // ArmAgedon seam
+ 		list.Clear();
+ 		Pool<RawValueList<T>>.ReturnCleaned(ref list);
+ 	}
+ 
++	public static void Return<TKey, TValue>(ref Dictionary<TKey, TValue>? dictionary)
++	where TKey : notnull
+-	public static void Return<TKey, TValue>(ref Dictionary<TKey, TValue> dictionary)
+ 	{
++		CoreContract.Required(dictionary); // ArmAgedon seam
+ 		dictionary.Clear();
+ 		Pool<Dictionary<TKey, TValue>>.ReturnCleaned(ref dictionary);
+ 	}
+ 
++	public static void Return<TKey, TValue>(ref DictionaryList<TKey, TValue>? dictionary)
++	where TKey : notnull
+-	public static void Return<TKey, TValue>(ref DictionaryList<TKey, TValue> dictionary)
+ 	{
++		CoreContract.Required(dictionary); // ArmAgedon seam
+ 		dictionary.Clear();
+ 		Pool<DictionaryList<TKey, TValue>>.ReturnCleaned(ref dictionary);
+ 	}
+ 
++	public static void Return<T>(ref HashSet<T>? hashSet)
+-	public static void Return<T>(ref HashSet<T> hashSet)
+ 	{
++		CoreContract.Required(hashSet); // ArmAgedon seam
+ 		hashSet.Clear();
+ 		Pool<HashSet<T>>.ReturnCleaned(ref hashSet);
+ 	}
+ 
++	public static void Return<T>(ref Queue<T>? queue)
+-	public static void Return<T>(ref Queue<T> queue)
+ 	{
++		CoreContract.Required(queue); // ArmAgedon seam
+ 		queue.Clear();
+ 		Pool<Queue<T>>.ReturnCleaned(ref queue);
+ 	}
+ 
++	public static void Return(ref BitQueue? bitqueue)
+-	public static void Return(ref BitQueue bitqueue)
+ 	{
++		CoreContract.Required(bitqueue); // ArmAgedon seam
+ 		bitqueue.Clear();
+ 		Pool<BitQueue>.ReturnCleaned(ref bitqueue);
+ 	}
+ 
++	public static void Return(ref StringBuilder? stringBuilder)
+-	public static void Return(ref StringBuilder stringBuilder)
+ 	{
++		CoreContract.Required(stringBuilder); // ArmAgedon seam
+ 		stringBuilder.Clear();
+ 		Pool<StringBuilder>.ReturnCleaned(ref stringBuilder);
+ 	}
+ 
++	public static void Return<T>(ref KeyCounter<T>? counter)
++	where T : notnull
+-	public static void Return<T>(ref KeyCounter<T> counter)
+ 	{
++		CoreContract.Required(counter); // ArmAgedon seam
+ 		counter.Clear();
+ 		Pool<KeyCounter<T>>.ReturnCleaned(ref counter);
+ 	}
+ 
++	public static string ReturnToString(ref StringBuilder? stringBuilder)
+-	public static string ReturnToString(ref StringBuilder stringBuilder)
+ 	{
++		CoreContract.Required(stringBuilder); // ArmAgedon seam
+ 		string result = stringBuilder.ToString();
+ 		Return(ref stringBuilder);
+ 		return result;
+ 	}
+ 
++	public static void Return(ref BinaryReaderX? reader)
+-	public static void Return(ref BinaryReaderX reader)
+ 	{
++		CoreContract.Required(reader); // ArmAgedon seam
++		CoreContract.Required(reader.TargetStream).Flush(); // ArmAgedon seam
+-		reader.TargetStream.Flush();
+ 		reader.TargetStream = null;
+ 		Pool<BinaryReaderX>.ReturnCleaned(ref reader);
+ 	}
+ 
++	public static void Return(ref BinaryWriterX? writer)
+-	public static void Return(ref BinaryWriterX writer)
+ 	{
++		CoreContract.Required(writer); // ArmAgedon seam
++		CoreContract.Required(writer.TargetStream).Flush(); // ArmAgedon seam
+-		writer.TargetStream.Flush();
+ 		writer.TargetStream = null;
+ 		Pool<BinaryWriterX>.ReturnCleaned(ref writer);
+ 	}
+ 
++	public static void Return(ref BitBinaryReaderX? reader)
+-	public static void Return(ref BitBinaryReaderX reader)
+ 	{
++		CoreContract.Required(reader); // ArmAgedon seam
++		CoreContract.Required(reader.TargetStream).Flush(); // ArmAgedon seam
+-		reader.TargetStream.Flush();
+ 		reader.TargetStream = null;
+ 		Pool<BitBinaryReaderX>.ReturnCleaned(ref reader);
+ 	}
+ 
++	public static void Return(ref BitBinaryWriterX? writer)
+-	public static void Return(ref BitBinaryWriterX writer)
+ 	{
++		CoreContract.Required(writer); // ArmAgedon seam
++		CoreContract.Required(writer.TargetStream).Flush(); // ArmAgedon seam
+-		writer.TargetStream.Flush();
+ 		writer.TargetStream = null;
+ 		Pool<BitBinaryWriterX>.ReturnCleaned(ref writer);
+ 	}
+ 
++	public static void Return(ref DataSegmentChain? chain)
+-	public static void Return(ref DataSegmentChain chain)
+ 	{
++		CoreContract.Required(chain); // ArmAgedon seam
+ 		chain.Clear();
+ 		Pool<DataSegmentChain>.ReturnCleaned(ref chain);
+ 	}
+ 
++	public static void Return<T>(ref T? poolable) where T : IPoolable, new()
+-	public static void Return<T>(ref T poolable) where T : IPoolable, new()
+ 	{
++		CoreContract.Required(poolable); // ArmAgedon seam
+ 		poolable.Clean();
+ 		Pool<T>.ReturnCleaned(ref poolable);
+ 	}
+ }
++public static partial class Pool<T> /* ArmAgedon seam */ where T : new()
+-public static class Pool<T> where T : new()
+ {
+ 	private static ConcurrentStack<T> pool;
+ 
+@@ -351,7 +374,7 @@
+ 		pool.Clear();
+ 	}
+ 
++	public static T Borrow(Func<T>? constructor = null)
+-	public static T Borrow(Func<T> constructor = null)
+ 	{
+ 		Interlocked.Increment(ref borrowedCount);
+ 		if (borrowedCount > maxBorrowedCount)
+@@ -392,19 +415,21 @@
+ 		}
+ 	}
+ 
++	public static void Return(ref T? resource)
+-	public static void Return(ref T resource)
+ 	{
++		CoreContract.Required(resource); // ArmAgedon seam
+ 		Clean(resource);
+ 		ReturnCleaned(ref resource);
+ 	}
+ 
+ 	public static void ReturnCleanedUnsafe(T resource)
+ 	{
++		ReturnOwned(resource); // ArmAgedon seam
+-		ReturnCleaned(ref resource);
+ 	}
+ 
++	public static void ReturnCleaned(ref T? resource)
+-	public static void ReturnCleaned(ref T resource)
+ 	{
++		CoreContract.Required(resource); // ArmAgedon seam
+ 		if (resource.GetType() != typeof(T))
+ 		{
+ 			throw new ArgumentException("Returned resource is of type " + resource.GetType()?.ToString() + ", but the pool is for type: " + typeof(T));

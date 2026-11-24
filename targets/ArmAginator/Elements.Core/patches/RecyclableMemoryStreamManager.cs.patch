@@ -1,0 +1,76 @@
+--- a/Elements/Core/RecyclableMemoryStreamManager.cs
++++ b/Elements/Core/RecyclableMemoryStreamManager.cs
+@@ -79,23 +79,23 @@
+ 
+ 	public bool AggressiveBufferReturn { get; set; }
+ 
++	public event EventHandler? BlockCreated;
+-	public event EventHandler BlockCreated;
+ 
++	public event EventHandler? BlockDiscarded;
+-	public event EventHandler BlockDiscarded;
+ 
++	public event EventHandler? LargeBufferCreated;
+-	public event EventHandler LargeBufferCreated;
+ 
++	public event EventHandler? StreamCreated;
+-	public event EventHandler StreamCreated;
+ 
++	public event EventHandler? StreamDisposed;
+-	public event EventHandler StreamDisposed;
+ 
++	public event EventHandler? StreamFinalized;
+-	public event EventHandler StreamFinalized;
+ 
++	public event StreamLengthReportHandler? StreamLength;
+-	public event StreamLengthReportHandler StreamLength;
+ 
++	public event EventHandler? StreamConvertedToArray;
+-	public event EventHandler StreamConvertedToArray;
+ 
++	public event UsageReportEventHandler? UsageReport;
+-	public event UsageReportEventHandler UsageReport;
+ 
+ 	public RecyclableMemoryStreamManager()
+ 		: this(131072, 1048576, 134217728)
+@@ -149,11 +149,11 @@
+ 		return result;
+ 	}
+ 
++	public byte[] GetLargeBuffer(int requiredSize, string? tag)
+-	public byte[] GetLargeBuffer(int requiredSize, string tag)
+ 	{
+ 		requiredSize = RoundToLargeBufferMultiple(requiredSize);
+ 		int num = requiredSize / largeBufferMultiple - 1;
++		byte[]? result;
+-		byte[] result;
+ 		if (num < largePools.Length)
+ 		{
+ 			if (!largePools[num].TryPop(out result))
+@@ -194,7 +194,7 @@
+ 		return false;
+ 	}
+ 
++	public void ReturnLargeBuffer(byte[] buffer, string? tag)
+-	public void ReturnLargeBuffer(byte[] buffer, string tag)
+ 	{
+ 		if (buffer == null)
+ 		{
+@@ -221,7 +221,7 @@
+ 		ReportUsageReport(smallPoolInUseSize, smallPoolFreeSize, LargePoolInUseSize, LargePoolFreeSize);
+ 	}
+ 
++	internal void ReturnBlocks(List<byte[]> blocks, string? tag)
+-	internal void ReturnBlocks(List<byte[]> blocks, string tag)
+ 	{
+ 		if (blocks == null)
+ 		{
+@@ -250,7 +250,7 @@
+ 		ReportUsageReport(smallPoolInUseSize, smallPoolFreeSize, LargePoolInUseSize, LargePoolFreeSize);
+ 	}
+ 
++	internal void ReturnBlock(byte[] block, string? tag)
+-	internal void ReturnBlock(byte[] block, string tag)
+ 	{
+ 		if (block == null || block.Length != BlockSize)
+ 		{

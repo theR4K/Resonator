@@ -1,0 +1,21 @@
+--- a/Elements/Core/NullableFieldProxy.cs
++++ b/Elements/Core/NullableFieldProxy.cs
+@@ -12,15 +12,15 @@
+ 		{
+ 			throw new ArgumentException("Type must be a nullable type!");
+ 		}
++		MemberType = CoreContract.Required(Nullable.GetUnderlyingType(nullableType)); // ArmAgedon seam
+-		MemberType = Nullable.GetUnderlyingType(nullableType);
+ 	}
+ 
++	public object? GetValue(object? current)
+-	public object GetValue(object current)
+ 	{
+ 		return current;
+ 	}
+ 
++	public object? SetValue(object? current, object? value)
+-	public object SetValue(object current, object value)
+ 	{
+ 		return value;
+ 	}

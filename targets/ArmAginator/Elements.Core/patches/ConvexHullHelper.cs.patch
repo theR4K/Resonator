@@ -1,0 +1,54 @@
+--- a/Elements/Core/ConvexHullHelper.cs
++++ b/Elements/Core/ConvexHullHelper.cs
+@@ -11,9 +11,9 @@
+ 
+ 	public static void GetConvexHull(RawList<float3> points, IList<int> newTriangleIndicies, IList<float3> surfacePoints)
+ 	{
++		RawList<int>? list = Pool.BorrowRawList<int>();
+-		RawList<int> list = Pool.BorrowRawList<int>();
+ 		GetConvexHull(points, list);
++		Dictionary<int, int>? dictionary = Pool.BorrowDictionary<int, int>();
+-		Dictionary<int, int> dictionary = Pool.BorrowDictionary<int, int>();
+ 		for (int num = list.Count - 1; num >= 0; num--)
+ 		{
+ 			int num2 = list[num];
+@@ -35,7 +35,7 @@
+ 		{
+ 			return false;
+ 		}
++		RawList<int>? list = Pool.BorrowRawList<int>();
+-		RawList<int> list = Pool.BorrowRawList<int>();
+ 		if (list.Capacity < points.Count - 4)
+ 		{
+ 			list.Capacity = points.Count - 4;
+@@ -46,9 +46,9 @@
+ 			return false;
+ 		}
+ 		RemoveInsidePoints(points, outputTriangleIndices, list);
++		RawList<int>? list2 = Pool.BorrowRawList<int>();
++		RawList<int>? list3 = Pool.BorrowRawList<int>();
++		RawList<int>? list4 = Pool.BorrowRawList<int>();
+-		RawList<int> list2 = Pool.BorrowRawList<int>();
+-		RawList<int> list3 = Pool.BorrowRawList<int>();
+-		RawList<int> list4 = Pool.BorrowRawList<int>();
+ 		while (list.Count > 0)
+ 		{
+ 			for (int i = 0; i < outputTriangleIndices.Count; i += 3)
+@@ -238,7 +238,7 @@
+ 				triangleIndices.Elements[j + 1] = num11;
+ 			}
+ 		}
++		RawList<int>? list = Pool.BorrowRawList<int>();
+-		RawList<int> list = Pool.BorrowRawList<int>();
+ 		list.Add(num5);
+ 		list.Add(num6);
+ 		list.Add(num8);
+@@ -262,7 +262,7 @@
+ 
+ 	private static void RemoveInsidePoints(RawList<float3> points, RawList<int> triangleIndices, RawList<int> outsidePoints)
+ 	{
++		RawList<int>? list = Pool.BorrowRawList<int>();
+-		RawList<int> list = Pool.BorrowRawList<int>();
+ 		list.AddRange(outsidePoints);
+ 		outsidePoints.Clear();
+ 		for (int i = 0; i < triangleIndices.Count; i += 3)

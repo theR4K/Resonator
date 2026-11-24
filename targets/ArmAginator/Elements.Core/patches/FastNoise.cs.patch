@@ -1,0 +1,29 @@
+--- a/FastNoise.cs
++++ b/FastNoise.cs
+@@ -69,7 +69,7 @@
+ 
+ 	private CellularReturnType m_cellularReturnType;
+ 
++	private FastNoise? m_cellularNoiseLookup;
+-	private FastNoise m_cellularNoiseLookup;
+ 
+ 	private float m_gradientPerturbAmp = 2.2222223f;
+ 
+@@ -2304,7 +2304,7 @@
+ 		case CellularReturnType.NoiseLookup:
+ 		{
+ 			int num23 = Hash3D(m_seed, num5, num6, num7) & 0xFF;
++			return Elements.Core.CoreContract.Required(m_cellularNoiseLookup).GetNoise /* ArmAgedon seam */((float)num5 + CELL_3D_X[num23], (float)num6 + CELL_3D_Y[num23], (float)num7 + CELL_3D_Z[num23]);
+-			return m_cellularNoiseLookup.GetNoise((float)num5 + CELL_3D_X[num23], (float)num6 + CELL_3D_Y[num23], (float)num7 + CELL_3D_Z[num23]);
+ 		}
+ 		case CellularReturnType.Distance:
+ 			return num4 - 1f;
+@@ -2483,7 +2483,7 @@
+ 		case CellularReturnType.NoiseLookup:
+ 		{
+ 			int num16 = Hash2D(m_seed, num4, num5) & 0xFF;
++			return Elements.Core.CoreContract.Required(m_cellularNoiseLookup).GetNoise /* ArmAgedon seam */((float)num4 + CELL_2D_X[num16], (float)num5 + CELL_2D_Y[num16]);
+-			return m_cellularNoiseLookup.GetNoise((float)num4 + CELL_2D_X[num16], (float)num5 + CELL_2D_Y[num16]);
+ 		}
+ 		case CellularReturnType.Distance:
+ 			return num3 - 1f;

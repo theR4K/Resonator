@@ -1,6 +1,27 @@
 --- a/Elements/Core/UniLog.cs
 +++ b/Elements/Core/UniLog.cs
-@@ -25,6 +25,11 @@
+@@ -6,15 +6,15 @@
+ {
+ 	public static bool FlushEveryMessage;
+ 
++	public static Func<string>? MessagePrefix;
+-	public static Func<string> MessagePrefix;
+ 
++	public static event Action<string>? OnLog;
+-	public static event Action<string> OnLog;
+ 
++	public static event Action<string>? OnWarning;
+-	public static event Action<string> OnWarning;
+ 
++	public static event Action<string>? OnError;
+-	public static event Action<string> OnError;
+ 
++	public static event Action? OnFlush;
+-	public static event Action OnFlush;
+ 
+ 	public static string GenerateLogName(string versionNumber, string suffix = "")
+ 	{
+@@ -25,10 +25,15 @@
  	{
  		OnFlush?.Invoke();
  	}
@@ -10,9 +31,15 @@
 +	// loads. Only with ARMA_LOG_STACKTRACES=1; exceptions logged with their own stack keep it.
 +	public static readonly bool CaptureStackTraces = Environment.GetEnvironmentVariable("ARMA_LOG_STACKTRACES") == "1";
  
- 	public static void Log(object obj, bool stackTrace = false)
++	public static void Log(object? obj, bool stackTrace = false)
+-	public static void Log(object obj, bool stackTrace = false)
  	{
-@@ -37,7 +42,7 @@
++		Log(CoreContract.LogText(obj), stackTrace) /* ArmAgedon seam */;
+-		Log(obj?.ToString(), stackTrace);
+ 	}
+ 
+ 	public static void Log(string message, bool stackTrace = false)
+@@ -37,11 +42,11 @@
  		{
  			message = MessagePrefix() + message;
  		}
@@ -21,7 +48,12 @@
  		{
  			message = message + "\n\n" + Environment.StackTrace;
  		}
-@@ -60,7 +65,7 @@
++		Action<string>? onLog = OnLog;
+-		Action<string> onLog = OnLog;
+ 		if (onLog == null)
+ 		{
+ 			Console.WriteLine(message);
+@@ -60,11 +65,11 @@
  		{
  			message = MessagePrefix() + message;
  		}
@@ -30,7 +62,12 @@
  		{
  			message = message + "\n\n" + Environment.StackTrace;
  		}
-@@ -83,7 +88,7 @@
++		Action<string>? onWarning = OnWarning;
+-		Action<string> onWarning = OnWarning;
+ 		if (onWarning == null)
+ 		{
+ 			Console.WriteLine(message);
+@@ -83,11 +88,11 @@
  		{
  			message = MessagePrefix() + message;
  		}
@@ -39,3 +76,8 @@
  		{
  			message = message + "\n\n" + Environment.StackTrace;
  		}
++		Action<string>? onError = OnError;
+-		Action<string> onError = OnError;
+ 		if (onError == null)
+ 		{
+ 			Console.WriteLine(message);

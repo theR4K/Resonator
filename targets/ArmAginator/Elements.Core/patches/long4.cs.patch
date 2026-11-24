@@ -1,0 +1,96 @@
+--- a/Elements/Core/long4.cs
++++ b/Elements/Core/long4.cs
+@@ -8727,12 +8727,12 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(provider) + "]";
+ 	}
+ 
++	public string ToStringBase(IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(provider) + separator + " " + y.ToString(provider) + separator + " " + z.ToString(provider) + separator + " " + w.ToString(provider);
+ 	}
+@@ -8747,48 +8747,48 @@
+ 		return x.ToString(elementFormat) + separator + " " + y.ToString(elementFormat) + separator + " " + z.ToString(elementFormat) + separator + " " + w.ToString(elementFormat);
+ 	}
+ 
++	public string ToString(string? elementFormat, IFormatProvider? provider)
+-	public string ToString(string elementFormat, IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(elementFormat, provider) + "]";
+ 	}
+ 
++	public string ToStringBase(string? elementFormat, IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(string elementFormat, IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(elementFormat, provider) + separator + " " + y.ToString(elementFormat, provider) + separator + " " + z.ToString(elementFormat, provider) + separator + " " + w.ToString(elementFormat, provider);
+ 	}
+ 
++	public string ToStringConstructor(string? overrideType = null)
+-	public string ToStringConstructor(string overrideType = null)
+ 	{
+ 		return $"new {overrideType ?? "long4"}({x.ToCodeLiteral() + ", " + y.ToCodeLiteral() + ", " + z.ToCodeLiteral() + ", " + w.ToCodeLiteral()})";
+ 	}
+ 
+ 	public static long4 Parse(string s)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new long4(long.Parse(array[0]), long.Parse(array[1]), long.Parse(array[2]), long.Parse(array[3]));
+ 	}
+ 
+ 	public static long4 Parse(string s, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new long4(long.Parse(array[0], provider), long.Parse(array[1], provider), long.Parse(array[2], provider), long.Parse(array[3], provider));
+ 	}
+ 
+ 	public static long4 Parse(string s, NumberStyles style)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new long4(long.Parse(array[0], style), long.Parse(array[1], style), long.Parse(array[2], style), long.Parse(array[3], style));
+ 	}
+ 
+ 	public static long4 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new long4(long.Parse(array[0], style, provider), long.Parse(array[1], style, provider), long.Parse(array[2], style, provider), long.Parse(array[3], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out long4 val)
+-	public static bool TryParse(string s, out long4 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -8807,9 +8807,9 @@
+ 		return false;
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider formatProvider, out long4 val)
+-	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out long4 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -9596,7 +9596,7 @@
+ 		return new long4(v.x << n, v.y << n, v.z << n, v.w << n);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is long4)
+ 		{

@@ -1,0 +1,41 @@
+--- a/Elements/Core/BitBinaryReaderX.cs
++++ b/Elements/Core/BitBinaryReaderX.cs
+@@ -5,9 +5,9 @@
+ 
+ public class BitBinaryReaderX : BinaryReaderX
+ {
++	private BitReaderStream? bitStream;
+-	private BitReaderStream bitStream;
+ 
++	public override Stream? TargetStream
+-	public override Stream TargetStream
+ 	{
+ 		get
+ 		{
+@@ -15,7 +15,7 @@
+ 		}
+ 		set
+ 		{
++			BitReaderStream? bitReaderStream = value as BitReaderStream;
+-			BitReaderStream bitReaderStream = value as BitReaderStream;
+ 			if (bitReaderStream == null && value != null)
+ 			{
+ 				throw new ArgumentException("Stream must be BitReaderStream");
+@@ -37,7 +37,7 @@
+ 
+ 	public bool ReadBit()
+ 	{
++		return CoreContract.Required(bitStream) /* ArmAgedon seam */.Read(1) != 0;
+-		return bitStream.Read(1) != 0;
+ 	}
+ 
+ 	public ulong ReadBits(int bits)
+@@ -47,7 +47,7 @@
+ 		{
+ 			int num2 = ((bits > 8) ? 8 : bits);
+ 			num <<= num2;
++			num |= CoreContract.Required(bitStream) /* ArmAgedon seam */.Read(num2);
+-			num |= bitStream.Read(num2);
+ 			bits -= num2;
+ 		}
+ 		return num;

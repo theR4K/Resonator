@@ -1,0 +1,71 @@
+--- a/Elements/Core/CollectionsExtensions.cs
++++ b/Elements/Core/CollectionsExtensions.cs
+@@ -66,7 +66,7 @@
+ 		return false;
+ 	}
+ 
++	public static T? GetOrNull<T>(this IReadOnlyList<T> list, int index) where T : class
+-	public static T GetOrNull<T>(this IReadOnlyList<T> list, int index) where T : class
+ 	{
+ 		if (list.Count <= index)
+ 		{
+@@ -75,7 +75,7 @@
+ 		return list[index];
+ 	}
+ 
++	public static T GetRandom<T>(this IReadOnlyList<T> list, RandomXGenerator? randomSource = null)
+-	public static T GetRandom<T>(this IReadOnlyList<T> list, RandomXGenerator randomSource = null)
+ 	{
+ 		int index = randomSource?.Range(0, list.Count) ?? RandomX.Range(0, list.Count);
+ 		return list[index];
+@@ -231,7 +231,7 @@
+ 		return InternalEnsureSize(array, minLength, keepData);
+ 	}
+ 
++	public static T[]? EnsureExactSize<T>(this T[] array, int length, bool keepData = false, bool allowZeroSize = false)
+-	public static T[] EnsureExactSize<T>(this T[] array, int length, bool keepData = false, bool allowZeroSize = false)
+ 	{
+ 		if (length == 0)
+ 		{
+@@ -244,19 +244,19 @@
+ 		return InternalEnsureSize(array, length, keepData, shrinkIfLarge: true);
+ 	}
+ 
++	public static void EnsureExactCount<T>(this List<T?> collection, int count)
+-	public static void EnsureExactCount<T>(this List<T> collection, int count)
+ 	{
+ 		collection.EnsureMinCount(count);
+ 		collection.EnsureMaxCount(count);
+ 	}
+ 
++	public static void EnsureExactCount<T>(this IList<T?> collection, int count)
+-	public static void EnsureExactCount<T>(this IList<T> collection, int count)
+ 	{
+ 		collection.EnsureMinCount(count);
+ 		collection.EnsureMaxCount(count);
+ 	}
+ 
++	public static void EnsureMinCount<T>(this IList<T?> collection, int count)
+-	public static void EnsureMinCount<T>(this IList<T> collection, int count)
+ 	{
+ 		while (collection.Count < count)
+ 		{
+@@ -324,7 +324,7 @@
+ 		StringBuilder stringBuilder = new StringBuilder();
+ 		foreach (T item in list)
+ 		{
++			stringBuilder.AppendLine(CoreContract.LogText(item)); // ArmAgedon seam
+-			stringBuilder.AppendLine(item.ToString());
+ 		}
+ 		return stringBuilder.ToString();
+ 	}
+@@ -353,7 +353,8 @@
+ 	}
+ 
+ 	public static void Replace<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, TValue newValue)
++	where TKey : notnull
++{
+-	{
+ 		dict.Remove(key);
+ 		dict.Add(key, newValue);
+ 	}

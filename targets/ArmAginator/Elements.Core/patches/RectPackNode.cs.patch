@@ -1,0 +1,61 @@
+--- a/Elements/Core/RectPackNode.cs
++++ b/Elements/Core/RectPackNode.cs
+@@ -8,13 +8,14 @@
+ 
+ 	public float Area => Bounds.size.x * Bounds.size.y;
+ 
++	[System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(ChildA), nameof(ChildB))]
+ 	public bool HasContent { get; private set; }
+ 
+ 	public Rect Content { get; private set; }
+ 
++	public RectPackNode? ChildA { get; private set; }
+-	public RectPackNode ChildA { get; private set; }
+ 
++	public RectPackNode? ChildB { get; private set; }
+-	public RectPackNode ChildB { get; private set; }
+ 
+ 	public RectPackNode(Rect bounds)
+ 	{
+@@ -117,7 +118,7 @@
+ 		}
+ 	}
+ 
++	public RectPackNode? GetEmptyNode(in float2 size)
+-	public RectPackNode GetEmptyNode(in float2 size)
+ 	{
+ 		if (!Fits(in size))
+ 		{
+@@ -134,7 +135,7 @@
+ 		return null;
+ 	}
+ 
++	public RectPackNode? GetEmptyNode(float area)
+-	public RectPackNode GetEmptyNode(float area)
+ 	{
+ 		if (!Fits(area))
+ 		{
+@@ -151,7 +152,7 @@
+ 		return null;
+ 	}
+ 
++	public RectPackNode? GetEmptyNode(float minArea, float maxArea)
+-	public RectPackNode GetEmptyNode(float minArea, float maxArea)
+ 	{
+ 		if (!Fits(minArea))
+ 		{
+@@ -159,12 +160,12 @@
+ 		}
+ 		if (HasContent)
+ 		{
++			RectPackNode? emptyNode = ChildA.GetEmptyNode(minArea, maxArea);
+-			RectPackNode emptyNode = ChildA.GetEmptyNode(minArea, maxArea);
+ 			if (emptyNode != null && emptyNode.Bounds.size.x * emptyNode.Bounds.size.y >= maxArea)
+ 			{
+ 				return emptyNode;
+ 			}
++			RectPackNode? emptyNode2 = ChildB.GetEmptyNode(minArea, maxArea);
+-			RectPackNode emptyNode2 = ChildB.GetEmptyNode(minArea, maxArea);
+ 			if (emptyNode != null && emptyNode2 != null)
+ 			{
+ 				if (!(emptyNode.Area > emptyNode2.Area))

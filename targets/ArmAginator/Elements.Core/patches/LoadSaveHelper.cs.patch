@@ -1,0 +1,136 @@
+--- a/Elements/Core/LoadSaveHelper.cs
++++ b/Elements/Core/LoadSaveHelper.cs
+@@ -123,8 +123,8 @@
+ 
+ 	public static decimal LoadDecimal(this DataTreeNode node)
+ 	{
++		DataTreeValue dataTreeValue = CoreContract.Required(node as DataTreeValue); // ArmAgedon seam
++		string? str = "";
+-		DataTreeValue dataTreeValue = node as DataTreeValue;
+-		string str = "";
+ 		if (!dataTreeValue.IsNull)
+ 		{
+ 			str = dataTreeValue.Extract<string>();
+@@ -148,9 +148,9 @@
+ 		return new DataTreeValue(value);
+ 	}
+ 
++	public static string? LoadString(this DataTreeNode node)
+-	public static string LoadString(this DataTreeNode node)
+ 	{
++		DataTreeValue dataTreeValue = CoreContract.Required(node as DataTreeValue); // ArmAgedon seam
+-		DataTreeValue dataTreeValue = node as DataTreeValue;
+ 		if (dataTreeValue.IsNull)
+ 		{
+ 			return null;
+@@ -163,7 +163,7 @@
+ 		return new DataTreeValue(value);
+ 	}
+ 
++	public static Uri? LoadUri(this DataTreeNode node)
+-	public static Uri LoadUri(this DataTreeNode node)
+ 	{
+ 		return ((DataTreeValue)node).Extract<Uri>();
+ 	}
+@@ -713,10 +713,10 @@
+ 
+ 	public static float2x2 LoadFloat2x2(this DataTreeNode node)
+ 	{
++		DataTreeList obj = CoreContract.Required(node as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList = CoreContract.Required(obj[0] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList2 = CoreContract.Required(obj[1] as DataTreeList); // ArmAgedon seam
++		return new float2x2(CoreContract.Required(dataTreeList[0] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList[1] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList2[0] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList2[1] as DataTreeValue).Extract<float>()); // ArmAgedon seam
+-		DataTreeList obj = node as DataTreeList;
+-		DataTreeList dataTreeList = obj[0] as DataTreeList;
+-		DataTreeList dataTreeList2 = obj[1] as DataTreeList;
+-		return new float2x2((dataTreeList[0] as DataTreeValue).Extract<float>(), (dataTreeList[1] as DataTreeValue).Extract<float>(), (dataTreeList2[0] as DataTreeValue).Extract<float>(), (dataTreeList2[1] as DataTreeValue).Extract<float>());
+ 	}
+ 
+ 	public static DataTreeNode Save(this double2x2 value)
+@@ -736,10 +736,10 @@
+ 
+ 	public static double2x2 LoadDouble2x2(this DataTreeNode node)
+ 	{
++		DataTreeList obj = CoreContract.Required(node as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList = CoreContract.Required(obj[0] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList2 = CoreContract.Required(obj[1] as DataTreeList); // ArmAgedon seam
++		return new double2x2(CoreContract.Required(dataTreeList[0] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList[1] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList2[0] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList2[1] as DataTreeValue).Extract<double>()); // ArmAgedon seam
+-		DataTreeList obj = node as DataTreeList;
+-		DataTreeList dataTreeList = obj[0] as DataTreeList;
+-		DataTreeList dataTreeList2 = obj[1] as DataTreeList;
+-		return new double2x2((dataTreeList[0] as DataTreeValue).Extract<double>(), (dataTreeList[1] as DataTreeValue).Extract<double>(), (dataTreeList2[0] as DataTreeValue).Extract<double>(), (dataTreeList2[1] as DataTreeValue).Extract<double>());
+ 	}
+ 
+ 	public static DataTreeNode Save(this float3x3 value)
+@@ -759,11 +759,11 @@
+ 
+ 	public static float3x3 LoadFloat3x3(this DataTreeNode node)
+ 	{
++		DataTreeList obj = CoreContract.Required(node as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList = CoreContract.Required(obj[0] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList2 = CoreContract.Required(obj[1] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList3 = CoreContract.Required(obj[2] as DataTreeList); // ArmAgedon seam
++		return new float3x3(CoreContract.Required(dataTreeList[0] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList[1] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList[2] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList2[0] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList2[1] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList2[2] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList3[0] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList3[1] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList3[2] as DataTreeValue).Extract<float>()); // ArmAgedon seam
+-		DataTreeList obj = node as DataTreeList;
+-		DataTreeList dataTreeList = obj[0] as DataTreeList;
+-		DataTreeList dataTreeList2 = obj[1] as DataTreeList;
+-		DataTreeList dataTreeList3 = obj[2] as DataTreeList;
+-		return new float3x3((dataTreeList[0] as DataTreeValue).Extract<float>(), (dataTreeList[1] as DataTreeValue).Extract<float>(), (dataTreeList[2] as DataTreeValue).Extract<float>(), (dataTreeList2[0] as DataTreeValue).Extract<float>(), (dataTreeList2[1] as DataTreeValue).Extract<float>(), (dataTreeList2[2] as DataTreeValue).Extract<float>(), (dataTreeList3[0] as DataTreeValue).Extract<float>(), (dataTreeList3[1] as DataTreeValue).Extract<float>(), (dataTreeList3[2] as DataTreeValue).Extract<float>());
+ 	}
+ 
+ 	public static DataTreeNode Save(this double3x3 value)
+@@ -783,11 +783,11 @@
+ 
+ 	public static double3x3 LoadDouble3x3(this DataTreeNode node)
+ 	{
++		DataTreeList obj = CoreContract.Required(node as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList = CoreContract.Required(obj[0] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList2 = CoreContract.Required(obj[1] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList3 = CoreContract.Required(obj[2] as DataTreeList); // ArmAgedon seam
++		return new double3x3(CoreContract.Required(dataTreeList[0] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList[1] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList[2] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList2[0] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList2[1] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList2[2] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList3[0] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList3[1] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList3[2] as DataTreeValue).Extract<double>()); // ArmAgedon seam
+-		DataTreeList obj = node as DataTreeList;
+-		DataTreeList dataTreeList = obj[0] as DataTreeList;
+-		DataTreeList dataTreeList2 = obj[1] as DataTreeList;
+-		DataTreeList dataTreeList3 = obj[2] as DataTreeList;
+-		return new double3x3((dataTreeList[0] as DataTreeValue).Extract<double>(), (dataTreeList[1] as DataTreeValue).Extract<double>(), (dataTreeList[2] as DataTreeValue).Extract<double>(), (dataTreeList2[0] as DataTreeValue).Extract<double>(), (dataTreeList2[1] as DataTreeValue).Extract<double>(), (dataTreeList2[2] as DataTreeValue).Extract<double>(), (dataTreeList3[0] as DataTreeValue).Extract<double>(), (dataTreeList3[1] as DataTreeValue).Extract<double>(), (dataTreeList3[2] as DataTreeValue).Extract<double>());
+ 	}
+ 
+ 	public static DataTreeNode Save(this float4x4 value)
+@@ -807,12 +807,12 @@
+ 
+ 	public static float4x4 LoadFloat4x4(this DataTreeNode node)
+ 	{
++		DataTreeList obj = CoreContract.Required(node as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList = CoreContract.Required(obj[0] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList2 = CoreContract.Required(obj[1] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList3 = CoreContract.Required(obj[2] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList4 = CoreContract.Required(obj[3] as DataTreeList); // ArmAgedon seam
++		return new float4x4(CoreContract.Required(dataTreeList[0] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList[1] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList[2] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList[3] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList2[0] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList2[1] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList2[2] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList2[3] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList3[0] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList3[1] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList3[2] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList3[3] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList4[0] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList4[1] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList4[2] as DataTreeValue).Extract<float>(), CoreContract.Required(dataTreeList4[3] as DataTreeValue).Extract<float>()); // ArmAgedon seam
+-		DataTreeList obj = node as DataTreeList;
+-		DataTreeList dataTreeList = obj[0] as DataTreeList;
+-		DataTreeList dataTreeList2 = obj[1] as DataTreeList;
+-		DataTreeList dataTreeList3 = obj[2] as DataTreeList;
+-		DataTreeList dataTreeList4 = obj[3] as DataTreeList;
+-		return new float4x4((dataTreeList[0] as DataTreeValue).Extract<float>(), (dataTreeList[1] as DataTreeValue).Extract<float>(), (dataTreeList[2] as DataTreeValue).Extract<float>(), (dataTreeList[3] as DataTreeValue).Extract<float>(), (dataTreeList2[0] as DataTreeValue).Extract<float>(), (dataTreeList2[1] as DataTreeValue).Extract<float>(), (dataTreeList2[2] as DataTreeValue).Extract<float>(), (dataTreeList2[3] as DataTreeValue).Extract<float>(), (dataTreeList3[0] as DataTreeValue).Extract<float>(), (dataTreeList3[1] as DataTreeValue).Extract<float>(), (dataTreeList3[2] as DataTreeValue).Extract<float>(), (dataTreeList3[3] as DataTreeValue).Extract<float>(), (dataTreeList4[0] as DataTreeValue).Extract<float>(), (dataTreeList4[1] as DataTreeValue).Extract<float>(), (dataTreeList4[2] as DataTreeValue).Extract<float>(), (dataTreeList4[3] as DataTreeValue).Extract<float>());
+ 	}
+ 
+ 	public static DataTreeNode Save(this double4x4 value)
+@@ -832,12 +832,12 @@
+ 
+ 	public static double4x4 LoadDouble4x4(this DataTreeNode node)
+ 	{
++		DataTreeList obj = CoreContract.Required(node as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList = CoreContract.Required(obj[0] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList2 = CoreContract.Required(obj[1] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList3 = CoreContract.Required(obj[2] as DataTreeList); // ArmAgedon seam
++		DataTreeList dataTreeList4 = CoreContract.Required(obj[3] as DataTreeList); // ArmAgedon seam
++		return new double4x4(CoreContract.Required(dataTreeList[0] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList[1] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList[2] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList[3] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList2[0] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList2[1] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList2[2] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList2[3] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList3[0] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList3[1] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList3[2] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList3[3] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList4[0] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList4[1] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList4[2] as DataTreeValue).Extract<double>(), CoreContract.Required(dataTreeList4[3] as DataTreeValue).Extract<double>()); // ArmAgedon seam
+-		DataTreeList obj = node as DataTreeList;
+-		DataTreeList dataTreeList = obj[0] as DataTreeList;
+-		DataTreeList dataTreeList2 = obj[1] as DataTreeList;
+-		DataTreeList dataTreeList3 = obj[2] as DataTreeList;
+-		DataTreeList dataTreeList4 = obj[3] as DataTreeList;
+-		return new double4x4((dataTreeList[0] as DataTreeValue).Extract<double>(), (dataTreeList[1] as DataTreeValue).Extract<double>(), (dataTreeList[2] as DataTreeValue).Extract<double>(), (dataTreeList[3] as DataTreeValue).Extract<double>(), (dataTreeList2[0] as DataTreeValue).Extract<double>(), (dataTreeList2[1] as DataTreeValue).Extract<double>(), (dataTreeList2[2] as DataTreeValue).Extract<double>(), (dataTreeList2[3] as DataTreeValue).Extract<double>(), (dataTreeList3[0] as DataTreeValue).Extract<double>(), (dataTreeList3[1] as DataTreeValue).Extract<double>(), (dataTreeList3[2] as DataTreeValue).Extract<double>(), (dataTreeList3[3] as DataTreeValue).Extract<double>(), (dataTreeList4[0] as DataTreeValue).Extract<double>(), (dataTreeList4[1] as DataTreeValue).Extract<double>(), (dataTreeList4[2] as DataTreeValue).Extract<double>(), (dataTreeList4[3] as DataTreeValue).Extract<double>());
+ 	}
+ 
+ 	public static DataTreeNode Save(this floatQ value)

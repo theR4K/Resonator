@@ -1,0 +1,1271 @@
+--- a/Elements/Core/Coder.cs
++++ b/Elements/Core/Coder.cs
+@@ -10,7 +10,7 @@
+ 
+ namespace Elements.Core;
+ 
++public static partial class Coder /* ArmAgedon seam */
+-public static class Coder
+ {
+ 	private static HashSet<Type> _baseEnginePrimitives = new HashSet<Type>
+ 	{
+@@ -94,135 +94,127 @@
+ 
+ 	public static bool IsEnginePrimitive(this Type type)
+ 	{
++		return IsPrimitiveType(type); // ArmAgedon seam
+-		if (type.IsBaseEnginePrimitive())
+-		{
+-			return true;
+-		}
+-		if (type.ContainsGenericParameters)
+-		{
+-			return false;
+-		}
+-		return (bool)typeof(Coder<>).MakeGenericType(type).GetProperty("IsEnginePrimitive").GetValue(null);
+ 	}
+ 
+ 	public static bool SupportsScale(this Type type)
+ 	{
++		return CoderFlag(type, "SupportsScale"); // ArmAgedon seam
+-		return (bool)typeof(Coder<>).MakeGenericType(type).GetProperty("SupportsScale").GetValue(null);
+ 	}
+ 
+ 	public static bool SupportsConstantLerp(this Type type)
+ 	{
++		return CoderFlag(type, "SupportsConstantLerp"); // ArmAgedon seam
+-		return (bool)typeof(Coder<>).MakeGenericType(type).GetProperty("SupportsConstantLerp").GetValue(null);
+ 	}
+ 
+ 	public static bool SupportsSmoothLerp(this Type type)
+ 	{
++		return CoderFlag(type, "SupportsSmoothLerp"); // ArmAgedon seam
+-		return (bool)typeof(Coder<>).MakeGenericType(type).GetProperty("SupportsSmoothLerp").GetValue(null);
+ 	}
+ 
++	public static object? GetIdentity(this Type type)
+-	public static object GetIdentity(this Type type)
+ 	{
++		return CoderProperty(type, "Identity"); // ArmAgedon seam
+-		return typeof(Coder<>).MakeGenericType(type).GetProperty("Identity").GetValue(null);
+ 	}
+ 
++	public static object? GetDefault(this Type type)
+-	public static object GetDefault(this Type type)
+ 	{
++		return CoderProperty(type, "Default"); // ArmAgedon seam
+-		return typeof(Coder<>).MakeGenericType(type).GetProperty("Default").GetValue(null);
+ 	}
+ }
++public static partial class Coder /* ArmAgedon seam */<T>
+-public static class Coder<T>
+ {
++	private static readonly Equaler<T>? _equaler;
+-	private static readonly Equaler<T> _equaler;
+ 
++	private static readonly Equaler<T>? _approximately;
+-	private static readonly Equaler<T> _approximately;
+ 
++	private static readonly Comparer<T>? _comparer;
+-	private static readonly Comparer<T> _comparer;
+ 
++	private static readonly BiBoolOperator<T>? _lessThan;
+-	private static readonly BiBoolOperator<T> _lessThan;
+ 
++	private static readonly BiBoolOperator<T>? _lessThanOrEqual;
+-	private static readonly BiBoolOperator<T> _lessThanOrEqual;
+ 
++	private static readonly BiBoolOperator<T>? _greaterThan;
+-	private static readonly BiBoolOperator<T> _greaterThan;
+ 
++	private static readonly BiBoolOperator<T>? _greaterThanOrEqual;
+-	private static readonly BiBoolOperator<T> _greaterThanOrEqual;
+ 
++	private static readonly Measurer<T>? _distance;
+-	private static readonly Measurer<T> _distance;
+ 
++	private static readonly UniOperator<T>? _neg;
+-	private static readonly UniOperator<T> _neg;
+ 
++	private static readonly UniOperator<T>? _abs;
+-	private static readonly UniOperator<T> _abs;
+ 
++	private static readonly UniOperator<T>? _round;
+-	private static readonly UniOperator<T> _round;
+ 
++	private static readonly BoolOperator<T>? _validCheck;
+-	private static readonly BoolOperator<T> _validCheck;
+ 
++	private static readonly BiOperator<T>? _invalidFilter;
+-	private static readonly BiOperator<T> _invalidFilter;
+ 
++	private static readonly BiOperator<T>? _add;
+-	private static readonly BiOperator<T> _add;
+ 
++	private static readonly BiOperator<T>? _sub;
+-	private static readonly BiOperator<T> _sub;
+ 
++	private static readonly BiOperator<T>? _mul;
+-	private static readonly BiOperator<T> _mul;
+ 
++	private static readonly BiOperator<T>? _div;
+-	private static readonly BiOperator<T> _div;
+ 
++	private static readonly BiOperator<T>? _mod;
+-	private static readonly BiOperator<T> _mod;
+ 
++	private static readonly BiBoolOperator<T>? _canDivide;
+-	private static readonly BiBoolOperator<T> _canDivide;
+ 
++	private static readonly BoolOperator<T>? _canDivideBy;
+-	private static readonly BoolOperator<T> _canDivideBy;
+ 
++	private static readonly BiOperator<T>? _min;
+-	private static readonly BiOperator<T> _min;
+ 
++	private static readonly BiOperator<T>? _max;
+-	private static readonly BiOperator<T> _max;
+ 
++	private static readonly BiOperator<T>? _repeat;
+-	private static readonly BiOperator<T> _repeat;
+ 
++	private static readonly TriOperator<T>? _clamp;
+-	private static readonly TriOperator<T> _clamp;
+ 
++	private static readonly FloatOperator<T>? _shift;
+-	private static readonly FloatOperator<T> _shift;
+ 
++	private static readonly FloatOperator<T>? _scale;
+-	private static readonly FloatOperator<T> _scale;
+ 
++	private static readonly FloatOperator<T>? _power;
+-	private static readonly FloatOperator<T> _power;
+ 
++	private static readonly FloatOperator<T>? _powerMagnitude;
+-	private static readonly FloatOperator<T> _powerMagnitude;
+ 
++	private static readonly Lerper<T>? _lerper;
+-	private static readonly Lerper<T> _lerper;
+ 
++	private static readonly Lerper<T>? _lerperUnclamped;
+-	private static readonly Lerper<T> _lerperUnclamped;
+ 
++	private static readonly InverseLerper<T>? _inverseLerper;
+-	private static readonly InverseLerper<T> _inverseLerper;
+ 
++	private static readonly ConstantLerper<T>? _constantLerper;
+-	private static readonly ConstantLerper<T> _constantLerper;
+ 
++	private static readonly SmoothLerper<T>? _smoothLerper;
+-	private static readonly SmoothLerper<T> _smoothLerper;
+ 
++	private static readonly Encoder<T>? _encoder;
+-	private static readonly Encoder<T> _encoder;
+ 
++	private static readonly Decoder<T>? _decoder;
+-	private static readonly Decoder<T> _decoder;
+ 
++	private static readonly QuantizedEncoder<T>? _qEncoder;
+-	private static readonly QuantizedEncoder<T> _qEncoder;
+ 
++	private static readonly QuantizedDecoder<T>? _qDecoder;
+-	private static readonly QuantizedDecoder<T> _qDecoder;
+ 
++	private static readonly Saver<T>? _saver;
+-	private static readonly Saver<T> _saver;
+ 
++	private static readonly Loader<T>? _loader;
+-	private static readonly Loader<T> _loader;
+ 
++	private static readonly StringEncoder<T>? _strEncoder;
+-	private static readonly StringEncoder<T> _strEncoder;
+ 
++	private static readonly StringDecoder<T>? _strDecoder;
+-	private static readonly StringDecoder<T> _strDecoder;
+ 
++	private static readonly TryParser<T>? _tryParser;
+-	private static readonly TryParser<T> _tryParser;
+ 
++	public static T? Identity { get; private set; }
+-	public static T Identity { get; private set; }
+ 
++	public static T? Default { get; private set; }
+-	public static T Default { get; private set; }
+ 
++	public static T? MinValue { get; private set; }
+-	public static T MinValue { get; private set; }
+ 
++	public static T? MaxValue { get; private set; }
+-	public static T MaxValue { get; private set; }
+ 
+ 	public static bool IsSupported { get; private set; }
+ 
+@@ -313,253 +305,253 @@
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static bool Equals(T a, T b)
+ 	{
++		return Operation(_equaler)(a, b); // ArmAgedon seam
+-		return _equaler(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static bool Approximately(T a, T b)
+ 	{
++		return Operation(_approximately)(a, b); // ArmAgedon seam
+-		return _approximately(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static int Compare(T a, T b)
+ 	{
++		return Operation(_comparer)(a, b); // ArmAgedon seam
+-		return _comparer(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static bool LessThan(T a, T b)
+ 	{
++		return Operation(_lessThan)(a, b); // ArmAgedon seam
+-		return _lessThan(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static bool LessOrEqual(T a, T b)
+ 	{
++		return Operation(_lessThanOrEqual)(a, b); // ArmAgedon seam
+-		return _lessThanOrEqual(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static bool GreaterThan(T a, T b)
+ 	{
++		return Operation(_greaterThan)(a, b); // ArmAgedon seam
+-		return _greaterThan(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static bool GreaterOrEqual(T a, T b)
+ 	{
++		return Operation(_greaterThanOrEqual)(a, b); // ArmAgedon seam
+-		return _greaterThanOrEqual(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static float Distance(T a, T b)
+ 	{
++		return Operation(_distance)(a, b); // ArmAgedon seam
+-		return _distance(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Negate(T a)
+ 	{
++		return Operation(_neg)(a); // ArmAgedon seam
+-		return _neg(a);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Abs(T a)
+ 	{
++		return Operation(_abs)(a); // ArmAgedon seam
+-		return _abs(a);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Round(T a)
+ 	{
++		return Operation(_round)(a); // ArmAgedon seam
+-		return _round(a);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static bool IsValid(T a)
+ 	{
++		return Operation(_validCheck)(a); // ArmAgedon seam
+-		return _validCheck(a);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
++	public static T? FilterInvalid(T a, T? fallback = default(T))
+-	public static T FilterInvalid(T a, T fallback = default(T))
+ 	{
++		return FilterWithDefault(a, fallback); // ArmAgedon seam
+-		return _invalidFilter(a, fallback);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Add(T a, T b)
+ 	{
++		return Operation(_add)(a, b); // ArmAgedon seam
+-		return _add(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Sub(T a, T b)
+ 	{
++		return Operation(_sub)(a, b); // ArmAgedon seam
+-		return _sub(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Mul(T a, T b)
+ 	{
++		return Operation(_mul)(a, b); // ArmAgedon seam
+-		return _mul(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Div(T a, T b)
+ 	{
++		return Operation(_div)(a, b); // ArmAgedon seam
+-		return _div(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Mod(T a, T b)
+ 	{
++		return Operation(_mod)(a, b); // ArmAgedon seam
+-		return _mod(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static bool CanDivide(T dividend, T divisor)
+ 	{
++		return Operation(_canDivide)(dividend, divisor); // ArmAgedon seam
+-		return _canDivide(dividend, divisor);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static bool CanDivideBy(T divisor)
+ 	{
++		return Operation(_canDivideBy)(divisor); // ArmAgedon seam
+-		return _canDivideBy(divisor);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Min(T a, T b)
+ 	{
++		return Operation(_min)(a, b); // ArmAgedon seam
+-		return _min(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Max(T a, T b)
+ 	{
++		return Operation(_max)(a, b); // ArmAgedon seam
+-		return _max(a, b);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Repeat(T value, T max)
+ 	{
++		return Operation(_repeat)(value, max); // ArmAgedon seam
+-		return _repeat(value, max);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Clamp(T n, T min, T max)
+ 	{
++		return Operation(_clamp)(n, min, max); // ArmAgedon seam
+-		return _clamp(n, min, max);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Scale(T t, float s)
+ 	{
++		return Operation(_scale)(t, s); // ArmAgedon seam
+-		return _scale(t, s);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Pow(T t, float s)
+ 	{
++		return Operation(_power)(t, s); // ArmAgedon seam
+-		return _power(t, s);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T PowMagnitude(T t, float s)
+ 	{
++		return Operation(_powerMagnitude)(t, s); // ArmAgedon seam
+-		return _powerMagnitude(t, s);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Shift(T t, float s)
+ 	{
++		return Operation(_shift)(t, s); // ArmAgedon seam
+-		return _shift(t, s);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T Lerp(T a, T b, float ratio)
+ 	{
++		return Operation(_lerper)(a, b, ratio); // ArmAgedon seam
+-		return _lerper(a, b, ratio);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T LerpUnclamped(T a, T b, float ratio)
+ 	{
++		return Operation(_lerperUnclamped)(a, b, ratio); // ArmAgedon seam
+-		return _lerperUnclamped(a, b, ratio);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static float InverseLerp(T a, T b, T value)
+ 	{
++		return Operation(_inverseLerper)(a, b, value); // ArmAgedon seam
+-		return _inverseLerper(a, b, value);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T ConstantLerp(T current, T target, float delta)
+ 	{
++		return Operation(_constantLerper)(current, target, delta); // ArmAgedon seam
+-		return _constantLerper(current, target, delta);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T SmoothLerp(T current, T target, ref T intermediate, float delta)
+ 	{
++		return Operation(_smoothLerper)(current, target, ref intermediate, delta); // ArmAgedon seam
+-		return _smoothLerper(current, target, ref intermediate, delta);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static void Encode(T value, BinaryWriter bw)
+ 	{
++		Operation(_encoder)(value, bw); // ArmAgedon seam
+-		_encoder(value, bw);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
++	public static T? Decode(BinaryReader br)
+-	public static T Decode(BinaryReader br)
+ 	{
++		return Operation(_decoder)(br); // ArmAgedon seam
+-		return _decoder(br);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T EncodeQuantized(T value, T min, T max, int bits, BitBinaryWriterX bw)
+ 	{
++		return Operation(_qEncoder)(value, min, max, bits, bw); // ArmAgedon seam
+-		return _qEncoder(value, min, max, bits, bw);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static T DecodeQuantized(T min, T max, int bits, BitBinaryReaderX br)
+ 	{
++		return Operation(_qDecoder)(min, max, bits, br); // ArmAgedon seam
+-		return _qDecoder(min, max, bits, br);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	public static DataTreeNode Save(T value)
+ 	{
++		return Operation(_saver)(value); // ArmAgedon seam
+-		return _saver(value);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
++	public static T? Load(DataTreeNode node)
+-	public static T Load(DataTreeNode node)
+ 	{
++		return Operation(_loader)(node); // ArmAgedon seam
+-		return _loader(node);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
++	public static string? EncodeToString(T value)
+-	public static string EncodeToString(T value)
+ 	{
++		return Operation(_strEncoder)(value); // ArmAgedon seam
+-		return _strEncoder(value);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
++	public static T? DecodeFromString(string str)
+-	public static T DecodeFromString(string str)
+ 	{
++		return Operation(_strDecoder)(str); // ArmAgedon seam
+-		return _strDecoder(str);
+ 	}
+ 
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
++	public static bool TryParse(string? str, out T? value)
+-	public static bool TryParse(string str, out T value)
+ 	{
++		return Operation(_tryParser)(str, out value); // ArmAgedon seam
+-		return _tryParser(str, out value);
+ 	}
+ 
+ 	static Coder()
+@@ -1905,7 +1897,7 @@
+ 			_scale = (FloatOperator<T>)(object)(FloatOperator<uint3>)((uint3 t, float n) =>
+ 			{
+ 				return (uint3)ILSpyHelper_AsRefReadOnly(t * n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -1914,7 +1906,7 @@
+ 			_shift = (FloatOperator<T>)(object)(FloatOperator<uint3>)((uint3 t, float n) =>
+ 			{
+ 				return (uint3)ILSpyHelper_AsRefReadOnly(t + n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -1931,7 +1923,7 @@
+ 			_power = (FloatOperator<T>)(object)(FloatOperator<uint3>)((uint3 t, float n) =>
+ 			{
+ 				return (uint3)ILSpyHelper_AsRefReadOnly(MathX.Pow((float3)t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -1940,7 +1932,7 @@
+ 			_powerMagnitude = (FloatOperator<T>)(object)(FloatOperator<uint3>)((uint3 t, float n) =>
+ 			{
+ 				return (uint3)ILSpyHelper_AsRefReadOnly(MathX.PowMagnitude(t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -1951,7 +1943,7 @@
+ 				uint3 value2 = MathX.Quantize(value, (float3)min, (float3)max, bits);
+ 				bw.WriteBits(value2, bits);
+ 				return (uint3)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(in value2, (float3)min, (float3)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -1960,7 +1952,7 @@
+ 			_qDecoder = (QuantizedDecoder<T>)(object)(QuantizedDecoder<uint3>)((uint3 min, uint3 max, int bits, BitBinaryReaderX br) =>
+ 			{
+ 				return (uint3)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(br.ReadBits3D(bits), (float3)min, (float3)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2003,7 +1995,7 @@
+ 			_scale = (FloatOperator<T>)(object)(FloatOperator<ulong3>)((ulong3 t, float n) =>
+ 			{
+ 				return (ulong3)ILSpyHelper_AsRefReadOnly(t * n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2012,7 +2004,7 @@
+ 			_shift = (FloatOperator<T>)(object)(FloatOperator<ulong3>)((ulong3 t, float n) =>
+ 			{
+ 				return (ulong3)ILSpyHelper_AsRefReadOnly(t + n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2029,7 +2021,7 @@
+ 			_power = (FloatOperator<T>)(object)(FloatOperator<ulong3>)((ulong3 t, float n) =>
+ 			{
+ 				return (ulong3)ILSpyHelper_AsRefReadOnly(MathX.Pow((float3)t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2038,7 +2030,7 @@
+ 			_powerMagnitude = (FloatOperator<T>)(object)(FloatOperator<ulong3>)((ulong3 t, float n) =>
+ 			{
+ 				return (ulong3)ILSpyHelper_AsRefReadOnly(MathX.PowMagnitude(t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2049,7 +2041,7 @@
+ 				uint3 value2 = MathX.Quantize(value, (float3)min, (float3)max, bits);
+ 				bw.WriteBits(value2, bits);
+ 				return (ulong3)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(in value2, (float3)min, (float3)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2058,7 +2050,7 @@
+ 			_qDecoder = (QuantizedDecoder<T>)(object)(QuantizedDecoder<ulong3>)((ulong3 min, ulong3 max, int bits, BitBinaryReaderX br) =>
+ 			{
+ 				return (ulong3)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(br.ReadBits3D(bits), (float3)min, (float3)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2157,7 +2149,7 @@
+ 			_scale = (FloatOperator<T>)(object)(FloatOperator<int3>)((int3 t, float n) =>
+ 			{
+ 				return (int3)ILSpyHelper_AsRefReadOnly(t * n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2166,7 +2158,7 @@
+ 			_shift = (FloatOperator<T>)(object)(FloatOperator<int3>)((int3 t, float n) =>
+ 			{
+ 				return (int3)ILSpyHelper_AsRefReadOnly(t + n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2183,7 +2175,7 @@
+ 			_power = (FloatOperator<T>)(object)(FloatOperator<int3>)((int3 t, float n) =>
+ 			{
+ 				return (int3)ILSpyHelper_AsRefReadOnly(MathX.Pow((float3)t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2192,7 +2184,7 @@
+ 			_powerMagnitude = (FloatOperator<T>)(object)(FloatOperator<int3>)((int3 t, float n) =>
+ 			{
+ 				return (int3)ILSpyHelper_AsRefReadOnly(MathX.PowMagnitude(t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2203,7 +2195,7 @@
+ 				uint3 value2 = MathX.Quantize(value, (float3)min, (float3)max, bits);
+ 				bw.WriteBits(value2, bits);
+ 				return (int3)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(in value2, (float3)min, (float3)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2212,7 +2204,7 @@
+ 			_qDecoder = (QuantizedDecoder<T>)(object)(QuantizedDecoder<int3>)((int3 min, int3 max, int bits, BitBinaryReaderX br) =>
+ 			{
+ 				return (int3)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(br.ReadBits3D(bits), (float3)min, (float3)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2257,7 +2249,7 @@
+ 			_scale = (FloatOperator<T>)(object)(FloatOperator<long3>)((long3 t, float n) =>
+ 			{
+ 				return (long3)ILSpyHelper_AsRefReadOnly(t * n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2266,7 +2258,7 @@
+ 			_shift = (FloatOperator<T>)(object)(FloatOperator<long3>)((long3 t, float n) =>
+ 			{
+ 				return (long3)ILSpyHelper_AsRefReadOnly(t + n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2283,7 +2275,7 @@
+ 			_power = (FloatOperator<T>)(object)(FloatOperator<long3>)((long3 t, float n) =>
+ 			{
+ 				return (long3)ILSpyHelper_AsRefReadOnly(MathX.Pow((float3)t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2292,7 +2284,7 @@
+ 			_powerMagnitude = (FloatOperator<T>)(object)(FloatOperator<long3>)((long3 t, float n) =>
+ 			{
+ 				return (long3)ILSpyHelper_AsRefReadOnly(MathX.PowMagnitude(t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2303,7 +2295,7 @@
+ 				uint3 value2 = MathX.Quantize(value, (float3)min, (float3)max, bits);
+ 				bw.WriteBits(value2, bits);
+ 				return (long3)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(in value2, (float3)min, (float3)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2312,7 +2304,7 @@
+ 			_qDecoder = (QuantizedDecoder<T>)(object)(QuantizedDecoder<long3>)((long3 min, long3 max, int bits, BitBinaryReaderX br) =>
+ 			{
+ 				return (long3)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(br.ReadBits3D(bits), (float3)min, (float3)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2556,7 +2548,7 @@
+ 			_scale = (FloatOperator<T>)(object)(FloatOperator<uint4>)((uint4 t, float n) =>
+ 			{
+ 				return (uint4)ILSpyHelper_AsRefReadOnly(t * n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2565,7 +2557,7 @@
+ 			_shift = (FloatOperator<T>)(object)(FloatOperator<uint4>)((uint4 t, float n) =>
+ 			{
+ 				return (uint4)ILSpyHelper_AsRefReadOnly(t + n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2582,7 +2574,7 @@
+ 			_power = (FloatOperator<T>)(object)(FloatOperator<uint4>)((uint4 t, float n) =>
+ 			{
+ 				return (uint4)ILSpyHelper_AsRefReadOnly(MathX.Pow((float4)t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2591,7 +2583,7 @@
+ 			_powerMagnitude = (FloatOperator<T>)(object)(FloatOperator<uint4>)((uint4 t, float n) =>
+ 			{
+ 				return (uint4)ILSpyHelper_AsRefReadOnly(MathX.PowMagnitude(t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2602,7 +2594,7 @@
+ 				uint4 value2 = MathX.Quantize(value, (float4)min, (float4)max, bits);
+ 				bw.WriteBits(value2, bits);
+ 				return (uint4)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(in value2, (float4)min, (float4)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2611,7 +2603,7 @@
+ 			_qDecoder = (QuantizedDecoder<T>)(object)(QuantizedDecoder<uint4>)((uint4 min, uint4 max, int bits, BitBinaryReaderX br) =>
+ 			{
+ 				return (uint4)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(br.ReadBits4D(bits), (float4)min, (float4)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2654,7 +2646,7 @@
+ 			_scale = (FloatOperator<T>)(object)(FloatOperator<ulong4>)((ulong4 t, float n) =>
+ 			{
+ 				return (ulong4)ILSpyHelper_AsRefReadOnly(t * n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2663,7 +2655,7 @@
+ 			_shift = (FloatOperator<T>)(object)(FloatOperator<ulong4>)((ulong4 t, float n) =>
+ 			{
+ 				return (ulong4)ILSpyHelper_AsRefReadOnly(t + n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2680,7 +2672,7 @@
+ 			_power = (FloatOperator<T>)(object)(FloatOperator<ulong4>)((ulong4 t, float n) =>
+ 			{
+ 				return (ulong4)ILSpyHelper_AsRefReadOnly(MathX.Pow((float4)t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2689,7 +2681,7 @@
+ 			_powerMagnitude = (FloatOperator<T>)(object)(FloatOperator<ulong4>)((ulong4 t, float n) =>
+ 			{
+ 				return (ulong4)ILSpyHelper_AsRefReadOnly(MathX.PowMagnitude(t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2700,7 +2692,7 @@
+ 				uint4 value2 = MathX.Quantize(value, (float4)min, (float4)max, bits);
+ 				bw.WriteBits(value2, bits);
+ 				return (ulong4)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(in value2, (float4)min, (float4)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2709,7 +2701,7 @@
+ 			_qDecoder = (QuantizedDecoder<T>)(object)(QuantizedDecoder<ulong4>)((ulong4 min, ulong4 max, int bits, BitBinaryReaderX br) =>
+ 			{
+ 				return (ulong4)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(br.ReadBits4D(bits), (float4)min, (float4)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2808,7 +2800,7 @@
+ 			_scale = (FloatOperator<T>)(object)(FloatOperator<int4>)((int4 t, float n) =>
+ 			{
+ 				return (int4)ILSpyHelper_AsRefReadOnly(t * n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2817,7 +2809,7 @@
+ 			_shift = (FloatOperator<T>)(object)(FloatOperator<int4>)((int4 t, float n) =>
+ 			{
+ 				return (int4)ILSpyHelper_AsRefReadOnly(t + n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2834,7 +2826,7 @@
+ 			_power = (FloatOperator<T>)(object)(FloatOperator<int4>)((int4 t, float n) =>
+ 			{
+ 				return (int4)ILSpyHelper_AsRefReadOnly(MathX.Pow((float4)t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2843,7 +2835,7 @@
+ 			_powerMagnitude = (FloatOperator<T>)(object)(FloatOperator<int4>)((int4 t, float n) =>
+ 			{
+ 				return (int4)ILSpyHelper_AsRefReadOnly(MathX.PowMagnitude(t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2854,7 +2846,7 @@
+ 				uint4 value2 = MathX.Quantize(value, (float4)min, (float4)max, bits);
+ 				bw.WriteBits(value2, bits);
+ 				return (int4)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(in value2, (float4)min, (float4)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2863,7 +2855,7 @@
+ 			_qDecoder = (QuantizedDecoder<T>)(object)(QuantizedDecoder<int4>)((int4 min, int4 max, int bits, BitBinaryReaderX br) =>
+ 			{
+ 				return (int4)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(br.ReadBits4D(bits), (float4)min, (float4)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2908,7 +2900,7 @@
+ 			_scale = (FloatOperator<T>)(object)(FloatOperator<long4>)((long4 t, float n) =>
+ 			{
+ 				return (long4)ILSpyHelper_AsRefReadOnly(t * n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2917,7 +2909,7 @@
+ 			_shift = (FloatOperator<T>)(object)(FloatOperator<long4>)((long4 t, float n) =>
+ 			{
+ 				return (long4)ILSpyHelper_AsRefReadOnly(t + n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2934,7 +2926,7 @@
+ 			_power = (FloatOperator<T>)(object)(FloatOperator<long4>)((long4 t, float n) =>
+ 			{
+ 				return (long4)ILSpyHelper_AsRefReadOnly(MathX.Pow((float4)t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2943,7 +2935,7 @@
+ 			_powerMagnitude = (FloatOperator<T>)(object)(FloatOperator<long4>)((long4 t, float n) =>
+ 			{
+ 				return (long4)ILSpyHelper_AsRefReadOnly(MathX.PowMagnitude(t, n));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2954,7 +2946,7 @@
+ 				uint4 value2 = MathX.Quantize(value, (float4)min, (float4)max, bits);
+ 				bw.WriteBits(value2, bits);
+ 				return (long4)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(in value2, (float4)min, (float4)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -2963,7 +2955,7 @@
+ 			_qDecoder = (QuantizedDecoder<T>)(object)(QuantizedDecoder<long4>)((long4 min, long4 max, int bits, BitBinaryReaderX br) =>
+ 			{
+ 				return (long4)ILSpyHelper_AsRefReadOnly(MathX.Dequantize(br.ReadBits4D(bits), (float4)min, (float4)max, bits));
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -3447,7 +3439,7 @@
+ 			_scale = (FloatOperator<T>)(object)(FloatOperator<doubleQ>)((doubleQ t, float n) =>
+ 			{
+ 				return t * ILSpyHelper_AsRefReadOnly((double)n);
++				static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-				static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 				{
+ 					//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 					return ref temp;
+@@ -3731,7 +3723,7 @@
+ 				{
+ 				};
+ 				_decoder = (BinaryReader br) => default;
++				_saver = (T v) => new DataTreeValue((string?)null);
+-				_saver = (T v) => new DataTreeValue((string)null);
+ 				_loader = (DataTreeNode n) => default;
+ 			}
+ 			else if (typeof(T).IsEnum)
+@@ -3744,7 +3736,7 @@
+ 				_decoder = (BinaryReader br) => br.ReadEnumBinary<T>();
+ 				_saver = (T v) => DataTreeValue.FromEnum(v);
+ 				_loader = (DataTreeNode n) => ((DataTreeValue)n).ExtractEnum<T>();
++				_strEncoder = (T v) => Enums.AsString(typeof(T), CoreContract.Required(v)) /* ArmAgedon seam */;
+-				_strEncoder = (T v) => Enums.AsString(typeof(T), v);
+ 				_strDecoder = (string str) => (T)Enum.Parse(typeof(T), str);
+ 			}
+ 			else if (typeof(T) == typeof(Rect))
+@@ -3761,7 +3753,7 @@
+ 				StringDecoder<Rect> stringDecoder = (string str) =>
+ 				{
+ 					return (Rect)ILSpyHelper_AsRefReadOnly(float4.Parse(str));
++					static ref readonly TValue ILSpyHelper_AsRefReadOnly<TValue>(in TValue temp)
+-					static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 					{
+ 						//ILSpy generated this function to help ensure overload resolution can pick the overload using 'in'
+ 						return ref temp;
+@@ -3826,13 +3818,13 @@
+ 				Saver<Uri> saver4 = (Uri v) => new DataTreeValue(v);
+ 				Loader<Uri> loader4 = (DataTreeNode n) => ((DataTreeValue)n).Extract<Uri>();
+ 				StringEncoder<Uri> stringEncoder3 = (Uri v) => v?.ToString();
++				StringDecoder<Uri>? stringDecoder3 = (string str) =>
+-				StringDecoder<Uri> stringDecoder3 = (string str) =>
+ 				{
+ 					if (string.IsNullOrWhiteSpace(str))
+ 					{
++						return (Uri?)null;
+-						return (Uri)null;
+ 					}
++					if (Uri.TryCreate(str, UriKind.Absolute, out Uri? result))
+-					if (Uri.TryCreate(str, UriKind.Absolute, out Uri result))
+ 					{
+ 						return result;
+ 					}
+@@ -3868,14 +3860,14 @@
+ 			}
+ 			else if (typeof(IQuantity).IsAssignableFrom(typeof(T)) && typeof(T).IsValueType)
+ 			{
++				ConstructorInfo constructor = CoreContract.Required(typeof(T).GetConstructor(new Type[1] { typeof(double) })); // ArmAgedon seam
++				_equaler = (T a, T b) => CoreContract.ValueEquals(a, b) /* ArmAgedon seam */;
+-				ConstructorInfo constructor = typeof(T).GetConstructor(new Type[1] { typeof(double) });
+-				_equaler = (T a, T b) => a.Equals(b);
+ 				_encoder = (T v, BinaryWriter bw) =>
+ 				{
++					bw.Write(CoreContract.Required((IQuantity?)(object?)v) /* ArmAgedon seam */.BaseValue);
+-					bw.Write(((IQuantity)(object)v).BaseValue);
+ 				};
+ 				_decoder = (BinaryReader br) => (T)constructor.Invoke(new object[1] { br.ReadDouble() });
++				_saver = (T v) => CoreContract.Required((IQuantity?)(object?)v) /* ArmAgedon seam */.BaseValue.Save();
+-				_saver = (T v) => ((IQuantity)(object)v).BaseValue.Save();
+ 				_loader = (DataTreeNode n) =>
+ 				{
+ 					double num = n.LoadDouble();
+@@ -3883,31 +3875,31 @@
+ 				};
+ 				BiOperator<IQuantity> __min = (IQuantity a, IQuantity b) => (IQuantity)constructor.Invoke(new object[1] { MathX.Min(a.BaseValue, b.BaseValue) });
+ 				BiOperator<IQuantity> __max = (IQuantity a, IQuantity b) => (IQuantity)constructor.Invoke(new object[1] { MathX.Max(a.BaseValue, b.BaseValue) });
++				_min = (T a, T b) => (T)__min(CoreContract.Required((IQuantity?)(object?)a), /* ArmAgedon seam */ CoreContract.Required((IQuantity?)(object?)b) /* ArmAgedon seam */);
++				_max = (T a, T b) => (T)__max(CoreContract.Required((IQuantity?)(object?)a), /* ArmAgedon seam */ CoreContract.Required((IQuantity?)(object?)b) /* ArmAgedon seam */);
+-				_min = (T a, T b) => (T)__min((IQuantity)(object)a, (IQuantity)(object)b);
+-				_max = (T a, T b) => (T)__max((IQuantity)(object)a, (IQuantity)(object)b);
+ 				Lerper<IQuantity> __lerper = (IQuantity a, IQuantity b, float lerp) => (IQuantity)constructor.Invoke(new object[1] { MathX.Lerp(a.BaseValue, b.BaseValue, lerp) });
+ 				Lerper<IQuantity> __lerperUnclamped = (IQuantity a, IQuantity b, float lerp) => (IQuantity)constructor.Invoke(new object[1] { MathX.LerpUnclamped(a.BaseValue, b.BaseValue, lerp) });
++				_lerper = (T a, T b, float lerp) => (T)__lerper(CoreContract.Required((IQuantity?)(object?)a), /* ArmAgedon seam */ CoreContract.Required((IQuantity?)(object?)b) /* ArmAgedon seam */, lerp);
++				_lerperUnclamped = (T a, T b, float lerp) => (T)__lerperUnclamped(CoreContract.Required((IQuantity?)(object?)a), /* ArmAgedon seam */ CoreContract.Required((IQuantity?)(object?)b) /* ArmAgedon seam */, lerp);
+-				_lerper = (T a, T b, float lerp) => (T)__lerper((IQuantity)(object)a, (IQuantity)(object)b, lerp);
+-				_lerperUnclamped = (T a, T b, float lerp) => (T)__lerperUnclamped((IQuantity)(object)a, (IQuantity)(object)b, lerp);
+ 				BiOperator<IQuantity> __add = (IQuantity a, IQuantity b) => (IQuantity)constructor.Invoke(new object[1] { a.BaseValue + b.BaseValue });
+ 				BiOperator<IQuantity> __sub = (IQuantity a, IQuantity b) => (IQuantity)constructor.Invoke(new object[1] { a.BaseValue - b.BaseValue });
+ 				BiOperator<IQuantity> __mul = (IQuantity a, IQuantity b) => (IQuantity)constructor.Invoke(new object[1] { a.BaseValue * b.BaseValue });
+ 				BiOperator<IQuantity> __div = (IQuantity a, IQuantity b) => (IQuantity)constructor.Invoke(new object[1] { a.BaseValue / b.BaseValue });
++				_add = (T a, T b) => (T)__add(CoreContract.Required((IQuantity?)(object?)a), /* ArmAgedon seam */ CoreContract.Required((IQuantity?)(object?)b) /* ArmAgedon seam */);
++				_sub = (T a, T b) => (T)__sub(CoreContract.Required((IQuantity?)(object?)a), /* ArmAgedon seam */ CoreContract.Required((IQuantity?)(object?)b) /* ArmAgedon seam */);
++				_mul = (T a, T b) => (T)__mul(CoreContract.Required((IQuantity?)(object?)a), /* ArmAgedon seam */ CoreContract.Required((IQuantity?)(object?)b) /* ArmAgedon seam */);
++				_div = (T a, T b) => (T)__div(CoreContract.Required((IQuantity?)(object?)a), /* ArmAgedon seam */ CoreContract.Required((IQuantity?)(object?)b) /* ArmAgedon seam */);
+-				_add = (T a, T b) => (T)__add((IQuantity)(object)a, (IQuantity)(object)b);
+-				_sub = (T a, T b) => (T)__sub((IQuantity)(object)a, (IQuantity)(object)b);
+-				_mul = (T a, T b) => (T)__mul((IQuantity)(object)a, (IQuantity)(object)b);
+-				_div = (T a, T b) => (T)__div((IQuantity)(object)a, (IQuantity)(object)b);
+ 				_canDivide = (T dividend, T divisor) => true;
+ 				_canDivideBy = (T divisor) => true;
+ 				FloatOperator<IQuantity> __scale = (IQuantity a, float scale) => (IQuantity)constructor.Invoke(new object[1] { a.BaseValue * (double)scale });
++				_scale = (T a, float scale) => (T)__scale(CoreContract.Required((IQuantity?)(object?)a), /* ArmAgedon seam */ scale);
+-				_scale = (T a, float scale) => (T)__scale((IQuantity)(object)a, scale);
+ 				UniOperator<IQuantity> __neg = (IQuantity a) => (IQuantity)constructor.Invoke(new object[1] { 0.0 - a.BaseValue });
+ 				UniOperator<IQuantity> __abs = (IQuantity a) => (IQuantity)constructor.Invoke(new object[1] { MathX.Abs(a.BaseValue) });
++				_neg = (T a) => (T)__neg(CoreContract.Required((IQuantity?)(object?)a)); // ArmAgedon seam
++				_abs = (T a) => (T)__abs(CoreContract.Required((IQuantity?)(object?)a)); // ArmAgedon seam
+-				_neg = (T a) => (T)__neg((IQuantity)(object)a);
+-				_abs = (T a) => (T)__abs((IQuantity)(object)a);
+ 				MinValue = (T)constructor.Invoke(new object[1] { double.MinValue });
+ 				MaxValue = (T)constructor.Invoke(new object[1] { double.MaxValue });
++				_strEncoder = (T v) => Coder<double>.EncodeToString(CoreContract.Required((IQuantity?)(object?)v) /* ArmAgedon seam */.BaseValue);
+-				_strEncoder = (T v) => Coder<double>.EncodeToString(((IQuantity)(object)v).BaseValue);
+ 				_strDecoder = (string s) =>
+ 				{
+ 					double num = Coder<double>.DecodeFromString(s);
+@@ -3924,32 +3916,32 @@
+ 					return;
+ 				}
+ 				_equaler = (T a, T b) => EqualityComparer<T>.Default.Equals(a, b);
++				_add = (T a, T b) => CoreContract.Required((IAddable<T>?)(object?)a) /* ArmAgedon seam */.Add(b);
++				_sub = (T a, T b) => CoreContract.Required((ISubtractable<T>?)(object?)a) /* ArmAgedon seam */.Sub(b);
++				_scale = (T a, float n) => CoreContract.Required((IScalable<T>?)(object?)a) /* ArmAgedon seam */.Scale(n);
++				_lerper = (T a, T b, float lerp) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.Lerp(b, lerp);
++				_lerperUnclamped = (T a, T b, float lerp) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.LerpUnclamped(b, lerp);
++				_constantLerper = (T a, T b, float delta) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.ConstantLerp(b, delta);
+-				_add = (T a, T b) => ((IAddable<T>)(object)a).Add(b);
+-				_sub = (T a, T b) => ((ISubtractable<T>)(object)a).Sub(b);
+-				_scale = (T a, float n) => ((IScalable<T>)(object)a).Scale(n);
+-				_lerper = (T a, T b, float lerp) => ((ILerpable<T>)(object)a).Lerp(b, lerp);
+-				_lerperUnclamped = (T a, T b, float lerp) => ((ILerpable<T>)(object)a).LerpUnclamped(b, lerp);
+-				_constantLerper = (T a, T b, float delta) => ((ILerpable<T>)(object)a).ConstantLerp(b, delta);
+ 				_smoothLerper = delegate(T a, T b, ref T i, float delta)
+ 				{
++					return CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.SmoothLerp(b, ref i, delta);
+-					return ((ILerpable<T>)(object)a).SmoothLerp(b, ref i, delta);
+ 				};
++				_validCheck = (T v) => CoreContract.Required((ISphericalHarmonics?)(object?)v) /* ArmAgedon seam */.IsValid;
++				_invalidFilter = (BiOperator<T>)CoreContract.Required(typeof(SphericalHarmonicsHelper).GetMethod("FilterInvalid")).MakeGenericMethod /* ArmAgedon seam */(typeof(T)).CreateDelegate(typeof(BiOperator<T>));
+-				_validCheck = (T v) => ((ISphericalHarmonics)(object)v).IsValid;
+-				_invalidFilter = (BiOperator<T>)typeof(SphericalHarmonicsHelper).GetMethod("FilterInvalid").MakeGenericMethod(typeof(T)).CreateDelegate(typeof(BiOperator<T>));
+ 				_encoder = (T v, BinaryWriter bw) =>
+ 				{
++					CoreContract.Required((IEncodable?)(object?)v) /* ArmAgedon seam */.Encode(bw);
+-					((IEncodable)(object)v).Encode(bw);
+ 				};
+ 				_decoder = (BinaryReader br) =>
+ 				{
++					IEncodable encodable = CreateEncodable(); // ArmAgedon seam
+-					IEncodable encodable = (IEncodable)(object)default(T);
+ 					encodable.Decode(br);
+ 					return (T)encodable;
+ 				};
++				_saver = (T v) => CoreContract.Required((IEncodable?)(object?)v) /* ArmAgedon seam */.Save();
+-				_saver = (T v) => ((IEncodable)(object)v).Save();
+ 				_loader = (DataTreeNode n) =>
+ 				{
++					IEncodable encodable = CreateEncodable(); // ArmAgedon seam
+-					IEncodable encodable = (IEncodable)(object)default(T);
+ 					encodable.Load(n);
+ 					return (T)encodable;
+ 				};
+@@ -3966,32 +3958,32 @@
+ 					return;
+ 				}
+ 				_equaler = (T a, T b) => EqualityComparer<T>.Default.Equals(a, b);
++				_add = (T a, T b) => CoreContract.Required((IAddable<T>?)(object?)a) /* ArmAgedon seam */.Add(b);
++				_sub = (T a, T b) => CoreContract.Required((ISubtractable<T>?)(object?)a) /* ArmAgedon seam */.Sub(b);
++				_scale = (T a, float n) => CoreContract.Required((IScalable<T>?)(object?)a) /* ArmAgedon seam */.Scale(n);
++				_lerper = (T a, T b, float lerp) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.Lerp(b, lerp);
++				_lerperUnclamped = (T a, T b, float lerp) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.LerpUnclamped(b, lerp);
++				_constantLerper = (T a, T b, float delta) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.ConstantLerp(b, delta);
+-				_add = (T a, T b) => ((IAddable<T>)(object)a).Add(b);
+-				_sub = (T a, T b) => ((ISubtractable<T>)(object)a).Sub(b);
+-				_scale = (T a, float n) => ((IScalable<T>)(object)a).Scale(n);
+-				_lerper = (T a, T b, float lerp) => ((ILerpable<T>)(object)a).Lerp(b, lerp);
+-				_lerperUnclamped = (T a, T b, float lerp) => ((ILerpable<T>)(object)a).LerpUnclamped(b, lerp);
+-				_constantLerper = (T a, T b, float delta) => ((ILerpable<T>)(object)a).ConstantLerp(b, delta);
+ 				_smoothLerper = delegate(T a, T b, ref T i, float delta)
+ 				{
++					return CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.SmoothLerp(b, ref i, delta);
+-					return ((ILerpable<T>)(object)a).SmoothLerp(b, ref i, delta);
+ 				};
++				_validCheck = (T v) => CoreContract.Required((ISphericalHarmonics?)(object?)v) /* ArmAgedon seam */.IsValid;
++				_invalidFilter = (BiOperator<T>)CoreContract.Required(typeof(SphericalHarmonicsHelper).GetMethod("FilterInvalid")).MakeGenericMethod /* ArmAgedon seam */(typeof(T)).CreateDelegate(typeof(BiOperator<T>));
+-				_validCheck = (T v) => ((ISphericalHarmonics)(object)v).IsValid;
+-				_invalidFilter = (BiOperator<T>)typeof(SphericalHarmonicsHelper).GetMethod("FilterInvalid").MakeGenericMethod(typeof(T)).CreateDelegate(typeof(BiOperator<T>));
+ 				_encoder = (T v, BinaryWriter bw) =>
+ 				{
++					CoreContract.Required((IEncodable?)(object?)v) /* ArmAgedon seam */.Encode(bw);
+-					((IEncodable)(object)v).Encode(bw);
+ 				};
+ 				_decoder = (BinaryReader br) =>
+ 				{
++					IEncodable encodable = CreateEncodable(); // ArmAgedon seam
+-					IEncodable encodable = (IEncodable)(object)default(T);
+ 					encodable.Decode(br);
+ 					return (T)encodable;
+ 				};
++				_saver = (T v) => CoreContract.Required((IEncodable?)(object?)v) /* ArmAgedon seam */.Save();
+-				_saver = (T v) => ((IEncodable)(object)v).Save();
+ 				_loader = (DataTreeNode n) =>
+ 				{
++					IEncodable encodable = CreateEncodable(); // ArmAgedon seam
+-					IEncodable encodable = (IEncodable)(object)default(T);
+ 					encodable.Load(n);
+ 					return (T)encodable;
+ 				};
+@@ -4008,32 +4000,32 @@
+ 					return;
+ 				}
+ 				_equaler = (T a, T b) => EqualityComparer<T>.Default.Equals(a, b);
++				_add = (T a, T b) => CoreContract.Required((IAddable<T>?)(object?)a) /* ArmAgedon seam */.Add(b);
++				_sub = (T a, T b) => CoreContract.Required((ISubtractable<T>?)(object?)a) /* ArmAgedon seam */.Sub(b);
++				_scale = (T a, float n) => CoreContract.Required((IScalable<T>?)(object?)a) /* ArmAgedon seam */.Scale(n);
++				_lerper = (T a, T b, float lerp) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.Lerp(b, lerp);
++				_lerperUnclamped = (T a, T b, float lerp) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.LerpUnclamped(b, lerp);
++				_constantLerper = (T a, T b, float delta) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.ConstantLerp(b, delta);
+-				_add = (T a, T b) => ((IAddable<T>)(object)a).Add(b);
+-				_sub = (T a, T b) => ((ISubtractable<T>)(object)a).Sub(b);
+-				_scale = (T a, float n) => ((IScalable<T>)(object)a).Scale(n);
+-				_lerper = (T a, T b, float lerp) => ((ILerpable<T>)(object)a).Lerp(b, lerp);
+-				_lerperUnclamped = (T a, T b, float lerp) => ((ILerpable<T>)(object)a).LerpUnclamped(b, lerp);
+-				_constantLerper = (T a, T b, float delta) => ((ILerpable<T>)(object)a).ConstantLerp(b, delta);
+ 				_smoothLerper = delegate(T a, T b, ref T i, float delta)
+ 				{
++					return CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.SmoothLerp(b, ref i, delta);
+-					return ((ILerpable<T>)(object)a).SmoothLerp(b, ref i, delta);
+ 				};
++				_validCheck = (T v) => CoreContract.Required((ISphericalHarmonics?)(object?)v) /* ArmAgedon seam */.IsValid;
++				_invalidFilter = (BiOperator<T>)CoreContract.Required(typeof(SphericalHarmonicsHelper).GetMethod("FilterInvalid")).MakeGenericMethod /* ArmAgedon seam */(typeof(T)).CreateDelegate(typeof(BiOperator<T>));
+-				_validCheck = (T v) => ((ISphericalHarmonics)(object)v).IsValid;
+-				_invalidFilter = (BiOperator<T>)typeof(SphericalHarmonicsHelper).GetMethod("FilterInvalid").MakeGenericMethod(typeof(T)).CreateDelegate(typeof(BiOperator<T>));
+ 				_encoder = (T v, BinaryWriter bw) =>
+ 				{
++					CoreContract.Required((IEncodable?)(object?)v) /* ArmAgedon seam */.Encode(bw);
+-					((IEncodable)(object)v).Encode(bw);
+ 				};
+ 				_decoder = (BinaryReader br) =>
+ 				{
++					IEncodable encodable = CreateEncodable(); // ArmAgedon seam
+-					IEncodable encodable = (IEncodable)(object)default(T);
+ 					encodable.Decode(br);
+ 					return (T)encodable;
+ 				};
++				_saver = (T v) => CoreContract.Required((IEncodable?)(object?)v) /* ArmAgedon seam */.Save();
+-				_saver = (T v) => ((IEncodable)(object)v).Save();
+ 				_loader = (DataTreeNode n) =>
+ 				{
++					IEncodable encodable = CreateEncodable(); // ArmAgedon seam
+-					IEncodable encodable = (IEncodable)(object)default(T);
+ 					encodable.Load(n);
+ 					return (T)encodable;
+ 				};
+@@ -4050,32 +4042,32 @@
+ 					return;
+ 				}
+ 				_equaler = (T a, T b) => EqualityComparer<T>.Default.Equals(a, b);
++				_add = (T a, T b) => CoreContract.Required((IAddable<T>?)(object?)a) /* ArmAgedon seam */.Add(b);
++				_sub = (T a, T b) => CoreContract.Required((ISubtractable<T>?)(object?)a) /* ArmAgedon seam */.Sub(b);
++				_scale = (T a, float n) => CoreContract.Required((IScalable<T>?)(object?)a) /* ArmAgedon seam */.Scale(n);
++				_lerper = (T a, T b, float lerp) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.Lerp(b, lerp);
++				_lerperUnclamped = (T a, T b, float lerp) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.LerpUnclamped(b, lerp);
++				_constantLerper = (T a, T b, float delta) => CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.ConstantLerp(b, delta);
+-				_add = (T a, T b) => ((IAddable<T>)(object)a).Add(b);
+-				_sub = (T a, T b) => ((ISubtractable<T>)(object)a).Sub(b);
+-				_scale = (T a, float n) => ((IScalable<T>)(object)a).Scale(n);
+-				_lerper = (T a, T b, float lerp) => ((ILerpable<T>)(object)a).Lerp(b, lerp);
+-				_lerperUnclamped = (T a, T b, float lerp) => ((ILerpable<T>)(object)a).LerpUnclamped(b, lerp);
+-				_constantLerper = (T a, T b, float delta) => ((ILerpable<T>)(object)a).ConstantLerp(b, delta);
+ 				_smoothLerper = delegate(T a, T b, ref T i, float delta)
+ 				{
++					return CoreContract.Required((ILerpable<T>?)(object?)a) /* ArmAgedon seam */.SmoothLerp(b, ref i, delta);
+-					return ((ILerpable<T>)(object)a).SmoothLerp(b, ref i, delta);
+ 				};
++				_validCheck = (T v) => CoreContract.Required((ISphericalHarmonics?)(object?)v) /* ArmAgedon seam */.IsValid;
++				_invalidFilter = (BiOperator<T>)CoreContract.Required(typeof(SphericalHarmonicsHelper).GetMethod("FilterInvalid")).MakeGenericMethod /* ArmAgedon seam */(typeof(T)).CreateDelegate(typeof(BiOperator<T>));
+-				_validCheck = (T v) => ((ISphericalHarmonics)(object)v).IsValid;
+-				_invalidFilter = (BiOperator<T>)typeof(SphericalHarmonicsHelper).GetMethod("FilterInvalid").MakeGenericMethod(typeof(T)).CreateDelegate(typeof(BiOperator<T>));
+ 				_encoder = (T v, BinaryWriter bw) =>
+ 				{
++					CoreContract.Required((IEncodable?)(object?)v) /* ArmAgedon seam */.Encode(bw);
+-					((IEncodable)(object)v).Encode(bw);
+ 				};
+ 				_decoder = (BinaryReader br) =>
+ 				{
++					IEncodable encodable = CreateEncodable(); // ArmAgedon seam
+-					IEncodable encodable = (IEncodable)(object)default(T);
+ 					encodable.Decode(br);
+ 					return (T)encodable;
+ 				};
++				_saver = (T v) => CoreContract.Required((IEncodable?)(object?)v) /* ArmAgedon seam */.Save();
+-				_saver = (T v) => ((IEncodable)(object)v).Save();
+ 				_loader = (DataTreeNode n) =>
+ 				{
++					IEncodable encodable = CreateEncodable(); // ArmAgedon seam
+-					IEncodable encodable = (IEncodable)(object)default(T);
+ 					encodable.Load(n);
+ 					return (T)encodable;
+ 				};
+@@ -4084,28 +4076,28 @@
+ 			}
+ 			else if (typeof(IEncodable).IsAssignableFrom(typeof(T)))
+ 			{
++				_equaler = (T a, T b) => CoreContract.ValueEquals(a, b) /* ArmAgedon seam */;
+-				_equaler = (T a, T b) => a.Equals(b);
+ 				_encoder = (T v, BinaryWriter bw) =>
+ 				{
++					CoreContract.Required((IEncodable?)(object?)v) /* ArmAgedon seam */.Encode(bw);
+-					((IEncodable)(object)v).Encode(bw);
+ 				};
+ 				_decoder = (BinaryReader br) =>
+ 				{
++					IEncodable encodable = CreateEncodable(); // ArmAgedon seam
+-					IEncodable encodable = (IEncodable)(object)default(T);
+ 					encodable.Decode(br);
+ 					return (T)encodable;
+ 				};
++				_saver = (T v) => CoreContract.Required((IEncodable?)(object?)v) /* ArmAgedon seam */.Save();
+-				_saver = (T v) => ((IEncodable)(object)v).Save();
+ 				_loader = (DataTreeNode n) =>
+ 				{
++					IEncodable encodable = CreateEncodable(); // ArmAgedon seam
+-					IEncodable encodable = (IEncodable)(object)default(T);
+ 					encodable.Load(n);
+ 					return (T)encodable;
+ 				};
+ 				_strEncoder = null;
+ 				_strDecoder = null;
+ 			}
++			else if (typeof(T).IsNullable() && CoreContract.Required(Nullable.GetUnderlyingType(typeof(T))).IsEnginePrimitive() /* ArmAgedon seam */)
+-			else if (typeof(T).IsNullable() && Nullable.GetUnderlyingType(typeof(T)).IsEnginePrimitive())
+ 			{
+ 				_equaler = (Equaler<T>)CoderNullable.GetNullableMethod(typeof(T), typeof(Equaler<T>), "EqualsNullable");
+ 				_encoder = (Encoder<T>)CoderNullable.GetNullableMethod(typeof(T), typeof(Encoder<T>), "EncodeNullable");

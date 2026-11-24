@@ -1,0 +1,8 @@
+--- a/Elements/Core/Decoder.cs
++++ b/Elements/Core/Decoder.cs
+@@ -2,4 +2,4 @@
+ 
+ namespace Elements.Core;
+ 
++internal delegate E? Decoder<E>(BinaryReader br);
+-internal delegate E Decoder<E>(BinaryReader br);

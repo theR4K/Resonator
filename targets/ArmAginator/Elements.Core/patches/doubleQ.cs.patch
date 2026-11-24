@@ -1,0 +1,37 @@
+--- a/Elements/Core/doubleQ.cs
++++ b/Elements/Core/doubleQ.cs
+@@ -2842,7 +2842,7 @@
+ 		return false;
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is doubleQ)
+ 		{
+@@ -2878,7 +2878,7 @@
+ 		}
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return ((double4)ILSpyHelper_AsRefReadOnly(this)).ToString(provider);
+ 		static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+@@ -2958,14 +2958,14 @@
+ 		}
+ 	}
+ 
++	public static bool TryParse(string? s, out doubleQ val)
+-	public static bool TryParse(string s, out doubleQ val)
+ 	{
+ 		bool result = double4.TryParse(s, out var val2);
+ 		val = (doubleQ)val2;
+ 		return result;
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles style, IFormatProvider provider, out doubleQ val)
+-	public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out doubleQ val)
+ 	{
+ 		bool result = double4.TryParse(s, style, provider, out var val2);
+ 		val = (doubleQ)val2;

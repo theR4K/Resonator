@@ -1,0 +1,72 @@
+--- a/Elements/Core/StringToken.cs
++++ b/Elements/Core/StringToken.cs
+@@ -5,9 +5,9 @@
+ 
+ namespace Elements.Core;
+ 
++public abstract partial class StringToken /* ArmAgedon seam */ : IEnumerable<StringToken>, IEnumerable
+-public abstract class StringToken : IEnumerable<StringToken>, IEnumerable
+ {
++	public StringToken? Next;
+-	public StringToken Next;
+ 
+ 	public abstract void AppendTo(StringBuilder builder);
+ 
+@@ -52,7 +52,7 @@
+ 			{
+ 				StringToken current = enumerator.Current;
+ 				tagTracker.Update(current);
++				StringContent? stringContent = current as StringContent;
+-				StringContent stringContent = current as StringContent;
+ 				if (stringContent != null)
+ 				{
+ 					if (!flag)
+@@ -90,7 +90,7 @@
+ 
+ 	public void SpliceAfter(StringToken token)
+ 	{
++		StringToken? next = Next;
+-		StringToken next = Next;
+ 		Next = token;
+ 		if (next != null)
+ 		{
+@@ -101,10 +101,10 @@
+ 	public bool SpliceAt(StringToken token, int position)
+ 	{
+ 		int num = 0;
++		StringToken? stringToken = null;
+-		StringToken stringToken = null;
+ 		foreach (StringToken item in token)
+ 		{
++			MarkSpliced(item); // ArmAgedon seam
+-			(item as StringContent).IsSpliced = true;
+ 			stringToken = item;
+ 		}
+ 		using (IEnumerator<StringToken> enumerator = GetEnumerator())
+@@ -124,7 +124,7 @@
+ 						StringSegmentToken content = stringContent.Segment.SubSegment(position, -1);
+ 						stringContent.Segment = segment;
+ 						stringContent.SpliceAfter(token);
++						CoreContract.Required(stringToken).SpliceAfter(new StringContent(content)); // ArmAgedon seam
+-						stringToken.SpliceAfter(new StringContent(content));
+ 						return true;
+ 					}
+ 					stringContent.SpliceAfter(token);
+@@ -148,7 +148,7 @@
+ 
+ 	public IEnumerable<StringContent> EnumerateStringContents()
+ 	{
++		for (StringToken? currentToken = this; currentToken != null; currentToken = currentToken.Next)
+-		for (StringToken currentToken = this; currentToken != null; currentToken = currentToken.Next)
+ 		{
+ 			if (currentToken is StringContent stringContent)
+ 			{
+@@ -159,7 +159,7 @@
+ 
+ 	public IEnumerator<StringToken> GetEnumerator()
+ 	{
++		for (StringToken? currentToken = this; currentToken != null; currentToken = currentToken.Next)
+-		for (StringToken currentToken = this; currentToken != null; currentToken = currentToken.Next)
+ 		{
+ 			yield return currentToken;
+ 		}

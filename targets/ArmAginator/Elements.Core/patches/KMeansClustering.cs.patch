@@ -1,0 +1,29 @@
+--- a/Elements/Core/KMeansClustering.cs
++++ b/Elements/Core/KMeansClustering.cs
+@@ -12,7 +12,7 @@
+ 
+ 	private const string LOCALE_HEADER = "K-Means Clustering";
+ 
++	public static bool Calculate(int dim, Memory<float> inputData, int batchSize, float passesOverData, Memory<float> outClusterMeans, Memory<int> outDataLabels, IProgressIndicator? progress = null, CancellationToken cancel = default(CancellationToken))
+-	public static bool Calculate(int dim, Memory<float> inputData, int batchSize, float passesOverData, Memory<float> outClusterMeans, Memory<int> outDataLabels, IProgressIndicator progress = null, CancellationToken cancel = default(CancellationToken))
+ 	{
+ 		if (dim < 1)
+ 		{
+@@ -102,7 +102,7 @@
+ 		}
+ 	}
+ 
++	private static bool InitializeCentroids(int dim, Span<float> inputData, int initBatchSize, ref uint rngState, int initAttempts, Span<float> outClusters, IProgressIndicator? progress = null, CancellationToken cancel = default(CancellationToken))
+-	private static bool InitializeCentroids(int dim, Span<float> inputData, int initBatchSize, ref uint rngState, int initAttempts, Span<float> outClusters, IProgressIndicator progress = null, CancellationToken cancel = default(CancellationToken))
+ 	{
+ 		int num = outClusters.Length / dim;
+ 		int val = inputData.Length / dim;
+@@ -146,7 +146,7 @@
+ 		uint num = (uint)(inputData.Length / dim);
+ 		int num2 = outBatch.Length / dim;
+ 		uint num3 = pcg_random(ref rngState);
++		HashSet<int>? hashSet = Pool.BorrowHashSet<int>();
+-		HashSet<int> hashSet = Pool.BorrowHashSet<int>();
+ 		while (hashSet.Count < num2)
+ 		{
+ 			int num4 = (int)(pcg_hash(num3++) % num);

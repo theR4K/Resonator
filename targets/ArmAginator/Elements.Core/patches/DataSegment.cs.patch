@@ -1,0 +1,11 @@
+--- a/Elements/Core/DataSegment.cs
++++ b/Elements/Core/DataSegment.cs
+@@ -233,7 +233,7 @@
+ 		return false;
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is DataSegment)
+ 		{

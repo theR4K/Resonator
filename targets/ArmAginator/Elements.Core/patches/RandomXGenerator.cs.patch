@@ -1,0 +1,23 @@
+--- a/Elements/Core/RandomXGenerator.cs
++++ b/Elements/Core/RandomXGenerator.cs
+@@ -513,7 +513,7 @@
+ 
+ 	public string String(string characters, int length)
+ 	{
++		StringBuilder? stringBuilder = Pool.BorrowStringBuilder();
+-		StringBuilder stringBuilder = Pool.BorrowStringBuilder();
+ 		for (int i = 0; i < length; i++)
+ 		{
+ 			stringBuilder.Append(characters[Range(characters.Length)]);
+@@ -555,9 +555,9 @@
+ 		return String("abcdefghijklmnopqrstuvwxyz0123456789", length);
+ 	}
+ 
++	public E? Enum<E>()
+-	public E Enum<E>()
+ 	{
+ 		Array values = System.Enum.GetValues(typeof(E));
++		return (E?)values.GetValue(RandomX.Range(0, values.Length));
+-		return (E)values.GetValue(RandomX.Range(0, values.Length));
+ 	}
+ }

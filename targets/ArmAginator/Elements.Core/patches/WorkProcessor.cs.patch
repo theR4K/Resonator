@@ -1,0 +1,20 @@
+--- a/Elements/Core/WorkProcessor.cs
++++ b/Elements/Core/WorkProcessor.cs
+@@ -19,7 +19,7 @@
+ 
+ 	private ActionBlock<WorkTask> _processor;
+ 
++	public static WorkProcessor? Instance { get; private set; }
+-	public static WorkProcessor Instance { get; private set; }
+ 
+ 	public bool IsDisposed { get; private set; }
+ 
+@@ -81,7 +81,7 @@
+ 		_processor.Post(new WorkTask(work));
+ 	}
+ 
++	public override void Post(SendOrPostCallback d, object? state)
+-	public override void Post(SendOrPostCallback d, object state)
+ 	{
+ 		Enqueue(() =>
+ 		{

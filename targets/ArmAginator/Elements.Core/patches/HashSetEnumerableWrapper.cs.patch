@@ -1,0 +1,11 @@
+--- a/Elements/Core/HashSetEnumerableWrapper.cs
++++ b/Elements/Core/HashSetEnumerableWrapper.cs
+@@ -5,7 +5,7 @@
+ 
+ public struct HashSetEnumerableWrapper<T> : IEnumerable<T>, IEnumerable
+ {
++	private static HashSet<T>? emptyHashSet;
+-	private static HashSet<T> emptyHashSet;
+ 
+ 	private readonly HashSet<T> hashset;
+ 

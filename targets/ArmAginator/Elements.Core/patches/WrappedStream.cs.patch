@@ -1,0 +1,171 @@
+--- a/Elements/Core/WrappedStream.cs
++++ b/Elements/Core/WrappedStream.cs
+@@ -5,29 +5,29 @@
+ 
+ namespace Elements.Core;
+ 
++public partial class WrappedStream /* ArmAgedon seam */ : Stream
+-public class WrappedStream : Stream
+ {
++	public Stream? TargetStream { get; set; }
+-	public Stream TargetStream { get; set; }
+ 
++	public override bool CanRead => TargetCanRead; // ArmAgedon seam
+-	public override bool CanRead => TargetStream.CanRead;
+ 
++	public override bool CanSeek => TargetCanSeek; // ArmAgedon seam
+-	public override bool CanSeek => TargetStream.CanSeek;
+ 
++	public override bool CanTimeout => TargetCanTimeout; // ArmAgedon seam
+-	public override bool CanTimeout => TargetStream.CanTimeout;
+ 
++	public override bool CanWrite => TargetCanWrite; // ArmAgedon seam
+-	public override bool CanWrite => TargetStream.CanWrite;
+ 
++	public override long Length => ActiveStream.Length; // ArmAgedon seam
+-	public override long Length => TargetStream.Length;
+ 
+ 	public override long Position
+ 	{
+ 		get
+ 		{
++			return ActiveStream.Position; // ArmAgedon seam
+-			return TargetStream.Position;
+ 		}
+ 		set
+ 		{
++			ActiveStream.Position = value; // ArmAgedon seam
+-			TargetStream.Position = value;
+ 		}
+ 	}
+ 
+@@ -35,11 +35,11 @@
+ 	{
+ 		get
+ 		{
++			return ActiveStream.ReadTimeout; // ArmAgedon seam
+-			return TargetStream.ReadTimeout;
+ 		}
+ 		set
+ 		{
++			ActiveStream.ReadTimeout = value; // ArmAgedon seam
+-			TargetStream.ReadTimeout = value;
+ 		}
+ 	}
+ 
+@@ -47,11 +47,11 @@
+ 	{
+ 		get
+ 		{
++			return ActiveStream.WriteTimeout; // ArmAgedon seam
+-			return TargetStream.WriteTimeout;
+ 		}
+ 		set
+ 		{
++			ActiveStream.WriteTimeout = value; // ArmAgedon seam
+-			TargetStream.WriteTimeout = value;
+ 		}
+ 	}
+ 
+@@ -64,83 +64,83 @@
+ 		TargetStream = targetStream;
+ 	}
+ 
++	public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+-	public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+ 	{
++		return ActiveStream.BeginRead(buffer, offset, count, callback, state); // ArmAgedon seam
+-		return TargetStream.BeginRead(buffer, offset, count, callback, state);
+ 	}
+ 
++	public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+-	public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+ 	{
++		return ActiveStream.BeginWrite(buffer, offset, count, callback, state); // ArmAgedon seam
+-		return TargetStream.BeginWrite(buffer, offset, count, callback, state);
+ 	}
+ 
+ 	public override void Close()
+ 	{
++		CloseTarget(); // ArmAgedon seam
+-		TargetStream.Close();
+ 	}
+ 
+ 	public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
+ 	{
++		return ActiveStream.CopyToAsync(destination, bufferSize, cancellationToken); // ArmAgedon seam
+-		return TargetStream.CopyToAsync(destination, bufferSize, cancellationToken);
+ 	}
+ 
+ 	public override int EndRead(IAsyncResult asyncResult)
+ 	{
++		return ActiveStream.EndRead(asyncResult); // ArmAgedon seam
+-		return TargetStream.EndRead(asyncResult);
+ 	}
+ 
+ 	public override void EndWrite(IAsyncResult asyncResult)
+ 	{
++		ActiveStream.EndWrite(asyncResult); // ArmAgedon seam
+-		TargetStream.EndWrite(asyncResult);
+ 	}
+ 
+ 	public override void Flush()
+ 	{
++		ActiveStream.Flush(); // ArmAgedon seam
+-		TargetStream.Flush();
+ 	}
+ 
+ 	public override Task FlushAsync(CancellationToken cancellationToken)
+ 	{
++		return ActiveStream.FlushAsync(cancellationToken); // ArmAgedon seam
+-		return TargetStream.FlushAsync(cancellationToken);
+ 	}
+ 
+ 	public override int Read(byte[] buffer, int offset, int count)
+ 	{
++		return ActiveStream.Read(buffer, offset, count); // ArmAgedon seam
+-		return TargetStream.Read(buffer, offset, count);
+ 	}
+ 
+ 	public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+ 	{
++		return ActiveStream.ReadAsync(buffer, offset, count, cancellationToken); // ArmAgedon seam
+-		return TargetStream.ReadAsync(buffer, offset, count, cancellationToken);
+ 	}
+ 
+ 	public override int ReadByte()
+ 	{
++		return ActiveStream.ReadByte(); // ArmAgedon seam
+-		return TargetStream.ReadByte();
+ 	}
+ 
+ 	public override long Seek(long offset, SeekOrigin origin)
+ 	{
++		return ActiveStream.Seek(offset, origin); // ArmAgedon seam
+-		return TargetStream.Seek(offset, origin);
+ 	}
+ 
+ 	public override void SetLength(long value)
+ 	{
++		ActiveStream.SetLength(value); // ArmAgedon seam
+-		TargetStream.SetLength(value);
+ 	}
+ 
+ 	public override void Write(byte[] buffer, int offset, int count)
+ 	{
++		ActiveStream.Write(buffer, offset, count); // ArmAgedon seam
+-		TargetStream.Write(buffer, offset, count);
+ 	}
+ 
+ 	public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+ 	{
++		return ActiveStream.WriteAsync(buffer, offset, count, cancellationToken); // ArmAgedon seam
+-		return TargetStream.WriteAsync(buffer, offset, count, cancellationToken);
+ 	}
+ 
+ 	public override void WriteByte(byte value)
+ 	{
++		ActiveStream.WriteByte(value); // ArmAgedon seam
+-		TargetStream.WriteByte(value);
+ 	}
+ }

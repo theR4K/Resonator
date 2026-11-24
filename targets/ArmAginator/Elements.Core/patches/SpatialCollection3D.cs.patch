@@ -1,0 +1,157 @@
+--- a/Elements/Core/SpatialCollection3D.cs
++++ b/Elements/Core/SpatialCollection3D.cs
+@@ -3,28 +3,29 @@
+ 
+ namespace Elements.Core;
+ 
++public partial class SpatialCollection3D<T> /* ArmAgedon seam */ : IDisposable
++where T : notnull
+-public class SpatialCollection3D<T> : IDisposable
+ {
++	private T?[]? items;
+-	private T[] items;
+ 
++	private Dictionary<T, int>? itemToIndex = new Dictionary<T, int>();
+-	private Dictionary<T, int> itemToIndex = new Dictionary<T, int>();
+ 
++	private BoundingBoxTree? tree = new BoundingBoxTree();
+-	private BoundingBoxTree tree = new BoundingBoxTree();
+ 
++	public int Count => ActiveTree /* ArmAgedon seam */.Count;
+-	public int Count => tree.Count;
+ 
+ 	public void Add(T item, BoundingBox bounds)
+ 	{
++		int num = ActiveTree /* ArmAgedon seam */.CreateNode(bounds);
+-		int num = tree.CreateNode(bounds);
+ 		try
+ 		{
+ 			EnsureCapacity(num);
+ 			items[num] = item;
++			ActiveIndex /* ArmAgedon seam */.Add(item, num);
+-			itemToIndex.Add(item, num);
+ 		}
+ 		catch
+ 		{
++			RollbackInsertion(num); // ArmAgedon seam
+-			HandleItemRemoval(num, tree.RemoveNode(num));
+ 			throw;
+ 		}
+ 	}
+@@ -39,49 +40,49 @@
+ 
+ 	public bool UpdateBoundsIfExists(T item, BoundingBox bounds)
+ 	{
++		if (!ActiveIndex /* ArmAgedon seam */.TryGetValue(item, out var value))
+-		if (!itemToIndex.TryGetValue(item, out var value))
+ 		{
+ 			return false;
+ 		}
++		ActiveTree /* ArmAgedon seam */.UpdateNode(value, bounds);
+-		tree.UpdateNode(value, bounds);
+ 		return true;
+ 	}
+ 
+ 	public void UpdateBoundsAndRefit(T item, BoundingBox bounds)
+ 	{
++		if (!ActiveIndex /* ArmAgedon seam */.TryGetValue(item, out var value))
+-		if (!itemToIndex.TryGetValue(item, out var value))
+ 		{
+ 			throw new ArgumentException("Given item is not part of this collection");
+ 		}
++		ActiveTree /* ArmAgedon seam */.UpdateNodeAndRefit(value, bounds);
+-		tree.UpdateNodeAndRefit(value, bounds);
+ 	}
+ 
+ 	public bool Remove(T item)
+ 	{
++		if (!ActiveIndex /* ArmAgedon seam */.TryGetValue(item, out var value))
+-		if (!itemToIndex.TryGetValue(item, out var value))
+ 		{
+ 			return false;
+ 		}
++		HandleItemRemoval(value, ActiveTree /* ArmAgedon seam */.RemoveNode(value));
+-		HandleItemRemoval(value, tree.RemoveNode(value));
+ 		return true;
+ 	}
+ 
+ 	public void Refit()
+ 	{
++		ActiveTree /* ArmAgedon seam */.Refit();
+-		tree.Refit();
+ 	}
+ 
+ 	public void RefitAndRefine()
+ 	{
++		ActiveTree /* ArmAgedon seam */.RefitAndRefine();
+-		tree.RefitAndRefine();
+ 	}
+ 
+ 	public int GetOverlaps(BoundingBox bounds, ICollection<T> results, Predicate<T> filter)
+ 	{
+ 		int count = 0;
++		ActiveTree /* ArmAgedon seam */.GetOverlaps(bounds, (int index) =>
+-		tree.GetOverlaps(bounds, (int index) =>
+ 		{
++			T val = OccupiedItem(index); // ArmAgedon seam
+-			T val = items[index];
+ 			if (filter(val))
+ 			{
+ 				count++;
+@@ -94,10 +95,10 @@
+ 	public int GetOverlaps(BoundingBox bounds, ICollection<T> results)
+ 	{
+ 		int count = 0;
++		ActiveTree /* ArmAgedon seam */.GetOverlaps(bounds, (int index) =>
+-		tree.GetOverlaps(bounds, (int index) =>
+ 		{
+ 			count++;
++			results.Add(OccupiedItem(index)); // ArmAgedon seam
+-			results.Add(items[index]);
+ 		});
+ 		return count;
+ 	}
+@@ -111,39 +112,18 @@
+ 
+ 	private void HandleItemRemoval(int removedIndex, int swapIndex)
+ 	{
++		RemoveStoredItem(removedIndex, swapIndex); // ArmAgedon seam
+-		itemToIndex.Remove(items[removedIndex]);
+-		if (swapIndex < 0)
+-		{
+-			items[removedIndex] = default;
+-			return;
+-		}
+-		T key = items[swapIndex];
+-		itemToIndex[key] = removedIndex;
+-		items[removedIndex] = items[swapIndex];
+-		items[swapIndex] = default;
+ 	}
+ 
++	[System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(items))]
+ 	private void EnsureCapacity(int index)
+ 	{
++		GrowStorage(index); // ArmAgedon seam
+-		int num = items?.Length ?? 0;
+-		if (num <= index)
+-		{
+-			T[] destinationArray = new T[MathX.Max(index + 1, num * 2)];
+-			if (num > 0)
+-			{
+-				Array.Copy(items, destinationArray, num);
+-			}
+-			items = destinationArray;
+-		}
+ 	}
+ 
+ 	public void Dispose()
+ 	{
++		DisposeStorage(); // ArmAgedon seam
+-		tree.Dispose();
+-		tree = null;
+-		items = null;
+-		itemToIndex = null;
+-		GC.SuppressFinalize(this);
+ 	}
+ 
+ 	~SpatialCollection3D()

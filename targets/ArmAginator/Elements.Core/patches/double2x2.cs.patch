@@ -1,0 +1,64 @@
+--- a/Elements/Core/double2x2.cs
++++ b/Elements/Core/double2x2.cs
+@@ -230,7 +230,7 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		StringBuilder stringBuilder = new StringBuilder();
+ 		stringBuilder.Append("[");
+@@ -313,36 +313,36 @@
+ 
+ 	public static double2x2 Parse(string s)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new double2x2(double.Parse(array[0]), double.Parse(array[1]), double.Parse(array[2]), double.Parse(array[3]));
+ 	}
+ 
+ 	public static double2x2 Parse(string s, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new double2x2(double.Parse(array[0], provider), double.Parse(array[1], provider), double.Parse(array[2], provider), double.Parse(array[3], provider));
+ 	}
+ 
+ 	public static double2x2 Parse(string s, NumberStyles style)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new double2x2(double.Parse(array[0], style), double.Parse(array[1], style), double.Parse(array[2], style), double.Parse(array[3], style));
+ 	}
+ 
+ 	public static double2x2 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new double2x2(double.Parse(array[0], style, provider), double.Parse(array[1], style, provider), double.Parse(array[2], style, provider), double.Parse(array[3], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out double2x2 val)
+-	public static bool TryParse(string s, out double2x2 val)
+ 	{
+ 		return TryParse(s, NumberStyles.Float, null, out val);
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider? formatProvider, out double2x2 val)
+-	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out double2x2 val)
+ 	{
++		string[]? stringBuilder = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] stringBuilder = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (stringBuilder == null)
+ 		{
+ 			val = default;
+@@ -421,7 +421,7 @@
+ 		result = new double2x2(a.m00 * b.m00 + a.m01 * b.m10, a.m00 * b.m01 + a.m01 * b.m11, a.m10 * b.m00 + a.m11 * b.m10, a.m10 * b.m01 + a.m11 * b.m11);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is double2x2)
+ 		{

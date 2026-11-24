@@ -1,0 +1,64 @@
+--- a/Elements/Core/double4x4.cs
++++ b/Elements/Core/double4x4.cs
+@@ -716,7 +716,7 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		StringBuilder stringBuilder = new StringBuilder();
+ 		stringBuilder.Append("[");
+@@ -799,36 +799,36 @@
+ 
+ 	public static double4x4 Parse(string s)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 16)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 16);
+ 		return new double4x4(double.Parse(array[0]), double.Parse(array[1]), double.Parse(array[2]), double.Parse(array[3]), double.Parse(array[4]), double.Parse(array[5]), double.Parse(array[6]), double.Parse(array[7]), double.Parse(array[8]), double.Parse(array[9]), double.Parse(array[10]), double.Parse(array[11]), double.Parse(array[12]), double.Parse(array[13]), double.Parse(array[14]), double.Parse(array[15]));
+ 	}
+ 
+ 	public static double4x4 Parse(string s, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 16)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 16);
+ 		return new double4x4(double.Parse(array[0], provider), double.Parse(array[1], provider), double.Parse(array[2], provider), double.Parse(array[3], provider), double.Parse(array[4], provider), double.Parse(array[5], provider), double.Parse(array[6], provider), double.Parse(array[7], provider), double.Parse(array[8], provider), double.Parse(array[9], provider), double.Parse(array[10], provider), double.Parse(array[11], provider), double.Parse(array[12], provider), double.Parse(array[13], provider), double.Parse(array[14], provider), double.Parse(array[15], provider));
+ 	}
+ 
+ 	public static double4x4 Parse(string s, NumberStyles style)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 16)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 16);
+ 		return new double4x4(double.Parse(array[0], style), double.Parse(array[1], style), double.Parse(array[2], style), double.Parse(array[3], style), double.Parse(array[4], style), double.Parse(array[5], style), double.Parse(array[6], style), double.Parse(array[7], style), double.Parse(array[8], style), double.Parse(array[9], style), double.Parse(array[10], style), double.Parse(array[11], style), double.Parse(array[12], style), double.Parse(array[13], style), double.Parse(array[14], style), double.Parse(array[15], style));
+ 	}
+ 
+ 	public static double4x4 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 16)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 16);
+ 		return new double4x4(double.Parse(array[0], style, provider), double.Parse(array[1], style, provider), double.Parse(array[2], style, provider), double.Parse(array[3], style, provider), double.Parse(array[4], style, provider), double.Parse(array[5], style, provider), double.Parse(array[6], style, provider), double.Parse(array[7], style, provider), double.Parse(array[8], style, provider), double.Parse(array[9], style, provider), double.Parse(array[10], style, provider), double.Parse(array[11], style, provider), double.Parse(array[12], style, provider), double.Parse(array[13], style, provider), double.Parse(array[14], style, provider), double.Parse(array[15], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out double4x4 val)
+-	public static bool TryParse(string s, out double4x4 val)
+ 	{
+ 		return TryParse(s, NumberStyles.Float, null, out val);
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider? formatProvider, out double4x4 val)
+-	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out double4x4 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 16);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 16);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -919,7 +919,7 @@
+ 		result = new double4x4(a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20 + a.m03 * b.m30, a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21 + a.m03 * b.m31, a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22 + a.m03 * b.m32, a.m00 * b.m03 + a.m01 * b.m13 + a.m02 * b.m23 + a.m03 * b.m33, a.m10 * b.m00 + a.m11 * b.m10 + a.m12 * b.m20 + a.m13 * b.m30, a.m10 * b.m01 + a.m11 * b.m11 + a.m12 * b.m21 + a.m13 * b.m31, a.m10 * b.m02 + a.m11 * b.m12 + a.m12 * b.m22 + a.m13 * b.m32, a.m10 * b.m03 + a.m11 * b.m13 + a.m12 * b.m23 + a.m13 * b.m33, a.m20 * b.m00 + a.m21 * b.m10 + a.m22 * b.m20 + a.m23 * b.m30, a.m20 * b.m01 + a.m21 * b.m11 + a.m22 * b.m21 + a.m23 * b.m31, a.m20 * b.m02 + a.m21 * b.m12 + a.m22 * b.m22 + a.m23 * b.m32, a.m20 * b.m03 + a.m21 * b.m13 + a.m22 * b.m23 + a.m23 * b.m33, a.m30 * b.m00 + a.m31 * b.m10 + a.m32 * b.m20 + a.m33 * b.m30, a.m30 * b.m01 + a.m31 * b.m11 + a.m32 * b.m21 + a.m33 * b.m31, a.m30 * b.m02 + a.m31 * b.m12 + a.m32 * b.m22 + a.m33 * b.m32, a.m30 * b.m03 + a.m31 * b.m13 + a.m32 * b.m23 + a.m33 * b.m33);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is double4x4)
+ 		{

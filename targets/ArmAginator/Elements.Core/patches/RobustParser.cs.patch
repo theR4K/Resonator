@@ -1,0 +1,936 @@
+--- a/Elements/Core/RobustParser.cs
++++ b/Elements/Core/RobustParser.cs
+@@ -5,12 +5,12 @@
+ 
+ public static class RobustParser
+ {
++	public static bool TryParse(string? str, out bool value)
+-	public static bool TryParse(string str, out bool value)
+ 	{
+ 		return bool.TryParse(str, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out byte value)
+-	public static bool TryParse(string str, out byte value)
+ 	{
+ 		if (byte.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -19,7 +19,7 @@
+ 		return byte.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out byte value)
+-	public static bool TryParse(string str, NumberStyles style, out byte value)
+ 	{
+ 		if (byte.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -28,7 +28,7 @@
+ 		return byte.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out ushort value)
+-	public static bool TryParse(string str, out ushort value)
+ 	{
+ 		if (ushort.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -37,7 +37,7 @@
+ 		return ushort.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out ushort value)
+-	public static bool TryParse(string str, NumberStyles style, out ushort value)
+ 	{
+ 		if (ushort.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -46,7 +46,7 @@
+ 		return ushort.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out uint value)
+-	public static bool TryParse(string str, out uint value)
+ 	{
+ 		if (uint.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -55,7 +55,7 @@
+ 		return uint.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out uint value)
+-	public static bool TryParse(string str, NumberStyles style, out uint value)
+ 	{
+ 		if (uint.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -64,7 +64,7 @@
+ 		return uint.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out ulong value)
+-	public static bool TryParse(string str, out ulong value)
+ 	{
+ 		if (ulong.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -73,7 +73,7 @@
+ 		return ulong.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out ulong value)
+-	public static bool TryParse(string str, NumberStyles style, out ulong value)
+ 	{
+ 		if (ulong.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -82,7 +82,7 @@
+ 		return ulong.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out sbyte value)
+-	public static bool TryParse(string str, out sbyte value)
+ 	{
+ 		if (sbyte.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -91,7 +91,7 @@
+ 		return sbyte.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out sbyte value)
+-	public static bool TryParse(string str, NumberStyles style, out sbyte value)
+ 	{
+ 		if (sbyte.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -100,7 +100,7 @@
+ 		return sbyte.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out short value)
+-	public static bool TryParse(string str, out short value)
+ 	{
+ 		if (short.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -109,7 +109,7 @@
+ 		return short.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out short value)
+-	public static bool TryParse(string str, NumberStyles style, out short value)
+ 	{
+ 		if (short.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -118,7 +118,7 @@
+ 		return short.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out int value)
+-	public static bool TryParse(string str, out int value)
+ 	{
+ 		if (int.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -127,7 +127,7 @@
+ 		return int.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out int value)
+-	public static bool TryParse(string str, NumberStyles style, out int value)
+ 	{
+ 		if (int.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -136,7 +136,7 @@
+ 		return int.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out long value)
+-	public static bool TryParse(string str, out long value)
+ 	{
+ 		if (long.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -145,7 +145,7 @@
+ 		return long.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out long value)
+-	public static bool TryParse(string str, NumberStyles style, out long value)
+ 	{
+ 		if (long.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -154,12 +154,12 @@
+ 		return long.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out float value)
+-	public static bool TryParse(string str, out float value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out float value)
+-	public static bool TryParse(string str, NumberStyles style, out float value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -206,12 +206,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out double value)
+-	public static bool TryParse(string str, out double value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out double value)
+-	public static bool TryParse(string str, NumberStyles style, out double value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -258,12 +258,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out decimal value)
+-	public static bool TryParse(string str, out decimal value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out decimal value)
+-	public static bool TryParse(string str, NumberStyles style, out decimal value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -310,28 +310,28 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out char value)
+-	public static bool TryParse(string str, out char value)
+ 	{
+ 		return char.TryParse(str, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out string? value)
+-	public static bool TryParse(string str, out string value)
+ 	{
+ 		value = str;
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Uri? value)
+-	public static bool TryParse(string str, out Uri value)
+ 	{
+ 		return Uri.TryCreate(str, UriKind.Absolute, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out bool2 value)
+-	public static bool TryParse(string str, out bool2 value)
+ 	{
+ 		return bool2.TryParse(str, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out byte2 value)
+-	public static bool TryParse(string str, out byte2 value)
+ 	{
+ 		if (byte2.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -340,7 +340,7 @@
+ 		return byte2.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out byte2 value)
+-	public static bool TryParse(string str, NumberStyles style, out byte2 value)
+ 	{
+ 		if (byte2.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -349,7 +349,7 @@
+ 		return byte2.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out ushort2 value)
+-	public static bool TryParse(string str, out ushort2 value)
+ 	{
+ 		if (ushort2.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -358,7 +358,7 @@
+ 		return ushort2.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out ushort2 value)
+-	public static bool TryParse(string str, NumberStyles style, out ushort2 value)
+ 	{
+ 		if (ushort2.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -367,7 +367,7 @@
+ 		return ushort2.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out uint2 value)
+-	public static bool TryParse(string str, out uint2 value)
+ 	{
+ 		if (uint2.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -376,7 +376,7 @@
+ 		return uint2.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out uint2 value)
+-	public static bool TryParse(string str, NumberStyles style, out uint2 value)
+ 	{
+ 		if (uint2.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -385,7 +385,7 @@
+ 		return uint2.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out ulong2 value)
+-	public static bool TryParse(string str, out ulong2 value)
+ 	{
+ 		if (ulong2.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -394,7 +394,7 @@
+ 		return ulong2.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out ulong2 value)
+-	public static bool TryParse(string str, NumberStyles style, out ulong2 value)
+ 	{
+ 		if (ulong2.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -403,7 +403,7 @@
+ 		return ulong2.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out sbyte2 value)
+-	public static bool TryParse(string str, out sbyte2 value)
+ 	{
+ 		if (sbyte2.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -412,7 +412,7 @@
+ 		return sbyte2.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out sbyte2 value)
+-	public static bool TryParse(string str, NumberStyles style, out sbyte2 value)
+ 	{
+ 		if (sbyte2.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -421,7 +421,7 @@
+ 		return sbyte2.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out short2 value)
+-	public static bool TryParse(string str, out short2 value)
+ 	{
+ 		if (short2.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -430,7 +430,7 @@
+ 		return short2.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out short2 value)
+-	public static bool TryParse(string str, NumberStyles style, out short2 value)
+ 	{
+ 		if (short2.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -439,7 +439,7 @@
+ 		return short2.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out int2 value)
+-	public static bool TryParse(string str, out int2 value)
+ 	{
+ 		if (int2.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -448,7 +448,7 @@
+ 		return int2.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out int2 value)
+-	public static bool TryParse(string str, NumberStyles style, out int2 value)
+ 	{
+ 		if (int2.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -457,7 +457,7 @@
+ 		return int2.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out long2 value)
+-	public static bool TryParse(string str, out long2 value)
+ 	{
+ 		if (long2.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -466,7 +466,7 @@
+ 		return long2.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out long2 value)
+-	public static bool TryParse(string str, NumberStyles style, out long2 value)
+ 	{
+ 		if (long2.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -475,12 +475,12 @@
+ 		return long2.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out float2 value)
+-	public static bool TryParse(string str, out float2 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out float2 value)
+-	public static bool TryParse(string str, NumberStyles style, out float2 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -527,12 +527,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out double2 value)
+-	public static bool TryParse(string str, out double2 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out double2 value)
+-	public static bool TryParse(string str, NumberStyles style, out double2 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -579,12 +579,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out bool3 value)
+-	public static bool TryParse(string str, out bool3 value)
+ 	{
+ 		return bool3.TryParse(str, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out byte3 value)
+-	public static bool TryParse(string str, out byte3 value)
+ 	{
+ 		if (byte3.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -593,7 +593,7 @@
+ 		return byte3.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out byte3 value)
+-	public static bool TryParse(string str, NumberStyles style, out byte3 value)
+ 	{
+ 		if (byte3.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -602,7 +602,7 @@
+ 		return byte3.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out ushort3 value)
+-	public static bool TryParse(string str, out ushort3 value)
+ 	{
+ 		if (ushort3.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -611,7 +611,7 @@
+ 		return ushort3.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out ushort3 value)
+-	public static bool TryParse(string str, NumberStyles style, out ushort3 value)
+ 	{
+ 		if (ushort3.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -620,7 +620,7 @@
+ 		return ushort3.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out uint3 value)
+-	public static bool TryParse(string str, out uint3 value)
+ 	{
+ 		if (uint3.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -629,7 +629,7 @@
+ 		return uint3.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out uint3 value)
+-	public static bool TryParse(string str, NumberStyles style, out uint3 value)
+ 	{
+ 		if (uint3.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -638,7 +638,7 @@
+ 		return uint3.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out ulong3 value)
+-	public static bool TryParse(string str, out ulong3 value)
+ 	{
+ 		if (ulong3.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -647,7 +647,7 @@
+ 		return ulong3.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out ulong3 value)
+-	public static bool TryParse(string str, NumberStyles style, out ulong3 value)
+ 	{
+ 		if (ulong3.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -656,7 +656,7 @@
+ 		return ulong3.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out sbyte3 value)
+-	public static bool TryParse(string str, out sbyte3 value)
+ 	{
+ 		if (sbyte3.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -665,7 +665,7 @@
+ 		return sbyte3.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out sbyte3 value)
+-	public static bool TryParse(string str, NumberStyles style, out sbyte3 value)
+ 	{
+ 		if (sbyte3.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -674,7 +674,7 @@
+ 		return sbyte3.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out short3 value)
+-	public static bool TryParse(string str, out short3 value)
+ 	{
+ 		if (short3.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -683,7 +683,7 @@
+ 		return short3.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out short3 value)
+-	public static bool TryParse(string str, NumberStyles style, out short3 value)
+ 	{
+ 		if (short3.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -692,7 +692,7 @@
+ 		return short3.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out int3 value)
+-	public static bool TryParse(string str, out int3 value)
+ 	{
+ 		if (int3.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -701,7 +701,7 @@
+ 		return int3.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out int3 value)
+-	public static bool TryParse(string str, NumberStyles style, out int3 value)
+ 	{
+ 		if (int3.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -710,7 +710,7 @@
+ 		return int3.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out long3 value)
+-	public static bool TryParse(string str, out long3 value)
+ 	{
+ 		if (long3.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -719,7 +719,7 @@
+ 		return long3.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out long3 value)
+-	public static bool TryParse(string str, NumberStyles style, out long3 value)
+ 	{
+ 		if (long3.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -728,12 +728,12 @@
+ 		return long3.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out float3 value)
+-	public static bool TryParse(string str, out float3 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out float3 value)
+-	public static bool TryParse(string str, NumberStyles style, out float3 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -780,12 +780,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out double3 value)
+-	public static bool TryParse(string str, out double3 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out double3 value)
+-	public static bool TryParse(string str, NumberStyles style, out double3 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -832,12 +832,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out bool4 value)
+-	public static bool TryParse(string str, out bool4 value)
+ 	{
+ 		return bool4.TryParse(str, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out byte4 value)
+-	public static bool TryParse(string str, out byte4 value)
+ 	{
+ 		if (byte4.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -846,7 +846,7 @@
+ 		return byte4.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out byte4 value)
+-	public static bool TryParse(string str, NumberStyles style, out byte4 value)
+ 	{
+ 		if (byte4.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -855,7 +855,7 @@
+ 		return byte4.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out ushort4 value)
+-	public static bool TryParse(string str, out ushort4 value)
+ 	{
+ 		if (ushort4.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -864,7 +864,7 @@
+ 		return ushort4.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out ushort4 value)
+-	public static bool TryParse(string str, NumberStyles style, out ushort4 value)
+ 	{
+ 		if (ushort4.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -873,7 +873,7 @@
+ 		return ushort4.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out uint4 value)
+-	public static bool TryParse(string str, out uint4 value)
+ 	{
+ 		if (uint4.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -882,7 +882,7 @@
+ 		return uint4.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out uint4 value)
+-	public static bool TryParse(string str, NumberStyles style, out uint4 value)
+ 	{
+ 		if (uint4.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -891,7 +891,7 @@
+ 		return uint4.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out ulong4 value)
+-	public static bool TryParse(string str, out ulong4 value)
+ 	{
+ 		if (ulong4.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -900,7 +900,7 @@
+ 		return ulong4.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out ulong4 value)
+-	public static bool TryParse(string str, NumberStyles style, out ulong4 value)
+ 	{
+ 		if (ulong4.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -909,7 +909,7 @@
+ 		return ulong4.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out sbyte4 value)
+-	public static bool TryParse(string str, out sbyte4 value)
+ 	{
+ 		if (sbyte4.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -918,7 +918,7 @@
+ 		return sbyte4.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out sbyte4 value)
+-	public static bool TryParse(string str, NumberStyles style, out sbyte4 value)
+ 	{
+ 		if (sbyte4.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -927,7 +927,7 @@
+ 		return sbyte4.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out short4 value)
+-	public static bool TryParse(string str, out short4 value)
+ 	{
+ 		if (short4.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -936,7 +936,7 @@
+ 		return short4.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out short4 value)
+-	public static bool TryParse(string str, NumberStyles style, out short4 value)
+ 	{
+ 		if (short4.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -945,7 +945,7 @@
+ 		return short4.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out int4 value)
+-	public static bool TryParse(string str, out int4 value)
+ 	{
+ 		if (int4.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -954,7 +954,7 @@
+ 		return int4.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out int4 value)
+-	public static bool TryParse(string str, NumberStyles style, out int4 value)
+ 	{
+ 		if (int4.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -963,7 +963,7 @@
+ 		return int4.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out long4 value)
+-	public static bool TryParse(string str, out long4 value)
+ 	{
+ 		if (long4.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -972,7 +972,7 @@
+ 		return long4.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out long4 value)
+-	public static bool TryParse(string str, NumberStyles style, out long4 value)
+ 	{
+ 		if (long4.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -981,12 +981,12 @@
+ 		return long4.TryParse(str, style, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out float4 value)
+-	public static bool TryParse(string str, out float4 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out float4 value)
+-	public static bool TryParse(string str, NumberStyles style, out float4 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1033,12 +1033,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out double4 value)
+-	public static bool TryParse(string str, out double4 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out double4 value)
+-	public static bool TryParse(string str, NumberStyles style, out double4 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1085,12 +1085,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out float2x2 value)
+-	public static bool TryParse(string str, out float2x2 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out float2x2 value)
+-	public static bool TryParse(string str, NumberStyles style, out float2x2 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1137,12 +1137,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out double2x2 value)
+-	public static bool TryParse(string str, out double2x2 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out double2x2 value)
+-	public static bool TryParse(string str, NumberStyles style, out double2x2 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1189,12 +1189,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out float3x3 value)
+-	public static bool TryParse(string str, out float3x3 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out float3x3 value)
+-	public static bool TryParse(string str, NumberStyles style, out float3x3 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1241,12 +1241,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out double3x3 value)
+-	public static bool TryParse(string str, out double3x3 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out double3x3 value)
+-	public static bool TryParse(string str, NumberStyles style, out double3x3 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1293,12 +1293,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out float4x4 value)
+-	public static bool TryParse(string str, out float4x4 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out float4x4 value)
+-	public static bool TryParse(string str, NumberStyles style, out float4x4 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1345,12 +1345,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out double4x4 value)
+-	public static bool TryParse(string str, out double4x4 value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out double4x4 value)
+-	public static bool TryParse(string str, NumberStyles style, out double4x4 value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1397,12 +1397,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out floatQ value)
+-	public static bool TryParse(string str, out floatQ value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out floatQ value)
+-	public static bool TryParse(string str, NumberStyles style, out floatQ value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1449,12 +1449,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out doubleQ value)
+-	public static bool TryParse(string str, out doubleQ value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out doubleQ value)
+-	public static bool TryParse(string str, NumberStyles style, out doubleQ value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1501,22 +1501,22 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out DateTime value)
+-	public static bool TryParse(string str, out DateTime value)
+ 	{
+ 		return DateTime.TryParse(str, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out TimeSpan value)
+-	public static bool TryParse(string str, out TimeSpan value)
+ 	{
+ 		return TimeSpan.TryParse(str, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, out color value)
+-	public static bool TryParse(string str, out color value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out color value)
+-	public static bool TryParse(string str, NumberStyles style, out color value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1563,12 +1563,12 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out colorX value)
+-	public static bool TryParse(string str, out colorX value)
+ 	{
+ 		return TryParse(str, NumberStyles.Float, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out colorX value)
+-	public static bool TryParse(string str, NumberStyles style, out colorX value)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -1615,7 +1615,7 @@
+ 		return true;
+ 	}
+ 
++	public static bool TryParse(string? str, out color32 value)
+-	public static bool TryParse(string str, out color32 value)
+ 	{
+ 		if (color32.TryParse(str, NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+ 		{
+@@ -1624,7 +1624,7 @@
+ 		return color32.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+ 	}
+ 
++	public static bool TryParse(string? str, NumberStyles style, out color32 value)
+-	public static bool TryParse(string str, NumberStyles style, out color32 value)
+ 	{
+ 		if (color32.TryParse(str, style, CultureInfo.CurrentCulture, out value))
+ 		{

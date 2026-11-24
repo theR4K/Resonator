@@ -9,3 +9,148 @@
  {
  	public enum Compression
  	{
+@@ -38,13 +38,13 @@
+ 		}
+ 	}
+ 
++	public static DataTreeDictionary? Load(string file, Uri uri)
+-	public static DataTreeDictionary Load(string file, Uri uri)
+ 	{
+ 		string ext = Path.GetExtension(uri.LocalPath).Replace(".", "");
+ 		return Load(file, ext);
+ 	}
+ 
++	public static DataTreeDictionary? Load(string file, string? ext = null)
+-	public static DataTreeDictionary Load(string file, string ext = null)
+ 	{
+ 		if (ext == null)
+ 		{
+@@ -116,7 +116,7 @@
+ 		{
+ 			using (FileStream stream = File.OpenRead(file))
+ 			{
++				DataTreeDictionary? dataTreeDictionary = LoadAuto(stream);
+-				DataTreeDictionary dataTreeDictionary = LoadAuto(stream);
+ 				if (dataTreeDictionary != null)
+ 				{
+ 					return dataTreeDictionary;
+@@ -139,7 +139,7 @@
+ 		}
+ 	}
+ 
++	public static DataTreeDictionary? LoadAuto(Stream stream)
+-	public static DataTreeDictionary LoadAuto(Stream stream)
+ 	{
+ 		if (TryReadHeader(stream, out var version, out var compression))
+ 		{
+@@ -185,22 +185,22 @@
+ 		}
+ 	}
+ 
++	public static DataTreeDictionary? FromRawBSON(Stream stream)
+-	public static DataTreeDictionary FromRawBSON(Stream stream)
+ 	{
+ 		using BsonDataReader bsonDataReader = new BsonDataReader(stream);
+ 		bsonDataReader.CloseInput = false;
++		return (DataTreeDictionary?)Read(bsonDataReader);
+-		return (DataTreeDictionary)Read(bsonDataReader);
+ 	}
+ 
++	public static DataTreeDictionary? FromRawLZ4BSON(Stream stream)
+-	public static DataTreeDictionary FromRawLZ4BSON(Stream stream)
+ 	{
+ 		using LZ4Stream num = new LZ4Stream(stream, LZ4StreamMode.Decompress);
+ 		using BsonDataReader bsonDataReader = new BsonDataReader(num);
+ 		bsonDataReader.CloseInput = false;
++		return (DataTreeDictionary?)Read(bsonDataReader);
+-		return (DataTreeDictionary)Read(bsonDataReader);
+ 	}
+ 
++	public static DataTreeDictionary? FromRawBRSON(Stream stream)
+-	public static DataTreeDictionary FromRawBRSON(Stream stream)
+ 	{
+ 		using MemoryStream memoryStream = new MemoryStream();
+ 		using (BrotliStream brotliStream = new BrotliStream(stream, CompressionMode.Decompress, leaveOpen: true))
+@@ -210,17 +210,17 @@
+ 		memoryStream.Seek(0L, SeekOrigin.Begin);
+ 		using BsonDataReader bsonDataReader = new BsonDataReader(memoryStream);
+ 		bsonDataReader.CloseInput = false;
++		return (DataTreeDictionary?)Read(bsonDataReader);
+-		return (DataTreeDictionary)Read(bsonDataReader);
+ 	}
+ 
++	public static DataTreeDictionary? FromRaw7zBSON(Stream stream)
+-	public static DataTreeDictionary FromRaw7zBSON(Stream stream)
+ 	{
+ 		using MemoryStream memoryStream = new MemoryStream();
+ 		LZMAHelper.Decompress(stream, memoryStream);
+ 		memoryStream.Seek(0L, SeekOrigin.Begin);
+ 		using BsonDataReader bsonDataReader = new BsonDataReader(memoryStream);
+ 		bsonDataReader.CloseInput = false;
++		return (DataTreeDictionary?)Read(bsonDataReader);
+-		return (DataTreeDictionary)Read(bsonDataReader);
+ 	}
+ 
+ 	public static void ToRawBSON(DataTreeDictionary root, Stream stream)
+@@ -369,23 +369,23 @@
+ 		writer.WriteEndObject();
+ 	}
+ 
++	private static DataTreeNode? Read(JsonReader reader)
+-	private static DataTreeNode Read(JsonReader reader)
+ 	{
+ 		reader.MaxDepth = null;
+ 		reader.Read();
+ 		return ReadNode(reader);
+ 	}
+ 
++	private static DataTreeNode? ReadNode(JsonReader reader)
+-	private static DataTreeNode ReadNode(JsonReader reader)
+ 	{
+ 		return reader.TokenType switch
+ 		{
++			JsonToken.Boolean => (DataTreeNode)new DataTreeValue((bool)CoreContract.Required(reader.Value) /* ArmAgedon seam */), 
++			JsonToken.Float => new DataTreeValue((double)CoreContract.Required(reader.Value) /* ArmAgedon seam */), 
++			JsonToken.Integer => new DataTreeValue((long)CoreContract.Required(reader.Value) /* ArmAgedon seam */), 
+-			JsonToken.Boolean => (DataTreeNode)new DataTreeValue((bool)reader.Value), 
+-			JsonToken.Float => new DataTreeValue((double)reader.Value), 
+-			JsonToken.Integer => new DataTreeValue((long)reader.Value), 
+ 			JsonToken.String => DataTreeValue.RawString(reader.Value as string), 
++			JsonToken.Date => new DataTreeValue((DateTime)CoreContract.Required(reader.Value) /* ArmAgedon seam */), 
++			JsonToken.Null => new DataTreeValue((string?)null), 
+-			JsonToken.Date => new DataTreeValue((DateTime)reader.Value), 
+-			JsonToken.Null => new DataTreeValue((string)null), 
+ 			JsonToken.StartArray => ReadList(reader), 
+ 			JsonToken.StartObject => ReadDictionary(reader), 
+ 			_ => null, 
+@@ -401,7 +401,7 @@
+ 			{
+ 				return dataTreeList;
+ 			}
++			DataTreeNode? dataTreeNode = ReadNode(reader);
+-			DataTreeNode dataTreeNode = ReadNode(reader);
+ 			if (dataTreeNode != null)
+ 			{
+ 				dataTreeList.Add(dataTreeNode);
+@@ -413,7 +413,7 @@
+ 	private static DataTreeDictionary ReadDictionary(JsonReader reader)
+ 	{
+ 		DataTreeDictionary dataTreeDictionary = new DataTreeDictionary();
++		string? key = null;
+-		string key = null;
+ 		while (reader.Read())
+ 		{
+ 			switch (reader.TokenType)
+@@ -424,10 +424,10 @@
+ 				key = reader.Value as string;
+ 				continue;
+ 			}
++			DataTreeNode? dataTreeNode = ReadNode(reader);
+-			DataTreeNode dataTreeNode = ReadNode(reader);
+ 			if (dataTreeNode != null)
+ 			{
++				dataTreeDictionary.Add(CoreContract.Required(key), dataTreeNode); // ArmAgedon seam
+-				dataTreeDictionary.Add(key, dataTreeNode);
+ 				key = null;
+ 			}
+ 		}

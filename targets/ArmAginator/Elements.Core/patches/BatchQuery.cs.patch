@@ -1,0 +1,83 @@
+--- a/Elements/Core/BatchQuery.cs
++++ b/Elements/Core/BatchQuery.cs
+@@ -10,7 +10,7 @@
+ 	{
+ 		public readonly Query query;
+ 
++		public Result? result;
+-		public Result result;
+ 
+ 		public QueryResult(Query query)
+ 		{
+@@ -20,9 +20,9 @@
+ 
+ 	private object _lock = new object();
+ 
++	private Dictionary<Query, TaskCompletionSource<Result?>> queue = new Dictionary<Query, TaskCompletionSource<Result?>>();
+-	private Dictionary<Query, TaskCompletionSource<Result>> queue = new Dictionary<Query, TaskCompletionSource<Result>>();
+ 
++	private TaskCompletionSource<bool>? immediateDispatch;
+-	private TaskCompletionSource<bool> immediateDispatch;
+ 
+ 	private volatile bool dispatchScheduled;
+ 
+@@ -36,24 +36,24 @@
+ 		DelaySeconds = delaySeconds;
+ 	}
+ 
++	public async Task<Result?> Request(Query query)
+-	public async Task<Result> Request(Query query)
+ 	{
++		TaskCompletionSource<Result?>? value = null;
+-		TaskCompletionSource<Result> value = null;
+ 		lock (_lock)
+ 		{
+ 			if (!queue.TryGetValue(query, out value))
+ 			{
++				value = new TaskCompletionSource<Result?>();
+-				value = new TaskCompletionSource<Result>();
+ 				queue.Add(query, value);
+ 				if (!dispatchScheduled)
+ 				{
+ 					dispatchScheduled = true;
+ 					immediateDispatch = new TaskCompletionSource<bool>();
++					Task.Run((Func<Task>)SendBatch);
+-					Task.Run((Func<Task?>)SendBatch);
+ 				}
+ 				else if (queue.Count >= MaxBatchSize)
+ 				{
++					CoreContract.Required(immediateDispatch).TrySetResult /* ArmAgedon seam */(result: true);
+-					immediateDispatch.TrySetResult(result: true);
+ 				}
+ 			}
+ 		}
+@@ -62,11 +62,11 @@
+ 
+ 	private async Task SendBatch()
+ 	{
++		await Task.WhenAny(CoreContract.Required(immediateDispatch).Task, /* ArmAgedon seam */ Task.Delay(TimeSpan.FromSeconds(DelaySeconds))).ConfigureAwait(continueOnCapturedContext: false);
+-		await Task.WhenAny(immediateDispatch.Task, Task.Delay(TimeSpan.FromSeconds(DelaySeconds))).ConfigureAwait(continueOnCapturedContext: false);
+ 		List<QueryResult> toSend = Pool.BorrowList<QueryResult>();
+ 		lock (_lock)
+ 		{
++			foreach (KeyValuePair<Query, TaskCompletionSource<Result?>> item in queue)
+-			foreach (KeyValuePair<Query, TaskCompletionSource<Result>> item in queue)
+ 			{
+ 				toSend.Add(new QueryResult(item.Key));
+ 				if (toSend.Count == MaxBatchSize)
+@@ -90,13 +90,13 @@
+ 			{
+ 				if (queue.Count >= MaxBatchSize)
+ 				{
++					CoreContract.Required(immediateDispatch).TrySetResult /* ArmAgedon seam */(result: true);
+-					immediateDispatch.TrySetResult(result: true);
+ 				}
+ 				else
+ 				{
+ 					immediateDispatch = new TaskCompletionSource<bool>();
+ 				}
++				Task.Run((Func<Task>)SendBatch);
+-				Task.Run((Func<Task?>)SendBatch);
+ 			}
+ 			else
+ 			{

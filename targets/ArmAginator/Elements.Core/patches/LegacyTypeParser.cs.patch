@@ -1,0 +1,35 @@
+--- a/Elements/Core/LegacyTypeParser.cs
++++ b/Elements/Core/LegacyTypeParser.cs
+@@ -23,12 +23,12 @@
+ 
+ 	internal static string LegacyMatchColor = LegacyMatchCore + ".color";
+ 
++	public static Type? TryParse(string str, LegacyTypeSeacher typeSearcher)
+-	public static Type TryParse(string str, LegacyTypeSeacher typeSearcher)
+ 	{
+ 		return TryParse(new StringSegment(str), typeSearcher);
+ 	}
+ 
++	public static Type? TryParse(StringSegment typename, LegacyTypeSeacher typeSearcher)
+-	public static Type TryParse(StringSegment typename, LegacyTypeSeacher typeSearcher)
+ 	{
+ 		SlimList<Type> slimList = default;
+ 		int num = typename.IndexOf("[");
+@@ -64,7 +64,7 @@
+ 						{
+ 							return null;
+ 						}
++						Type? type = TryParse(stringSegment.Slice(num4, i - num4), typeSearcher);
+-						Type type = TryParse(stringSegment.Slice(num4, i - num4), typeSearcher);
+ 						if (type == null)
+ 						{
+ 							return null;
+@@ -123,7 +123,7 @@
+ 		}
+ 	}
+ 
++	public static Type? TryResolveLegacyAlias(string name)
+-	public static Type TryResolveLegacyAlias(string name)
+ 	{
+ 		switch (name)
+ 		{

@@ -1,0 +1,96 @@
+--- a/Elements/Core/byte4.cs
++++ b/Elements/Core/byte4.cs
+@@ -8731,12 +8731,12 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(provider) + "]";
+ 	}
+ 
++	public string ToStringBase(IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(provider) + separator + " " + y.ToString(provider) + separator + " " + z.ToString(provider) + separator + " " + w.ToString(provider);
+ 	}
+@@ -8751,48 +8751,48 @@
+ 		return x.ToString(elementFormat) + separator + " " + y.ToString(elementFormat) + separator + " " + z.ToString(elementFormat) + separator + " " + w.ToString(elementFormat);
+ 	}
+ 
++	public string ToString(string? elementFormat, IFormatProvider? provider)
+-	public string ToString(string elementFormat, IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(elementFormat, provider) + "]";
+ 	}
+ 
++	public string ToStringBase(string? elementFormat, IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(string elementFormat, IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(elementFormat, provider) + separator + " " + y.ToString(elementFormat, provider) + separator + " " + z.ToString(elementFormat, provider) + separator + " " + w.ToString(elementFormat, provider);
+ 	}
+ 
++	public string ToStringConstructor(string? overrideType = null)
+-	public string ToStringConstructor(string overrideType = null)
+ 	{
+ 		return $"new {overrideType ?? "byte4"}({x.ToCodeLiteral() + ", " + y.ToCodeLiteral() + ", " + z.ToCodeLiteral() + ", " + w.ToCodeLiteral()})";
+ 	}
+ 
+ 	public static byte4 Parse(string s)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new byte4(byte.Parse(array[0]), byte.Parse(array[1]), byte.Parse(array[2]), byte.Parse(array[3]));
+ 	}
+ 
+ 	public static byte4 Parse(string s, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new byte4(byte.Parse(array[0], provider), byte.Parse(array[1], provider), byte.Parse(array[2], provider), byte.Parse(array[3], provider));
+ 	}
+ 
+ 	public static byte4 Parse(string s, NumberStyles style)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new byte4(byte.Parse(array[0], style), byte.Parse(array[1], style), byte.Parse(array[2], style), byte.Parse(array[3], style));
+ 	}
+ 
+ 	public static byte4 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new byte4(byte.Parse(array[0], style, provider), byte.Parse(array[1], style, provider), byte.Parse(array[2], style, provider), byte.Parse(array[3], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out byte4 val)
+-	public static bool TryParse(string s, out byte4 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -8811,9 +8811,9 @@
+ 		return false;
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider formatProvider, out byte4 val)
+-	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out byte4 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -8844,7 +8844,7 @@
+ 		return new byte4(mask.x ? x : masked.x, mask.y ? y : masked.y, mask.z ? z : masked.z, mask.w ? w : masked.w);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is byte4)
+ 		{

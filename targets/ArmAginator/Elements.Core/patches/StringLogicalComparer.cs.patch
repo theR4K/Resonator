@@ -1,0 +1,11 @@
+--- a/Elements/Core/StringLogicalComparer.cs
++++ b/Elements/Core/StringLogicalComparer.cs
+@@ -2,7 +2,7 @@
+ 
+ public class StringLogicalComparer
+ {
++	public static int Compare(string? s1, string? s2)
+-	public static int Compare(string s1, string s2)
+ 	{
+ 		if (s1 == null && s2 == null)
+ 		{

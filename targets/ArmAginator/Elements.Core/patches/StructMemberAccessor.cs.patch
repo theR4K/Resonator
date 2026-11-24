@@ -1,0 +1,78 @@
+--- a/Elements/Core/StructMemberAccessor.cs
++++ b/Elements/Core/StructMemberAccessor.cs
+@@ -10,7 +10,7 @@
+ 
+ 	public Type RootType { get; private set; }
+ 
++	public Type? TargetType { get; private set; }
+-	public Type TargetType { get; private set; }
+ 
+ 	public StructMemberAccessor(Type rootType, string path)
+ 	{
+@@ -19,7 +19,7 @@
+ 		GenerateHierarchy(rootType, path);
+ 	}
+ 
++	public object? Get(object? root)
+-	public object Get(object root)
+ 	{
+ 		foreach (IStructMemberProxy item in hierarchy)
+ 		{
+@@ -32,25 +32,25 @@
+ 		return root;
+ 	}
+ 
++	public object? Set(object? target, object? value)
+-	public object Set(object target, object value)
+ 	{
+ 		return InternalSet(target, value);
+ 	}
+ 
++	private object? InternalSet(object? target, object? value, int level = 0)
+-	private object InternalSet(object target, object value, int level = 0)
+ 	{
+ 		if (level == hierarchy.Count)
+ 		{
+ 			return value;
+ 		}
+ 		IStructMemberProxy structMemberProxy = hierarchy[level];
++		object? value2 = structMemberProxy.GetValue(target);
+-		object value2 = structMemberProxy.GetValue(target);
+ 		value2 = InternalSet(value2, value, level + 1);
+ 		target = structMemberProxy.SetValue(target, value2);
+ 		return target;
+ 	}
+ 
++	private void GenerateHierarchy(Type type, string? path)
+-	private void GenerateHierarchy(Type type, string path)
+ 	{
+ 		if (string.IsNullOrEmpty(path))
+ 		{
+@@ -73,7 +73,7 @@
+ 			text = path.Substring(0, num);
+ 			path = path.Substring(num + 1);
+ 		}
++		IStructMemberProxy? structMemberProxy = null;
+-		IStructMemberProxy structMemberProxy = null;
+ 		if (type.IsNullable())
+ 		{
+ 			if (text != "value")
+@@ -84,15 +84,15 @@
+ 		}
+ 		else
+ 		{
++			FieldInfo? field = type.GetField(text, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+-			FieldInfo field = type.GetField(text, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+ 			if (field != null)
+ 			{
+ 				structMemberProxy = new StructFieldProxy(field);
+ 			}
+ 			else
+ 			{
++				PropertyInfo? property = type.GetProperty(text, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
++				MethodInfo? method = type.GetMethod("Set" + text.ToUpper(), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+-				PropertyInfo property = type.GetProperty(text, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+-				MethodInfo method = type.GetMethod("Set" + text.ToUpper(), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+ 				if (property != null && method != null)
+ 				{
+ 					structMemberProxy = new StructPropertyMethodProxy(property, method);

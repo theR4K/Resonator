@@ -1,0 +1,22 @@
+--- a/Elements/Core/IntRect.cs
++++ b/Elements/Core/IntRect.cs
+@@ -168,8 +168,9 @@
+ 		throw new FormatException("Invalid IntRect format");
+ 	}
+ 
++	public static bool TryParse(string? str, out IntRect rect)
+-	public static bool TryParse(string str, out IntRect rect)
+ 	{
++		if (CoreContract.MissingText(str, out rect)) return false; // ArmAgedon seam
+ 		str = str.Trim();
+ 		if (str[0] != '[' && str[str.Length - 1] != ']')
+ 		{
+@@ -314,7 +315,7 @@
+ 		return new IntRect(intBounds.x, intBounds.y, intBounds.width, intBounds.height);
+ 	}
+ 
++	public override readonly bool Equals(object? obj)
+-	public override readonly bool Equals(object obj)
+ 	{
+ 		if (obj is IntRect)
+ 		{

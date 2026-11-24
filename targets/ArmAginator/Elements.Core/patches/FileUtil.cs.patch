@@ -1,0 +1,67 @@
+--- a/Elements/Core/FileUtil.cs
++++ b/Elements/Core/FileUtil.cs
+@@ -7,7 +7,7 @@
+ 
+ namespace Elements.Core;
+ 
++public static partial class FileUtil /* ArmAgedon seam */
+-public static class FileUtil
+ {
+ 	public enum FileHash
+ 	{
+@@ -24,20 +24,7 @@
+ 
+ 	public static byte[] ComputeHash(Stream stream, FileHash algorithm)
+ 	{
++		return ComputeOwnedHash(stream, algorithm); // ArmAgedon seam
+-		HashAlgorithm hashAlgorithm = null;
+-		switch (algorithm)
+-		{
+-		case FileHash.MD5:
+-			hashAlgorithm = MD5.Create();
+-			break;
+-		case FileHash.SHA256:
+-			hashAlgorithm = SHA256.Create();
+-			break;
+-		case FileHash.SHA1:
+-			hashAlgorithm = SHA1.Create();
+-			break;
+-		}
+-		return hashAlgorithm.ComputeHash(stream);
+ 	}
+ 
+ 	public static string GenerateFileSignature(string filename, FileHash method = FileHash.SHA1)
+@@ -72,9 +59,9 @@
+ 		return StringHelper.ToURLBase64(ComputeHash(stream, method));
+ 	}
+ 
++	public static string? FindFile(string filename, string directory, int maxDepth = -1)
+-	public static string FindFile(string filename, string directory, int maxDepth = -1)
+ 	{
++		string? text = Path.Combine(directory, filename);
+-		string text = Path.Combine(directory, filename);
+ 		if (File.Exists(text))
+ 		{
+ 			return text;
+@@ -84,7 +71,7 @@
+ 			if (maxDepth != 0)
+ 			{
+ 				string[] directories = Directory.GetDirectories(directory);
++				foreach (string? directory2 in directories)
+-				foreach (string directory2 in directories)
+ 				{
+ 					text = FindFile(filename, directory2, (maxDepth == -1) ? (-1) : (maxDepth - 1));
+ 					if (text != null)
+@@ -189,10 +176,10 @@
+ 		throw new Exception("Exception when deleting file " + filePath + "\n" + ex2);
+ 	}
+ 
++	public static List<string> GetPathDirectories(string? path)
+-	public static List<string> GetPathDirectories(string path)
+ 	{
+ 		List<string> list = new List<string>();
++		string? text = null;
+-		string text = null;
+ 		if (!string.IsNullOrEmpty(path))
+ 		{
+ 			text = Path.GetPathRoot(path);

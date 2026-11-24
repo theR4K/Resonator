@@ -1,0 +1,28 @@
+--- a/Elements/Core/PathUtility.cs
++++ b/Elements/Core/PathUtility.cs
+@@ -2,7 +2,7 @@
+ 
+ namespace Elements.Core;
+ 
++public static partial class PathUtility /* ArmAgedon seam */
+-public static class PathUtility
+ {
+ 	public static string NormalizePath(string path)
+ 	{
+@@ -13,14 +13,14 @@
+ 		return path.Replace('\\', '/');
+ 	}
+ 
++	public static string? GetDirectoryName(string path)
+-	public static string GetDirectoryName(string path)
+ 	{
+ 		if (Path.DirectorySeparatorChar == '\\' || Path.AltDirectorySeparatorChar == '\\' || !path.Contains('\\'))
+ 		{
+ 			return Path.GetDirectoryName(path);
+ 		}
+ 		path = path.Replace('\\', '/');
++		return NormalizeDirectoryName(path); // ArmAgedon seam
+-		return Path.GetDirectoryName(path).Replace('/', '\\');
+ 	}
+ 
+ 	public static string GetFileName(string path)

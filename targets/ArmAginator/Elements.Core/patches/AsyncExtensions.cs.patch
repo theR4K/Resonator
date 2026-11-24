@@ -1,0 +1,11 @@
+--- a/Elements/Core/AsyncExtensions.cs
++++ b/Elements/Core/AsyncExtensions.cs
+@@ -11,7 +11,7 @@
+ 		TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+ 		using (cancellationToken.Register((object? s) =>
+ 		{
++			CoreContract.Required((TaskCompletionSource<bool>?)s).TrySetResult /* ArmAgedon seam */(result: true);
+-			((TaskCompletionSource<bool>)s).TrySetResult(result: true);
+ 		}, taskCompletionSource))
+ 		{
+ 			if (task != await Task.WhenAny(task, taskCompletionSource.Task))

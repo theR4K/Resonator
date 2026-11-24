@@ -1,0 +1,30 @@
+--- a/Elements/Core/BoundingBoxTree.cs
++++ b/Elements/Core/BoundingBoxTree.cs
+@@ -7,7 +7,7 @@
+ 
+ namespace Elements.Core;
+ 
++public partial class BoundingBoxTree /* ArmAgedon seam */ : IDisposable
+-public class BoundingBoxTree : IDisposable
+ {
+ 	private struct EnumeratorCallbacks : IBreakableForEach<int>
+ 	{
+@@ -40,7 +40,7 @@
+ 		}
+ 	}
+ 
++	private BufferPool? _pool;
+-	private BufferPool _pool;
+ 
+ 	private Tree _tree;
+ 
+@@ -150,8 +150,6 @@
+ 
+ 	public void Dispose()
+ 	{
++		DisposePool(); // ArmAgedon seam
+-		_tree.Dispose(_pool);
+-		_pool.Clear();
+-		_pool = null;
+ 	}
+ }

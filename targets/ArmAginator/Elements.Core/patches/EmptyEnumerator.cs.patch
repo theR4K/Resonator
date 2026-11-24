@@ -1,0 +1,14 @@
+--- a/Elements/Core/EmptyEnumerator.cs
++++ b/Elements/Core/EmptyEnumerator.cs
+@@ -8,9 +8,9 @@
+ {
+ 	private class Enumerator : IEnumerator<T>, IEnumerator, IDisposable
+ 	{
++		public T Current => CoreContract.NoCurrent<T>(); // ArmAgedon seam
+-		public T Current => default;
+ 
++		object? IEnumerator.Current => Current;
+-		object IEnumerator.Current => null;
+ 
+ 		public void Dispose()
+ 		{

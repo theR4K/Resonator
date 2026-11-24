@@ -1,0 +1,96 @@
+--- a/Elements/Core/float2.cs
++++ b/Elements/Core/float2.cs
+@@ -1485,12 +1485,12 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(provider) + "]";
+ 	}
+ 
++	public string ToStringBase(IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(provider) + separator + " " + y.ToString(provider);
+ 	}
+@@ -1505,48 +1505,48 @@
+ 		return x.ToString(elementFormat) + separator + " " + y.ToString(elementFormat);
+ 	}
+ 
++	public string ToString(string? elementFormat, IFormatProvider? provider)
+-	public string ToString(string elementFormat, IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(elementFormat, provider) + "]";
+ 	}
+ 
++	public string ToStringBase(string? elementFormat, IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(string elementFormat, IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(elementFormat, provider) + separator + " " + y.ToString(elementFormat, provider);
+ 	}
+ 
++	public string ToStringConstructor(string? overrideType = null)
+-	public string ToStringConstructor(string overrideType = null)
+ 	{
+ 		return $"new {overrideType ?? "float2"}({x.ToCodeLiteral() + ", " + y.ToCodeLiteral()})";
+ 	}
+ 
+ 	public static float2 Parse(string s)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 2)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 2);
+ 		return new float2(float.Parse(array[0]), float.Parse(array[1]));
+ 	}
+ 
+ 	public static float2 Parse(string s, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 2)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 2);
+ 		return new float2(float.Parse(array[0], provider), float.Parse(array[1], provider));
+ 	}
+ 
+ 	public static float2 Parse(string s, NumberStyles style)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 2)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 2);
+ 		return new float2(float.Parse(array[0], style), float.Parse(array[1], style));
+ 	}
+ 
+ 	public static float2 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 2)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 2);
+ 		return new float2(float.Parse(array[0], style, provider), float.Parse(array[1], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out float2 val)
+-	public static bool TryParse(string s, out float2 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 2);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 2);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -1563,9 +1563,9 @@
+ 		return false;
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider formatProvider, out float2 val)
+-	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out float2 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 2);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 2);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -2260,7 +2260,7 @@
+ 		return new float2((float)n % v.x, (float)n % v.y);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is float2)
+ 		{

@@ -1,0 +1,26 @@
+--- a/Elements/Core/MathX.cs
++++ b/Elements/Core/MathX.cs
+@@ -15195,7 +15195,7 @@
+ 		return num;
+ 	}
+ 
++	private static int Partition<T>(this IList<T> list, int start, int end, Random? rnd = null) where T : IComparable<T>
+-	private static int Partition<T>(this IList<T> list, int start, int end, Random rnd = null) where T : IComparable<T>
+ 	{
+ 		if (rnd != null)
+ 		{
+@@ -15214,12 +15214,12 @@
+ 		return num;
+ 	}
+ 
++	public static T NthOrderStatistic<T>(this IList<T> list, int n, Random? rnd = null) where T : IComparable<T>
+-	public static T NthOrderStatistic<T>(this IList<T> list, int n, Random rnd = null) where T : IComparable<T>
+ 	{
+ 		return list.NthOrderStatistic(n, 0, list.Count - 1, rnd);
+ 	}
+ 
++	private static T NthOrderStatistic<T>(this IList<T> list, int n, int start, int end, Random? rnd) where T : IComparable<T>
+-	private static T NthOrderStatistic<T>(this IList<T> list, int n, int start, int end, Random rnd) where T : IComparable<T>
+ 	{
+ 		int num;
+ 		while (true)

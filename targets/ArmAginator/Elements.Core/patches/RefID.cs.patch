@@ -1,0 +1,31 @@
+--- a/Elements/Core/RefID.cs
++++ b/Elements/Core/RefID.cs
+@@ -50,7 +50,7 @@
+ 		return id == other.id;
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (!(obj is RefID))
+ 		{
+@@ -64,7 +64,7 @@
+ 		return id.GetHashCode();
+ 	}
+ 
++	public int CompareTo(object? obj)
+-	public int CompareTo(object obj)
+ 	{
+ 		if (!(obj is RefID other))
+ 		{
+@@ -88,8 +88,9 @@
+ 		return id.CompareTo(other.id);
+ 	}
+ 
++	public static bool TryParse(string? str, out RefID value)
+-	public static bool TryParse(string str, out RefID value)
+ 	{
++		if (CoreContract.MissingText(str, out value)) return false; // ArmAgedon seam
+ 		if (str.Length < 3)
+ 		{
+ 			value = default;

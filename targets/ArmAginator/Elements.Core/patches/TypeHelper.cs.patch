@@ -1,0 +1,59 @@
+--- a/Elements/Core/TypeHelper.cs
++++ b/Elements/Core/TypeHelper.cs
+@@ -83,14 +83,14 @@
+ 		extraAliases.Add("rect", typeof(Rect));
+ 	}
+ 
++	public static Type? FindType(string typename)
+-	public static Type FindType(string typename)
+ 	{
++		Type? type = Type.GetType(typename, throwOnError: false, ignoreCase: true);
+-		Type type = Type.GetType(typename, throwOnError: false, ignoreCase: true);
+ 		if (type != null)
+ 		{
+ 			return type;
+ 		}
++		Assembly[]? assemblies = AppDomain.CurrentDomain.GetAssemblies();
+-		Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+ 		for (int i = 0; i < assemblies.Length; i++)
+ 		{
+ 			type = assemblies[i].GetType(typename, throwOnError: false, ignoreCase: true);
+@@ -102,11 +102,11 @@
+ 		return null;
+ 	}
+ 
++	public static Type? TryResolveAlias(string alias)
+-	public static Type TryResolveAlias(string alias)
+ 	{
+ 		if (alias.EndsWith("?"))
+ 		{
++			Type? type = TryResolveAlias(alias.Substring(0, alias.Length - 1));
+-			Type type = TryResolveAlias(alias.Substring(0, alias.Length - 1));
+ 			if (type == null)
+ 			{
+ 				return null;
+@@ -128,11 +128,11 @@
+ 		return null;
+ 	}
+ 
++	public static string? TryGetAlias(Type type)
+-	public static string TryGetAlias(Type type)
+ 	{
+ 		if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+ 		{
++			string? text = TryGetAlias(type.GetGenericArguments()[0]);
+-			string text = TryGetAlias(type.GetGenericArguments()[0]);
+ 			if (text == null)
+ 			{
+ 				return null;
+@@ -159,8 +159,8 @@
+ 		}
+ 		string name = inputType.Name;
+ 		string newValue = name.Replace(typeReplacement.ReplaceSource, typeReplacement.ReplaceTarget);
++		string text = CoreContract.Required(inputType.FullName).Replace /* ArmAgedon seam */(name, newValue);
++		Type? type2 = FindType(text);
+-		string text = inputType.FullName.Replace(name, newValue);
+-		Type type2 = FindType(text);
+ 		if (type2 == null)
+ 		{
+ 			throw new Exception($"Replacement type doesn't exist.\nInputType: {inputType}\nReplacementType: {text}");

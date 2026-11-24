@@ -1,0 +1,11 @@
+--- a/Elements/Core/SphericalHarmonicsHelper.cs
++++ b/Elements/Core/SphericalHarmonicsHelper.cs
+@@ -22,7 +22,7 @@
+ 		return sphericalHarmonicType.IsEnginePrimitive();
+ 	}
+ 
++	public static T? FilterInvalid<T>(T sh, T? fallback = default(T)) where T : ISphericalHarmonics
+-	public static T FilterInvalid<T>(T sh, T fallback = default(T)) where T : ISphericalHarmonics
+ 	{
+ 		if (sh.IsValid)
+ 		{

@@ -1,0 +1,11 @@
+--- a/Elements/Core/half3.cs
++++ b/Elements/Core/half3.cs
+@@ -76,7 +76,7 @@
+ 		return new half3(half5, half5, half5);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is half3)
+ 		{

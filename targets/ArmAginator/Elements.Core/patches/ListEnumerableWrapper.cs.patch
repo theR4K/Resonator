@@ -1,0 +1,11 @@
+--- a/Elements/Core/ListEnumerableWrapper.cs
++++ b/Elements/Core/ListEnumerableWrapper.cs
+@@ -7,7 +7,7 @@
+ [Obsolete("Likely no longer needed with current .net versions")]
+ public readonly struct ListEnumerableWrapper<T> : IEnumerable<T>, IEnumerable
+ {
++	private static List<T>? emptyList;
+-	private static List<T> emptyList;
+ 
+ 	private readonly List<T> list;
+ 

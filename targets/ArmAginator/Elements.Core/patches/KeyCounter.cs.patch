@@ -1,0 +1,36 @@
+--- a/Elements/Core/KeyCounter.cs
++++ b/Elements/Core/KeyCounter.cs
+@@ -5,6 +5,7 @@
+ namespace Elements.Core;
+ 
+ public class KeyCounter<T> : IEnumerable<KeyValuePair<T, int>>, IEnumerable
++where T : notnull
+ {
+ 	private readonly Dictionary<T, int> keys = new Dictionary<T, int>();
+ 
+@@ -58,10 +59,10 @@
+ 		AllowNegativeValues = allowNegativeValues;
+ 	}
+ 
++	public T? FindItemWithHighestCount()
+-	public T FindItemWithHighestCount()
+ 	{
+ 		int num = int.MinValue;
++		T? result = default;
+-		T result = default;
+ 		foreach (KeyValuePair<T, int> key in keys)
+ 		{
+ 			if (key.Value > num)
+@@ -73,10 +74,10 @@
+ 		return result;
+ 	}
+ 
++	public T? FindItemWithLowestCount()
+-	public T FindItemWithLowestCount()
+ 	{
+ 		int num = int.MaxValue;
++		T? result = default;
+-		T result = default;
+ 		foreach (KeyValuePair<T, int> key in keys)
+ 		{
+ 			if (key.Value < num)

@@ -1,0 +1,12 @@
+--- a/Elements/Core/IStructMemberProxy.cs
++++ b/Elements/Core/IStructMemberProxy.cs
+@@ -6,7 +6,7 @@
+ {
+ 	Type MemberType { get; }
+ 
++	object? GetValue(object? current);
+-	object GetValue(object current);
+ 
++	object? SetValue(object? current, object? value);
+-	object SetValue(object current, object value);
+ }

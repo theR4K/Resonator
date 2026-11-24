@@ -1,0 +1,19 @@
+--- a/Elements/Core/StructPropertyMethodProxy.cs
++++ b/Elements/Core/StructPropertyMethodProxy.cs
+@@ -17,13 +17,13 @@
+ 		this.setMethod = setMethod;
+ 	}
+ 
++	public object? GetValue(object? current)
+-	public object GetValue(object current)
+ 	{
+ 		return property.GetValue(current);
+ 	}
+ 
++	public object? SetValue(object? current, object? value)
+-	public object SetValue(object current, object value)
+ 	{
++		return setMethod.Invoke(current, new object?[1] { value });
+-		return setMethod.Invoke(current, new object[1] { value });
+ 	}
+ }

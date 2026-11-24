@@ -1,0 +1,224 @@
+--- a/Elements/Core/dummy.cs
++++ b/Elements/Core/dummy.cs
+@@ -4,9 +4,9 @@
+ namespace Elements.Core;
+ 
+ [StructLayout(LayoutKind.Sequential, Size = 1)]
++public readonly partial struct @dummy /* ArmAgedon seam */ : IEquatable<dummy>, IConvertible, IComparable<dummy>
+-public readonly struct dummy : IEquatable<dummy>, IConvertible, IComparable<dummy>
+ {
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		return obj is dummy;
+ 	}
+@@ -31,82 +31,82 @@
+ 		return TypeCode.Empty;
+ 	}
+ 
++	public bool ToBoolean(IFormatProvider? provider)
+-	public bool ToBoolean(IFormatProvider provider)
+ 	{
+ 		return false;
+ 	}
+ 
++	public char ToChar(IFormatProvider? provider)
+-	public char ToChar(IFormatProvider provider)
+ 	{
+ 		return '\0';
+ 	}
+ 
++	public sbyte ToSByte(IFormatProvider? provider)
+-	public sbyte ToSByte(IFormatProvider provider)
+ 	{
+ 		return 0;
+ 	}
+ 
++	public byte ToByte(IFormatProvider? provider)
+-	public byte ToByte(IFormatProvider provider)
+ 	{
+ 		return 0;
+ 	}
+ 
++	public short ToInt16(IFormatProvider? provider)
+-	public short ToInt16(IFormatProvider provider)
+ 	{
+ 		return 0;
+ 	}
+ 
++	public ushort ToUInt16(IFormatProvider? provider)
+-	public ushort ToUInt16(IFormatProvider provider)
+ 	{
+ 		return 0;
+ 	}
+ 
++	public int ToInt32(IFormatProvider? provider)
+-	public int ToInt32(IFormatProvider provider)
+ 	{
+ 		return 0;
+ 	}
+ 
++	public uint ToUInt32(IFormatProvider? provider)
+-	public uint ToUInt32(IFormatProvider provider)
+ 	{
+ 		return 0u;
+ 	}
+ 
++	public long ToInt64(IFormatProvider? provider)
+-	public long ToInt64(IFormatProvider provider)
+ 	{
+ 		return 0L;
+ 	}
+ 
++	public ulong ToUInt64(IFormatProvider? provider)
+-	public ulong ToUInt64(IFormatProvider provider)
+ 	{
+ 		return 0uL;
+ 	}
+ 
++	public float ToSingle(IFormatProvider? provider)
+-	public float ToSingle(IFormatProvider provider)
+ 	{
+ 		return 0f;
+ 	}
+ 
++	public double ToDouble(IFormatProvider? provider)
+-	public double ToDouble(IFormatProvider provider)
+ 	{
+ 		return 0.0;
+ 	}
+ 
++	public decimal ToDecimal(IFormatProvider? provider)
+-	public decimal ToDecimal(IFormatProvider provider)
+ 	{
+ 		return 0m;
+ 	}
+ 
++	public DateTime ToDateTime(IFormatProvider? provider)
+-	public DateTime ToDateTime(IFormatProvider provider)
+ 	{
+ 		return default;
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return ToString();
+ 	}
+ 
++	public object? ToType(Type conversionType, IFormatProvider? provider)
+-	public object ToType(Type conversionType, IFormatProvider provider)
+ 	{
+ 		return conversionType.GetDefaultValue();
+ 	}
+@@ -117,9 +117,9 @@
+ 	}
+ }
+ [StructLayout(LayoutKind.Sequential, Size = 1)]
++public readonly partial struct @dummy /* ArmAgedon seam */<T> : IEquatable<dummy<T>>, IConvertible, IComparable<dummy<T>>
+-public readonly struct dummy<T> : IEquatable<dummy<T>>, IConvertible, IComparable<dummy<T>>
+ {
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		return obj is dummy<T>;
+ 	}
+@@ -144,82 +144,82 @@
+ 		return TypeCode.Empty;
+ 	}
+ 
++	public bool ToBoolean(IFormatProvider? provider)
+-	public bool ToBoolean(IFormatProvider provider)
+ 	{
+ 		return false;
+ 	}
+ 
++	public char ToChar(IFormatProvider? provider)
+-	public char ToChar(IFormatProvider provider)
+ 	{
+ 		return '\0';
+ 	}
+ 
++	public sbyte ToSByte(IFormatProvider? provider)
+-	public sbyte ToSByte(IFormatProvider provider)
+ 	{
+ 		return 0;
+ 	}
+ 
++	public byte ToByte(IFormatProvider? provider)
+-	public byte ToByte(IFormatProvider provider)
+ 	{
+ 		return 0;
+ 	}
+ 
++	public short ToInt16(IFormatProvider? provider)
+-	public short ToInt16(IFormatProvider provider)
+ 	{
+ 		return 0;
+ 	}
+ 
++	public ushort ToUInt16(IFormatProvider? provider)
+-	public ushort ToUInt16(IFormatProvider provider)
+ 	{
+ 		return 0;
+ 	}
+ 
++	public int ToInt32(IFormatProvider? provider)
+-	public int ToInt32(IFormatProvider provider)
+ 	{
+ 		return 0;
+ 	}
+ 
++	public uint ToUInt32(IFormatProvider? provider)
+-	public uint ToUInt32(IFormatProvider provider)
+ 	{
+ 		return 0u;
+ 	}
+ 
++	public long ToInt64(IFormatProvider? provider)
+-	public long ToInt64(IFormatProvider provider)
+ 	{
+ 		return 0L;
+ 	}
+ 
++	public ulong ToUInt64(IFormatProvider? provider)
+-	public ulong ToUInt64(IFormatProvider provider)
+ 	{
+ 		return 0uL;
+ 	}
+ 
++	public float ToSingle(IFormatProvider? provider)
+-	public float ToSingle(IFormatProvider provider)
+ 	{
+ 		return 0f;
+ 	}
+ 
++	public double ToDouble(IFormatProvider? provider)
+-	public double ToDouble(IFormatProvider provider)
+ 	{
+ 		return 0.0;
+ 	}
+ 
++	public decimal ToDecimal(IFormatProvider? provider)
+-	public decimal ToDecimal(IFormatProvider provider)
+ 	{
+ 		return 0m;
+ 	}
+ 
++	public DateTime ToDateTime(IFormatProvider? provider)
+-	public DateTime ToDateTime(IFormatProvider provider)
+ 	{
+ 		return default;
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return ToString();
+ 	}
+ 
++	public object? ToType(Type conversionType, IFormatProvider? provider)
+-	public object ToType(Type conversionType, IFormatProvider provider)
+ 	{
+ 		return conversionType.GetDefaultValue();
+ 	}

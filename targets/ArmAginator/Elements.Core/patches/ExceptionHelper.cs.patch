@@ -1,0 +1,11 @@
+--- a/Elements/Core/ExceptionHelper.cs
++++ b/Elements/Core/ExceptionHelper.cs
+@@ -14,7 +14,7 @@
+ 		StringBuilder stringBuilder = new StringBuilder();
+ 		stringBuilder.AppendLine("Exception:");
+ 		stringBuilder.AppendLine(ex.ToString());
++		for (Exception? innerException = ex.InnerException; innerException != null; innerException = innerException.InnerException)
+-		for (Exception innerException = ex.InnerException; innerException != null; innerException = innerException.InnerException)
+ 		{
+ 			stringBuilder.AppendLine("InnerException:");
+ 			stringBuilder.AppendLine(innerException.ToString());

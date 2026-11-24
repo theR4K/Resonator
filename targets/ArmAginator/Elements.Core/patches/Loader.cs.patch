@@ -1,0 +1,7 @@
+--- a/Elements/Core/Loader.cs
++++ b/Elements/Core/Loader.cs
+@@ -1,3 +1,3 @@
+ namespace Elements.Core;
+ 
++internal delegate E? Loader<E>(DataTreeNode node);
+-internal delegate E Loader<E>(DataTreeNode node);

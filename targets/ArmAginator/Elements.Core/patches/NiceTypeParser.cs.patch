@@ -1,0 +1,75 @@
+--- a/Elements/Core/NiceTypeParser.cs
++++ b/Elements/Core/NiceTypeParser.cs
+@@ -24,14 +24,14 @@
+ 		}
+ 	}
+ 
++	public static Func<string, Type?>? DefaultTypeSearcher;
+-	public static Func<string, Type> DefaultTypeSearcher;
+ 
++	public static Type? TryParse(string str)
+-	public static Type TryParse(string str)
+ 	{
++		return TryParse(str, DefaultTypeSearcher ?? ((Func<string, Type?>)((string s) => TypeHelper.FindType(s))));
+-		return TryParse(str, DefaultTypeSearcher ?? ((Func<string, Type>)((string s) => TypeHelper.FindType(s))));
+ 	}
+ 
++	public static Type? TryParse(string str, Func<string, Type?> typeSearcher)
+-	public static Type TryParse(string str, Func<string, Type> typeSearcher)
+ 	{
+ 		return TryParse(new StringSegment(str), typeSearcher);
+ 	}
+@@ -138,7 +138,7 @@
+ 		return false;
+ 	}
+ 
++	public static Type? TryParse(StringSegment str, Func<string, Type?> typeSearcher)
+-	public static Type TryParse(StringSegment str, Func<string, Type> typeSearcher)
+ 	{
+ 		List<TypePart> list = new List<TypePart>();
+ 		List<Type> list2 = new List<Type>();
+@@ -198,7 +198,7 @@
+ 		{
+ 			return null;
+ 		}
++		Type? type = TypeHelper.TryResolveAlias(text) ?? typeSearcher(text);
+-		Type type = TypeHelper.TryResolveAlias(text) ?? typeSearcher(text);
+ 		if (type == null)
+ 		{
+ 			return null;
+@@ -239,7 +239,7 @@
+ 		{
+ 			return null;
+ 		}
++		Type? FinalizeType(Type type2)
+-		Type FinalizeType(Type type2)
+ 		{
+ 			if (isNullable)
+ 			{
+@@ -258,7 +258,7 @@
+ 		}
+ 	}
+ 
++	private static TypePart TryParseTypePart(StringSegment typePart, List<Type> genericArguments, Func<string, Type?> typeSearcher)
+-	private static TypePart TryParseTypePart(StringSegment typePart, List<Type> genericArguments, Func<string, Type> typeSearcher)
+ 	{
+ 		int num = typePart.IndexOf("<");
+ 		if (num < 0)
+@@ -328,7 +328,7 @@
+ 		bool ProcessArgument(int index)
+ 		{
+ 			StringSegment str = typePart.Slice(currentStart, index - currentStart).Trim();
++			Type? type = null;
+-			Type type = null;
+ 			if (str.length > 0)
+ 			{
+ 				type = TryParse(str, typeSearcher);
+@@ -337,7 +337,7 @@
+ 					return false;
+ 				}
+ 			}
++			genericArguments.Add(CoreContract.Required(type)); // ArmAgedon seam
+-			genericArguments.Add(type);
+ 			genericArgCount++;
+ 			currentStart = index + 1;
+ 			return true;

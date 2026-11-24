@@ -1,0 +1,52 @@
+--- a/Elements/Core/colorX.cs
++++ b/Elements/Core/colorX.cs
+@@ -7986,7 +7986,7 @@
+ 		return this == other;
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is colorX colorX2)
+ 		{
+@@ -8332,11 +8332,11 @@
+ 
+ 	public static colorX Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 5);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 5);
+ 		ColorProfile colorProfile = ColorProfile.sRGB;
+ 		if (array == null)
+ 		{
++			array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-			array = PrimitivesUtility.ExtractElements(s, 4);
+ 		}
+ 		if (array.Length == 5)
+ 		{
+@@ -8345,14 +8345,14 @@
+ 		return new colorX(float.Parse(array[0], style, provider), float.Parse(array[1], style, provider), float.Parse(array[2], style, provider), float.Parse(array[3], style, provider), colorProfile);
+ 	}
+ 
++	public static bool TryParse(string? s, out colorX val)
+-	public static bool TryParse(string s, out colorX val)
+ 	{
+ 		return TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out val);
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles style, IFormatProvider provider, out colorX val)
+-	public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out colorX val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 5);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 5);
+ 		ColorProfile result = ColorProfile.sRGB;
+ 		if (array == null)
+ 		{
+@@ -8386,7 +8386,7 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return $"[{baseColor.ToStringBase(provider)}; {profile}]";
+ 	}

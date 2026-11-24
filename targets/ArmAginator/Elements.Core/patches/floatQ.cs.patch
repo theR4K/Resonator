@@ -1,0 +1,37 @@
+--- a/Elements/Core/floatQ.cs
++++ b/Elements/Core/floatQ.cs
+@@ -2864,7 +2864,7 @@
+ 		return false;
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is floatQ)
+ 		{
+@@ -2895,7 +2895,7 @@
+ 		return ((float4)this).ToString();
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return ((float4)this).ToString(provider);
+ 	}
+@@ -2955,14 +2955,14 @@
+ 		}
+ 	}
+ 
++	public static bool TryParse(string? s, out floatQ val)
+-	public static bool TryParse(string s, out floatQ val)
+ 	{
+ 		bool result = float4.TryParse(s, out var val2);
+ 		val = (floatQ)val2;
+ 		return result;
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles style, IFormatProvider provider, out floatQ val)
+-	public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out floatQ val)
+ 	{
+ 		bool result = float4.TryParse(s, style, provider, out var val2);
+ 		val = (floatQ)val2;

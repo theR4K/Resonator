@@ -1,0 +1,13 @@
+--- a/Elements/Core/DictionaryEnumerableWrapper.cs
++++ b/Elements/Core/DictionaryEnumerableWrapper.cs
+@@ -4,8 +4,9 @@
+ namespace Elements.Core;
+ 
+ public readonly struct DictionaryEnumerableWrapper<K, T> : IEnumerable<KeyValuePair<K, T>>, IEnumerable
++where K : notnull
+ {
++	private static Dictionary<K, T>? emptyDict;
+-	private static Dictionary<K, T> emptyDict;
+ 
+ 	private readonly Dictionary<K, T> dict;
+ 

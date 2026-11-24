@@ -1,0 +1,47 @@
+--- a/Elements/Core/StringTokenizer.cs
++++ b/Elements/Core/StringTokenizer.cs
+@@ -4,14 +4,14 @@
+ 
+ public static class StringTokenizer
+ {
++	public static StringToken? Tokenize(string str, HashSet<string>? allowedTags = null)
+-	public static StringToken Tokenize(string str, HashSet<string> allowedTags = null)
+ 	{
+ 		if (string.IsNullOrEmpty(str))
+ 		{
+ 			return new StringContent("");
+ 		}
++		StringToken? stringToken = null;
++		StringToken? stringToken2 = null;
+-		StringToken stringToken = null;
+-		StringToken stringToken2 = null;
+ 		int index = 0;
+ 		while (index < str.Length)
+ 		{
+@@ -29,7 +29,7 @@
+ 		return stringToken;
+ 	}
+ 
++	private static StringToken GetNextToken(string str, ref int index, HashSet<string>? allowedTags)
+-	private static StringToken GetNextToken(string str, ref int index, HashSet<string> allowedTags)
+ 	{
+ 		StringSegmentToken content;
+ 		if (IsStartingTag(str, index, allowedTags))
+@@ -72,7 +72,7 @@
+ 		return new StringContent(content);
+ 	}
+ 
++	private static int GetNextOpenTagIndex(string str, int index, HashSet<string>? allowedTags)
+-	private static int GetNextOpenTagIndex(string str, int index, HashSet<string> allowedTags)
+ 	{
+ 		int num = index - 1;
+ 		do
+@@ -87,7 +87,7 @@
+ 		return num;
+ 	}
+ 
++	private static bool IsStartingTag(string str, int index, HashSet<string>? allowedTags)
+-	private static bool IsStartingTag(string str, int index, HashSet<string> allowedTags)
+ 	{
+ 		if (str[index] != '<')
+ 		{

@@ -1,0 +1,115 @@
+--- a/Elements/Core/DataTreeDictionary.cs
++++ b/Elements/Core/DataTreeDictionary.cs
+@@ -55,7 +55,7 @@
+ 		return Children.Remove(key);
+ 	}
+ 
++	public bool TryExtract<T>(string key, ref T? value)
+-	public bool TryExtract<T>(string key, ref T value)
+ 	{
+ 		if (Children.TryGetValue(key, out var value2))
+ 		{
+@@ -65,7 +65,7 @@
+ 		return false;
+ 	}
+ 
++	public T? ExtractOrDefault<T>(string key, T? def = default(T))
+-	public T ExtractOrDefault<T>(string key, T def = default(T))
+ 	{
+ 		if (Children.TryGetValue(key, out var value))
+ 		{
+@@ -74,7 +74,7 @@
+ 		return def;
+ 	}
+ 
++	public T? ExtractOrThrow<T>(string key)
+-	public T ExtractOrThrow<T>(string key)
+ 	{
+ 		if (Children.TryGetValue(key, out var value))
+ 		{
+@@ -83,7 +83,7 @@
+ 		throw new Exception("Value " + key + " does not exist!");
+ 	}
+ 
++	public T? ExtractOrAdd<T>(string key, T add)
+-	public T ExtractOrAdd<T>(string key, T add)
+ 	{
+ 		if (Children.TryGetValue(key, out var value))
+ 		{
+@@ -93,13 +93,13 @@
+ 		return add;
+ 	}
+ 
++	public DataTreeNode? TryGetNode(string key)
+-	public DataTreeNode TryGetNode(string key)
+ 	{
+ 		Children.TryGetValue(key, out var value);
+ 		return value;
+ 	}
+ 
++	public DataTreeList? TryGetList(string key)
+-	public DataTreeList TryGetList(string key)
+ 	{
+ 		if (Children.TryGetValue(key, out var value) && value is DataTreeList result)
+ 		{
+@@ -108,7 +108,7 @@
+ 		return null;
+ 	}
+ 
++	public DataTreeDictionary? TryGetDictionary(string key)
+-	public DataTreeDictionary TryGetDictionary(string key)
+ 	{
+ 		if (Children.TryGetValue(key, out var value) && value is DataTreeDictionary result)
+ 		{
+@@ -155,16 +155,16 @@
+ 		return GetEnumerator();
+ 	}
+ 
++	private T? ExtractValue<T>(DataTreeNode node)
+-	private T ExtractValue<T>(DataTreeNode node)
+ 	{
+ 		Type typeFromHandle = typeof(T);
+ 		if (typeFromHandle.IsEnum)
+ 		{
++			return (T)Enum.Parse(typeFromHandle, CoreContract.Required(ExtractValue<string>(node))) /* ArmAgedon seam */;
+-			return (T)Enum.Parse(typeFromHandle, ExtractValue<string>(node));
+ 		}
+ 		if (typeFromHandle == typeof(string))
+ 		{
++			return (T?)(object?)CoreContract.Required(node as DataTreeValue).Extract<string>() /* ArmAgedon seam */;
+-			return (T)(object)(node as DataTreeValue).Extract<string>();
+ 		}
+ 		if (typeFromHandle == typeof(bool))
+ 		{
+@@ -220,11 +220,11 @@
+ 		}
+ 		if (typeFromHandle == typeof(string))
+ 		{
++			return (T?)(object?)node.LoadString();
+-			return (T)(object)node.LoadString();
+ 		}
+ 		if (typeFromHandle == typeof(Uri))
+ 		{
++			return (T?)(object?)node.LoadUri();
+-			return (T)(object)node.LoadUri();
+ 		}
+ 		if (typeFromHandle == typeof(bool2))
+ 		{
+@@ -418,7 +418,7 @@
+ 		Type typeFromHandle = typeof(T);
+ 		if (val is DataTreeNode)
+ 		{
++			Children.Add(key, CoreContract.Required(val as DataTreeNode)) /* ArmAgedon seam */;
+-			Children.Add(key, val as DataTreeNode);
+ 			return;
+ 		}
+ 		if (typeFromHandle.IsEnum)
+@@ -428,7 +428,7 @@
+ 		}
+ 		if (typeFromHandle == typeof(string))
+ 		{
++			Children.Add(key, new DataTreeValue((string?)(object?)val));
+-			Children.Add(key, new DataTreeValue((string)(object)val));
+ 			return;
+ 		}
+ 		if (val is bool)

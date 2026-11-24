@@ -1,0 +1,20 @@
+--- a/Elements/Core/ArrayPool.cs
++++ b/Elements/Core/ArrayPool.cs
+@@ -11,13 +11,13 @@
+ 
+ 	public int MaxGroupSize = 51200;
+ 
++	public event Action<int>? OnAllocate;
+-	public event Action<int> OnAllocate;
+ 
++	public event Action<int>? OnBorrow;
+-	public event Action<int> OnBorrow;
+ 
++	public event Action<int>? OnReturn;
+-	public event Action<int> OnReturn;
+ 
++	public event Action<int>? OnThrowAway;
+-	public event Action<int> OnThrowAway;
+ 
+ 	public ArrayPool(params int[] _sizeGroups)
+ 	{

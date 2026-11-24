@@ -1,0 +1,17 @@
+--- a/Elements/Core/StructFieldProxy.cs
++++ b/Elements/Core/StructFieldProxy.cs
+@@ -14,12 +14,12 @@
+ 		this.field = field;
+ 	}
+ 
++	public object? GetValue(object? current)
+-	public object GetValue(object current)
+ 	{
+ 		return field.GetValue(current);
+ 	}
+ 
++	public object? SetValue(object? current, object? value)
+-	public object SetValue(object current, object value)
+ 	{
+ 		field.SetValue(current, value);
+ 		return current;

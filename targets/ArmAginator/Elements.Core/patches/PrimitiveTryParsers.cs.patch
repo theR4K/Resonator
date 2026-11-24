@@ -1,0 +1,170 @@
+--- a/Elements/Core/PrimitiveTryParsers.cs
++++ b/Elements/Core/PrimitiveTryParsers.cs
+@@ -5,22 +5,22 @@
+ 
+ public static class PrimitiveTryParsers
+ {
++	public delegate bool TryParser(string str, out object? parsed);
+-	public delegate bool TryParser(string str, out object parsed);
+ 
++	private static TryParser _stringParser = delegate(string str, out object? parsed)
+-	private static TryParser _stringParser = delegate(string str, out object parsed)
+ 	{
+ 		parsed = str;
+ 		return true;
+ 	};
+ 
++	public static readonly TryParser UriParser = delegate(string str, out object? parsed)
+-	public static readonly TryParser UriParser = delegate(string str, out object parsed)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+ 			parsed = null;
+ 			return true;
+ 		}
++		if (Uri.TryCreate(str, UriKind.Absolute, out Uri? result))
+-		if (Uri.TryCreate(str, UriKind.Absolute, out Uri result))
+ 		{
+ 			parsed = result;
+ 			return true;
+@@ -29,7 +29,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser TypeParser = delegate(string str, out object? parsed)
+-	public static readonly TryParser TypeParser = delegate(string str, out object parsed)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(str))
+ 		{
+@@ -40,7 +40,7 @@
+ 		return parsed != null;
+ 	};
+ 
++	public static readonly TryParser BooleanParser = delegate(string str, out object? parsed)
+-	public static readonly TryParser BooleanParser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, out bool value))
+ 		{
+@@ -51,7 +51,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser ByteParser = delegate(string str, out object? parsed)
+-	public static readonly TryParser ByteParser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out byte value))
+ 		{
+@@ -62,7 +62,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser UInt16Parser = delegate(string str, out object? parsed)
+-	public static readonly TryParser UInt16Parser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out ushort value))
+ 		{
+@@ -73,7 +73,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser UInt32Parser = delegate(string str, out object? parsed)
+-	public static readonly TryParser UInt32Parser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out uint value))
+ 		{
+@@ -84,7 +84,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser UInt64Parser = delegate(string str, out object? parsed)
+-	public static readonly TryParser UInt64Parser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out ulong value))
+ 		{
+@@ -95,7 +95,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser SByteParser = delegate(string str, out object? parsed)
+-	public static readonly TryParser SByteParser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out sbyte value))
+ 		{
+@@ -106,7 +106,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser Int16Parser = delegate(string str, out object? parsed)
+-	public static readonly TryParser Int16Parser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out short value))
+ 		{
+@@ -117,7 +117,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser Int32Parser = delegate(string str, out object? parsed)
+-	public static readonly TryParser Int32Parser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out int value))
+ 		{
+@@ -128,7 +128,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser Int64Parser = delegate(string str, out object? parsed)
+-	public static readonly TryParser Int64Parser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out long value))
+ 		{
+@@ -139,7 +139,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser SingleParser = delegate(string str, out object? parsed)
+-	public static readonly TryParser SingleParser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out float value))
+ 		{
+@@ -150,7 +150,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser DoubleParser = delegate(string str, out object? parsed)
+-	public static readonly TryParser DoubleParser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out double value))
+ 		{
+@@ -161,7 +161,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser DecimalParser = delegate(string str, out object? parsed)
+-	public static readonly TryParser DecimalParser = delegate(string str, out object parsed)
+ 	{
+ 		if (RobustParser.TryParse(str, NumberStyles.Any, out decimal value))
+ 		{
+@@ -172,7 +172,7 @@
+ 		return false;
+ 	};
+ 
++	public static readonly TryParser CharParser = delegate(string str, out object? parsed)
+-	public static readonly TryParser CharParser = delegate(string str, out object parsed)
+ 	{
+ 		if (str != null && str.Length > 1 && str[0] == '\0')
+ 		{
+@@ -187,12 +187,12 @@
+ 		return false;
+ 	};
+ 
++	public static TryParser? GetParser(Type type)
+-	public static TryParser GetParser(Type type)
+ 	{
+ 		return GetParser(type.Name);
+ 	}
+ 
++	public static TryParser? GetParser(string typename)
+-	public static TryParser GetParser(string typename)
+ 	{
+ 		return typename switch
+ 		{

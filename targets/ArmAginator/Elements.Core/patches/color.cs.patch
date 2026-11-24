@@ -1,0 +1,87 @@
+--- a/Elements/Core/color.cs
++++ b/Elements/Core/color.cs
+@@ -8,7 +8,7 @@
+ namespace Elements.Core;
+ 
+ [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
++public readonly struct @color : IEquatable<color>
+-public readonly struct color : IEquatable<color>
+ {
+ 	public readonly float r;
+ 
+@@ -7709,7 +7709,7 @@
+ 		return new bool4(a.r <= b.r, a.g <= b.g, a.b <= b.b, a.a <= b.a);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is color)
+ 		{
+@@ -7837,36 +7837,36 @@
+ 
+ 	public static color Parse(string s)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new color(float.Parse(array[0]), float.Parse(array[1]), float.Parse(array[2]), float.Parse(array[3]));
+ 	}
+ 
+ 	public static color Parse(string s, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new color(float.Parse(array[0], provider), float.Parse(array[1], provider), float.Parse(array[2], provider), float.Parse(array[3], provider));
+ 	}
+ 
+ 	public static color Parse(string s, NumberStyles style)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new color(float.Parse(array[0], style), float.Parse(array[1], style), float.Parse(array[2], style), float.Parse(array[3], style));
+ 	}
+ 
+ 	public static color Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new color(float.Parse(array[0], style, provider), float.Parse(array[1], style, provider), float.Parse(array[2], style, provider), float.Parse(array[3], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out color val)
+-	public static bool TryParse(string s, out color val)
+ 	{
+ 		bool result = float4.TryParse(s, out var val2);
+ 		val = val2;
+ 		return result;
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles style, IFormatProvider provider, out color val)
+-	public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out color val)
+ 	{
+ 		bool result = float4.TryParse(s, style, provider, out var val2);
+ 		val = val2;
+@@ -7878,12 +7878,12 @@
+ 		return ((float4)this/*cast due to constrained. prefix*/).ToString();
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return ((float4)this).ToString(provider);
+ 	}
+ 
++	public string ToStringBase(IFormatProvider? provider)
+-	public string ToStringBase(IFormatProvider provider)
+ 	{
+ 		return ((float4)this).ToStringBase(provider);
+ 	}
+@@ -7903,7 +7903,7 @@
+ 		return ((float4)this).ToString(elementFormat, provider);
+ 	}
+ 
++	public string ToStringBase(string? elementFormat, IFormatProvider? provider)
+-	public string ToStringBase(string elementFormat, IFormatProvider provider)
+ 	{
+ 		return ((float4)this).ToStringBase(elementFormat, provider);
+ 	}

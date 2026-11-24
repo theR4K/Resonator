@@ -1,0 +1,11 @@
+--- a/Elements/Core/RefIDExtensions.cs
++++ b/Elements/Core/RefIDExtensions.cs
+@@ -11,7 +11,7 @@
+ 
+ 	public static RefID LoadRefID(this DataTreeNode node)
+ 	{
++		return RefID.Parse(CoreContract.Required(node.LoadString())) /* ArmAgedon seam */;
+-		return RefID.Parse(node.LoadString());
+ 	}
+ 
+ 	public static void Write(this BinaryWriter wr, RefID id)

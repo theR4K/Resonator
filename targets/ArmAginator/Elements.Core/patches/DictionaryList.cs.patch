@@ -1,0 +1,51 @@
+--- a/Elements/Core/DictionaryList.cs
++++ b/Elements/Core/DictionaryList.cs
+@@ -4,6 +4,7 @@
+ namespace Elements.Core;
+ 
+ public class DictionaryList<K, T> : IEnumerable<KeyValuePair<K, List<T>>>, IEnumerable
++where K : notnull
+ {
+ 	private Dictionary<K, List<T>> dictionary = new Dictionary<K, List<T>>();
+ 
+@@ -30,8 +31,9 @@
+ 		return false;
+ 	}
+ 
++	private void CheckRemoveList(K key, List<T>? list)
+-	private void CheckRemoveList(K key, List<T> list)
+ 	{
++		CoreContract.Required(list); // ArmAgedon seam
+ 		if (list.Count == 0)
+ 		{
+ 			dictionary.Remove(key);
+@@ -54,7 +56,7 @@
+ 	{
+ 		foreach (KeyValuePair<K, List<T>> item in dictionary)
+ 		{
++			List<T>? list = item.Value;
+-			List<T> list = item.Value;
+ 			Pool.Return(ref list);
+ 		}
+ 		dictionary.Clear();
+@@ -65,7 +67,7 @@
+ 		return dictionary.ContainsKey(key);
+ 	}
+ 
++	public List<T>? TryGetList(K key)
+-	public List<T> TryGetList(K key)
+ 	{
+ 		dictionary.TryGetValue(key, out var value);
+ 		return value;
+@@ -81,9 +83,9 @@
+ 		return value;
+ 	}
+ 
++	public bool TryTakeOne(K key, out T? element)
+-	public bool TryTakeOne(K key, out T element)
+ 	{
++		List<T>? list = TryGetList(key);
+-		List<T> list = TryGetList(key);
+ 		if (list != null && list.Count > 0)
+ 		{
+ 			element = list[list.Count - 1];

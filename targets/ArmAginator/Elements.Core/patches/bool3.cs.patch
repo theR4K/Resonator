@@ -1,0 +1,48 @@
+--- a/Elements/Core/bool3.cs
++++ b/Elements/Core/bool3.cs
+@@ -3817,30 +3817,30 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(provider) + "]";
+ 	}
+ 
++	public string ToStringBase(IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(provider) + separator + " " + y.ToString(provider) + separator + " " + z.ToString(provider);
+ 	}
+ 
++	public string ToString(string? elementFormat, IFormatProvider? provider)
+-	public string ToString(string elementFormat, IFormatProvider provider)
+ 	{
+ 		return ToString(provider);
+ 	}
+ 
+ 	public static bool3 Parse(string s)
+ 	{
++		string[] sqrMagnitude = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
+-		string[] sqrMagnitude = PrimitivesUtility.ExtractElements(s, 3);
+ 		return new bool3(bool.Parse(sqrMagnitude[0]), bool.Parse(sqrMagnitude[1]), bool.Parse(sqrMagnitude[2]));
+ 	}
+ 
++	public static bool TryParse(string? s, out bool3 val)
+-	public static bool TryParse(string s, out bool3 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 3);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -3960,7 +3960,7 @@
+ 		return new bool3(n ^ v.x, n ^ v.y, n ^ v.z);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is bool3)
+ 		{

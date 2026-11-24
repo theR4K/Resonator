@@ -1,0 +1,11 @@
+--- a/Elements/Core/RigidTransform.cs
++++ b/Elements/Core/RigidTransform.cs
+@@ -4,7 +4,7 @@
+ namespace Elements.Core;
+ 
+ [DataModelType]
++public readonly partial struct RigidTransform /* ArmAgedon seam */(in float3 position, in floatQ rotation) : IEquatable<RigidTransform>
+-public readonly struct RigidTransform(in float3 position, in floatQ rotation) : IEquatable<RigidTransform>
+ {
+ 	public readonly float3 position = position;
+ 

@@ -1,0 +1,41 @@
+--- a/Elements/Core/LocaleString.cs
++++ b/Elements/Core/LocaleString.cs
+@@ -3,17 +3,17 @@
+ 
+ namespace Elements.Core;
+ 
++public readonly partial struct LocaleString /* ArmAgedon seam */(string content, string? format, bool isLocaleKey, bool isContinuous, Dictionary<string, object>? arguments) : IComparable<LocaleString>, IEquatable<LocaleString>
+-public readonly struct LocaleString(string content, string format, bool isLocaleKey, bool isContinuous, Dictionary<string, object> arguments) : IComparable<LocaleString>, IEquatable<LocaleString>
+ {
+ 	public readonly string content = content;
+ 
++	public readonly string? format = format;
+-	public readonly string format = format;
+ 
+ 	public readonly bool isLocaleKey = isLocaleKey;
+ 
+ 	public readonly bool isContinuous = isContinuous;
+ 
++	public readonly Dictionary<string, object>? arguments = arguments;
+-	public readonly Dictionary<string, object> arguments = arguments;
+ 
+ 	public LocaleString SetFormat(string format)
+ 	{
+@@ -34,7 +34,7 @@
+ 		return false;
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is LocaleString b)
+ 		{
+@@ -47,7 +47,7 @@
+ 	{
+ 		int b = 2108858224;
+ 		b = b * -1521134295 + EqualityComparer<string>.Default.GetHashCode(content);
++		b = b * -1521134295 + LocaleFormatHash(format) /* ArmAgedon seam */;
+-		b = b * -1521134295 + EqualityComparer<string>.Default.GetHashCode(format);
+ 		b = b * -1521134295 + isLocaleKey.GetHashCode();
+ 		b = b * -1521134295 + isContinuous.GetHashCode();
+ 		if (arguments != null)

@@ -1,0 +1,96 @@
+--- a/Elements/Core/int3.cs
++++ b/Elements/Core/int3.cs
+@@ -3864,12 +3864,12 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(provider) + "]";
+ 	}
+ 
++	public string ToStringBase(IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(provider) + separator + " " + y.ToString(provider) + separator + " " + z.ToString(provider);
+ 	}
+@@ -3884,48 +3884,48 @@
+ 		return x.ToString(elementFormat) + separator + " " + y.ToString(elementFormat) + separator + " " + z.ToString(elementFormat);
+ 	}
+ 
++	public string ToString(string? elementFormat, IFormatProvider? provider)
+-	public string ToString(string elementFormat, IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(elementFormat, provider) + "]";
+ 	}
+ 
++	public string ToStringBase(string? elementFormat, IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(string elementFormat, IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(elementFormat, provider) + separator + " " + y.ToString(elementFormat, provider) + separator + " " + z.ToString(elementFormat, provider);
+ 	}
+ 
++	public string ToStringConstructor(string? overrideType = null)
+-	public string ToStringConstructor(string overrideType = null)
+ 	{
+ 		return $"new {overrideType ?? "int3"}({x.ToCodeLiteral() + ", " + y.ToCodeLiteral() + ", " + z.ToCodeLiteral()})";
+ 	}
+ 
+ 	public static int3 Parse(string s)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		return new int3(int.Parse(array[0]), int.Parse(array[1]), int.Parse(array[2]));
+ 	}
+ 
+ 	public static int3 Parse(string s, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		return new int3(int.Parse(array[0], provider), int.Parse(array[1], provider), int.Parse(array[2], provider));
+ 	}
+ 
+ 	public static int3 Parse(string s, NumberStyles style)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		return new int3(int.Parse(array[0], style), int.Parse(array[1], style), int.Parse(array[2], style));
+ 	}
+ 
+ 	public static int3 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		return new int3(int.Parse(array[0], style, provider), int.Parse(array[1], style, provider), int.Parse(array[2], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out int3 val)
+-	public static bool TryParse(string s, out int3 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 3);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -3943,9 +3943,9 @@
+ 		return false;
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider formatProvider, out int3 val)
+-	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out int3 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 3);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -4731,7 +4731,7 @@
+ 		return new int3(v.x << n, v.y << n, v.z << n);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is int3)
+ 		{

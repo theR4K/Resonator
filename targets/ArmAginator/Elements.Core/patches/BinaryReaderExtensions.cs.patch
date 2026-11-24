@@ -1,0 +1,52 @@
+--- a/Elements/Core/BinaryReaderExtensions.cs
++++ b/Elements/Core/BinaryReaderExtensions.cs
+@@ -28,7 +28,7 @@
+ 		return result;
+ 	}
+ 
++	public static string? ReadNullableString(this BinaryReader br)
+-	public static string ReadNullableString(this BinaryReader br)
+ 	{
+ 		if (!br.ReadBoolean())
+ 		{
+@@ -47,7 +47,7 @@
+ 		return new TimeSpan(br.ReadInt64());
+ 	}
+ 
++	public static Uri? ReadUri(this BinaryReader br)
+-	public static Uri ReadUri(this BinaryReader br)
+ 	{
+ 		UriData uriData = br.ReadEnumBinary<UriData>();
+ 		switch (uriData)
+@@ -56,12 +56,12 @@
+ 			return null;
+ 		case UriData.Absolute:
+ 		{
++			Uri.TryCreate(br.ReadString(), UriKind.Absolute, out Uri? result2);
+-			Uri.TryCreate(br.ReadString(), UriKind.Absolute, out Uri result2);
+ 			return result2;
+ 		}
+ 		case UriData.Relative:
+ 		{
++			Uri.TryCreate(br.ReadString(), UriKind.Relative, out Uri? result);
+-			Uri.TryCreate(br.ReadString(), UriKind.Relative, out Uri result);
+ 			return result;
+ 		}
+ 		default:
+@@ -85,14 +85,14 @@
+ 		return num;
+ 	}
+ 
++	public static byte[]? ReadSequence(this BinaryReader br, byte?[] sequence)
+-	public static byte[] ReadSequence(this BinaryReader br, byte?[] sequence)
+ 	{
+ 		byte[] array = new byte[sequence.Length];
+ 		int num = 0;
+ 		while (br.BaseStream.Position < br.BaseStream.Length)
+ 		{
+ 			byte b = br.ReadByte();
++			if (!sequence[num].HasValue || sequence[num].GetValueOrDefault() == b /* ArmAgedon seam */)
+-			if (!sequence[num].HasValue || sequence[num].Value == b)
+ 			{
+ 				array[num] = b;
+ 				num++;

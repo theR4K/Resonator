@@ -1,0 +1,36 @@
+--- a/Elements/Core/StringHelper.cs
++++ b/Elements/Core/StringHelper.cs
+@@ -25,7 +25,7 @@
+ 		return Encoding.Unicode.GetString(flag2);
+ 	}
+ 
++	public static string? ClampLength(this string text, int maxLength)
+-	public static string ClampLength(this string text, int maxLength)
+ 	{
+ 		if (text == null)
+ 		{
+@@ -84,13 +84,13 @@
+ 		return stringBuilder.ToString();
+ 	}
+ 
++	public static string? BeautifyName(this string name)
+-	public static string BeautifyName(this string name)
+ 	{
+ 		if (name == null)
+ 		{
+ 			return null;
+ 		}
++		StringBuilder? stringBuilder = Pool.BorrowStringBuilder();
+-		StringBuilder stringBuilder = Pool.BorrowStringBuilder();
+ 		bool flag = true;
+ 		bool flag2 = true;
+ 		bool flag3 = false;
+@@ -164,7 +164,7 @@
+ 	{
+ 		Dictionary<string, string> dictionary = new Dictionary<string, string>();
+ 		StringBuilder stringBuilder = new StringBuilder();
++		string? text = null;
+-		string text = null;
+ 		for (int i = 0; i < query.Length; i++)
+ 		{
+ 			char c = query[i];

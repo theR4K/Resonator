@@ -1,0 +1,35 @@
+--- a/Elements/Core/StreamProgressWrapper.cs
++++ b/Elements/Core/StreamProgressWrapper.cs
+@@ -11,7 +11,7 @@
+ 
+ 	private IProgressIndicator indicator;
+ 
++	private Action<Stream, IProgressIndicator>? updateActionOverride;
+-	private Action<Stream, IProgressIndicator> updateActionOverride;
+ 
+ 	private long? overrideTargetLength;
+ 
+@@ -62,7 +62,7 @@
+ 		}
+ 	}
+ 
++	public StreamProgressWrapper(Stream stream, IProgressIndicator indicator, Action<Stream, IProgressIndicator>? updateActionOverride = null, long? overrideTargetLength = null)
+-	public StreamProgressWrapper(Stream stream, IProgressIndicator indicator, Action<Stream, IProgressIndicator> updateActionOverride = null, long? overrideTargetLength = null)
+ 	{
+ 		innerStream = stream;
+ 		this.indicator = indicator;
+@@ -70,12 +70,12 @@
+ 		this.overrideTargetLength = overrideTargetLength;
+ 	}
+ 
++	public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+-	public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+ 	{
+ 		return innerStream.BeginRead(buffer, offset, count, callback, state);
+ 	}
+ 
++	public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+-	public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+ 	{
+ 		return base.BeginWrite(buffer, offset, count, callback, state);
+ 	}

@@ -1,0 +1,96 @@
+--- a/Elements/Core/float4.cs
++++ b/Elements/Core/float4.cs
+@@ -8787,12 +8787,12 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(provider) + "]";
+ 	}
+ 
++	public string ToStringBase(IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(provider) + separator + " " + y.ToString(provider) + separator + " " + z.ToString(provider) + separator + " " + w.ToString(provider);
+ 	}
+@@ -8807,48 +8807,48 @@
+ 		return x.ToString(elementFormat) + separator + " " + y.ToString(elementFormat) + separator + " " + z.ToString(elementFormat) + separator + " " + w.ToString(elementFormat);
+ 	}
+ 
++	public string ToString(string? elementFormat, IFormatProvider? provider)
+-	public string ToString(string elementFormat, IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(elementFormat, provider) + "]";
+ 	}
+ 
++	public string ToStringBase(string? elementFormat, IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(string elementFormat, IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(elementFormat, provider) + separator + " " + y.ToString(elementFormat, provider) + separator + " " + z.ToString(elementFormat, provider) + separator + " " + w.ToString(elementFormat, provider);
+ 	}
+ 
++	public string ToStringConstructor(string? overrideType = null)
+-	public string ToStringConstructor(string overrideType = null)
+ 	{
+ 		return $"new {overrideType ?? "float4"}({x.ToCodeLiteral() + ", " + y.ToCodeLiteral() + ", " + z.ToCodeLiteral() + ", " + w.ToCodeLiteral()})";
+ 	}
+ 
+ 	public static float4 Parse(string s)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new float4(float.Parse(array[0]), float.Parse(array[1]), float.Parse(array[2]), float.Parse(array[3]));
+ 	}
+ 
+ 	public static float4 Parse(string s, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new float4(float.Parse(array[0], provider), float.Parse(array[1], provider), float.Parse(array[2], provider), float.Parse(array[3], provider));
+ 	}
+ 
+ 	public static float4 Parse(string s, NumberStyles style)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new float4(float.Parse(array[0], style), float.Parse(array[1], style), float.Parse(array[2], style), float.Parse(array[3], style));
+ 	}
+ 
+ 	public static float4 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new float4(float.Parse(array[0], style, provider), float.Parse(array[1], style, provider), float.Parse(array[2], style, provider), float.Parse(array[3], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out float4 val)
+-	public static bool TryParse(string s, out float4 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -8867,9 +8867,9 @@
+ 		return false;
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider formatProvider, out float4 val)
+-	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out float4 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -9566,7 +9566,7 @@
+ 		return new float4((float)n % v.x, (float)n % v.y, (float)n % v.z, (float)n % v.w);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is float4)
+ 		{

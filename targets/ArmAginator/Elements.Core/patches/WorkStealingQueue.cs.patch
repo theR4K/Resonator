@@ -1,0 +1,20 @@
+--- a/System/Threading/Tasks/Schedulers/WorkStealingQueue.cs
++++ b/System/Threading/Tasks/Schedulers/WorkStealingQueue.cs
+@@ -31,7 +31,7 @@
+ 			int workStealingQueue = m_tailIndex - m_headIndex;
+ 			if (workStealingQueue >= m_mask)
+ 			{
++				T?[] array = new T?[m_array.Length << 1];
+-				T[] array = new T[m_array.Length << 1];
+ 				for (int i = 0; i < m_array.Length; i++)
+ 				{
+ 					array[i] = m_array[(i + headIndex) & m_mask];
+@@ -156,7 +156,7 @@
+ 		List<T> list = new List<T>();
+ 		for (int num = m_tailIndex - 1; num >= m_headIndex; num--)
+ 		{
++			T? i = m_array[num & m_mask];
+-			T i = m_array[num & m_mask];
+ 			if (i != null)
+ 			{
+ 				list.Add(i);

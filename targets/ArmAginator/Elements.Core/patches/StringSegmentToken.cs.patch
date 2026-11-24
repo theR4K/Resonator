@@ -1,0 +1,57 @@
+--- a/Elements/Core/StringSegmentToken.cs
++++ b/Elements/Core/StringSegmentToken.cs
+@@ -2,7 +2,7 @@
+ 
+ namespace Elements.Core;
+ 
++public partial class StringSegmentToken /* ArmAgedon seam */ : IEquatable<StringSegmentToken>
+-public class StringSegmentToken : IEquatable<StringSegmentToken>
+ {
+ 	public readonly string WholeString;
+ 
+@@ -10,7 +10,7 @@
+ 
+ 	public readonly int Length;
+ 
++	private string? _cachedSubstring;
+-	private string _cachedSubstring;
+ 
+ 	public int EndIndex => StartIndex + Length;
+ 
+@@ -112,7 +112,7 @@
+ 		return Substring;
+ 	}
+ 
++	public bool Equals(StringSegmentToken? other)
+-	public bool Equals(StringSegmentToken other)
+ 	{
+ 		if (other == null)
+ 		{
+@@ -129,9 +129,9 @@
+ 		return string.Compare(WholeString, StartIndex, other.WholeString, other.StartIndex, Length) == 0;
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
++		StringSegmentToken? stringSegmentToken = obj as StringSegmentToken;
+-		StringSegmentToken stringSegmentToken = obj as StringSegmentToken;
+ 		if (stringSegmentToken == null)
+ 		{
+ 			return false;
+@@ -139,12 +139,12 @@
+ 		return Equals(stringSegmentToken);
+ 	}
+ 
++	public static bool operator ==(StringSegmentToken? a, StringSegmentToken? b)
+-	public static bool operator ==(StringSegmentToken a, StringSegmentToken b)
+ 	{
++		return a?.Equals(b) ?? ((object?)b == null);
+-		return a?.Equals(b) ?? ((object)b == null);
+ 	}
+ 
++	public static bool operator !=(StringSegmentToken? a, StringSegmentToken? b)
+-	public static bool operator !=(StringSegmentToken a, StringSegmentToken b)
+ 	{
+ 		return !(a == b);
+ 	}

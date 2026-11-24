@@ -1,0 +1,38 @@
+--- a/Elements/Core/PointMerger.cs
++++ b/Elements/Core/PointMerger.cs
+@@ -7,7 +7,7 @@
+ {
+ 	public static void RemoveRedundantPoints(RawList<float3> points, double cellSize = 0.001)
+ 	{
++		HashSet<int3>? hashSet = Pool.BorrowHashSet<int3>();
+-		HashSet<int3> hashSet = Pool.BorrowHashSet<int3>();
+ 		for (int num = points.Count - 1; num >= 0; num--)
+ 		{
+ 			float3 v = points.Elements[num];
+@@ -22,7 +22,7 @@
+ 
+ 	public static void RemoveRedundantPoints(RawList<Vector3> points, double cellSize = 0.001)
+ 	{
++		HashSet<int3>? hashSet = Pool.BorrowHashSet<int3>();
+-		HashSet<int3> hashSet = Pool.BorrowHashSet<int3>();
+ 		for (int num = points.Count - 1; num >= 0; num--)
+ 		{
+ 			Vector3 v = points.Elements[num];
+@@ -37,7 +37,7 @@
+ 
+ 	public static void GetMergedPoints(RawList<float3> points, IList<float3> mergedPoints, double cellSize = 0.001)
+ 	{
++		HashSet<int3>? hashSet = Pool.BorrowHashSet<int3>();
+-		HashSet<int3> hashSet = Pool.BorrowHashSet<int3>();
+ 		for (int i = 0; i < points.Count; i++)
+ 		{
+ 			float3 v = points.Elements[i];
+@@ -52,7 +52,7 @@
+ 
+ 	public static int GetMergedPoints(RawList<float3> points, Dictionary<int, int> remappedIndicies, double cellSize = 0.001)
+ 	{
++		Dictionary<int3, int>? dictionary = Pool.BorrowDictionary<int3, int>();
+-		Dictionary<int3, int> dictionary = Pool.BorrowDictionary<int3, int>();
+ 		for (int i = 0; i < points.Count; i++)
+ 		{
+ 			float3 v = points.Elements[i];

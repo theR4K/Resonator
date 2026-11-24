@@ -1,0 +1,75 @@
+--- a/System/Threading/Tasks/Schedulers/WorkStealingTaskScheduler.cs
++++ b/System/Threading/Tasks/Schedulers/WorkStealingTaskScheduler.cs
+@@ -21,7 +21,7 @@
+ 
+ 	private ThreadPriority m_threadPriority;
+ 
++	private string? m_threadName;
+-	private string m_threadName;
+ 
+ 	public override int MaximumConcurrencyLevel => m_concurrencyLevel;
+ 
+@@ -30,7 +30,7 @@
+ 	{
+ 	}
+ 
++	public WorkStealingTaskScheduler(int concurrencyLevel, ThreadPriority threadPriority = ThreadPriority.Normal, string? threadName = null)
+-	public WorkStealingTaskScheduler(int concurrencyLevel, ThreadPriority threadPriority = ThreadPriority.Normal, string threadName = null)
+ 	{
+ 		if (concurrencyLevel <= 0)
+ 		{
+@@ -56,9 +56,9 @@
+ 	{
+ 		if ((task.CreationOptions & TaskCreationOptions.LongRunning) != 0)
+ 		{
++			Thread? thread = new Thread((object? state) =>
+-			Thread thread = new Thread((object? state) =>
+ 			{
++				TryExecuteTask(Elements.Core.CoreContract.Required((Task?)state)) /* ArmAgedon seam */;
+-				TryExecuteTask((Task)state);
+ 			});
+ 			thread.IsBackground = true;
+ 			thread.Priority = m_threadPriority;
+@@ -66,7 +66,7 @@
+ 			thread.Start(task);
+ 			return;
+ 		}
++		WorkStealingQueue<Task>? wsq = m_wsq;
+-		WorkStealingQueue<Task> wsq = m_wsq;
+ 		if (wsq != null && (task.CreationOptions & TaskCreationOptions.PreferFairness) == 0)
+ 		{
+ 			wsq.LocalPush(task);
+@@ -115,8 +115,8 @@
+ 				Monitor.Exit(m_queue);
+ 			}
+ 		}
++		WorkStealingQueue<Task>?[] wsQueues = m_wsQueues;
++		foreach (WorkStealingQueue<Task>? workStealingQueue in wsQueues)
+-		WorkStealingQueue<Task>[] wsQueues = m_wsQueues;
+-		foreach (WorkStealingQueue<Task> workStealingQueue in wsQueues)
+ 		{
+ 			if (workStealingQueue != null)
+ 			{
+@@ -168,7 +168,7 @@
+ 		{
+ 			while (true)
+ 			{
++				Task? obj = null;
+-				Task obj = null;
+ 				if (!i.LocalPop(ref obj))
+ 				{
+ 					bool flag = false;
+@@ -204,11 +204,11 @@
+ 								continue;
+ 							}
+ 						}
++						WorkStealingQueue<Task>?[] wsQueues = m_wsQueues;
+-						WorkStealingQueue<Task>[] wsQueues = m_wsQueues;
+ 						int j;
+ 						for (j = 0; j < wsQueues.Length; j++)
+ 						{
++							WorkStealingQueue<Task>? workStealingQueue = wsQueues[j];
+-							WorkStealingQueue<Task> workStealingQueue = wsQueues[j];
+ 							if (workStealingQueue != null && workStealingQueue != i && workStealingQueue.TrySteal(ref obj))
+ 							{
+ 								break;

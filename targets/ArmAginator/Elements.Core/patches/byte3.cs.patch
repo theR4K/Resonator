@@ -1,0 +1,96 @@
+--- a/Elements/Core/byte3.cs
++++ b/Elements/Core/byte3.cs
+@@ -3865,12 +3865,12 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(provider) + "]";
+ 	}
+ 
++	public string ToStringBase(IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(provider) + separator + " " + y.ToString(provider) + separator + " " + z.ToString(provider);
+ 	}
+@@ -3885,48 +3885,48 @@
+ 		return x.ToString(elementFormat) + separator + " " + y.ToString(elementFormat) + separator + " " + z.ToString(elementFormat);
+ 	}
+ 
++	public string ToString(string? elementFormat, IFormatProvider? provider)
+-	public string ToString(string elementFormat, IFormatProvider provider)
+ 	{
+ 		return "[" + ToStringBase(elementFormat, provider) + "]";
+ 	}
+ 
++	public string ToStringBase(string? elementFormat, IFormatProvider? provider, string separator = ";")
+-	public string ToStringBase(string elementFormat, IFormatProvider provider, string separator = ";")
+ 	{
+ 		return x.ToString(elementFormat, provider) + separator + " " + y.ToString(elementFormat, provider) + separator + " " + z.ToString(elementFormat, provider);
+ 	}
+ 
++	public string ToStringConstructor(string? overrideType = null)
+-	public string ToStringConstructor(string overrideType = null)
+ 	{
+ 		return $"new {overrideType ?? "byte3"}({x.ToCodeLiteral() + ", " + y.ToCodeLiteral() + ", " + z.ToCodeLiteral()})";
+ 	}
+ 
+ 	public static byte3 Parse(string s)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		return new byte3(byte.Parse(array[0]), byte.Parse(array[1]), byte.Parse(array[2]));
+ 	}
+ 
+ 	public static byte3 Parse(string s, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		return new byte3(byte.Parse(array[0], provider), byte.Parse(array[1], provider), byte.Parse(array[2], provider));
+ 	}
+ 
+ 	public static byte3 Parse(string s, NumberStyles style)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		return new byte3(byte.Parse(array[0], style), byte.Parse(array[1], style), byte.Parse(array[2], style));
+ 	}
+ 
+ 	public static byte3 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		return new byte3(byte.Parse(array[0], style, provider), byte.Parse(array[1], style, provider), byte.Parse(array[2], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out byte3 val)
+-	public static bool TryParse(string s, out byte3 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 3);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -3944,9 +3944,9 @@
+ 		return false;
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider formatProvider, out byte3 val)
+-	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out byte3 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 3);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -3976,7 +3976,7 @@
+ 		return new byte3(mask.x ? x : masked.x, mask.y ? y : masked.y, mask.z ? z : masked.z);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is byte3)
+ 		{

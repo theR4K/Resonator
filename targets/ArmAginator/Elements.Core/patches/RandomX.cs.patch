@@ -1,0 +1,11 @@
+--- a/Elements/Core/RandomX.cs
++++ b/Elements/Core/RandomX.cs
+@@ -733,7 +733,7 @@
+ 		}
+ 	}
+ 
++	public static E? Enum<E>()
+-	public static E Enum<E>()
+ 	{
+ 		lock (r)
+ 		{

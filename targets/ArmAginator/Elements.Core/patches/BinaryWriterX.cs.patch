@@ -1,0 +1,27 @@
+--- a/Elements/Core/BinaryWriterX.cs
++++ b/Elements/Core/BinaryWriterX.cs
+@@ -3,20 +3,20 @@
+ 
+ namespace Elements.Core;
+ 
++public partial class BinaryWriterX /* ArmAgedon seam */ : BinaryWriter
+-public class BinaryWriterX : BinaryWriter
+ {
+ 	private byte[] _buffer = new byte[16];
+ 
++	public virtual Stream? TargetStream
+-	public virtual Stream TargetStream
+ 	{
+ 		get
+ 		{
++			return ReadTarget(); // ArmAgedon seam
+-			return BaseStream;
+ 		}
+ 		set
+ 		{
+ 			OutStream?.Flush();
++			SetTarget(value); // ArmAgedon seam
+-			OutStream = value;
+ 		}
+ 	}
+ 

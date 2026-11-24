@@ -1,0 +1,64 @@
+--- a/Elements/Core/double3x3.cs
++++ b/Elements/Core/double3x3.cs
+@@ -406,7 +406,7 @@
+ 		return ToString(CultureInfo.InvariantCulture);
+ 	}
+ 
++	public string ToString(IFormatProvider? provider)
+-	public string ToString(IFormatProvider provider)
+ 	{
+ 		StringBuilder stringBuilder = new StringBuilder();
+ 		stringBuilder.Append("[");
+@@ -489,36 +489,36 @@
+ 
+ 	public static double3x3 Parse(string s)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 9)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 9);
+ 		return new double3x3(double.Parse(array[0]), double.Parse(array[1]), double.Parse(array[2]), double.Parse(array[3]), double.Parse(array[4]), double.Parse(array[5]), double.Parse(array[6]), double.Parse(array[7]), double.Parse(array[8]));
+ 	}
+ 
+ 	public static double3x3 Parse(string s, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 9)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 9);
+ 		return new double3x3(double.Parse(array[0], provider), double.Parse(array[1], provider), double.Parse(array[2], provider), double.Parse(array[3], provider), double.Parse(array[4], provider), double.Parse(array[5], provider), double.Parse(array[6], provider), double.Parse(array[7], provider), double.Parse(array[8], provider));
+ 	}
+ 
+ 	public static double3x3 Parse(string s, NumberStyles style)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 9)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 9);
+ 		return new double3x3(double.Parse(array[0], style), double.Parse(array[1], style), double.Parse(array[2], style), double.Parse(array[3], style), double.Parse(array[4], style), double.Parse(array[5], style), double.Parse(array[6], style), double.Parse(array[7], style), double.Parse(array[8], style));
+ 	}
+ 
+ 	public static double3x3 Parse(string s, NumberStyles style, IFormatProvider provider)
+ 	{
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 9)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 9);
+ 		return new double3x3(double.Parse(array[0], style, provider), double.Parse(array[1], style, provider), double.Parse(array[2], style, provider), double.Parse(array[3], style, provider), double.Parse(array[4], style, provider), double.Parse(array[5], style, provider), double.Parse(array[6], style, provider), double.Parse(array[7], style, provider), double.Parse(array[8], style, provider));
+ 	}
+ 
++	public static bool TryParse(string? s, out double3x3 val)
+-	public static bool TryParse(string s, out double3x3 val)
+ 	{
+ 		return TryParse(s, NumberStyles.Float, null, out val);
+ 	}
+ 
++	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider? formatProvider, out double3x3 val)
+-	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out double3x3 val)
+ 	{
++		string[]? array = PrimitivesUtility.ExtractElements(s, 9);
+-		string[] array = PrimitivesUtility.ExtractElements(s, 9);
+ 		if (array == null)
+ 		{
+ 			val = default;
+@@ -602,7 +602,7 @@
+ 		result = new double3x3(a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20, a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21, a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22, a.m10 * b.m00 + a.m11 * b.m10 + a.m12 * b.m20, a.m10 * b.m01 + a.m11 * b.m11 + a.m12 * b.m21, a.m10 * b.m02 + a.m11 * b.m12 + a.m12 * b.m22, a.m20 * b.m00 + a.m21 * b.m10 + a.m22 * b.m20, a.m20 * b.m01 + a.m21 * b.m11 + a.m22 * b.m21, a.m20 * b.m02 + a.m21 * b.m12 + a.m22 * b.m22);
+ 	}
+ 
++	public override bool Equals(object? other)
+-	public override bool Equals(object other)
+ 	{
+ 		if (other is double3x3)
+ 		{

@@ -8,7 +8,7 @@ The workflows live in `.forgejo/workflows`:
 
 ## Runner setup
 
-The default is a **Linux runner**, including ARM64. `checks.yaml` runs on `ubuntu-latest` (the home lab's runner `pi`; repository variable `RESONATOR_RUNNER` overrides it). `release.yaml` needs Steam and runs on the runner labelled `steam` (variable `RESONATOR_STEAM_RUNNER` overrides it), which mounts the persistent Steam directory at `/resonator-steam` in every job and runs one job at a time. It needs Python 3.10+, Git, a shell, and Node.js 24 for the pinned setup-dotnet action; setup-dotnet installs the native .NET 10 and 11 SDKs for releases (.NET 10 for source-only checks). No Docker privileged mode or emulator is needed for the default download method. The CI scripts are portable Python; the supplied workflow shell commands target Linux.
+The default is a **Linux runner**, including ARM64. `checks.yaml` runs on `ubuntu-latest` (the home lab's runner `pi`; repository variable `RESONATOR_RUNNER` overrides it). `release.yaml` needs Steam and runs on the runner labelled `steam` (variable `RESONATOR_STEAM_RUNNER` overrides it), which mounts the persistent Steam directory at `/resonator-steam` in every job and runs one job at a time. It needs Python 3.10+, Git, a shell, and Node.js 24 for the pinned setup-dotnet action; setup-dotnet installs the native .NET 11 SDK for releases and source-only checks. No Docker privileged mode or emulator is needed for the default download method. The CI scripts are portable Python; the supplied workflow shell commands target Linux.
 
 The release archive is framework dependent and portable: the same ZIP runs with native .NET on Linux/Windows/macOS, ARM64 or x64. It contains all four CLIs, target sets/patches, docs, and the local Flatweave.Adapter source needed by those targets. Run:
 
@@ -16,7 +16,7 @@ The release archive is framework dependent and portable: the same ZIP runs with 
 dotnet tools/Resonator.ProjectBuilder/Resonator.ProjectBuilder.dll --help
 ```
 
-The .NET 10 and 11 SDKs and a user's own Resonite install are required. ProjectBuilder, PatchGenerator and Deweaver target .NET 10; ShadersReferenceBuilder and generated game projects target .NET 11. Targets are located automatically from the bundled repository marker. Resonite assemblies, generated engine trees and Steam login state are excluded from tool releases. Validation builds are not uploaded as tool-suite release assets.
+The .NET 11 SDK and a user's own Resonite install are required. All four tools, the shared adapter and generated game projects target .NET 11. Targets are located automatically from the bundled repository marker. Resonite assemblies, generated engine trees and Steam login state are excluded from tool releases. Validation builds are not uploaded as tool-suite release assets.
 
 ## Steam authentication and ARM64
 

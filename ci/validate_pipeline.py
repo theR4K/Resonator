@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def run(resonite, output, target):
     output.mkdir(parents=True, exist_ok=True)
     log = output / "pipeline.log"
-    command = ["dotnet", str(ROOT / "src/Resonator.ProjectBuilder/bin/Release/net10.0/Resonator.ProjectBuilder.dll"),
+    command = ["dotnet", str(ROOT / "src/Resonator.ProjectBuilder/bin/Release/net11.0/Resonator.ProjectBuilder.dll"),
                str(output / "projects"), "--targets", str(ROOT / "targets/Flatweave"),
                "--resonite", str(resonite.resolve()), "--keep-going", "--no-publish"]
     if target:

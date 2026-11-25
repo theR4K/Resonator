@@ -7,8 +7,10 @@ import re
 import shutil
 import subprocess
 import zipfile
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
+TOOL_FRAMEWORK = ET.parse(ROOT / "Directory.Build.props").findtext("./PropertyGroup/TargetFramework")
 TOOLS = ("Resonator.ProjectBuilder", "Resonator.PatchGenerator", "Resonator.Deweaver", "Resonator.ShadersReferenceBuilder")
 GAME_BINARIES = {"frooxengine.dll", "frooxengine.weaver.dll", "elements.core.dll", "elements.assets.dll",
                  "awwdio.dll", "photondust.dll", "skyfrost.base.dll", "skyfrost.base.models.dll", "renderite.shared.dll"}
@@ -27,6 +29,9 @@ def check_bundle(bundle):
     for tool in TOOLS:
         if not (bundle / "tools" / tool / (tool + ".dll")).is_file():
             raise ValueError("Missing published tool: " + tool)
+        runtime = bundle / "tools" / tool / (tool + ".runtimeconfig.json")
+        if not runtime.is_file() or json.loads(runtime.read_text(encoding="utf-8"))["runtimeOptions"]["tfm"] != TOOL_FRAMEWORK:
+            raise ValueError("Unexpected tool runtime framework: " + tool)
     for path in ("Resonator.slnx", "targets/ArmAginator/set.json", "src/Flatweave.Adapter/Flatweave.Adapter.csproj"):
         if not (bundle / path).is_file():
             raise ValueError("Missing target lookup/runtime source: " + path)
@@ -48,7 +53,7 @@ def package(version, output):
     for name in ("README.md", "LICENSE", "Directory.Build.props", "Resonator.slnx"):
         shutil.copy2(ROOT / name, bundle / name)
     (bundle / "RELEASE.md").write_text(
-        "Requires the .NET 10 and 11 SDKs and your own Resonite install.\n\n"
+        "Requires the .NET 11 SDK and your own Resonite install.\n\n"
         "Run `dotnet tools/Resonator.ProjectBuilder/Resonator.ProjectBuilder.dll --help`.\n"
         "Targets are bundled and located automatically. Set RESONITE_DIR or pass --resonite.\n"
         "This portable package runs with native .NET on x64 and ARM64; it contains no Resonite binaries.\n",

@@ -25,7 +25,7 @@ Patches are the last resort: they carry decompiled source. Prefer an IL fix, the
 
 ## Code style
 
-- Settings shared by every project live in [`Directory.Build.props`](Directory.Build.props): `net10.0`,
+- Settings shared by every project live in [`Directory.Build.props`](Directory.Build.props): `net11.0`,
   nullable enabled, implicit usings off.
 - Each file starts with what it is for: a header comment (CLIs) or a `<summary>` on the type.
 - Match the surrounding code: file-scoped namespaces, records for data, small static stage classes.

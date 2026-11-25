@@ -1,5 +1,6 @@
 """CI boundary checks: architecture, private inputs and publication behavior."""
 import importlib.util
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -45,6 +46,24 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 package.validate_version(bad)
         self.assertEqual(package.validate_version("1.0.0-rc.1"), "1.0.0-rc.1")
+
+    def test_mixed_tool_runtime_cannot_enter_release(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle = Path(directory)
+            for tool in package.TOOLS:
+                target = bundle / "tools" / tool
+                target.mkdir(parents=True)
+                (target / (tool + ".dll")).write_bytes(b"tool fixture")
+                (target / (tool + ".runtimeconfig.json")).write_text(json.dumps({"runtimeOptions": {"tfm": package.TOOL_FRAMEWORK}}))
+            for name in ("Resonator.slnx", "targets/ArmAginator/set.json", "src/Flatweave.Adapter/Flatweave.Adapter.csproj"):
+                path = bundle / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("fixture")
+            package.check_bundle(bundle)
+            runtime = bundle / "tools" / package.TOOLS[0] / (package.TOOLS[0] + ".runtimeconfig.json")
+            runtime.write_text(json.dumps({"runtimeOptions": {"tfm": "net10.0"}}))
+            with self.assertRaisesRegex(ValueError, "runtime framework"):
+                package.check_bundle(bundle)
 
     def test_game_dll_cannot_enter_release(self):
         with tempfile.TemporaryDirectory() as directory:

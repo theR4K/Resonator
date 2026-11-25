@@ -1,6 +1,6 @@
 # Flatweave.Adapter
 
-`src/Flatweave.Adapter` is a standalone .NET 10 class library. It has no Resonite assemblies, generated engine
+`src/Flatweave.Adapter` is a standalone .NET 11 class library. It has no Resonite assemblies, generated engine
 sources, native libraries or Resonator-tool dependencies. Its only package dependency is Concentus 2.2.2.
 
 ```powershell

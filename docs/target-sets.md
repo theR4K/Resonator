@@ -63,7 +63,7 @@ over OS APIs only (`kernel32`, `user32`, `winmm`, `libc`, ...).
 The targets build for net11.0, the runtime the game runs them on (since the 2026.11.24 install ships its
 assemblies against .NET 11), not for their shipped netstandard / .NET
 Framework TFMs. Those builds pulled in NuGet packages (System.Memory, ...) that `references.targets` does not model.
-The exception is `FreeImageNET` (`net20`): its System.Drawing interop is not inbox on .NET 10.
+The exception is `FreeImageNET` (`net20`): its System.Drawing interop is not inbox on .NET 11.
 `Resonator.Deweaver diff --api` against the shipped dll therefore differs only in attribute types the compiler
 embeds per TFM (`EmbeddedAttribute`, `RefSafetyRulesAttribute`, `IsUnmanagedAttribute`, ...). The weaved ones
 also differ in the Fody marker `.ctor`.
@@ -102,7 +102,7 @@ replaces each with its official release, using one of two target kinds:
 | SoundFlow, SteamAudio.NET, PDFiumSharp (`PDFiumSharpV2`), Steamworks.NET, SDL3-CS, Microsoft.ML.OnnxRuntime | package (official) | Steamworks.NET: engine patch cuts the fork-only `ExceptionHandler` hook |
 | AssimpNet | package `AssimpNetter` 6.0.5 | the maintained continuation; official AssimpNet (2020) predates assimp 5.1's structs. Engine patch: System.Numerics types, matrix helpers (transpose-aware), bone node by name |
 | Compressonator.NET, Mikktspace.NET, Msdfgen.NET, SharpPipe | package `YellowDogMan.*` | Yellow Dog Man's own libraries: their published package is the official one |
-| crunch.NET | source Yellow-Dog-Man/Crunch.NET (`e054374`) | rebuilt for `net10.0`; the package targets `net46`. Only managed sources are taken; the consumer supplies native crnlib |
+| crunch.NET | source Yellow-Dog-Man/Crunch.NET (`e054374`) | rebuilt for `net11.0`; the package targets `net46`. Only managed sources are taken; the consumer supplies native crnlib |
 | SharpFont | source Robmaister/SharpFont master | the NuGet package is net45-only |
 | CSCore | source filoe/cscore master + patches | YDM's `WasapiOut`/`MMDevice` additions the WASAPI driver uses; `ILUtils` on `Unsafe`; session GUID by pointer; `calli` post-compile step. Engine patch: codec choice + OGG (NVorbis) in `CSCoreSampleDecoder` |
 | FreeImageNET | source: the FreeImage 3.18.0 release's wrapper | engine patch: raw EXIF cleared directly |

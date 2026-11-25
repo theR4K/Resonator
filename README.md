@@ -5,7 +5,7 @@
 **Turns shipped Resonite assemblies into buildable C# source projects,
 so the engine can be rebuilt, patched and ported (e.g. to Windows on ARM) from source.**
 
-[![.NET 10 and 11](https://img.shields.io/badge/.NET-10.0%20%2F%2011.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET 11](https://img.shields.io/badge/.NET-11.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-nullable%20enabled-239120?logo=csharp&logoColor=white)](Directory.Build.props)
 [![Decompiler](https://img.shields.io/badge/decompiler-ILSpy%2011.1-1f6feb)](https://github.com/icsharpcode/ILSpy)
 [![IL](https://img.shields.io/badge/IL-Mono.Cecil%200.11.6-6e40c9)](https://github.com/jbevain/cecil)
@@ -53,10 +53,10 @@ flowchart LR
 dotnet build Resonator.slnx -c Release
 
 # 2. build the engine as a project from the shipped dlls
-src\Resonator.ProjectBuilder\bin\Release\net10.0\Resonator.ProjectBuilder.exe out\engine --target FrooxEngine
+src\Resonator.ProjectBuilder\bin\Release\net11.0\Resonator.ProjectBuilder.exe out\engine --target FrooxEngine
 
 # 3. edit out\engine, then turn the edits into patches of the set
-src\Resonator.PatchGenerator\bin\Release\net10.0\Resonator.PatchGenerator.exe out\engine --target FrooxEngine
+src\Resonator.PatchGenerator\bin\Release\net11.0\Resonator.PatchGenerator.exe out\engine --target FrooxEngine
 ```
 
 ### Requirements
@@ -121,7 +121,7 @@ Specs, weave modes, the official-library table and the `target.json` keys are in
 
 ```
 Resonator.slnx               the solution
-Directory.Build.props        shared settings (net10.0, nullable, ResoniteDir)
+Directory.Build.props        shared settings (net11.0, nullable, ResoniteDir)
 src/
   Resonator.ProjectBuilder/           CLI  shipped dll -> buildable C# project
   Resonator.PatchGenerator/           CLI  edited project -> the target set's patches

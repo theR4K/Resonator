@@ -7,10 +7,10 @@
 +	public static LocaleString AsLocaleKey(this string str, string? format, params (string, object)[] arguments)
 -	public static LocaleString AsLocaleKey(this string str, string format, params (string, object)[] arguments)
  	{
- 		Dictionary<string, object> dictionary = new Dictionary<string, object>();
+ 		Dictionary<string, object> num = new Dictionary<string, object>();
  		for (int i = 0; i < arguments.Length; i++)
 @@ -30,12 +30,12 @@
- 		return str.AsLocaleKey(format, continuous: true, dictionary);
+ 		return str.AsLocaleKey(format, continuous: true, num);
  	}
  
 +	public static LocaleString AsLocaleKey(this string str, bool continuous, Dictionary<string, object>? arguments = null)

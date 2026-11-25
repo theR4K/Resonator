@@ -39,9 +39,9 @@
  
  	public static byte4 Parse(string s)
  	{
-+		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
--		string[] array = PrimitivesUtility.ExtractElements(s, 4);
- 		return new byte4(byte.Parse(array[0]), byte.Parse(array[1]), byte.Parse(array[2]), byte.Parse(array[3]));
++		string[] sbyte5 = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] sbyte5 = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new byte4(byte.Parse(sbyte5[0]), byte.Parse(sbyte5[1]), byte.Parse(sbyte5[2]), byte.Parse(sbyte5[3]));
  	}
  
  	public static byte4 Parse(string s, IFormatProvider provider)
@@ -73,12 +73,9 @@
  		if (array == null)
  		{
  			val = default;
-@@ -8811,9 +8811,9 @@
- 		return false;
- 	}
+@@ -8813,7 +8813,7 @@
  
-+	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider formatProvider, out byte4 val)
--	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out byte4 val)
+ 	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out byte4 val)
  	{
 +		string[]? array = PrimitivesUtility.ExtractElements(s, 4);
 -		string[] array = PrimitivesUtility.ExtractElements(s, 4);

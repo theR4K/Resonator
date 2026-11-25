@@ -53,9 +53,9 @@
  
  	public static double3 Parse(string s, NumberStyles style)
  	{
-+		string[] num = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
--		string[] num = PrimitivesUtility.ExtractElements(s, 3);
- 		return new double3(double.Parse(num[0], style), double.Parse(num[1], style), double.Parse(num[2], style));
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 3)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 3);
+ 		return new double3(double.Parse(array[0], style), double.Parse(array[1], style), double.Parse(array[2], style));
  	}
  
  	public static double3 Parse(string s, NumberStyles style, IFormatProvider provider)

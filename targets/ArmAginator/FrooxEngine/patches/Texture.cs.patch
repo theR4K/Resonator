@@ -1,6 +1,6 @@
 --- a/FrooxEngine/Texture.cs
 +++ b/FrooxEngine/Texture.cs
-@@ -138,7 +138,7 @@
+@@ -140,7 +140,7 @@
  					}
  					if (loadChain.Count == 0)
  					{

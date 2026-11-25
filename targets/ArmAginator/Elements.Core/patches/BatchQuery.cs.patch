@@ -55,16 +55,16 @@
  
  	private async Task SendBatch()
  	{
-+		await Task.WhenAny(CoreContract.Required(immediateDispatch).Task, /* ArmAgedon seam */ Task.Delay(TimeSpan.FromSeconds(DelaySeconds))).ConfigureAwait(continueOnCapturedContext: false);
--		await Task.WhenAny(immediateDispatch.Task, Task.Delay(TimeSpan.FromSeconds(DelaySeconds))).ConfigureAwait(continueOnCapturedContext: false);
- 		List<QueryResult> toSend = Pool.BorrowList<QueryResult>();
++		await Task.WhenAny(CoreContract.Required(immediateDispatch).Task, /* ArmAgedon seam */ Task.Delay(TimeSpan.FromSeconds(DelaySeconds)));
+-		await Task.WhenAny(immediateDispatch.Task, Task.Delay(TimeSpan.FromSeconds(DelaySeconds)));
+ 		List<QueryResult> list = Pool.BorrowList<QueryResult>();
  		lock (_lock)
  		{
 +			foreach (KeyValuePair<Query, TaskCompletionSource<Result?>> item in queue)
 -			foreach (KeyValuePair<Query, TaskCompletionSource<Result>> item in queue)
  			{
- 				toSend.Add(new QueryResult(item.Key));
- 				if (toSend.Count == MaxBatchSize)
+ 				list.Add(new QueryResult(item.Key));
+ 				if (list.Count == MaxBatchSize)
 @@ -90,13 +90,13 @@
  			{
  				if (queue.Count >= MaxBatchSize)

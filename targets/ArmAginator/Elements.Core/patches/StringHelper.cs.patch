@@ -1,7 +1,7 @@
 --- a/Elements/Core/StringHelper.cs
 +++ b/Elements/Core/StringHelper.cs
 @@ -25,7 +25,7 @@
- 		return Encoding.Unicode.GetString(flag2);
+ 		return Encoding.Unicode.GetString(bytes);
  	}
  
 +	public static string? ClampLength(this string text, int maxLength)

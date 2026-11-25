@@ -1,6 +1,6 @@
 --- a/FrooxEngine/VideoTextureProvider.cs
 +++ b/FrooxEngine/VideoTextureProvider.cs
-@@ -233,7 +233,7 @@
+@@ -234,7 +234,7 @@
  		VideoTexture asset = Asset;
  		if (asset != null && asset.IsLoaded)
  		{
@@ -9,7 +9,7 @@
  		}
  		CurrentClockError.Value = Asset?.CurrentClockError ?? 0f;
  	}
-@@ -245,7 +245,7 @@
+@@ -246,7 +246,7 @@
  			VideoTexture asset = Asset;
  			if (asset != null && asset.IsLoaded)
  			{

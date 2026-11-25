@@ -1,6 +1,6 @@
 --- a/Elements/Core/MathX.cs
 +++ b/Elements/Core/MathX.cs
-@@ -15195,7 +15195,7 @@
+@@ -15408,7 +15408,7 @@
  		return num;
  	}
  
@@ -9,7 +9,7 @@
  	{
  		if (rnd != null)
  		{
-@@ -15214,12 +15214,12 @@
+@@ -15427,12 +15427,12 @@
  		return num;
  	}
  

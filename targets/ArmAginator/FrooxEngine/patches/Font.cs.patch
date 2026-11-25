@@ -1,6 +1,6 @@
 --- a/FrooxEngine/Font.cs
 +++ b/FrooxEngine/Font.cs
-@@ -633,7 +633,7 @@
+@@ -638,7 +638,7 @@
  					obj = backingBufferAllocator;
  				}
  				IBackingBufferAllocator allocator = (IBackingBufferAllocator)obj;

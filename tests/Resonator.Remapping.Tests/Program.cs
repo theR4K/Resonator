@@ -114,6 +114,7 @@ var spec = TargetSpecLoader.Load(Path.Combine(temp, "Child", "Demo"));
 Assert(spec.ApiRemaps.Count == 2 && spec.ApiRemaps[0].EndsWith("base.json") && spec.ApiRemaps[1].EndsWith("child.json"), "mapping inheritance");
 Assert((spec with { PatchDirs = spec.PatchDirs.SkipLast(1).ToArray() }).ApiRemaps.Count == 2, "patch baseline lost own mapping");
 Console.WriteLine("PASS target inheritance and patch baseline mapping retention");
+UpgradeFixupChecks.Run();
 RemapReviewChecks.Run();
 AdapterChecks.Run();
 #if HAS_ASSIMP

@@ -31,7 +31,7 @@
  	}
  
  	public static string GenerateFileSignature(string filename, FileHash method = FileHash.SHA1)
-@@ -72,9 +59,9 @@
+@@ -80,9 +67,9 @@
  		return StringHelper.ToURLBase64(ComputeHash(stream, method));
  	}
  
@@ -43,7 +43,7 @@
  		if (File.Exists(text))
  		{
  			return text;
-@@ -84,7 +71,7 @@
+@@ -92,7 +79,7 @@
  			if (maxDepth != 0)
  			{
  				string[] directories = Directory.GetDirectories(directory);
@@ -52,8 +52,8 @@
  				{
  					text = FindFile(filename, directory2, (maxDepth == -1) ? (-1) : (maxDepth - 1));
  					if (text != null)
-@@ -189,10 +176,10 @@
- 		throw new Exception("Exception when deleting file " + filePath + "\n" + ex2);
+@@ -205,10 +192,10 @@
+ 		throw new Exception("Exception when deleting file " + filePath + "\n" + ex);
  	}
  
 +	public static List<string> GetPathDirectories(string? path)

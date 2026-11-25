@@ -1,6 +1,6 @@
 --- a/FrooxEngine/Userspace.cs
 +++ b/FrooxEngine/Userspace.cs
-@@ -372,7 +372,7 @@
+@@ -373,7 +373,7 @@
  		{
  			DoNotAutoLoadHome = true;
  		}
@@ -9,7 +9,7 @@
  		MethodInfo bootstrapMethod = null;
  		if (BootstrapClass != null)
  		{
-@@ -1084,7 +1084,7 @@
+@@ -1089,7 +1089,7 @@
  
  	private void ProcessLaunchArgs(out bool noUI, out bool autoJoin, out string autojoinHost, out bool forceTutorial, out bool skipTutorial)
  	{
@@ -18,7 +18,7 @@
  		noUI = false;
  		autoJoin = Autojoin;
  		autojoinHost = null;
-@@ -1320,7 +1320,7 @@
+@@ -1341,7 +1341,7 @@
  		{
  			startTutorial = false;
  		}

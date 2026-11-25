@@ -7,15 +7,15 @@
 +	public string ToString(IFormatProvider? provider)
 -	public string ToString(IFormatProvider provider)
  	{
- 		StringBuilder stringBuilder = new StringBuilder();
- 		stringBuilder.Append("[");
+ 		StringBuilder binaryWriter = new StringBuilder();
+ 		binaryWriter.Append("[");
 @@ -313,36 +313,36 @@
  
  	public static float2x2 Parse(string s)
  	{
-+		string[] stringBuilder = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
--		string[] stringBuilder = PrimitivesUtility.ExtractElements(s, 4);
- 		return new float2x2(float.Parse(stringBuilder[0]), float.Parse(stringBuilder[1]), float.Parse(stringBuilder[2]), float.Parse(stringBuilder[3]));
++		string[] value2 = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] value2 = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new float2x2(float.Parse(value2[0]), float.Parse(value2[1]), float.Parse(value2[2]), float.Parse(value2[3]));
  	}
  
  	public static float2x2 Parse(string s, IFormatProvider provider)
@@ -27,16 +27,16 @@
  
  	public static float2x2 Parse(string s, NumberStyles style)
  	{
-+		string[] result = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
--		string[] result = PrimitivesUtility.ExtractElements(s, 4);
- 		return new float2x2(float.Parse(result[0], style), float.Parse(result[1], style), float.Parse(result[2], style), float.Parse(result[3], style));
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new float2x2(float.Parse(array[0], style), float.Parse(array[1], style), float.Parse(array[2], style), float.Parse(array[3], style));
  	}
  
  	public static float2x2 Parse(string s, NumberStyles style, IFormatProvider provider)
  	{
-+		string[] dataSegment = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
--		string[] dataSegment = PrimitivesUtility.ExtractElements(s, 4);
- 		return new float2x2(float.Parse(dataSegment[0], style, provider), float.Parse(dataSegment[1], style, provider), float.Parse(dataSegment[2], style, provider), float.Parse(dataSegment[3], style, provider));
++		string[] array = CoreContract.Elements(PrimitivesUtility.ExtractElements(s, 4)); // ArmAgedon seam
+-		string[] array = PrimitivesUtility.ExtractElements(s, 4);
+ 		return new float2x2(float.Parse(array[0], style, provider), float.Parse(array[1], style, provider), float.Parse(array[2], style, provider), float.Parse(array[3], style, provider));
  	}
  
 +	public static bool TryParse(string? s, out float2x2 val)
@@ -48,9 +48,9 @@
 +	public static bool TryParse(string? s, NumberStyles numberStyles, IFormatProvider? formatProvider, out float2x2 val)
 -	public static bool TryParse(string s, NumberStyles numberStyles, IFormatProvider formatProvider, out float2x2 val)
  	{
-+		string[]? num = PrimitivesUtility.ExtractElements(s, 4);
--		string[] num = PrimitivesUtility.ExtractElements(s, 4);
- 		if (num == null)
++		string[]? dataTreeList = PrimitivesUtility.ExtractElements(s, 4);
+-		string[] dataTreeList = PrimitivesUtility.ExtractElements(s, 4);
+ 		if (dataTreeList == null)
  		{
  			val = default;
 @@ -421,7 +421,7 @@

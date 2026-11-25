@@ -2,7 +2,7 @@
 
 [← README](../README.md)
 
-Executables: `src/<Project>/bin/Release/net10.0/<Project>.exe`. Each prints its usage with `--help` and exits non-zero on failure.
+Executables: `src/<Project>/bin/Release/net10.0/<Project>.exe`, except ShadersReferenceBuilder (`net11.0`). Each prints its usage with `--help` and exits non-zero on failure.
 
 - [Resonator.ProjectBuilder](#resonatorprojectbuilder)
 - [Resonator.PatchGenerator](#resonatorpatchgenerator)

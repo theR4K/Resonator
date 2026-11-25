@@ -1,6 +1,6 @@
 --- a/FrooxEngine/SessionThumbnailData.cs
 +++ b/FrooxEngine/SessionThumbnailData.cs
-@@ -179,7 +179,7 @@
+@@ -178,7 +178,7 @@
  			if (result.IsOK)
  			{
  				Uri thumbnailUrl = Engine.Cloud.Assets.ThumbnailToHttp(result.Entity);

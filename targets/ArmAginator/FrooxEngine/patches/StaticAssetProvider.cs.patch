@@ -1,6 +1,6 @@
 --- a/FrooxEngine/StaticAssetProvider.cs
 +++ b/FrooxEngine/StaticAssetProvider.cs
-@@ -131,9 +131,10 @@
+@@ -132,9 +132,10 @@
  		_cancellation?.Cancel();
  		_cancellation = new CancellationTokenSource();
  		CancellationToken _token = _cancellation.Token;
@@ -8,16 +8,16 @@
  		StartTask(async () =>
  		{
 +			await ArmAssetWork.Observe(armWork, () => UpdateAssetAsync(_token)).ConfigureAwait(continueOnCapturedContext: false); // ArmAgedon seam
--			await UpdateAssetAsync(_token).ConfigureAwait(continueOnCapturedContext: false);
+-			await UpdateAssetAsync(_token);
  		});
  	}
  
-@@ -171,7 +172,7 @@
+@@ -177,7 +178,7 @@
  		{
  			if (_metadata == null)
  			{
-+				M fetchedMetadata = await _engine.AssetManager.RequestMetadata<M>(assetURL, PlatformRoles.Assets(_engine.Platform) == Platform.Android || WaitOnMetadataFromCloud).ConfigureAwait(continueOnCapturedContext: false);
--				M fetchedMetadata = await _engine.AssetManager.RequestMetadata<M>(assetURL, _engine.Platform == Platform.Android || WaitOnMetadataFromCloud).ConfigureAwait(continueOnCapturedContext: false);
++				M fetchedMetadata = await _engine.AssetManager.RequestMetadata<M>(assetURL, PlatformRoles.Assets(_engine.Platform) == Platform.Android || WaitOnMetadataFromCloud);
+-				M fetchedMetadata = await _engine.AssetManager.RequestMetadata<M>(assetURL, _engine.Platform == Platform.Android || WaitOnMetadataFromCloud);
  				if (cancellationToken.IsCancellationRequested)
  				{
  					return;

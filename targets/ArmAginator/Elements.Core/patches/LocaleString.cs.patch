@@ -28,14 +28,14 @@
 +	public override bool Equals(object? obj)
 -	public override bool Equals(object obj)
  	{
- 		if (obj is LocaleString b)
+ 		if (obj is LocaleString other)
  		{
 @@ -47,7 +47,7 @@
  	{
- 		int b = 2108858224;
- 		b = b * -1521134295 + EqualityComparer<string>.Default.GetHashCode(content);
-+		b = b * -1521134295 + LocaleFormatHash(format) /* ArmAgedon seam */;
--		b = b * -1521134295 + EqualityComparer<string>.Default.GetHashCode(format);
- 		b = b * -1521134295 + isLocaleKey.GetHashCode();
- 		b = b * -1521134295 + isContinuous.GetHashCode();
+ 		int num = 2108858224;
+ 		num = num * -1521134295 + EqualityComparer<string>.Default.GetHashCode(content);
++		num = num * -1521134295 + LocaleFormatHash(format) /* ArmAgedon seam */;
+-		num = num * -1521134295 + EqualityComparer<string>.Default.GetHashCode(format);
+ 		num = num * -1521134295 + isLocaleKey.GetHashCode();
+ 		num = num * -1521134295 + isContinuous.GetHashCode();
  		if (arguments != null)

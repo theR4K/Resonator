@@ -7,7 +7,7 @@
 +	public bool TryExtract<T>(string key, ref T? value)
 -	public bool TryExtract<T>(string key, ref T value)
  	{
- 		if (Children.TryGetValue(key, out var value2))
+ 		if (Children.TryGetValue(key, out var num))
  		{
 @@ -65,7 +65,7 @@
  		return false;

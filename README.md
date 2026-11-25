@@ -5,7 +5,7 @@
 **Turns shipped Resonite assemblies into buildable C# source projects,
 so the engine can be rebuilt, patched and ported (e.g. to Windows on ARM) from source.**
 
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET 10 and 11](https://img.shields.io/badge/.NET-10.0%20%2F%2011.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-nullable%20enabled-239120?logo=csharp&logoColor=white)](Directory.Build.props)
 [![Decompiler](https://img.shields.io/badge/decompiler-ILSpy%2011.1-1f6feb)](https://github.com/icsharpcode/ILSpy)
 [![IL](https://img.shields.io/badge/IL-Mono.Cecil%200.11.6-6e40c9)](https://github.com/jbevain/cecil)

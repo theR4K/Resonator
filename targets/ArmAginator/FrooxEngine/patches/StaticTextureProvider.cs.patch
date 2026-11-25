@@ -1,6 +1,6 @@
 --- a/FrooxEngine/StaticTextureProvider.cs
 +++ b/FrooxEngine/StaticTextureProvider.cs
-@@ -83,7 +83,7 @@
+@@ -85,7 +85,7 @@
  			}
  			else
  			{
@@ -9,7 +9,7 @@
  				{
  				case Platform.Windows:
  				case Platform.Linux:
-@@ -147,6 +147,7 @@
+@@ -146,6 +146,7 @@
  				needsLinear = true;
  			}
  		}

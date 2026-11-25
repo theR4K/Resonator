@@ -4,6 +4,7 @@
        install given with resonite / RESONITE_DIR -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />

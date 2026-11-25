@@ -21,6 +21,8 @@ public static class FixupStage
         new UnsafeAsFix(),
         new NewTypeArgumentFix(),
         new GenericMemberCallFix(),
+        new ThrowExprCastFix(),
+        new LoggerMessageGeneratedFix(),
     ];
 
     public static void Run(Target target)

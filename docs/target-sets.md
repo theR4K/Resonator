@@ -60,7 +60,8 @@ run-time closure (`FrooxEngine.dll`, plus the weaved assemblies it loads), the s
 Left out: plain managed assemblies that touch no wrapper (they run unchanged on any architecture), and wrappers
 over OS APIs only (`kernel32`, `user32`, `winmm`, `libc`, ...).
 
-The targets build for net10.0, the runtime the game runs them on, not for their shipped netstandard / .NET
+The targets build for net11.0, the runtime the game runs them on (since the 2026.11.24 install ships its
+assemblies against .NET 11), not for their shipped netstandard / .NET
 Framework TFMs. Those builds pulled in NuGet packages (System.Memory, ...) that `references.targets` does not model.
 The exception is `FreeImageNET` (`net20`): its System.Drawing interop is not inbox on .NET 10.
 `Resonator.Deweaver diff --api` against the shipped dll therefore differs only in attribute types the compiler

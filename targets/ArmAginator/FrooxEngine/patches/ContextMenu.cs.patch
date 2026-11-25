@@ -1,6 +1,6 @@
 --- a/FrooxEngine/ContextMenu.cs
 +++ b/FrooxEngine/ContextMenu.cs
-@@ -424,7 +424,7 @@
+@@ -425,7 +425,7 @@
  		_fontRenderQueue.Target.Value = renderQueue;
  		_spriteRenderQueue.Target.Value = renderQueue;
  		_canvasOffset.Target.Value = ((!isOwner) ? (-32000) : 0);

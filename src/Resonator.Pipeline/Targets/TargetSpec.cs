@@ -53,7 +53,7 @@ public sealed record TargetSpec
     /// <summary>The shipped assembly, e.g. FrooxEngine.dll.</summary>
     public required string Assembly { get; init; }
     public string? OutAssembly { get; init; }
-    public string Tfm { get; init; } = "net10.0";
+    public string Tfm { get; init; } = "net11.0";
 
     public WeaveMode Weave { get; init; } = WeaveMode.Deweave;
     /// <summary>The weaver dll (in the install) that must be the known one before deweave / flatten; null = no check.</summary>

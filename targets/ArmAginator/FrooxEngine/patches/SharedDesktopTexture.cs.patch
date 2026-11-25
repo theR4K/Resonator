@@ -1,6 +1,6 @@
 --- a/FrooxEngine/SharedDesktopTexture.cs
 +++ b/FrooxEngine/SharedDesktopTexture.cs
-@@ -146,6 +146,7 @@
+@@ -147,6 +147,7 @@
  	{
  		bool num = Settings.GetActiveSetting<DebugSettings>()?.ForceSoftwareVideoEncoder.Value ?? false;
  		List<EncoderOption> encoders = new List<EncoderOption>();
@@ -8,7 +8,7 @@
  		if (!num)
  		{
  			switch (Engine.SystemInfo.GPU_Vendor)
-@@ -193,7 +194,7 @@
+@@ -194,7 +195,7 @@
  		double aspect = (double)display.Resolution.x / (double)display.Resolution.y;
  		int horizontalResolution = MathX.RoundToInt((double)verticalResolution * aspect);
  		bool hasAudio = audioSource != null;
@@ -17,7 +17,7 @@
  		FFMpegArgumentProcessor fFMpegArgumentProcessor = args.OutputToUrl(outputUrl, (FFMpegArgumentOptions options) =>
  		{
  			options.WithTimeout(TimeSpan.FromSeconds(10L));
-@@ -203,6 +204,7 @@
+@@ -204,6 +205,7 @@
  				options.WithCustomArgument("-muxdelay 0.3 -muxpreload 0.3");
  				options.WithCustomArgument("-af \"asetpts=(RTCSTART/(TB*1000000))+(N/SR/TB)\"");
  			}

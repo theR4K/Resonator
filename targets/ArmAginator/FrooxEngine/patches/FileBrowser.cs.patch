@@ -1,6 +1,6 @@
 --- a/FrooxEngine/FileBrowser.cs
 +++ b/FrooxEngine/FileBrowser.cs
-@@ -249,7 +249,7 @@
+@@ -255,7 +255,7 @@
  		if (string.IsNullOrWhiteSpace(_lastPath))
  		{
  			files = new string[0];
@@ -9,7 +9,7 @@
  		}
  		else if (Directory.Exists(_lastPath))
  		{
-@@ -451,7 +451,7 @@
+@@ -467,7 +467,7 @@
  		else
  		{
  			Slot slot = LocalUserSpace.AddSlot("Directory Create Dialog");

@@ -1,6 +1,6 @@
 --- a/FrooxEngine/CommonAvatarBuilder.cs
 +++ b/FrooxEngine/CommonAvatarBuilder.cs
-@@ -316,7 +316,7 @@
+@@ -317,7 +317,7 @@
  		ContextMenu contextMenu = null;
  		if (!isCamera)
  		{

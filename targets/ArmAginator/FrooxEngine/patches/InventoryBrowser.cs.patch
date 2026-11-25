@@ -1,6 +1,6 @@
 --- a/FrooxEngine/InventoryBrowser.cs
 +++ b/FrooxEngine/InventoryBrowser.cs
-@@ -667,7 +667,7 @@
+@@ -668,7 +668,7 @@
  				return;
  			}
  			Slot slot = LocalUserSpace.AddSlot("Directory Create Dialog");

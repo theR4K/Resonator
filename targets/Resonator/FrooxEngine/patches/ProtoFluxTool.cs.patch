@@ -1,6 +1,6 @@
 --- a/FrooxEngine/ProtoFlux/ProtoFluxTool.cs
 +++ b/FrooxEngine/ProtoFlux/ProtoFluxTool.cs
-@@ -1273,6 +1273,11 @@
+@@ -1279,6 +1279,11 @@
  	private P FindProxy<P>() where P : class
  	{
  		Canvas canvas;
@@ -12,7 +12,7 @@
  		if (InputInterface.VR_Active)
  		{
  			List<ICollider> overlaps = Pool.BorrowList<ICollider>();
-@@ -1289,10 +1294,6 @@
+@@ -1295,10 +1300,6 @@
  					{
  						nearestProxy = proxy;
  					}

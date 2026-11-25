@@ -48,8 +48,8 @@ def publish(client, tag, output, commit):
             raise
         release = client.request("POST", "/releases", {"tag_name": tag, "target_commitish": commit,
             "name": "Resonator " + tag, "draft": True, "prerelease": "-" in tag,
-            "body": "Portable .NET 10 tool suite: ProjectBuilder, PatchGenerator, Deweaver and ShadersReferenceBuilder.\n\n"
-                    "Includes target sets, patches and shared adapter source. Requires the .NET 10 SDK and your own Resonite install. "
+            "body": "Portable .NET tool suite: ProjectBuilder, PatchGenerator, Deweaver and ShadersReferenceBuilder.\n\n"
+                    "Includes target sets, patches and shared adapter source. Requires the .NET 10 and 11 SDKs and your own Resonite install. Generated game projects and ShadersReferenceBuilder target .NET 11. "
                     "Runs with native .NET on x64 and ARM64. Resonite binaries and generated engine sources are excluded.\n\n"
                     "Verify the archive with SHA256SUMS. Source commit: " + commit})
     if not release["draft"]:

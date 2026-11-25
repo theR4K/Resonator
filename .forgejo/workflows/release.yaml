@@ -39,10 +39,12 @@ jobs:
         env:
           RELEASE_TAG: ${{ inputs.tag || forgejo.ref_name }}
         run: python3 -c 'import os,re; tag=os.environ["RELEASE_TAG"]; assert re.fullmatch(r"v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?",tag), "Expected vMAJOR.MINOR.PATCH release tag"'
-      - name: Install native .NET 10 SDK
+      - name: Install native .NET 10 and 11 SDKs
         uses: https://github.com/actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: |
+            10.0.x
+            11.0.x
       - name: Download Resonite compile references from Steam
         env:
           STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}

@@ -48,7 +48,7 @@ def package(version, output):
     for name in ("README.md", "LICENSE", "Directory.Build.props", "Resonator.slnx"):
         shutil.copy2(ROOT / name, bundle / name)
     (bundle / "RELEASE.md").write_text(
-        "Requires the .NET 10 SDK and your own Resonite install.\n\n"
+        "Requires the .NET 10 and 11 SDKs and your own Resonite install.\n\n"
         "Run `dotnet tools/Resonator.ProjectBuilder/Resonator.ProjectBuilder.dll --help`.\n"
         "Targets are bundled and located automatically. Set RESONITE_DIR or pass --resonite.\n"
         "This portable package runs with native .NET on x64 and ARM64; it contains no Resonite binaries.\n",

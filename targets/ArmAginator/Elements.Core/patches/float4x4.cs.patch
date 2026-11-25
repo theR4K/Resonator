@@ -7,8 +7,8 @@
 +	public string ToString(IFormatProvider? provider)
 -	public string ToString(IFormatProvider provider)
  	{
- 		StringBuilder array = new StringBuilder();
- 		array.Append("[");
+ 		StringBuilder stringBuilder = new StringBuilder();
+ 		stringBuilder.Append("[");
 @@ -800,36 +800,36 @@
  
  	public static float4x4 Parse(string s)

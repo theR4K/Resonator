@@ -4,7 +4,9 @@
 
 ## Requirements
 
-- **.NET SDK 10.0** (all projects target `net10.0`, see [`Directory.Build.props`](../Directory.Build.props)).
+- **.NET SDKs 10.0 and 11.0**. ProjectBuilder, PatchGenerator and Deweaver target `net10.0`
+  (see [`Directory.Build.props`](../Directory.Build.props)). ShadersReferenceBuilder targets `net11.0`
+  to link the current game assemblies. Generated target projects default to `net11.0` and need the .NET 11 SDK.
 - **Windows** with a **Resonite install**. Every tool finds it the same way:
   1. `--resonite <dir>`
   2. `%RESONITE_DIR%`
@@ -20,7 +22,7 @@ $env:RESONITE_DIR = "D:\Games\Resonite"   # if not in the default Steam path
 dotnet build Resonator.slnx -c Release
 ```
 
-The executables land in `src/<Project>/bin/Release/net10.0/`.
+The executables land in `src/<Project>/bin/Release/net10.0/`, except ShadersReferenceBuilder (`net11.0`).
 
 ## First run
 

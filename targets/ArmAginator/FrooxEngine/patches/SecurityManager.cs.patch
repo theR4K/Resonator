@@ -1,6 +1,6 @@
 --- a/FrooxEngine/SecurityManager.cs
 +++ b/FrooxEngine/SecurityManager.cs
-@@ -216,7 +216,7 @@
+@@ -226,7 +226,7 @@
  			}
  			Slot slot = Userspace.UserspaceWorld.AddSlot("Host Access");
  			slot.PositionInFrontOfUser(float3.Backward);

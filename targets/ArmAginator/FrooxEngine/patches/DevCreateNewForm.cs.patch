@@ -1,6 +1,6 @@
 --- a/FrooxEngine/DevCreateNewForm.cs
 +++ b/FrooxEngine/DevCreateNewForm.cs
-@@ -316,7 +316,7 @@
+@@ -317,7 +317,7 @@
  	public static void OpenInspector(Slot slot)
  	{
  		Slot inspectorSlot = slot.LocalUserSpace.AddSlot("Inspector");

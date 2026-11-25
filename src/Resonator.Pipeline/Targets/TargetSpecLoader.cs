@@ -90,7 +90,7 @@ public static class TargetSpecLoader
             Assembly = assembly ?? "",
             Tree = tree,
             OutAssembly = outAssembly,
-            Tfm = tfm ?? "net10.0",
+            Tfm = tfm ?? "net11.0",
             Weave = ParseWeave(weave, name),
             // the engine's own weaver is always checked; elsewhere "weaver_check": null switches it off
             WeaverCheck = weaverCheck ?? (assembly?.Equals("FrooxEngine.dll", StringComparison.OrdinalIgnoreCase) == true ? FrooxEngineWeaver : null),

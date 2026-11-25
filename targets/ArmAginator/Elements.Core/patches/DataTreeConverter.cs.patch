@@ -59,8 +59,8 @@
 +	public static DataTreeDictionary? FromRawLZ4BSON(Stream stream)
 -	public static DataTreeDictionary FromRawLZ4BSON(Stream stream)
  	{
- 		using LZ4Stream num = new LZ4Stream(stream, LZ4StreamMode.Decompress);
- 		using BsonDataReader bsonDataReader = new BsonDataReader(num);
+ 		using LZ4Stream stream2 = new LZ4Stream(stream, LZ4StreamMode.Decompress);
+ 		using BsonDataReader bsonDataReader = new BsonDataReader(stream2);
  		bsonDataReader.CloseInput = false;
 +		return (DataTreeDictionary?)Read(bsonDataReader);
 -		return (DataTreeDictionary)Read(bsonDataReader);

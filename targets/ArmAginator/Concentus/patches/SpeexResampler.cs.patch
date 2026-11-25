@@ -1,0 +1,56 @@
+--- a/Common/SpeexResampler.cs
++++ b/Common/SpeexResampler.cs
+@@ -725,7 +725,7 @@
+                     int ichunk = (ilen > xlen) ? xlen : ilen;
+                     int ochunk = olen;
+ 
++                    if (input != Span<float>.Empty)
+-                    if (input != null)
+                     {
+                         for (j = 0; j < ichunk; ++j)
+                         {
+@@ -744,7 +744,7 @@
+                     ilen -= ichunk;
+                     olen -= ochunk;
+                     output_ptr += ochunk * this.out_stride;
++                    if (input != Span<float>.Empty)
+-                    if (input != null)
+                     {
+                         input_ptr += ichunk * istride;
+                     }
+@@ -790,7 +790,7 @@
+                 }
+                 if (this.magic_samples[channel_index] == 0)
+                 {
++                    if (input != Span<short>.Empty)
+-                    if (input != null)
+                     {
+                         for (j = 0; j < ichunk; ++j)
+                             this.mem[x + j + this.filt_len - 1] = input[input_ptr + j * istride_save];
+@@ -817,7 +817,7 @@
+                 ilen -= ichunk;
+                 olen -= ochunk;
+                 output_ptr += ((ochunk + omagic) * ostride_save);
++                if (input != Span<short>.Empty)
+-                if (input != null)
+                 {
+                     input_ptr += ichunk * istride_save;
+                 }
+@@ -842,7 +842,7 @@
+             {
+                 out_len = bak_out_len;
+                 in_len = bak_in_len;
++                if (input != Span<float>.Empty)
+-                if (input != null)
+                     this.Process(i, input, i, ref in_len, output, i, ref out_len);
+                 else
+                     this.Process(i, null, 0, ref in_len, output, i, ref out_len);
+@@ -865,7 +865,7 @@
+             {
+                 out_len = bak_out_len;
+                 in_len = bak_in_len;
++                if (input != Span<short>.Empty)
+-                if (input != null)
+                     this.Process(i, input, i, ref in_len, output, i, ref out_len);
+                 else
+                     this.Process(i, null, 0, ref in_len, output, i, ref out_len);

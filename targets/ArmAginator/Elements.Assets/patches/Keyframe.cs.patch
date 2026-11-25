@@ -1,0 +1,21 @@
+--- a/Elements/Assets/Keyframe.cs
++++ b/Elements/Assets/Keyframe.cs
+@@ -1,14 +1,14 @@
+ namespace Elements.Assets;
+ 
++public readonly struct Keyframe<T>(T? value, float time, KeyframeInterpolation interpolation, T? leftTangent = default(T), T? rightTangent = default(T))
+-public readonly struct Keyframe<T>(T value, float time, KeyframeInterpolation interpolation, T leftTangent = default(T), T rightTangent = default(T))
+ {
++	public readonly T? value = value;
+-	public readonly T value = value;
+ 
+ 	public readonly float time = time;
+ 
++	public readonly T? leftTangent = leftTangent;
+-	public readonly T leftTangent = leftTangent;
+ 
++	public readonly T? rightTangent = rightTangent;
+-	public readonly T rightTangent = rightTangent;
+ 
+ 	public readonly KeyframeInterpolation interpolation = interpolation;
+ }

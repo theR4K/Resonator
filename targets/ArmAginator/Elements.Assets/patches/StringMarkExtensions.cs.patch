@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringMarkExtensions.cs
++++ b/Elements/Assets/StringMarkExtensions.cs
+@@ -12,7 +12,7 @@
+ 			{
+ 				return markNode.MarkColor;
+ 			}
++			return AssetContract.Required(node.Parent).GetMarkColor(); // ArmAgedon seam
+-			return node.Parent.GetMarkColor();
+ 		}
+ 		return null;
+ 	}

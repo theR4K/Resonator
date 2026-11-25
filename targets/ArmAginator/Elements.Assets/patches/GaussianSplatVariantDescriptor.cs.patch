@@ -1,0 +1,173 @@
+--- a/Elements/Assets/GaussianSplatVariantDescriptor.cs
++++ b/Elements/Assets/GaussianSplatVariantDescriptor.cs
+@@ -103,7 +103,7 @@
+ 	}
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
++	public string? ValidationError
+-	public string ValidationError
+ 	{
+ 		get
+ 		{
+@@ -138,13 +138,13 @@
+ 	}
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
++	public string? VariantIdentifier
+-	public string VariantIdentifier
+ 	{
+ 		get
+ 		{
+ 			if (IsComposite)
+ 			{
++				return $"{"positions"}={AssetContract.Value(PositionFormat) /* ArmAgedon seam */}&{"rotations"}={AssetContract.Value(RotationFormat) /* ArmAgedon seam */}&{"scales"}={AssetContract.Value(ScaleFormat) /* ArmAgedon seam */}&{"colors"}={AssetContract.Value(ColorFormat) /* ArmAgedon seam */}&{"sh"}={AssetContract.Value(SphericalHarmonicsFormat) /* ArmAgedon seam */}&{CompressionIdentifier}";
+-				return $"{"positions"}={PositionFormat.Value}&{"rotations"}={RotationFormat.Value}&{"scales"}={ScaleFormat.Value}&{"colors"}={ColorFormat.Value}&{"sh"}={SphericalHarmonicsFormat.Value}&{CompressionIdentifier}";
+ 			}
+ 			switch (BufferDataType)
+ 			{
+@@ -262,7 +262,7 @@
+ 		ScaleFormat = scaleFormat;
+ 		ColorFormat = colorFormat;
+ 		SphericalHarmonicsFormat = sphericalHarmonicsFormat;
++		string? validationError = ValidationError;
+-		string validationError = ValidationError;
+ 		if (validationError != null)
+ 		{
+ 			throw new ArgumentException("Invalid variant: " + validationError);
+@@ -288,9 +288,9 @@
+ 		VariantVersion = 0;
+ 	}
+ 
++	public bool Equals(GaussianSplatVariantDescriptor? other, VersionComparison versionComparison)
+-	public bool Equals(GaussianSplatVariantDescriptor other, VersionComparison versionComparison)
+ 	{
++		if (PositionFormat != AssetContract.Required(other).PositionFormat) // ArmAgedon seam
+-		if (PositionFormat != other.PositionFormat)
+ 		{
+ 			return false;
+ 		}
+@@ -325,7 +325,7 @@
+ 		return true;
+ 	}
+ 
++	public bool Equals(GaussianSplatVariantDescriptor? other)
+-	public bool Equals(GaussianSplatVariantDescriptor other)
+ 	{
+ 		return Equals(other, VersionComparison.Exact);
+ 	}
+@@ -357,7 +357,7 @@
+ 		return list;
+ 	}
+ 
++	public void GenerateLoadChain(List<string?> chain)
+-	public void GenerateLoadChain(List<string> chain)
+ 	{
+ 		if (OriginalAsset)
+ 		{
+@@ -370,23 +370,23 @@
+ 		}
+ 	}
+ 
++	public List<GaussianSplatVariantDescriptor>? GetBestAlternateChain(List<GaussianSplatVariantDescriptor> availableDescriptors, Predicate<GaussianSplatVariantDescriptor>? variantFilter = null)
+-	public List<GaussianSplatVariantDescriptor> GetBestAlternateChain(List<GaussianSplatVariantDescriptor> availableDescriptors, Predicate<GaussianSplatVariantDescriptor> variantFilter = null)
+ 	{
+ 		return null;
+ 	}
+ 
++	public string? ValidateCloudVariant(GaussianSplatMetadata metadata)
+-	public string ValidateCloudVariant(GaussianSplatMetadata metadata)
+ 	{
+ 		if (!IsComposite)
+ 		{
+ 			return "Cloud variants must be composite";
+ 		}
++		string? baseError = ValidationError;
+-		string baseError = ValidationError;
+ 		if (baseError != null)
+ 		{
+ 			return baseError;
+ 		}
++		if (AssetContract.Value(SphericalHarmonicsFormat) /* ArmAgedon seam */.IsClustered() && GaussianSplatCompressor.GetSHCount(metadata.SplatCount, AssetContract.Value(SphericalHarmonicsFormat) /* ArmAgedon seam */) > metadata.SplatCount)
+-		if (SphericalHarmonicsFormat.Value.IsClustered() && GaussianSplatCompressor.GetSHCount(metadata.SplatCount, SphericalHarmonicsFormat.Value) > metadata.SplatCount)
+ 		{
+ 			return "Gaussian cloud has fewer splats than the clustered count";
+ 		}
+@@ -477,10 +477,10 @@
+ 			}
+ 			return new GaussianSplatVariantDescriptor(bufferCompression.Value, GaussianSplatDataType.ChunkData, null, null, null, null, null, version);
+ 		}
++		return new GaussianSplatVariantDescriptor(AssetContract.Value(bufferCompression) /* ArmAgedon seam */, (bufferFormatCount == 1) ? new GaussianSplatDataType?(GaussianSplatDataType.Buffer) : ((GaussianSplatDataType?)null), positionFormat, rotationFormat, scaleFormat, colorFormat, shFormat, version);
+-		return new GaussianSplatVariantDescriptor(bufferCompression.Value, (bufferFormatCount == 1) ? new GaussianSplatDataType?(GaussianSplatDataType.Buffer) : ((GaussianSplatDataType?)null), positionFormat, rotationFormat, scaleFormat, colorFormat, shFormat, version);
+ 	}
+ 
++	public GaussianSplatVariantDescriptor? Clone()
+-	public GaussianSplatVariantDescriptor Clone()
+ 	{
+ 		return System.Text.Json.JsonSerializer.Deserialize<GaussianSplatVariantDescriptor>(System.Text.Json.JsonSerializer.Serialize(this));
+ 	}
+@@ -488,8 +488,8 @@
+ 	public GaussianSplatVariantDescriptor ExtractPositionBufferVariant()
+ 	{
+ 		CheckBufferVariantExtraction();
++		GaussianSplatVariantDescriptor? gaussianSplatVariantDescriptor = Clone();
++		AssetContract.Required(gaussianSplatVariantDescriptor).BufferDataType = GaussianSplatDataType.Buffer; // ArmAgedon seam
+-		GaussianSplatVariantDescriptor gaussianSplatVariantDescriptor = Clone();
+-		gaussianSplatVariantDescriptor.BufferDataType = GaussianSplatDataType.Buffer;
+ 		gaussianSplatVariantDescriptor.RotationFormat = null;
+ 		gaussianSplatVariantDescriptor.ScaleFormat = null;
+ 		gaussianSplatVariantDescriptor.ColorFormat = null;
+@@ -500,8 +500,8 @@
+ 	public GaussianSplatVariantDescriptor ExtractRotationBufferVariant()
+ 	{
+ 		CheckBufferVariantExtraction();
++		GaussianSplatVariantDescriptor? gaussianSplatVariantDescriptor = Clone();
++		AssetContract.Required(gaussianSplatVariantDescriptor).BufferDataType = GaussianSplatDataType.Buffer; // ArmAgedon seam
+-		GaussianSplatVariantDescriptor gaussianSplatVariantDescriptor = Clone();
+-		gaussianSplatVariantDescriptor.BufferDataType = GaussianSplatDataType.Buffer;
+ 		gaussianSplatVariantDescriptor.PositionFormat = null;
+ 		gaussianSplatVariantDescriptor.ScaleFormat = null;
+ 		gaussianSplatVariantDescriptor.ColorFormat = null;
+@@ -512,8 +512,8 @@
+ 	public GaussianSplatVariantDescriptor ExtractScaleBufferVariant()
+ 	{
+ 		CheckBufferVariantExtraction();
++		GaussianSplatVariantDescriptor? gaussianSplatVariantDescriptor = Clone();
++		AssetContract.Required(gaussianSplatVariantDescriptor).BufferDataType = GaussianSplatDataType.Buffer; // ArmAgedon seam
+-		GaussianSplatVariantDescriptor gaussianSplatVariantDescriptor = Clone();
+-		gaussianSplatVariantDescriptor.BufferDataType = GaussianSplatDataType.Buffer;
+ 		gaussianSplatVariantDescriptor.PositionFormat = null;
+ 		gaussianSplatVariantDescriptor.RotationFormat = null;
+ 		gaussianSplatVariantDescriptor.ColorFormat = null;
+@@ -524,8 +524,8 @@
+ 	public GaussianSplatVariantDescriptor ExtractColorBufferVariant()
+ 	{
+ 		CheckBufferVariantExtraction();
++		GaussianSplatVariantDescriptor? gaussianSplatVariantDescriptor = Clone();
++		AssetContract.Required(gaussianSplatVariantDescriptor).BufferDataType = GaussianSplatDataType.Buffer; // ArmAgedon seam
+-		GaussianSplatVariantDescriptor gaussianSplatVariantDescriptor = Clone();
+-		gaussianSplatVariantDescriptor.BufferDataType = GaussianSplatDataType.Buffer;
+ 		gaussianSplatVariantDescriptor.PositionFormat = null;
+ 		gaussianSplatVariantDescriptor.RotationFormat = null;
+ 		gaussianSplatVariantDescriptor.ScaleFormat = null;
+@@ -536,8 +536,8 @@
+ 	public GaussianSplatVariantDescriptor ExtractSHBufferVariant()
+ 	{
+ 		CheckBufferVariantExtraction();
++		GaussianSplatVariantDescriptor? gaussianSplatVariantDescriptor = Clone();
++		AssetContract.Required(gaussianSplatVariantDescriptor).BufferDataType = GaussianSplatDataType.Buffer; // ArmAgedon seam
+-		GaussianSplatVariantDescriptor gaussianSplatVariantDescriptor = Clone();
+-		gaussianSplatVariantDescriptor.BufferDataType = GaussianSplatDataType.Buffer;
+ 		gaussianSplatVariantDescriptor.PositionFormat = null;
+ 		gaussianSplatVariantDescriptor.RotationFormat = null;
+ 		gaussianSplatVariantDescriptor.ScaleFormat = null;
+@@ -548,8 +548,8 @@
+ 	public GaussianSplatVariantDescriptor ExtractChunksVariant()
+ 	{
+ 		CheckBufferVariantExtraction();
++		GaussianSplatVariantDescriptor? gaussianSplatVariantDescriptor = Clone();
++		AssetContract.Required(gaussianSplatVariantDescriptor).PositionFormat = null; // ArmAgedon seam
+-		GaussianSplatVariantDescriptor gaussianSplatVariantDescriptor = Clone();
+-		gaussianSplatVariantDescriptor.PositionFormat = null;
+ 		gaussianSplatVariantDescriptor.RotationFormat = null;
+ 		gaussianSplatVariantDescriptor.ScaleFormat = null;
+ 		gaussianSplatVariantDescriptor.ColorFormat = null;

@@ -1,0 +1,77 @@
+--- a/Elements/Assets/Quad.cs
++++ b/Elements/Assets/Quad.cs
+@@ -11,7 +11,7 @@
+ 
+ 	public const int TOTAL_TRIANGLES = 2;
+ 
++	public readonly TriangleSubmesh? Submesh;
+-	public readonly TriangleSubmesh Submesh;
+ 
+ 	public float2 Size = float2.One;
+ 
+@@ -73,7 +73,7 @@
+ 
+ 	public override void Remove()
+ 	{
++		AssetContract.Required(Mesh).RemoveTriangle(Triangle1); // ArmAgedon seam
+-		Mesh.RemoveTriangle(Triangle1);
+ 		Mesh.RemoveTriangle(Triangle0);
+ 		Mesh.RemoveVertices(FirstVertex.Index, 4, updateSubmeshes: false);
+ 	}
+@@ -82,7 +82,7 @@
+ 		: base(submesh.Mesh)
+ 	{
+ 		Submesh = submesh;
++		AssetContract.Required(Mesh).IncreaseVertexCount(4); // ArmAgedon seam
+-		Mesh.IncreaseVertexCount(4);
+ 		FirstVertex = Mesh.GetVertex(Mesh.VertexCount - 4);
+ 		int index = FirstVertex.IndexUnsafe;
+ 		MeshX_Extensions.QuadTriangles t = Submesh.AddQuadAsTriangles(index, index + 1, index + 2, index + 3);
+@@ -94,27 +94,27 @@
+ 	}
+ 
+ 	public Quad(Vertex firstVertex)
++		: base(AssetContract.Required(firstVertex.Mesh)) // ArmAgedon seam
+-		: base(firstVertex.Mesh)
+ 	{
+ 		FirstVertex = firstVertex;
+ 	}
+ 
+ 	public override void Update()
+ 	{
++		AssetContract.Required(Mesh).HasColors = UseColors; // ArmAgedon seam
+-		Mesh.HasColors = UseColors;
+ 		UpdateUnsafe(FirstVertex.Index);
+ 	}
+ 
+ 	public void UpdateUnsafe(int index)
+ 	{
++		MeshX? meshx = Mesh;
+-		MeshX meshx = Mesh;
+ 		float2 off = Size * 0.5f;
++		SetQuad(AssetContract.Required(meshx), index, in Position, in Rotation, in Pivot, in off, in UVScale, in UVOffset); // ArmAgedon seam
+-		SetQuad(meshx, index, in Position, in Rotation, in Pivot, in off, in UVScale, in UVOffset);
+ 		if (UseColors)
+ 		{
+ 			for (int i = 0; i < 4; i++)
+ 			{
++				AssetContract.Required(meshx.RawColors)[index + i] = GetColor(i).ToProfile(meshx.Profile); // ArmAgedon seam
+-				meshx.RawColors[index + i] = GetColor(i).ToProfile(meshx.Profile);
+ 			}
+ 		}
+ 	}
+@@ -147,10 +147,10 @@
+ 			pos -= (float3)pivot;
+ 			uv = uv * uvScale + uvOffset;
+ 			pos = rotation * pos + position;
++			AssetContract.Required(meshx.RawPositions)[startVertex + i] = pos; // ArmAgedon seam
++			AssetContract.Required(meshx.RawUV0s)[startVertex + i] = uv; // ArmAgedon seam
++			AssetContract.Required(meshx.RawNormals)[startVertex + i] = rotation * ILSpyHelper_AsRefReadOnly(float3.Backward); // ArmAgedon seam
++			AssetContract.Required(meshx.RawTangents)[startVertex + i] = new float4(rotation * ILSpyHelper_AsRefReadOnly(float3.Right), -1f); // ArmAgedon seam
+-			meshx.RawPositions[startVertex + i] = pos;
+-			meshx.RawUV0s[startVertex + i] = uv;
+-			meshx.RawNormals[startVertex + i] = rotation * ILSpyHelper_AsRefReadOnly(float3.Backward);
+-			meshx.RawTangents[startVertex + i] = new float4(rotation * ILSpyHelper_AsRefReadOnly(float3.Right), -1f);
+ 		}
+ 		static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 		{

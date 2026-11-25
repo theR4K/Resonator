@@ -1,0 +1,20 @@
+--- a/Elements/Assets/AudioBufferPool.cs
++++ b/Elements/Assets/AudioBufferPool.cs
+@@ -27,7 +27,7 @@
+ 	{
+ 		lock (_lock)
+ 		{
++			if (bufferBlocks.TryGetValue(key, out BufferBlock? block))
+-			if (bufferBlocks.TryGetValue(key, out BufferBlock block))
+ 			{
+ 				block.userCount++;
+ 				return block;
+@@ -68,7 +68,7 @@
+ 			{
+ 				BufferBlockKey key = recycleQueue.Dequeue();
+ 				recycleQueuedBlocks.Remove(key);
++				if (bufferBlocks.TryGetValue(key, out BufferBlock? block) && block.userCount == 0)
+-				if (bufferBlocks.TryGetValue(key, out BufferBlock block) && block.userCount == 0)
+ 				{
+ 					bufferBlocks.Remove(key);
+ 					block.isDecoded = false;

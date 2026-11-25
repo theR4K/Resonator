@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringSizeNode.cs
++++ b/Elements/Assets/StringSizeNode.cs
+@@ -36,7 +36,7 @@
+ 		return $"Size: {Size * 100f:F2}%";
+ 	}
+ 
++	public static StringSizeNode? Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+-	public static StringSizeNode Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+ 	{
+ 		if (parameter.IsEmpty)
+ 		{

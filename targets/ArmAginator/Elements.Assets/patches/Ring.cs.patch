@@ -1,0 +1,11 @@
+--- a/Elements/Assets/Ring.cs
++++ b/Elements/Assets/Ring.cs
+@@ -68,7 +68,7 @@
+ 			Vertex v1 = OuterRingVertex(i);
+ 			Vertex v2 = OuterRingVertex(i + 1);
+ 			Vertex v3 = InnerRingVertex(i + 1);
++			MeshX_Extensions.QuadTriangles tt = AssetContract.Required(Mesh).AddQuadAsTriangles(v0, v1, v2, v3); // ArmAgedon seam
+-			MeshX_Extensions.QuadTriangles tt = Mesh.AddQuadAsTriangles(v0, v1, v2, v3);
+ 			AllTriangles.Add(tt.first);
+ 			AllTriangles.Add(tt.second);
+ 		}

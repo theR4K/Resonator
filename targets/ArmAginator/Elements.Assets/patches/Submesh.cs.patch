@@ -1,0 +1,110 @@
+--- a/Elements/Assets/Submesh.cs
++++ b/Elements/Assets/Submesh.cs
+@@ -9,9 +9,9 @@
+ {
+ 	public readonly MeshX Mesh;
+ 
++	internal int[]? indicies;
+-	internal int[] indicies;
+ 
++	internal int[]? primitiveIDs;
+-	internal int[] primitiveIDs;
+ 
+ 	private int _currentID;
+ 
+@@ -23,7 +23,7 @@
+ 
+ 	public int IndicieCount => Count * IndiciesPerElement;
+ 
++	public int[]? RawIndicies => indicies;
+-	public int[] RawIndicies => indicies;
+ 
+ 	public int Capacity => (indicies?.Length ?? 0) / IndiciesPerElement;
+ 
+@@ -46,7 +46,7 @@
+ 			IncreaseCount(diff);
+ 			for (int i = count2 * IndiciesPerElement; i < IndicieCount; i++)
+ 			{
++				AssetContract.Required(indicies)[i] = i + sequenceStart; // ArmAgedon seam
+-				indicies[i] = i + sequenceStart;
+ 			}
+ 		}
+ 		else if (diff < 0)
+@@ -86,7 +86,7 @@
+ 		{
+ 			for (int i = Count - count; i < Count; i++)
+ 			{
++				AssetContract.Required(primitiveIDs)[i] = _currentID++; // ArmAgedon seam
+-				primitiveIDs[i] = _currentID++;
+ 			}
+ 		}
+ 	}
+@@ -98,7 +98,7 @@
+ 			throw new InvalidOperationException("Submesh topology mismatch!");
+ 		}
+ 		IncreaseCount(submesh.Count);
++		Array.Copy(AssetContract.Required(submesh.RawIndicies), 0, AssetContract.Required(RawIndicies), IndicieCount - submesh.IndicieCount, submesh.IndicieCount); // ArmAgedon seam
+-		Array.Copy(submesh.RawIndicies, 0, RawIndicies, IndicieCount - submesh.IndicieCount, submesh.IndicieCount);
+ 	}
+ 
+ 	public void RemoveFromEnd(int count)
+@@ -154,7 +154,7 @@
+ 				throw new Exception("Primitive has been invalidated");
+ 			}
+ 		}
++		else if (version != AssetContract.Required(primitiveIDs)[index]) // ArmAgedon seam
+-		else if (version != primitiveIDs[index])
+ 		{
+ 			while (index > 0 && primitiveIDs[index] > version)
+ 			{
+@@ -174,7 +174,7 @@
+ 		int endIndex = index + count;
+ 		for (int i = 0; i < IndicieCount; i++)
+ 		{
++			if (AssetContract.Required(indicies)[i] >= index && indicies[i] < endIndex) // ArmAgedon seam
+-			if (indicies[i] >= index && indicies[i] < endIndex)
+ 			{
+ 				if (throwOnRemoved)
+ 				{
+@@ -193,7 +193,7 @@
+ 	{
+ 		for (int i = 0; i < Count; i++)
+ 		{
++			AssetContract.Required(primitiveIDs)[i] = _currentID++; // ArmAgedon seam
+-			primitiveIDs[i] = _currentID++;
+ 		}
+ 	}
+ 
+@@ -204,7 +204,7 @@
+ 		{
+ 			for (int i = 0; i < IndicieCount; i++)
+ 			{
++				bw.Write(AssetContract.Required(indicies)[i]); // ArmAgedon seam
+-				bw.Write(indicies[i]);
+ 			}
+ 		}
+ 	}
+@@ -215,7 +215,7 @@
+ 		IncreaseCount(count);
+ 		for (int i = 0; i < IndicieCount; i++)
+ 		{
++			AssetContract.Required(indicies)[i] = br.ReadInt32(); // ArmAgedon seam
+-			indicies[i] = br.ReadInt32();
+ 		}
+ 	}
+ 
+@@ -230,12 +230,12 @@
+ 		BoundingBox bounds = default;
+ 		bounds.MakeEmpty();
+ 		invalidIndicies = 0;
++		float3[]? positions = Mesh.positions;
+-		float3[] positions = Mesh.positions;
+ 		if (positions != null)
+ 		{
+ 			for (int i = 0; i < IndicieCount; i++)
+ 			{
++				int index = AssetContract.Required(indicies)[i]; // ArmAgedon seam
+-				int index = indicies[i];
+ 				if (index >= 0 && index <= positions.Length)
+ 				{
+ 					float3 p = positions[index];

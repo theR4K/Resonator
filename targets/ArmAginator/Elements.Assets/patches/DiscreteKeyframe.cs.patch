@@ -1,0 +1,13 @@
+--- a/Elements/Assets/DiscreteKeyframe.cs
++++ b/Elements/Assets/DiscreteKeyframe.cs
+@@ -1,8 +1,8 @@
+ namespace Elements.Assets;
+ 
++public readonly struct DiscreteKeyframe<T>(T? value, float time)
+-public readonly struct DiscreteKeyframe<T>(T value, float time)
+ {
++	public readonly T? value = value;
+-	public readonly T value = value;
+ 
+ 	public readonly float time = time;
+ }

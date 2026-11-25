@@ -1,0 +1,20 @@
+--- a/Elements/Assets/CurveBoolAnimationTrack.cs
++++ b/Elements/Assets/CurveBoolAnimationTrack.cs
+@@ -54,7 +54,7 @@
+ 	{
+ 		for (int i = 0; i < FrameCount; i++)
+ 		{
++			bw.Write(AssetContract.Required(tangents)[i].left); // ArmAgedon seam
+-			bw.Write(tangents[i].left);
+ 			bw.Write(tangents[i].right);
+ 		}
+ 	}
+@@ -71,7 +71,7 @@
+ 	{
+ 		for (int i = 0; i < count; i++)
+ 		{
++			AssetContract.Required(tangents).Add(new InternTangents(br.ReadBoolean(), br.ReadBoolean())); // ArmAgedon seam
+-			tangents.Add(new InternTangents(br.ReadBoolean(), br.ReadBoolean()));
+ 		}
+ 	}
+ }

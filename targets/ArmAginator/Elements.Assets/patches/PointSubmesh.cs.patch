@@ -1,0 +1,20 @@
+--- a/Elements/Assets/PointSubmesh.cs
++++ b/Elements/Assets/PointSubmesh.cs
+@@ -28,7 +28,7 @@
+ 		return p;
+ 	}
+ 
++	public void AddPoints(int count, PointCollection? points = null)
+-	public void AddPoints(int count, PointCollection points = null)
+ 	{
+ 		IncreaseCount(count);
+ 		if (points != null)
+@@ -49,7 +49,7 @@
+ 
+ 	public void SetPoint(int index, int vIndex)
+ 	{
++		AssetContract.Required(indicies)[index] = vIndex; // ArmAgedon seam
+-		indicies[index] = vIndex;
+ 	}
+ 
+ 	public void Remove(Point p)

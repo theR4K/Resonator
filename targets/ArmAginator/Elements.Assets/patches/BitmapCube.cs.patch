@@ -1,0 +1,86 @@
+--- a/Elements/Assets/BitmapCube.cs
++++ b/Elements/Assets/BitmapCube.cs
+@@ -40,24 +40,24 @@
+ 
+ 	public color this[int2 point, Face face] => this[point.x, point.y, face];
+ 
++	public BitmapCube(byte[] data, int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, string? originalFormat = null)
+-	public BitmapCube(byte[] data, int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, string originalFormat = null)
+ 		: this(new ArrayBackingMemoryBuffer(data), width, height, format, mipmaps, profile, originalFormat)
+ 	{
+ 	}
+ 
++	public BitmapCube(IBackingMemoryBuffer buffer, int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, string? originalFormat = null)
+-	public BitmapCube(IBackingMemoryBuffer buffer, int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, string originalFormat = null)
+ 	{
+ 		InitSize(new int2(width, height), flipY: false, format);
+ 		Init(buffer, format, mipmaps, originalFormat, profile, null);
+ 	}
+ 
++	public BitmapCube(int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, string? originalFormat = null, IBackingBufferAllocator? allocator = null)
+-	public BitmapCube(int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, string originalFormat = null, IBackingBufferAllocator allocator = null)
+ 	{
+ 		InitSize(new int2(width, height), flipY: false, format);
+ 		Init(null, format, mipmaps, originalFormat, profile, allocator);
+ 	}
+ 
++	public BitmapCube(Bitmap2D posX, Bitmap2D negX, Bitmap2D posY, Bitmap2D negY, Bitmap2D posZ, Bitmap2D negZ, IBackingBufferAllocator? allocator = null)
+-	public BitmapCube(Bitmap2D posX, Bitmap2D negX, Bitmap2D posY, Bitmap2D negY, Bitmap2D posZ, Bitmap2D negZ, IBackingBufferAllocator allocator = null)
+ 	{
+ 		InitSize(int2.One * posX.Size, flipY: true, posX.Format);
+ 		bool mipmaps = posX.HasMipMaps;
+@@ -94,7 +94,7 @@
+ 	{
+ 		if (mip != 0)
+ 		{
++			return AssetContract.Required(mipmapOrigins)[mip]; // ArmAgedon seam
+-			return mipmapOrigins[mip];
+ 		}
+ 		return 0;
+ 	}
+@@ -121,8 +121,8 @@
+ 		{
+ 			return faceStart + x + y * AlignedSize.x;
+ 		}
++		int2 size = AssetContract.Required(mipmapSizes)[mip]; // ArmAgedon seam
++		int offset = AssetContract.Required(mipmapOrigins)[mip]; // ArmAgedon seam
+-		int2 size = mipmapSizes[mip];
+-		int offset = mipmapOrigins[mip];
+ 		return faceStart + offset + (x + y * size.x);
+ 	}
+ 
+@@ -256,7 +256,7 @@
+ 		Encode(fstream, encoding);
+ 	}
+ 
++	public static BitmapCube Load(string file, IBackingBufferAllocator? allocator = null)
+-	public static BitmapCube Load(string file, IBackingBufferAllocator allocator = null)
+ 	{
+ 		using FileStream fstream = File.OpenRead(file);
+ 		return Decode(fstream, allocator);
+@@ -282,14 +282,14 @@
+ 			break;
+ 		case RawBitmapEncoding.LZMA:
+ 		{
++			using Stream data = AssetContract.Required(Buffer).Memory.AsStream(); // ArmAgedon seam
+-			using Stream data = Buffer.Memory.AsStream();
+ 			LZMAHelper.Compress(data, stream);
+ 			break;
+ 		}
+ 		}
+ 	}
+ 
++	public static BitmapCube Decode(Stream stream, IBackingBufferAllocator? allocator = null)
+-	public static BitmapCube Decode(Stream stream, IBackingBufferAllocator allocator = null)
+ 	{
+ 		BinaryReader rd = new BinaryReader(stream);
+ 		if (rd.ReadString() != "BmpCube")
+@@ -331,7 +331,7 @@
+ 		{
+ 			if (encoding == RawBitmapEncoding.LZMA)
+ 			{
++				using Stream data = AssetContract.Required(cube.Buffer).Memory.AsStream(); // ArmAgedon seam
+-				using Stream data = cube.Buffer.Memory.AsStream();
+ 				LZMAHelper.Decompress(stream, data);
+ 			}
+ 		}

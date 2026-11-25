@@ -1,0 +1,91 @@
+--- a/Elements/Assets/Line2D.cs
++++ b/Elements/Assets/Line2D.cs
+@@ -18,11 +18,11 @@
+ 
+ 	public int TriangleStartIndex = -1;
+ 
++	public TriangleSubmesh? Submesh { get; private set; }
+-	public TriangleSubmesh Submesh { get; private set; }
+ 
++	public float2[]? Points { get; private set; }
+-	public float2[] Points { get; private set; }
+ 
++	public int PointCount => AssetContract.Required(Points).Length; // ArmAgedon seam
+-	public int PointCount => Points.Length;
+ 
+ 	public Line2D(TriangleSubmesh submesh, int points)
+ 		: base(submesh.Mesh)
+@@ -39,7 +39,7 @@
+ 		UpdateMesh(submesh.Mesh);
+ 		Submesh = submesh;
+ 		Points = Points.EnsureExactSize(points);
++		VertexStartIndex = AssetContract.Required(Mesh).VertexCount; // ArmAgedon seam
+-		VertexStartIndex = Mesh.VertexCount;
+ 		TriangleStartIndex = submesh.Count;
+ 		submesh.Mesh.AddVertices(points * 2);
+ 		submesh.AddTriangles((points - 1) * 2);
+@@ -50,8 +50,8 @@
+ 		float halfWidth = Width * 0.5f;
+ 		float2 prevDir = float2.Zero;
+ 		float length = 0f;
++		AssetContract.Required(Mesh).Profile = Color.profile; // ArmAgedon seam
++		for (int i = 0; i < AssetContract.Required(Points).Length; i++) // ArmAgedon seam
+-		Mesh.Profile = Color.profile;
+-		for (int i = 0; i < Points.Length; i++)
+ 		{
+ 			float2 p = Points[i];
+ 			bool flag = i == Points.Length - 1;
+@@ -70,11 +70,11 @@
+ 			float2 p3 = p - offset;
+ 			int v0 = VertexStartIndex + i * 2;
+ 			int v1 = v0 + 1;
++			AssetContract.Required(Mesh.RawPositions)[v0] = p2; // ArmAgedon seam
+-			Mesh.RawPositions[v0] = p2;
+ 			Mesh.RawPositions[v1] = p3;
+ 			if (Mesh.HasUV0s)
+ 			{
++				AssetContract.Required(Mesh.RawUV0s)[v0] = new float2(0f, length) * UVScale; // ArmAgedon seam
+-				Mesh.RawUV0s[v0] = new float2(0f, length) * UVScale;
+ 				Mesh.RawUV0s[v1] = new float2(1f, length) * UVScale;
+ 			}
+ 			if (!flag)
+@@ -82,7 +82,7 @@
+ 				int baseIndex = i * 2;
+ 				int num = VertexStartIndex + baseIndex;
+ 				baseIndex += TriangleStartIndex;
++				Triangle t0 = AssetContract.Required(Submesh).GetTriangle(baseIndex); // ArmAgedon seam
+-				Triangle t0 = Submesh.GetTriangle(baseIndex);
+ 				Triangle t1 = Submesh.GetTriangle(baseIndex + 1);
+ 				int v0idx = num;
+ 				int v1idx = num + 1;
+@@ -114,14 +114,14 @@
+ 		{
+ 			for (int j = 0; j < PointCount * 2; j++)
+ 			{
++				AssetContract.Required(Mesh.RawNormals)[VertexStartIndex + j] = float3.Backward; // ArmAgedon seam
+-				Mesh.RawNormals[VertexStartIndex + j] = float3.Backward;
+ 			}
+ 		}
+ 		if (Mesh.HasColors)
+ 		{
+ 			for (int k = 0; k < PointCount * 2; k++)
+ 			{
++				AssetContract.Required(Mesh.RawColors)[VertexStartIndex + k] = Color.baseColor; // ArmAgedon seam
+-				Mesh.RawColors[VertexStartIndex + k] = Color.baseColor;
+ 			}
+ 		}
+ 	}
+@@ -130,11 +130,11 @@
+ 	{
+ 		if (TriangleStartIndex >= 0)
+ 		{
++			AssetContract.Required(Submesh).Remove(TriangleStartIndex, (PointCount - 1) * 2); // ArmAgedon seam
+-			Submesh.Remove(TriangleStartIndex, (PointCount - 1) * 2);
+ 		}
+ 		if (VertexStartIndex >= 0)
+ 		{
++			AssetContract.Required(Mesh).RemoveVertices(VertexStartIndex, PointCount * 2, updateSubmeshes: false); // ArmAgedon seam
+-			Mesh.RemoveVertices(VertexStartIndex, PointCount * 2, updateSubmeshes: false);
+ 		}
+ 		base.RemoveGeometry();
+ 	}

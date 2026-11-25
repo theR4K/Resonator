@@ -1,0 +1,54 @@
+--- a/Elements/Assets/LocaleResource.cs
++++ b/Elements/Assets/LocaleResource.cs
+@@ -55,7 +55,7 @@
+ 		return _formatMessages.Count((KeyValuePair<string, Message> p) => filter(p.Key));
+ 	}
+ 
++	public string? Format(string key, Dictionary<string, object?> arguments)
+-	public string Format(string key, Dictionary<string, object> arguments)
+ 	{
+ 		if (_formatMessages.TryGetValue(key, out var message))
+ 		{
+@@ -64,7 +64,7 @@
+ 		return null;
+ 	}
+ 
++	public string? GetKeyLocaleCode(string key)
+-	public string GetKeyLocaleCode(string key)
+ 	{
+ 		if (_formatMessages.TryGetValue(key, out var message))
+ 		{
+@@ -91,26 +91,28 @@
+ 
+ 	public void LoadDataAdditively(string json)
+ 	{
++		LocaleData? entity = JsonSerializer.Deserialize<LocaleData>(json);
+-		LocaleData entity = JsonSerializer.Deserialize<LocaleData>(json);
+ 		LoadDataAdditively(entity);
+ 	}
+ 
++	public void LoadDataAdditively(LocaleData? data)
+-	public void LoadDataAdditively(LocaleData data)
+ 	{
++		AssetContract.Required(data); // ArmAgedon seam
++		AssetContract.Required(data.LocaleCode); // ArmAgedon seam
+ 		if (!_formatters.ContainsKey(data.LocaleCode))
+ 		{
+ 			_formatters.Add(data.LocaleCode, new MessageFormatter(useCache: true, data.LocaleCode));
+ 		}
++		foreach (KeyValuePair<string, string> message in AssetContract.Required(data.Messages)) // ArmAgedon seam
+-		foreach (KeyValuePair<string, string> message in data.Messages)
+ 		{
+ 			if (!_formatMessages.ContainsKey(message.Key))
+ 			{
+ 				_formatMessages.Add(message.Key, new Message(data.LocaleCode, message.Value));
+ 			}
+ 		}
++		foreach (string author in AssetContract.Required(data.Authors)) // ArmAgedon seam
+-		foreach (string author in data.Authors)
+ 		{
++			if (!_authors.TryGetValue(author, out List<string>? codes))
+-			if (!_authors.TryGetValue(author, out List<string> codes))
+ 			{
+ 				codes = new List<string>();
+ 				_authors.Add(author, codes);

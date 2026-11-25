@@ -1,0 +1,35 @@
+--- a/Elements/Assets/RawUriAnimationTrack.cs
++++ b/Elements/Assets/RawUriAnimationTrack.cs
+@@ -6,11 +6,11 @@
+ 
+ public class RawUriAnimationTrack : RawAnimationTrack<Uri>, IAnimationTrack<Uri>, IAnimationTrack
+ {
++	public Uri? Sample(float position)
+-	public Uri Sample(float position)
+ 	{
+ 		GetSampleIndex(position, out var index, out var lerp);
++		Uri? frame0 = frames[index];
++		Uri? frame1 = frames[MathX.Min(index + 1, FrameCount - 1)];
+-		Uri frame0 = frames[index];
+-		Uri frame1 = frames[MathX.Min(index + 1, FrameCount - 1)];
+ 		if (!(lerp >= 0.5f))
+ 		{
+ 			return frame0;
+@@ -22,7 +22,7 @@
+ 	{
+ 		for (int i = 0; i < FrameCount; i++)
+ 		{
++			Uri? frame = frames[i];
+-			Uri frame = frames[i];
+ 			bw.Write(frame);
+ 		}
+ 	}
+@@ -31,7 +31,7 @@
+ 	{
+ 		for (int i = 0; i < count; i++)
+ 		{
++			Uri? value = br.ReadUri();
+-			Uri value = br.ReadUri();
+ 			frames.Add(value);
+ 		}
+ 	}

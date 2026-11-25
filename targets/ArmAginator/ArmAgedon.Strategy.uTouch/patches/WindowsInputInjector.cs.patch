@@ -1,0 +1,10 @@
+--- a/FrooxEngine/WindowsInputInjector.cs
++++ b/FrooxEngine/WindowsInputInjector.cs
+@@ -304,6 +304,6 @@
+ 
+ 	public void Dispose()
+ 	{
++		Lib.FinalizeInjection();
+-		Lib.Finalize();
+ 	}
+ }

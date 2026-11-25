@@ -1,0 +1,20 @@
+--- a/Elements/Assets/BitmapMetadata.cs
++++ b/Elements/Assets/BitmapMetadata.cs
+@@ -27,7 +27,7 @@
+ 
+ 	[JsonProperty(PropertyName = "baseFormat")]
+ 	[JsonPropertyName("baseFormat")]
++	public string? BaseFormat { get; set; }
+-	public string BaseFormat { get; set; }
+ 
+ 	public override void CopyFrom(IAssetMetadata metadata)
+ 	{
+@@ -50,7 +50,7 @@
+ 
+ 	public static BitmapMetadata GenerateMetadata(string file)
+ 	{
++		BitmapMetadata bitmapMetadata = GenerateMetadata(AssetContract.Required(Bitmap2D.Load(file, null))); // ArmAgedon seam
+-		BitmapMetadata bitmapMetadata = GenerateMetadata(Bitmap2D.Load(file, null));
+ 		bitmapMetadata.AssetIdentifier = file;
+ 		return bitmapMetadata;
+ 	}

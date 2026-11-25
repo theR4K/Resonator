@@ -1,0 +1,13 @@
+--- a/Elements/Assets/AtlasData.cs
++++ b/Elements/Assets/AtlasData.cs
+@@ -1,8 +1,8 @@
+ namespace Elements.Assets;
+ 
++public readonly struct AtlasData(GlyphAtlas glyphAtlas, object? customData = null)
+-public readonly struct AtlasData(GlyphAtlas glyphAtlas, object customData = null)
+ {
+ 	public readonly GlyphAtlas glyphAtlas = glyphAtlas;
+ 
++	public readonly object? customData = customData;
+-	public readonly object customData = customData;
+ }

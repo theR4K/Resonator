@@ -1,0 +1,35 @@
+--- a/Elements/Assets/WavefrontExporter.cs
++++ b/Elements/Assets/WavefrontExporter.cs
+@@ -20,7 +20,7 @@
+ 		writer.WriteLine();
+ 		for (int i = 0; i < meshx.VertexCount; i++)
+ 		{
++			float3 p = AssetContract.Required(meshx.RawPositions)[i]; // ArmAgedon seam
+-			float3 p = meshx.RawPositions[i];
+ 			writer.WriteLine($"v {p.x.ToString(culture)} {p.y.ToString(culture)} {p.z.ToString(culture)}");
+ 		}
+ 		if (meshx.HasUV0s)
+@@ -28,7 +28,7 @@
+ 			writer.WriteLine();
+ 			for (int j = 0; j < meshx.VertexCount; j++)
+ 			{
++				float2 uv = AssetContract.Required(meshx.RawUV0s)[j]; // ArmAgedon seam
+-				float2 uv = meshx.RawUV0s[j];
+ 				writer.WriteLine("vt " + uv.x.ToString(culture) + " " + uv.y.ToString(culture));
+ 			}
+ 		}
+@@ -37,12 +37,12 @@
+ 			writer.WriteLine();
+ 			for (int k = 0; k < meshx.VertexCount; k++)
+ 			{
++				float3 n = AssetContract.Required(meshx.RawNormals)[k]; // ArmAgedon seam
+-				float3 n = meshx.RawNormals[k];
+ 				writer.WriteLine($"vn {n.x.ToString(culture)} {n.y.ToString(culture)} {n.z.ToString(culture)}");
+ 			}
+ 		}
+ 		writer.WriteLine();
++		foreach (Submesh? submesh in meshx.Submeshes)
+-		foreach (Submesh submesh in meshx.Submeshes)
+ 		{
+ 			if (submesh is TriangleSubmesh trigs)
+ 			{

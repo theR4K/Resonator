@@ -1,0 +1,122 @@
+--- a/Elements/Assets/BepuMeshHelper.cs
++++ b/Elements/Assets/BepuMeshHelper.cs
+@@ -19,7 +19,7 @@
+ 
+ 	public const int MAX_TRIANGLES = 16777216;
+ 
++	public static void ComputeConvexHull(MeshX meshx, BufferPool bufferPool, object? bufferLock, Action? meshDataExtracted, out ConvexHull convexHull, out float3 center)
+-	public static void ComputeConvexHull(MeshX meshx, BufferPool bufferPool, object bufferLock, Action meshDataExtracted, out ConvexHull convexHull, out float3 center)
+ 	{
+ 		bufferLock = bufferLock ?? new object();
+ 		int vertexCount = meshx.VertexCount;
+@@ -27,7 +27,7 @@
+ 		RawList<Vector3> points = new RawList<Vector3>(vertexCount);
+ 		for (int i = 0; i < vertexCount; i++)
+ 		{
++			float3 pos = AssetContract.Required(meshx.RawPositions)[i]; // ArmAgedon seam
+-			float3 pos = meshx.RawPositions[i];
+ 			if (pos.IsValid())
+ 			{
+ 				points.Add(pos);
+@@ -59,17 +59,17 @@
+ 		}
+ 	}
+ 
++	public static void ExtractTriangles(MeshX meshx, bool dualSided, BufferPool bufferPool, object? bufferLock, Action? meshDataExtracted, out Buffer<BepuPhysics.Collidables.Triangle> triangles)
+-	public static void ExtractTriangles(MeshX meshx, bool dualSided, BufferPool bufferPool, object bufferLock, Action meshDataExtracted, out Buffer<BepuPhysics.Collidables.Triangle> triangles)
+ 	{
+ 		bufferLock = bufferLock ?? new object();
+ 		int totalTriangles = 0;
++		foreach (Submesh? submesh in meshx.Submeshes)
+-		foreach (Submesh submesh in meshx.Submeshes)
+ 		{
+ 			if (!(submesh is TriangleSubmesh triangleSubmesh))
+ 			{
+ 				if (!(submesh is PointSubmesh pointSubmesh))
+ 				{
++					throw new NotImplementedException("Unsupported submesh type: " + AssetContract.Required(submesh).GetType()); // ArmAgedon seam
+-					throw new NotImplementedException("Unsupported submesh type: " + submesh.GetType());
+ 				}
+ 				totalTriangles += pointSubmesh.Count;
+ 			}
+@@ -93,8 +93,8 @@
+ 			bufferPool.Take(totalTriangles, out triangles);
+ 		}
+ 		int triangleIndex = 0;
++		float3[]? positions = meshx.RawPositions;
++		foreach (Submesh? submesh2 in meshx.Submeshes)
+-		float3[] positions = meshx.RawPositions;
+-		foreach (Submesh submesh2 in meshx.Submeshes)
+ 		{
+ 			if (!(submesh2 is TriangleSubmesh triangleSubmesh2))
+ 			{
+@@ -102,7 +102,7 @@
+ 				{
+ 					for (int i = 0; i < pointSubmesh2.Count; i++)
+ 					{
++						float3 point = AssetContract.Required(positions)[AssetContract.Required(pointSubmesh2.RawIndicies)[i]]; // ArmAgedon seam
+-						float3 point = positions[pointSubmesh2.RawIndicies[i]];
+ 						if (!point.IsValid())
+ 						{
+ 							point = float3.Zero;
+@@ -114,13 +114,13 @@
+ 					}
+ 					continue;
+ 				}
++				throw new NotImplementedException("Unsupported submesh type: " + AssetContract.Required(submesh2).GetType()); // ArmAgedon seam
+-				throw new NotImplementedException("Unsupported submesh type: " + submesh2.GetType());
+ 			}
+ 			for (int j = 0; j < triangleSubmesh2.Count; j++)
+ 			{
+ 				triangleSubmesh2.GetIndiciesUnsafe(j, out var v0, out var v1, out var v2);
+ 				ref BepuPhysics.Collidables.Triangle reference2 = ref triangles[triangleIndex++];
++				float3 pos0 = AssetContract.Required(positions)[v0]; // ArmAgedon seam
+-				float3 pos0 = positions[v0];
+ 				float3 pos1 = positions[v1];
+ 				float3 pos2 = positions[v2];
+ 				if (!pos0.IsValid() || !pos1.IsValid() || !pos2.IsValid())
+@@ -157,7 +157,7 @@
+ 		}
+ 	}
+ 
++	public static void ComputeMeshCollider(MeshX meshx, bool dualSided, BufferPool bufferPool, object? bufferLock, Action? meshDataExtracted, out Mesh mesh)
+-	public static void ComputeMeshCollider(MeshX meshx, bool dualSided, BufferPool bufferPool, object bufferLock, Action meshDataExtracted, out Mesh mesh)
+ 	{
+ 		bufferLock = bufferLock ?? new object();
+ 		ExtractTriangles(meshx, dualSided, bufferPool, bufferLock, meshDataExtracted, out var triangles);
+@@ -191,7 +191,7 @@
+ 		}
+ 	}
+ 
++	public static void DeserializeMeshCollider(MeshX meshx, bool dualSided, MeshCompression compression, Stream stream, BufferPool bufferPool, object? bufferLock, Action? meshDataExtracted, out Mesh mesh)
+-	public static void DeserializeMeshCollider(MeshX meshx, bool dualSided, MeshCompression compression, Stream stream, BufferPool bufferPool, object bufferLock, Action meshDataExtracted, out Mesh mesh)
+ 	{
+ 		Decode(compression, stream, delegate(Stream stream2, out Mesh mesh2)
+ 		{
+@@ -199,7 +199,7 @@
+ 		}, out mesh);
+ 	}
+ 
++	public static void DeserializeMeshCollider(MeshX meshx, bool dualSided, Stream stream, BufferPool bufferPool, object? bufferLock, Action? meshDataExtracted, out Mesh mesh)
+-	public static void DeserializeMeshCollider(MeshX meshx, bool dualSided, Stream stream, BufferPool bufferPool, object bufferLock, Action meshDataExtracted, out Mesh mesh)
+ 	{
+ 		mesh = default;
+ 		ExtractTriangles(meshx, dualSided, bufferPool, bufferLock, meshDataExtracted, out mesh.Triangles);
+@@ -310,7 +310,7 @@
+ 		writer.Flush();
+ 	}
+ 
++	public static void DeserializeConvexHull(MeshCompression compression, Stream stream, BufferPool bufferPool, object? bufferLock, out ConvexHullBepuData convexHullData)
+-	public static void DeserializeConvexHull(MeshCompression compression, Stream stream, BufferPool bufferPool, object bufferLock, out ConvexHullBepuData convexHullData)
+ 	{
+ 		Decode(compression, stream, delegate(Stream stream2, out ConvexHullBepuData data)
+ 		{
+@@ -318,7 +318,7 @@
+ 		}, out convexHullData);
+ 	}
+ 
++	public static void DeserializeConvexHull(Stream stream, BufferPool bufferPool, object? bufferLock, out ConvexHullBepuData convexHullData)
+-	public static void DeserializeConvexHull(Stream stream, BufferPool bufferPool, object bufferLock, out ConvexHullBepuData convexHullData)
+ 	{
+ 		bufferLock = bufferLock ?? new object();
+ 		BinaryReader reader = new BinaryReader(stream);

@@ -1,0 +1,11 @@
+--- a/Elements/Assets/ClusteredSH_Data.cs
++++ b/Elements/Assets/ClusteredSH_Data.cs
+@@ -36,7 +36,7 @@
+ 		return sizeof(GaussianSH_TableHalf) * paletteCount;
+ 	}
+ 
++	public ClusteredSH_Data(int splatCount, int paletteCount, byte[]? data = null)
+-	public ClusteredSH_Data(int splatCount, int paletteCount, byte[] data = null)
+ 	{
+ 		SplatCount = splatCount;
+ 		PaletteCount = paletteCount;

@@ -1,0 +1,76 @@
+--- a/Elements/Assets/TextureDecoder.cs
++++ b/Elements/Assets/TextureDecoder.cs
+@@ -29,7 +29,7 @@
+ 
+ 	public static IEnumerable<string> SupportedExtensions => extensions.Keys;
+ 
++	public static event Action<string>? OnErrorMessage;
+-	public static event Action<string> OnErrorMessage;
+ 
+ 	static TextureDecoder()
+ 	{
+@@ -55,14 +55,14 @@
+ 		ERRORTEXTURE3D = GenerateErrorTexture(4, 4, 4, TextureFormat.RGB24);
+ 	}
+ 
++	public static Bitmap2D GenerateErrorTexture(int width, int height, TextureFormat format, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap2D GenerateErrorTexture(int width, int height, TextureFormat format, IBackingBufferAllocator allocator = null)
+ 	{
+ 		Bitmap2D bitmap2D = new Bitmap2D(width, height, format, mipmaps: false, ColorProfile.sRGB, flipY: true, null, allocator);
+ 		FillErrorTexture(bitmap2D);
+ 		return bitmap2D;
+ 	}
+ 
++	public static Bitmap3D GenerateErrorTexture(int width, int height, int depth, TextureFormat format, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap3D GenerateErrorTexture(int width, int height, int depth, TextureFormat format, IBackingBufferAllocator allocator = null)
+ 	{
+ 		Bitmap3D bitmap3D = new Bitmap3D(width, height, depth, format, mipmaps: false, ColorProfile.sRGB, null, allocator);
+ 		FillErrorTexture(bitmap3D);
+@@ -153,7 +153,7 @@
+ 		FreeImage.Unload(dib);
+ 	}
+ 
++	public static Bitmap2D FromDDS(Stream stream, bool? generateMipMaps, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap2D FromDDS(Stream stream, bool? generateMipMaps, IBackingBufferAllocator allocator = null)
+ 	{
+ 		using IImage pfim = Pfimage.FromStream(stream);
+ 		TextureFormat format = GetFormat(pfim.Format);
+@@ -275,7 +275,7 @@
+ 		};
+ 	}
+ 
++	public static Bitmap2D? FromFreeImage(ref FIBITMAP dib, bool generateMipMaps, AlphaHandling alphaHandling, int maxSize = int.MaxValue, float sizeRatio = 1f, string? originalFormat = null, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap2D FromFreeImage(ref FIBITMAP dib, bool generateMipMaps, AlphaHandling alphaHandling, int maxSize = int.MaxValue, float sizeRatio = 1f, string originalFormat = null, IBackingBufferAllocator allocator = null)
+ 	{
+ 		TextureFormat format = TextureFormat.Unknown;
+ 		int2 size = new int2((int)FreeImage.GetWidth(dib), (int)FreeImage.GetHeight(dib));
+@@ -564,7 +564,7 @@
+ 		return bitmap;
+ 	}
+ 
++	public static Bitmap2D? Decode(string file, bool? generateMipMaps, AlphaHandling alphaHandling = AlphaHandling.KeepOriginal, int maxSize = int.MaxValue, float sizeRatio = 1f, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap2D Decode(string file, bool? generateMipMaps, AlphaHandling alphaHandling = AlphaHandling.KeepOriginal, int maxSize = int.MaxValue, float sizeRatio = 1f, IBackingBufferAllocator allocator = null)
+ 	{
+ 		string ext = Path.GetExtension(file);
+ 		if (ext.Length > 1)
+@@ -575,9 +575,9 @@
+ 		return Decode(fStream, ext, generateMipMaps, alphaHandling, maxSize, sizeRatio, allocator);
+ 	}
+ 
++	public static Bitmap2D? Decode(Stream fStream, string extension, bool? generateMipMaps, AlphaHandling alphaHandling = AlphaHandling.KeepOriginal, int maxSize = int.MaxValue, float sizeRatio = 1f, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap2D Decode(Stream fStream, string extension, bool? generateMipMaps, AlphaHandling alphaHandling = AlphaHandling.KeepOriginal, int maxSize = int.MaxValue, float sizeRatio = 1f, IBackingBufferAllocator allocator = null)
+ 	{
++		Bitmap2D? bitmap = null;
+-		Bitmap2D bitmap = null;
+ 		FIBITMAP dib = FIBITMAP.Zero;
+ 		try
+ 		{
+@@ -648,7 +648,7 @@
+ 		return bitmap;
+ 	}
+ 
++	public static string? FreeImageFormatToMIME(FREE_IMAGE_FORMAT format)
+-	public static string FreeImageFormatToMIME(FREE_IMAGE_FORMAT format)
+ 	{
+ 		switch (format)
+ 		{

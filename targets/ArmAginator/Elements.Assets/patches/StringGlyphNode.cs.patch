@@ -1,0 +1,73 @@
+--- a/Elements/Assets/StringGlyphNode.cs
++++ b/Elements/Assets/StringGlyphNode.cs
+@@ -9,7 +9,7 @@
+ {
+ 	public uint GlyphId;
+ 
++	public string? GlyphName;
+-	public string GlyphName;
+ 
+ 	public bool Tint;
+ 
+@@ -22,7 +22,7 @@
+ 		throw new NotSupportedException();
+ 	}
+ 
++	public StringGlyphNode(uint glyphId, string? glyphName, int startIndex, bool? tint, StringContainerNode parent)
+-	public StringGlyphNode(uint glyphId, string glyphName, int startIndex, bool? tint, StringContainerNode parent)
+ 		: base(startIndex, parent)
+ 	{
+ 		GlyphId = glyphId;
+@@ -38,10 +38,10 @@
+ 			Tint = true;
+ 			return;
+ 		}
++		FontSet? fontSet = parent.GetFontSet(spriteFontSet: true);
++		if (fontSet != null && fontSet.GetGlyphByName(AssetContract.Required(glyphName), out GlyphMetrics? _, out uint actualGlyphId, out FontX? font)) // ArmAgedon seam
+-		FontSet fontSet = parent.GetFontSet(spriteFontSet: true);
+-		if (fontSet != null && fontSet.GetGlyphByName(glyphName, out GlyphMetrics _, out uint actualGlyphId, out FontX font))
+ 		{
++			Tint = AssetContract.Required(font).GetGlyphTintable(actualGlyphId); // ArmAgedon seam
+-			Tint = font.GetGlyphTintable(actualGlyphId);
+ 		}
+ 		else
+ 		{
+@@ -53,17 +53,17 @@
+ 	{
+ 	}
+ 
++	internal override void Shape(bool kerning, ref uint? lastGlyphId, ref FontX? lastFont, ref float lastSize, List<ICharacterFilter> characterFilterCache, List<ISizeFilter> sizeFilterCache)
+-	internal override void Shape(bool kerning, ref uint? lastGlyphId, ref FontX lastFont, ref float lastSize, List<ICharacterFilter> characterFilterCache, List<ISizeFilter> sizeFilterCache)
+ 	{
+ 		ClearRenderGlyphs();
+ 		float size = this.GetFontSize();
++		FontSet? fontSet = this.GetFontSet();
+-		FontSet fontSet = this.GetFontSet();
+ 		if (fontSet == null)
+ 		{
+ 			return;
+ 		}
++		GlyphMetrics? metrics;
++		FontX? font;
+-		GlyphMetrics metrics;
+-		FontX font;
+ 		if (!string.IsNullOrWhiteSpace(GlyphName))
+ 		{
+ 			fontSet.GetGlyphByName(GlyphName, out metrics, out uint _, out font);
+@@ -88,14 +88,14 @@
+ 		{
+ 			lastGlyphId = null;
+ 		}
++		AppendGlyph(size, StartIndex, new float2(0f, baseline), metrics, AssetContract.Required(font), lastGlyphId); // ArmAgedon seam
+-		AppendGlyph(size, StartIndex, new float2(0f, baseline), metrics, font, lastGlyphId);
+ 		lastGlyphId = metrics.glyphId;
+ 		lastSize = size;
+ 		lastFont = font;
+ 		sizeFilterCache.Clear();
+ 	}
+ 
++	public static StringGlyphNode? Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+-	public static StringGlyphNode Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+ 	{
+ 		bool? tint = null;
+ 		ReadOnlySpan<char> tintParam = "tint=".AsSpan();

@@ -31,6 +31,15 @@
  	}
  
  	public static string GenerateFileSignature(string filename, FileHash method = FileHash.SHA1)
+@@ -47,7 +34,7 @@
+ 
+ 	public static async Task<string> GenerateFileSignatureAsync(string filename, FileHash method = FileHash.SHA1, int attempts = 10)
+ 	{
++		Exception? ex = null;
+-		Exception ex = null;
+ 		int num = 50;
+ 		do
+ 		{
 @@ -80,9 +67,9 @@
  		return StringHelper.ToURLBase64(ComputeHash(stream, method));
  	}
@@ -52,6 +61,15 @@
  				{
  					text = FindFile(filename, directory2, (maxDepth == -1) ? (-1) : (maxDepth - 1));
  					if (text != null)
+@@ -176,7 +163,7 @@
+ 
+ 	public static async Task DeleteAsync(string filePath, int attempts = 10)
+ 	{
++		Exception? ex = null;
+-		Exception ex = null;
+ 		int num = 50;
+ 		do
+ 		{
 @@ -205,10 +192,10 @@
  		throw new Exception("Exception when deleting file " + filePath + "\n" + ex);
  	}

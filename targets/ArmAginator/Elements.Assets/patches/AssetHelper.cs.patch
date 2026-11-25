@@ -1,0 +1,64 @@
+--- a/Elements/Assets/AssetHelper.cs
++++ b/Elements/Assets/AssetHelper.cs
+@@ -27,7 +27,7 @@
+ 		}
+ 	}
+ 
++	private static Dictionary<AssetClass, List<ImportExtension>?> associatedExtensions;
+-	private static Dictionary<AssetClass, List<ImportExtension>> associatedExtensions;
+ 
+ 	private static bool IsLinux
+ 	{
+@@ -53,7 +53,7 @@
+ 
+ 	static AssetHelper()
+ 	{
++		associatedExtensions = new Dictionary<AssetClass, List<ImportExtension>?>
+-		associatedExtensions = new Dictionary<AssetClass, List<ImportExtension>>
+ 		{
+ 			{
+ 				AssetClass.Unknown,
+@@ -154,16 +154,16 @@
+ 			modelExtensions.AddRange(((IEnumerable<string>)FreeCADInterface.SupportedFormats).Select((Func<string, ImportExtension>)((string e) => e)));
+ 		}
+ 		UniLog.Log("Supported 3D model formats: " + string.Join(", ", modelExtensions));
++		UniLog.Log("Supported point cloud formats: " + string.Join(", ", AssetContract.Required(associatedExtensions[AssetClass.PointCloud]))); // ArmAgedon seam
++		UniLog.Log("Supported gaussian splat formats: " + string.Join(", ", AssetContract.Required(associatedExtensions[AssetClass.GaussianSplat]))); // ArmAgedon seam
+-		UniLog.Log("Supported point cloud formats: " + string.Join(", ", associatedExtensions[AssetClass.PointCloud]));
+-		UniLog.Log("Supported gaussian splat formats: " + string.Join(", ", associatedExtensions[AssetClass.GaussianSplat]));
+ 		associatedExtensions.Add(AssetClass.Model, modelExtensions);
+ 		List<ImportExtension> textureExtensions = TextureDecoder.SupportedExtensions.Select((Func<string, ImportExtension>)((string e) => e)).ToList();
+ 		associatedExtensions.Add(AssetClass.Texture, textureExtensions);
+ 		UniLog.Log("Supported image formats: " + string.Join(", ", textureExtensions));
++		UniLog.Log("Supported audio formats: " + string.Join(", ", AssetContract.Required(associatedExtensions[AssetClass.Audio]))); // ArmAgedon seam
++		UniLog.Log("Supported video formats: " + string.Join(", ", AssetContract.Required(associatedExtensions[AssetClass.Video]))); // ArmAgedon seam
++		UniLog.Log("Supported font formats: " + string.Join(", ", AssetContract.Required(associatedExtensions[AssetClass.Font]))); // ArmAgedon seam
++		UniLog.Log("Supported document formats: " + string.Join(", ", AssetContract.Required(associatedExtensions[AssetClass.Document]))); // ArmAgedon seam
+-		UniLog.Log("Supported audio formats: " + string.Join(", ", associatedExtensions[AssetClass.Audio]));
+-		UniLog.Log("Supported video formats: " + string.Join(", ", associatedExtensions[AssetClass.Video]));
+-		UniLog.Log("Supported font formats: " + string.Join(", ", associatedExtensions[AssetClass.Font]));
+-		UniLog.Log("Supported document formats: " + string.Join(", ", associatedExtensions[AssetClass.Document]));
+ 		List<ImportExtension> subtitleExtensions = SubtitlesFormat.SupportedSubtitlesFormats.Where((SubtitlesFormat s) => s.Extension != null).Select((Func<SubtitlesFormat, ImportExtension>)((SubtitlesFormat s) => s.Extension.Substring(2))).ToList();
+ 		associatedExtensions.Add(AssetClass.Subtitle, subtitleExtensions);
+ 		UniLog.Log("Supported subtitle formats: " + string.Join(", ", subtitleExtensions));
+@@ -258,7 +258,7 @@
+ 		}
+ 		try
+ 		{
++			if (!Uri.TryCreate(path, UriKind.Absolute, out Uri? url))
+-			if (!Uri.TryCreate(path, UriKind.Absolute, out Uri url))
+ 			{
+ 				if (Path.IsPathRooted(path))
+ 				{
+@@ -305,9 +305,9 @@
+ 			return AssetClass.Unknown;
+ 		}
+ 		ext = ext.ToLower();
++		foreach (KeyValuePair<AssetClass, List<ImportExtension>?> c in associatedExtensions)
+-		foreach (KeyValuePair<AssetClass, List<ImportExtension>> c in associatedExtensions)
+ 		{
++			if (c.Key != AssetClass.Unknown && AssetContract.Required(c.Value).Any((ImportExtension e) => e.ext == ext && e.primary == primary)) // ArmAgedon seam
+-			if (c.Key != AssetClass.Unknown && c.Value.Any((ImportExtension e) => e.ext == ext && e.primary == primary))
+ 			{
+ 				return c.Key;
+ 			}

@@ -1,0 +1,20 @@
+--- a/Elements/Assets/LabelPointer.cs
++++ b/Elements/Assets/LabelPointer.cs
+@@ -28,7 +28,7 @@
+ 	{
+ 		Submesh = submesh;
+ 		DualSided = dualSided;
++		AssetContract.Required(Mesh).AddVertices(DualSided ? 16 : 8, AllVertices); // ArmAgedon seam
+-		Mesh.AddVertices(DualSided ? 16 : 8, AllVertices);
+ 		for (int qn = 0; qn < (DualSided ? 4 : 2); qn++)
+ 		{
+ 			int off = qn * 4;
+@@ -122,7 +122,7 @@
+ 				AllVertices[i + 8].SetPosition(AllVertices[i].Position);
+ 			}
+ 		}
++		AssetContract.Required(Mesh).RecalculateNormals(AllTriangles); // ArmAgedon seam
+-		Mesh.RecalculateNormals(AllTriangles);
+ 		Mesh.RecalculateTangents(AllTriangles);
+ 		static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 		{

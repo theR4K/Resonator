@@ -1,0 +1,56 @@
+--- a/Elements/Assets/CubemapVariantGenerator.cs
++++ b/Elements/Assets/CubemapVariantGenerator.cs
+@@ -18,7 +18,7 @@
+ 	/// <param name="variantFilter"></param>
+ 	/// <returns>The resulting variant data.</returns>
+ 	/// <exception cref="T:System.Exception"></exception>
++	public static List<ComputedVariantResult> GenerateVariants(string file, CubemapVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler? variantGenerated = null, Predicate<string>? variantFilter = null)
+-	public static List<ComputedVariantResult> GenerateVariants(string file, CubemapVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler variantGenerated = null, Predicate<string> variantFilter = null)
+ 	{
+ 		List<ComputedVariantResult> results = new List<ComputedVariantResult>();
+ 		List<CubemapVariantDescriptor> variants = variantDescriptor.GenerateCloudChain();
+@@ -47,7 +47,7 @@
+ 		{
+ 			throw new Exception("Variant requires mipmaps, but the source cubemap doesn't have any!");
+ 		}
++		List<BitmapCube?> cubemaps = new List<BitmapCube?>();
+-		List<BitmapCube> cubemaps = new List<BitmapCube>();
+ 		if (variantDescriptor.MipMaps)
+ 		{
+ 			for (int i = 0; i < variants.Count; i++)
+@@ -62,13 +62,13 @@
+ 		for (int i2 = variants.Count - 1; i2 >= 0; i2--)
+ 		{
+ 			CubemapVariantDescriptor v = variants[i2];
++			BitmapCube? c = cubemaps[i2];
++			if (variantFilter == null || variantFilter(AssetContract.Required(v.VariantIdentifier) /* ArmAgedon seam */))
+-			BitmapCube c = cubemaps[i2];
+-			if (variantFilter == null || variantFilter(v.VariantIdentifier))
+ 			{
++				string? generatedFile = Path.Combine(AssetVariantHelper.TempFolder ?? Path.GetTempPath(), Guid.NewGuid().ToString());
+-				string generatedFile = Path.Combine(AssetVariantHelper.TempFolder ?? Path.GetTempPath(), Guid.NewGuid().ToString());
+ 				if (v.TextureCompression == TextureCompression.RawRGBA)
+ 				{
++					if (AssetContract.Required(c).Format != TextureFormat.RGBA32) // ArmAgedon seam
+-					if (c.Format != TextureFormat.RGBA32)
+ 					{
+ 						c = c.ConvertTo(TextureFormat.RGBA32);
+ 					}
+@@ -76,7 +76,7 @@
+ 				}
+ 				else if (v.TextureCompression == TextureCompression.RawRGBAHalf)
+ 				{
++					if (AssetContract.Required(c).Format != TextureFormat.RGBAHalf) // ArmAgedon seam
+-					if (c.Format != TextureFormat.RGBAHalf)
+ 					{
+ 						c = c.ConvertTo(TextureFormat.RGBAHalf);
+ 					}
+@@ -87,7 +87,7 @@
+ 					TextureFormat targetFormat = v.TextureCompression.ToFormat();
+ 					if (BitmapCube.SupportsBlockCompression(targetFormat))
+ 					{
++						AssetContract.Required(c).BlockCompress(targetFormat, v.CompressionQuality, maxThreads).Save(generatedFile); // ArmAgedon seam
+-						c.BlockCompress(targetFormat, v.CompressionQuality, maxThreads).Save(generatedFile);
+ 					}
+ 					else
+ 					{

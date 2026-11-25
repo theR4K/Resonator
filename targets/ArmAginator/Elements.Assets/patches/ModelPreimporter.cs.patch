@@ -1,0 +1,11 @@
+--- a/Elements/Assets/ModelPreimporter.cs
++++ b/Elements/Assets/ModelPreimporter.cs
+@@ -7,7 +7,7 @@
+ {
+ 	public const float DEFAULT_TESSELATION = 0.5f;
+ 
++	public static string? Preimport(string model, string tempPath)
+-	public static string Preimport(string model, string tempPath)
+ 	{
+ 		string ext = Path.GetExtension(model).Replace(".", "").ToLower();
+ 		if (FreeCADInterface.IsAvailable && FreeCADInterface.SupportedFormats.Contains(ext))

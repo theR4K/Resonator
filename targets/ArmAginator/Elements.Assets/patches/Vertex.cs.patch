@@ -1,0 +1,326 @@
+--- a/Elements/Assets/Vertex.cs
++++ b/Elements/Assets/Vertex.cs
+@@ -9,9 +9,9 @@
+ 
+ 	private int version;
+ 
++	private MeshX? meshx;
+-	private MeshX meshx;
+ 
++	public MeshX? Mesh => meshx;
+-	public MeshX Mesh => meshx;
+ 
+ 	public static Vertex Null => default;
+ 
+@@ -26,41 +26,41 @@
+ 		}
+ 	}
+ 
++	public ref float3 PositionUnsafe => ref AssetContract.Required(AssetContract.Required(meshx).positions)[index]; // ArmAgedon seam // ArmAgedon seam
+-	public ref float3 PositionUnsafe => ref meshx.positions[index];
+ 
+ 	public float3 Position
+ 	{
+ 		get
+ 		{
+ 			UpdateIndex();
++			return AssetContract.Required(AssetContract.Required(meshx).positions)[index]; // ArmAgedon seam // ArmAgedon seam
+-			return meshx.positions[index];
+ 		}
+ 		set
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(AssetContract.Required(meshx).positions)[index] = value; // ArmAgedon seam // ArmAgedon seam
+-			meshx.positions[index] = value;
+ 		}
+ 	}
+ 
++	public ref float3 NormalUnsafe => ref AssetContract.Required(AssetContract.Required(meshx).normals)[index]; // ArmAgedon seam // ArmAgedon seam
+-	public ref float3 NormalUnsafe => ref meshx.normals[index];
+ 
+ 	public float3 Normal
+ 	{
+ 		get
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(meshx).CheckNormals(); // ArmAgedon seam
++			return AssetContract.Required(meshx.normals)[index]; // ArmAgedon seam
+-			meshx.CheckNormals();
+-			return meshx.normals[index];
+ 		}
+ 		set
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(meshx).HasNormals = true; // ArmAgedon seam
++			AssetContract.Required(meshx.normals)[index] = value; // ArmAgedon seam
+-			meshx.HasNormals = true;
+-			meshx.normals[index] = value;
+ 		}
+ 	}
+ 
++	public ref float4 Tangent4Unsafe => ref AssetContract.Required(AssetContract.Required(meshx).tangents)[index]; // ArmAgedon seam // ArmAgedon seam
+-	public ref float4 Tangent4Unsafe => ref meshx.tangents[index];
+ 
+ 	public float3 Tangent
+ 	{
+@@ -79,60 +79,60 @@
+ 		get
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(meshx).CheckTangents(); // ArmAgedon seam
++			return AssetContract.Required(meshx.tangents)[index]; // ArmAgedon seam
+-			meshx.CheckTangents();
+-			return meshx.tangents[index];
+ 		}
+ 		set
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(meshx).HasTangents = true; // ArmAgedon seam
++			AssetContract.Required(meshx.tangents)[index] = value; // ArmAgedon seam
+-			meshx.HasTangents = true;
+-			meshx.tangents[index] = value;
+ 		}
+ 	}
+ 
++	public ref color ColorUnsafe => ref AssetContract.Required(AssetContract.Required(meshx).colors)[index]; // ArmAgedon seam // ArmAgedon seam
+-	public ref color ColorUnsafe => ref meshx.colors[index];
+ 
+ 	public color Color
+ 	{
+ 		get
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(meshx).CheckColors(); // ArmAgedon seam
++			return AssetContract.Required(meshx.colors)[index]; // ArmAgedon seam
+-			meshx.CheckColors();
+-			return meshx.colors[index];
+ 		}
+ 		set
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(meshx).HasColors = true; // ArmAgedon seam
++			AssetContract.Required(meshx.colors)[index] = value; // ArmAgedon seam
+-			meshx.HasColors = true;
+-			meshx.colors[index] = value;
+ 		}
+ 	}
+ 
++	public ref BoneBinding BoneBindingUnsafe => ref AssetContract.Required(AssetContract.Required(meshx).boneBindings)[index]; // ArmAgedon seam // ArmAgedon seam
+-	public ref BoneBinding BoneBindingUnsafe => ref meshx.boneBindings[index];
+ 
+ 	public BoneBinding BoneBinding
+ 	{
+ 		get
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(meshx).CheckBoneBindings(); // ArmAgedon seam
++			return AssetContract.Required(meshx.boneBindings)[index]; // ArmAgedon seam
+-			meshx.CheckBoneBindings();
+-			return meshx.boneBindings[index];
+ 		}
+ 		set
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(meshx).HasBoneBindings = true; // ArmAgedon seam
++			AssetContract.Required(meshx.boneBindings)[index] = value; // ArmAgedon seam
+-			meshx.HasBoneBindings = true;
+-			meshx.boneBindings[index] = value;
+ 		}
+ 	}
+ 
++	public ref float2 UV0Unsafe => ref AssetContract.Required(AssetContract.Required(AssetContract.Required(meshx).uv_channels)[0].uv_2D)[index]; // ArmAgedon seam // ArmAgedon seam // ArmAgedon seam
+-	public ref float2 UV0Unsafe => ref meshx.uv_channels[0].uv_2D[index];
+ 
++	public ref float2 UV1Unsafe => ref AssetContract.Required(AssetContract.Required(AssetContract.Required(meshx).uv_channels)[1].uv_2D)[index]; // ArmAgedon seam // ArmAgedon seam // ArmAgedon seam
+-	public ref float2 UV1Unsafe => ref meshx.uv_channels[1].uv_2D[index];
+ 
++	public ref float2 UV2Unsafe => ref AssetContract.Required(AssetContract.Required(AssetContract.Required(meshx).uv_channels)[2].uv_2D)[index]; // ArmAgedon seam // ArmAgedon seam // ArmAgedon seam
+-	public ref float2 UV2Unsafe => ref meshx.uv_channels[2].uv_2D[index];
+ 
++	public ref float2 UV3Unsafe => ref AssetContract.Required(AssetContract.Required(AssetContract.Required(meshx).uv_channels)[3].uv_2D)[index]; // ArmAgedon seam // ArmAgedon seam // ArmAgedon seam
+-	public ref float2 UV3Unsafe => ref meshx.uv_channels[3].uv_2D[index];
+ 
+ 	public float2 UV0
+ 	{
+@@ -186,11 +186,11 @@
+ 	{
+ 		get
+ 		{
++			return AssetContract.Required(AssetContract.Required(meshx).flags)[index]; // ArmAgedon seam // ArmAgedon seam
+-			return meshx.flags[index];
+ 		}
+ 		set
+ 		{
++			AssetContract.Required(AssetContract.Required(meshx).flags)[index] = value; // ArmAgedon seam // ArmAgedon seam
+-			meshx.flags[index] = value;
+ 		}
+ 	}
+ 
+@@ -199,14 +199,14 @@
+ 		get
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(meshx).CheckFlags(); // ArmAgedon seam
++			return AssetContract.Required(meshx.flags)[index]; // ArmAgedon seam
+-			meshx.CheckFlags();
+-			return meshx.flags[index];
+ 		}
+ 		set
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(meshx).HasFlags = true; // ArmAgedon seam
++			AssetContract.Required(meshx.flags)[index] = value; // ArmAgedon seam
+-			meshx.HasFlags = true;
+-			meshx.flags[index] = value;
+ 		}
+ 	}
+ 
+@@ -227,7 +227,7 @@
+ 	public void Copy(Vertex v)
+ 	{
+ 		Position = v.Position;
++		if (AssetContract.Required(v.Mesh).HasNormals) // ArmAgedon seam
+-		if (v.Mesh.HasNormals)
+ 		{
+ 			Normal = v.Normal;
+ 		}
+@@ -252,14 +252,14 @@
+ 	public float2 GetUV(int uvChannel)
+ 	{
+ 		UpdateIndex();
++		AssetContract.Required(meshx).CheckUV(uvChannel); // ArmAgedon seam
++		return AssetContract.Required(meshx.GetRawUVs(uvChannel))[index]; // ArmAgedon seam
+-		meshx.CheckUV(uvChannel);
+-		return meshx.GetRawUVs(uvChannel)[index];
+ 	}
+ 
+ 	public float4 GetUV_Auto(int uvChannel)
+ 	{
+ 		UpdateIndex();
++		MeshX.UV_Array rawUv = AssetContract.Required(meshx).TryGetRawUV_Array(uvChannel); // ArmAgedon seam
+-		MeshX.UV_Array rawUv = meshx.TryGetRawUV_Array(uvChannel);
+ 		if (rawUv.uv_2D != null)
+ 		{
+ 			return rawUv.uv_2D[index];
+@@ -278,58 +278,58 @@
+ 	public void SetUV(int uvChannel, in float2 uv, bool throwIfDimensionMismatch = false)
+ 	{
+ 		UpdateIndex();
++		AssetContract.Required(meshx).SetHasUV(uvChannel, state: true, throwIfDimensionMismatch); // ArmAgedon seam
++		AssetContract.Required(meshx.GetRawUVs(uvChannel))[index] = uv; // ArmAgedon seam
+-		meshx.SetHasUV(uvChannel, state: true, throwIfDimensionMismatch);
+-		meshx.GetRawUVs(uvChannel)[index] = uv;
+ 	}
+ 
+ 	public void SetUV_3D(int uvChannel, in float3 uv, bool throwIfDimensionMismatch = false)
+ 	{
+ 		UpdateIndex();
++		AssetContract.Required(meshx).SetHasUV_3D(uvChannel, state: true, throwIfDimensionMismatch); // ArmAgedon seam
++		AssetContract.Required(meshx.GetRawUVs_3D(uvChannel))[index] = uv; // ArmAgedon seam
+-		meshx.SetHasUV_3D(uvChannel, state: true, throwIfDimensionMismatch);
+-		meshx.GetRawUVs_3D(uvChannel)[index] = uv;
+ 	}
+ 
+ 	public void SetUV_4D(int uvChannel, in float4 uv, bool throwIfDimensionMismatch = false)
+ 	{
+ 		UpdateIndex();
++		AssetContract.Required(meshx).SetHasUV_4D(uvChannel, state: true, throwIfDimensionMismatch); // ArmAgedon seam
++		AssetContract.Required(meshx.GetRawUVs_4D(uvChannel))[index] = uv; // ArmAgedon seam
+-		meshx.SetHasUV_4D(uvChannel, state: true, throwIfDimensionMismatch);
+-		meshx.GetRawUVs_4D(uvChannel)[index] = uv;
+ 	}
+ 
+ 	public float3 GetBlendShapePositionDelta(string key, int frame = 0)
+ 	{
+ 		UpdateIndex();
++		return AssetContract.Required(AssetContract.Required(meshx).GetBlendShape(key)[frame].positions)[index]; // ArmAgedon seam // ArmAgedon seam
+-		return meshx.GetBlendShape(key)[frame].positions[index];
+ 	}
+ 
+ 	public void SetBlendShapePositionDelta(string key, in float3 delta, int frame = 0)
+ 	{
+ 		UpdateIndex();
++		AssetContract.Required(AssetContract.Required(meshx).GetBlendShape(key)[frame].positions)[index] = delta; // ArmAgedon seam // ArmAgedon seam
+-		meshx.GetBlendShape(key)[frame].positions[index] = delta;
+ 	}
+ 
+ 	public float3 GetBlendShapeNormalDelta(string key, int frame = 0)
+ 	{
+ 		UpdateIndex();
++		return AssetContract.Required(AssetContract.Required(meshx).GetBlendShape(key)[frame].normals)[index]; // ArmAgedon seam // ArmAgedon seam
+-		return meshx.GetBlendShape(key)[frame].normals[index];
+ 	}
+ 
+ 	public void SetBlendShapeNormalDelta(string key, in float3 delta, int frame = 0)
+ 	{
+ 		UpdateIndex();
++		AssetContract.Required(meshx).GetBlendShape(key)[frame].SetNormalDelta(index, delta); // ArmAgedon seam
+-		meshx.GetBlendShape(key)[frame].SetNormalDelta(index, delta);
+ 	}
+ 
+ 	public float3 GetBlendShapeTangentDelta(string key, int frame = 0)
+ 	{
+ 		UpdateIndex();
++		return AssetContract.Required(AssetContract.Required(meshx).GetBlendShape(key)[frame].tangents)[index]; // ArmAgedon seam // ArmAgedon seam
+-		return meshx.GetBlendShape(key)[frame].tangents[index];
+ 	}
+ 
+ 	public void SetBlendShapeTangentDelta(string key, in float3 delta, int frame = 0)
+ 	{
+ 		UpdateIndex();
++		AssetContract.Required(meshx).GetBlendShape(key)[frame].SetTangentDelta(index, delta); // ArmAgedon seam
+-		meshx.GetBlendShape(key)[frame].SetTangentDelta(index, delta);
+ 	}
+ 
+ 	public void SetPosition(in float3 value)
+@@ -366,19 +366,19 @@
+ 	{
+ 		if (version < 0)
+ 		{
++			if (version != AssetContract.Required(meshx).VerticesVersion) // ArmAgedon seam
+-			if (version != meshx.VerticesVersion)
+ 			{
+ 				throw new Exception("Vertex has been invalidated, index: " + index);
+ 			}
+ 		}
++		else if (version != AssetContract.Required(AssetContract.Required(meshx).vertexIDs)[index]) // ArmAgedon seam // ArmAgedon seam
+-		else if (version != meshx.vertexIDs[index])
+ 		{
+ 			int origIndex = index;
++			while (index > 0 && AssetContract.Required(meshx.vertexIDs)[index] > version) // ArmAgedon seam
+-			while (index > 0 && meshx.vertexIDs[index] > version)
+ 			{
+ 				index--;
+ 			}
++			if (AssetContract.Required(meshx.vertexIDs)[index] != version) // ArmAgedon seam
+-			if (meshx.vertexIDs[index] != version)
+ 			{
+ 				throw new Exception("Vertex has been removed, original index: " + origIndex + ", version: " + version);
+ 			}
+@@ -387,22 +387,22 @@
+ 		return false;
+ 	}
+ 
++	void IVertex.SetUV(int channel, in float2 uv, bool throwIfDimensionMismatch)
+-	void IVertex.SetUV(int channel, in float2 uv, bool throwIfDimensionMismatch = false)
+ 	{
+ 		SetUV(channel, in uv, throwIfDimensionMismatch);
+ 	}
+ 
++	void IVertex.SetBlendShapePositionDelta(string key, in float3 delta, int frame)
+-	void IVertex.SetBlendShapePositionDelta(string key, in float3 delta, int frame = 0)
+ 	{
+ 		SetBlendShapePositionDelta(key, in delta, frame);
+ 	}
+ 
++	void IVertex.SetBlendShapeNormalDelta(string key, in float3 delta, int frame)
+-	void IVertex.SetBlendShapeNormalDelta(string key, in float3 delta, int frame = 0)
+ 	{
+ 		SetBlendShapeNormalDelta(key, in delta, frame);
+ 	}
+ 
++	void IVertex.SetBlendShapeTangentDelta(string key, in float3 delta, int frame)
+-	void IVertex.SetBlendShapeTangentDelta(string key, in float3 delta, int frame = 0)
+ 	{
+ 		SetBlendShapeTangentDelta(key, in delta, frame);
+ 	}

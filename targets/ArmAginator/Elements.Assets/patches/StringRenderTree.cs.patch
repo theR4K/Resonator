@@ -1,0 +1,352 @@
+--- a/Elements/Assets/StringRenderTree.cs
++++ b/Elements/Assets/StringRenderTree.cs
+@@ -66,17 +66,17 @@
+ 
+ 	public Alignment BoundsAlignment;
+ 
++	private readonly List<FontSet>? _fontSets;
+-	private readonly List<FontSet> _fontSets;
+ 
+ 	internal float _tabLength;
+ 
+ 	internal float _invTabLength;
+ 
++	private List<StringLine>? _lines;
+-	private List<StringLine> _lines;
+ 
+ 	private int _glyphLayoutLength;
+ 
++	private RenderGlyph[]? _glyphLayout;
+-	private RenderGlyph[] _glyphLayout;
+ 
+ 	private bool _isShaped;
+ 
+@@ -86,15 +86,15 @@
+ 
+ 	public float ActualSize => Size * AutoSizeRatio;
+ 
++	public FontSet MainFontSet => AssetContract.Required(_fontSets)[0]; // ArmAgedon seam
+-	public FontSet MainFontSet => _fontSets[0];
+ 
++	public FontSet? MainSpriteFontSet { get; private set; }
+-	public FontSet MainSpriteFontSet { get; private set; }
+ 
++	public int FontSetCount => AssetContract.Required(_fontSets).Count; // ArmAgedon seam
+-	public int FontSetCount => _fontSets.Count;
+ 
+ 	public int GlyphLayoutLength => _glyphLayoutLength;
+ 
++	public int LineCount => AssetContract.Required(_lines).Count; // ArmAgedon seam
+-	public int LineCount => _lines.Count;
+ 
+ 	public bool IsShaped => _isShaped;
+ 
+@@ -278,7 +278,7 @@
+ 		{
+ 			return;
+ 		}
++		foreach (StringLine line in AssetContract.Required(_lines)) // ArmAgedon seam
+-		foreach (StringLine line in _lines)
+ 		{
+ 			line.Position += offset;
+ 		}
+@@ -293,7 +293,7 @@
+ 		return false;
+ 	}
+ 
++	private void GenerateLines(GlyphPositioner? glyphPositionOverride = null)
+-	private void GenerateLines(GlyphPositioner glyphPositionOverride = null)
+ 	{
+ 		if (glyphPositionOverride == null)
+ 		{
+@@ -326,7 +326,7 @@
+ 					{
+ 						if (glyphPositionOverride == null)
+ 						{
++							AssetContract.Required(_lines).Add(new StringLine()); // ArmAgedon seam
+-							_lines.Add(new StringLine());
+ 						}
+ 						lineCount++;
+ 						if (!dontResetOffset)
+@@ -383,7 +383,7 @@
+ 					}
+ 					for (int n = breakStartSearch; n >= currentLineStart; n--)
+ 					{
++						if (AllowsLineBreak(String[AssetContract.Required(_glyphLayout)[n].stringIndex])) // ArmAgedon seam
+-						if (AllowsLineBreak(String[_glyphLayout[n].stringIndex]))
+ 						{
+ 							breakCharacterIndex = n + 1;
+ 							break;
+@@ -391,7 +391,7 @@
+ 					}
+ 					if (!((breakCharacterIndex == currentGlyphIndex) & isLineBreakCharacter))
+ 					{
++						float wrapOffset = 0f - AssetContract.Required(_glyphLayout)[breakCharacterIndex].rect.x; // ArmAgedon seam
+-						float wrapOffset = 0f - _glyphLayout[breakCharacterIndex].rect.x;
+ 						if (glyphPositionOverride == null)
+ 						{
+ 							for (int j = breakCharacterIndex; j <= currentGlyphIndex; j++)
+@@ -416,14 +416,14 @@
+ 		}
+ 		if (glyphPositionOverride == null && currentLineIndex == LineCount)
+ 		{
++			AssetContract.Required(_lines).Add(new StringLine()); // ArmAgedon seam
+-			_lines.Add(new StringLine());
+ 		}
+ 	}
+ 
+ 	private void ComputeLineData()
+ 	{
+ 		int lastLineIndex = -1;
++		StringLine? line = null;
+-		StringLine line = null;
+ 		using (IEnumerator<StringRenderGlyphSegmentNode> enumerator = GetEnumerator())
+ 		{
+ 			while (enumerator.MoveNext())
+@@ -438,7 +438,7 @@
+ 					if (lastLineIndex != glyph.line)
+ 					{
+ 						lastLineIndex = glyph.line;
++						line = AssetContract.Required(_lines)[glyph.line]; // ArmAgedon seam
+-						line = _lines[glyph.line];
+ 						line.StartIndex = segment.GlyphSegmentOffset + i;
+ 						line.GlyphCount = 0;
+ 						line.LineHeight = 0f;
+@@ -449,10 +449,10 @@
+ 					}
+ 					if ((glyph.rect.size != float2.Zero) & isAlignmentOverride)
+ 					{
++						AssetContract.Required(line).Alignment = alignment; // ArmAgedon seam
+-						line.Alignment = alignment;
+ 					}
+ 					float lineHeight = glyph.font.LineHeight * size;
++					AssetContract.Required(line).Ascender = MathX.Min(line.Ascender, glyph.rect.y); // ArmAgedon seam
+-					line.Ascender = MathX.Min(line.Ascender, glyph.rect.y);
+ 					line.Descender = MathX.Max(line.Descender, glyph.rect.y + glyph.rect.height);
+ 					line.LineHeight = MathX.Max(lineHeight, line.LineHeight);
+ 					line.GlyphCount++;
+@@ -461,7 +461,7 @@
+ 		}
+ 		if (lastLineIndex == -1)
+ 		{
++			line = AssetContract.Required(_lines)[0]; // ArmAgedon seam
+-			line = _lines[0];
+ 			line.StartIndex = 0;
+ 			line.GlyphCount = 0;
+ 			line.LineHeight = MainFontSet.MainFont.LineHeight * ActualSize;
+@@ -481,7 +481,7 @@
+ 		float position = 0f;
+ 		for (int i = 0; i < LineCount; i++)
+ 		{
++			StringLine line = AssetContract.Required(_lines)[i]; // ArmAgedon seam
+-			StringLine line = _lines[i];
+ 			if (i > 0)
+ 			{
+ 				position += line.LineHeight * line.LineHeightMultiplier;
+@@ -495,7 +495,7 @@
+ 		LastLayoutWidth = 0f;
+ 		for (int i = 0; i < LineCount; i++)
+ 		{
++			StringLine line = AssetContract.Required(_lines)[i]; // ArmAgedon seam
+-			StringLine line = _lines[i];
+ 			float left;
+ 			float right;
+ 			if (line.GlyphCount == 0)
+@@ -505,7 +505,7 @@
+ 			}
+ 			else
+ 			{
++				left = AssetContract.Required(_glyphLayout)[line.StartIndex].rect.x; // ArmAgedon seam
+-				left = _glyphLayout[line.StartIndex].rect.x;
+ 				right = _glyphLayout[line.StartIndex + line.GlyphCount - 1].rect.xmax;
+ 			}
+ 			float lineWidth = right - left;
+@@ -553,7 +553,7 @@
+ 			{
+ 				for (int g = 0; g < line.GlyphCount; g++)
+ 				{
++					float x = AssetContract.Required(_glyphLayout)[g + line.StartIndex].rect.x; // ArmAgedon seam
+-					float x = _glyphLayout[g + line.StartIndex].rect.x;
+ 					x *= ratio;
+ 					_glyphLayout[g + line.StartIndex].rect.x = x;
+ 				}
+@@ -624,7 +624,7 @@
+ 
+ 	private void ComputeTopAndBottom(AlignmentMode alignmentMode, out float top, out float bottom)
+ 	{
++		StringLine firstLine = AssetContract.Required(_lines)[0]; // ArmAgedon seam
+-		StringLine firstLine = _lines[0];
+ 		StringLine lastLine = _lines[LineCount - 1];
+ 		top = firstLine.Position.y;
+ 		bottom = lastLine.Position.y;
+@@ -715,7 +715,7 @@
+ 		}
+ 		for (int i = 0; i < LineCount; i++)
+ 		{
++			StringLine stringLine = AssetContract.Required(_lines)[i]; // ArmAgedon seam
+-			StringLine stringLine = _lines[i];
+ 			stringLine.Position += new float2(0f, offset);
+ 		}
+ 	}
+@@ -750,10 +750,10 @@
+ 		}
+ 		_isShaped = true;
+ 		_glyphLayoutLength = 0;
++		GlyphMetrics? spaceMetrics = null;
+-		GlyphMetrics spaceMetrics = null;
+ 		for (int i = 0; i < (_fontSets?.Count ?? 0); i++)
+ 		{
++			foreach (FontX font in AssetContract.Required(_fontSets)[i].Fonts) // ArmAgedon seam
+-			foreach (FontX font in _fontSets[i].Fonts)
+ 			{
+ 				spaceMetrics = font.GetGlyphMetrics(0u);
+ 				if (spaceMetrics != null)
+@@ -774,10 +774,10 @@
+ 		_tabLength = tabLength;
+ 		_invTabLength = 1f / _tabLength;
+ 		uint? lastGlyphId = null;
++		FontX? lastFont = null;
+-		FontX lastFont = null;
+ 		float lastSize = 0f;
++		List<ICharacterFilter>? characterFilterCache = Pool.BorrowList<ICharacterFilter>();
++		List<ISizeFilter>? sizeFilterCache = Pool.BorrowList<ISizeFilter>();
+-		List<ICharacterFilter> characterFilterCache = Pool.BorrowList<ICharacterFilter>();
+-		List<ISizeFilter> sizeFilterCache = Pool.BorrowList<ISizeFilter>();
+ 		using (IEnumerator<StringRenderGlyphSegmentNode> enumerator2 = GetEnumerator())
+ 		{
+ 			while (enumerator2.MoveNext())
+@@ -789,9 +789,9 @@
+ 		Pool.Return(ref sizeFilterCache);
+ 	}
+ 
++	public FontSet? GetFontSet(string name)
+-	public FontSet GetFontSet(string name)
+ 	{
++		foreach (FontSet fontSet in AssetContract.Required(_fontSets)) // ArmAgedon seam
+-		foreach (FontSet fontSet in _fontSets)
+ 		{
+ 			if (fontSet.MainFont.Name != null && fontSet.MainFont.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+ 			{
+@@ -808,21 +808,21 @@
+ 		return null;
+ 	}
+ 
++	public FontSet? GetFontSet(int index)
+-	public FontSet GetFontSet(int index)
+ 	{
++		if (index < 0 || index >= AssetContract.Required(_fontSets).Count) // ArmAgedon seam
+-		if (index < 0 || index >= _fontSets.Count)
+ 		{
+ 			return null;
+ 		}
+ 		return _fontSets[index];
+ 	}
+ 
++	public StringRenderTree(string str, FontSet fontSet, Func<StringContainerNode, StringContainerNode>? initRootNodes = null, bool parse = true)
+-	public StringRenderTree(string str, FontSet fontSet, Func<StringContainerNode, StringContainerNode> initRootNodes = null, bool parse = true)
+ 		: this(str, new List<FontSet> { fontSet }, initRootNodes, parse)
+ 	{
+ 	}
+ 
++	public StringRenderTree(string str, List<FontSet>? fontSets = null, Func<StringContainerNode, StringContainerNode>? initRootNodes = null, bool parse = true)
+-	public StringRenderTree(string str, List<FontSet> fontSets = null, Func<StringContainerNode, StringContainerNode> initRootNodes = null, bool parse = true)
+ 	{
+ 		String = str;
+ 		_fontSets = fontSets;
+@@ -867,25 +867,25 @@
+ 		{
+ 			_glyphLayout = _glyphLayout.EnsureExactSize(_glyphLayout.Length * 2, keepData: true);
+ 		}
++		AssetContract.Required(_glyphLayout)[index] = glyph; // ArmAgedon seam
+-		_glyphLayout[index] = glyph;
+ 		_glyphLayoutLength++;
+ 	}
+ 
+ 	public ref RenderGlyph GetRenderGlyph(int index)
+ 	{
++		return ref AssetContract.Required(_glyphLayout)[index]; // ArmAgedon seam
+-		return ref _glyphLayout[index];
+ 	}
+ 
+ 	public StringLine GetLine(int index)
+ 	{
++		return AssetContract.Required(_lines)[index]; // ArmAgedon seam
+-		return _lines[index];
+ 	}
+ 
++	private void Parse(string str, Func<StringContainerNode, StringContainerNode>? initRootNodes = null)
+-	private void Parse(string str, Func<StringContainerNode, StringContainerNode> initRootNodes = null)
+ 	{
+ 		List<StringSegment> openTags = new List<StringSegment>();
+ 		Stack<RenestNode> toRenest = new Stack<RenestNode>();
++		StringContainerNode? currentNode = this;
+-		StringContainerNode currentNode = this;
+ 		if (initRootNodes != null)
+ 		{
+ 			currentNode = initRootNodes(currentNode);
+@@ -917,7 +917,7 @@
+ 						}
+ 					}
+ 				}
++				if (nestOutCount > 0 && ((AssetContract.Required(currentNode).AllowOutOfOrderSplit || nestOutCount == 1) | closeAll)) // ArmAgedon seam
+-				if (nestOutCount > 0 && ((currentNode.AllowOutOfOrderSplit || nestOutCount == 1) | closeAll))
+ 				{
+ 					FinishSegment(segmentStart, i, currentNode);
+ 					segmentStart = i + tagEndIndex;
+@@ -925,15 +925,15 @@
+ 					{
+ 						if (nestOutCount > 0 && !closeAll)
+ 						{
++							toRenest.Push(new RenestNode(openTags.Last(), AssetContract.Required(currentNode))); // ArmAgedon seam
+-							toRenest.Push(new RenestNode(openTags.Last(), currentNode));
+ 						}
++						currentNode = AssetContract.Required(currentNode).Parent; // ArmAgedon seam
+-						currentNode = currentNode.Parent;
+ 						openTags.TakeLast();
+ 					}
+ 					while (toRenest.Count > 0)
+ 					{
+ 						RenestNode renest = toRenest.Pop();
++						StringContainerNode nestedNode = renest.node.Clone(i + tagEndIndex, AssetContract.Required(currentNode)); // ArmAgedon seam
+-						StringContainerNode nestedNode = renest.node.Clone(i + tagEndIndex, currentNode);
+ 						currentNode.Nodes.Add(nestedNode);
+ 						currentNode = nestedNode;
+ 						openTags.Add(renest.tag);
+@@ -942,8 +942,8 @@
+ 			}
+ 			else
+ 			{
++				StringNode? nestedNode2 = CreateNode(i, AssetContract.Required(currentNode), in tag, in parameter); // ArmAgedon seam
++				StringContainerNode? containerNode = nestedNode2 as StringContainerNode;
+-				StringNode nestedNode2 = CreateNode(i, currentNode, in tag, in parameter);
+-				StringContainerNode containerNode = nestedNode2 as StringContainerNode;
+ 				if (nestedNode2 != null && (containerNode == null || currentNode.IsValidNestedNode(containerNode)))
+ 				{
+ 					FinishSegment(segmentStart, i, currentNode);
+@@ -968,7 +968,7 @@
+ 			}
+ 			i += tagEndIndex - 1;
+ 		}
++		FinishSegment(segmentStart, str.Length, AssetContract.Required(currentNode)); // ArmAgedon seam
+-		FinishSegment(segmentStart, str.Length, currentNode);
+ 	}
+ 
+ 	private static void FinishSegment(int segmentStart, int segmentEnd, StringContainerNode root)
+@@ -981,7 +981,7 @@
+ 		}
+ 	}
+ 
++	private static StringNode? CreateNode(int startIndex, StringContainerNode parent, in StringSegment tag, in StringSegment parameter)
+-	private static StringNode CreateNode(int startIndex, StringContainerNode parent, in StringSegment tag, in StringSegment parameter)
+ 	{
+ 		if (tag.length == 1)
+ 		{
+@@ -1066,7 +1066,7 @@
+ 		}
+ 		if (IsTag(in tag, "font"))
+ 		{
++			StringFontNode? stringFontNode = StringFontNode.Parse(parameter.AsSpan(), startIndex, parent);
+-			StringFontNode stringFontNode = StringFontNode.Parse(parameter.AsSpan(), startIndex, parent);
+ 			if (stringFontNode != null)
+ 			{
+ 				stringFontNode.ResolveFont();

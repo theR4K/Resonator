@@ -1,0 +1,73 @@
+--- a/Elements/Assets/GlyphAtlas.cs
++++ b/Elements/Assets/GlyphAtlas.cs
+@@ -42,9 +42,9 @@
+ 		}
+ 	}
+ 
++	public Bitmap2D? Atlas { get; private set; }
+-	public Bitmap2D Atlas { get; private set; }
+ 
++	public IBackingBufferAllocator? Allocator { get; private set; }
+-	public IBackingBufferAllocator Allocator { get; private set; }
+ 
+ 	public GlyphAtlas(FontX font, GlyphRenderMethod renderMethod, IBackingBufferAllocator allocator, int padding = 1, int pixelRange = 2, int packRegionSize = 512, int maxAtlasSize = 8192)
+ 	{
+@@ -58,9 +58,9 @@
+ 		_maxAtlasSize = 8192;
+ 	}
+ 
++	public GlyphAtlasData? GetGlyphData(uint glyphId)
+-	public GlyphAtlasData GetGlyphData(uint glyphId)
+ 	{
++		_glyphs.TryGetValue(glyphId, out GlyphAtlasData? data);
+-		_glyphs.TryGetValue(glyphId, out GlyphAtlasData data);
+ 		return data;
+ 	}
+ 
+@@ -93,7 +93,7 @@
+ 				}
+ 				for (int n = offset; n <= i; n++)
+ 				{
++					_glyphs.TryRemove(glyphs[n].glyphId, out GlyphAtlasData? _);
+-					_glyphs.TryRemove(glyphs[n].glyphId, out GlyphAtlasData _);
+ 				}
+ 				FinishPacking();
+ 				return 0;
+@@ -118,7 +118,7 @@
+ 			paddedSize = paddedSize.yx;
+ 			rotated = true;
+ 		}
++		RectPackNode? emptyNode = _rootPackNode.GetEmptyNode(in gridFittedSize);
+-		RectPackNode emptyNode = _rootPackNode.GetEmptyNode(in gridFittedSize);
+ 		if (emptyNode == null && !BitmapAllocated)
+ 		{
+ 			GrowAtlas();
+@@ -205,7 +205,7 @@
+ 
+ 	public void CopyGlyphBitmapFrom(uint glyphId, GlyphAtlas sourceAtlas)
+ 	{
++		GlyphAtlasData? glyphData = GetGlyphData(glyphId);
+-		GlyphAtlasData glyphData = GetGlyphData(glyphId);
+ 		if (glyphData == null)
+ 		{
+ 			throw new ArgumentException("Atlas doesn't contain glyph: " + glyphId);
+@@ -215,7 +215,7 @@
+ 
+ 	public void CopyGlyphBitmapFrom(GlyphAtlasData targetGlyph, GlyphAtlas sourceAtlas)
+ 	{
++		GlyphAtlasData? sourceGlyph = sourceAtlas.GetGlyphData(targetGlyph.glyphId);
+-		GlyphAtlasData sourceGlyph = sourceAtlas.GetGlyphData(targetGlyph.glyphId);
+ 		if (sourceGlyph == null)
+ 		{
+ 			throw new ArgumentException("Source atlas doesn't contain glyph: " + targetGlyph.glyphId);
+@@ -242,8 +242,8 @@
+ 				int srcY = (sourceGlyph.rotated ? x : y);
+ 				int trgX = (targetGlyph.rotated ? y : x);
+ 				int trgY = (targetGlyph.rotated ? x : y);
++				color c = AssetContract.Required(sourceAtlas.Atlas).GetPixel(srcX + sourceOffset.x, srcY + sourceOffset.y); // ArmAgedon seam
++				AssetContract.Required(Atlas).SetPixel(trgX + targetOffset.x, trgY + targetOffset.y, in c); // ArmAgedon seam
+-				color c = sourceAtlas.Atlas.GetPixel(srcX + sourceOffset.x, srcY + sourceOffset.y);
+-				Atlas.SetPixel(trgX + targetOffset.x, trgY + targetOffset.y, in c);
+ 			}
+ 		}
+ 	}

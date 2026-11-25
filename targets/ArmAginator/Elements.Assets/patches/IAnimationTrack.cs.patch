@@ -1,0 +1,9 @@
+--- a/Elements/Assets/IAnimationTrack.cs
++++ b/Elements/Assets/IAnimationTrack.cs
+@@ -16,5 +16,5 @@
+ }
+ public interface IAnimationTrack<T> : IAnimationTrack
+ {
++	T? Sample(float t);
+-	T Sample(float t);
+ }

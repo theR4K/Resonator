@@ -1,0 +1,172 @@
+--- a/Elements/Assets/ShaderMetadata.cs
++++ b/Elements/Assets/ShaderMetadata.cs
+@@ -27,39 +27,39 @@
+ 
+ 	[JsonProperty(PropertyName = "assetIdenfitier")]
+ 	[JsonPropertyName("assetIdenfitier")]
++	public string? AssetIdentifier { get; set; }
+-	public string AssetIdentifier { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "origin")]
+ 	[JsonPropertyName("origin")]
++	public string? Origin { get; set; }
+-	public string Origin { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "sourceFile")]
+ 	[JsonPropertyName("sourceFile")]
++	public ShaderSourceFile? SourceFile { get; set; }
+-	public ShaderSourceFile SourceFile { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "includeFiles")]
+ 	[JsonPropertyName("includeFiles")]
++	public List<ShaderSourceFile>? IncludeFiles { get; set; }
+-	public List<ShaderSourceFile> IncludeFiles { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "variantGroups")]
+ 	[JsonPropertyName("variantGroups")]
++	public List<List<string>>? VariantGroups { get; set; }
+-	public List<List<string>> VariantGroups { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "uniqueKeywords")]
+ 	[JsonPropertyName("uniqueKeywords")]
++	public List<string>? UniqueKeywords { get; set; }
+-	public List<string> UniqueKeywords { get; set; }
+ 
++	public IEnumerable<ShaderSourceFile?> AllSourceFiles
+-	public IEnumerable<ShaderSourceFile> AllSourceFiles
+ 	{
+ 		get
+ 		{
+ 			yield return SourceFile;
++			List<ShaderSourceFile>? includeFiles = IncludeFiles;
+-			List<ShaderSourceFile> includeFiles = IncludeFiles;
+ 			if (includeFiles == null || includeFiles.Count <= 0)
+ 			{
+ 				yield break;
+ 			}
++			foreach (ShaderSourceFile includeFile in AssetContract.Required(IncludeFiles)) // ArmAgedon seam
+-			foreach (ShaderSourceFile includeFile in IncludeFiles)
+ 			{
+ 				yield return includeFile;
+ 			}
+@@ -70,7 +70,7 @@
+ 	{
+ 	}
+ 
++	public static ShaderMetadata? LoadFromJSON(string json)
+-	public static ShaderMetadata LoadFromJSON(string json)
+ 	{
+ 		return System.Text.Json.JsonSerializer.Deserialize<ShaderMetadata>(json);
+ 	}
+@@ -93,8 +93,8 @@
+ 		try
+ 		{
+ 			using ShaderPackage package = new ShaderPackage(file);
++			ShaderMetadata? metadata = package.Metadata;
++			AssetContract.Required(metadata).AssetIdentifier = file; // ArmAgedon seam
+-			ShaderMetadata metadata = package.Metadata;
+-			metadata.AssetIdentifier = file;
+ 			return metadata;
+ 		}
+ 		catch (InvalidDataException)
+@@ -123,49 +123,49 @@
+ 		{
+ 			IncludeFiles = new List<ShaderSourceFile>();
+ 		}
++		List<ShaderSourceFile>? includeFiles = metadata.IncludeFiles;
+-		List<ShaderSourceFile> includeFiles = metadata.IncludeFiles;
+ 		if (includeFiles != null && includeFiles.Count > 0)
+ 		{
++			foreach (ShaderSourceFile file in AssetContract.Required(metadata.IncludeFiles)) // ArmAgedon seam
+-			foreach (ShaderSourceFile file in metadata.IncludeFiles)
+ 			{
++				AssetContract.Required(IncludeFiles).Add(file.Clone()); // ArmAgedon seam
+-				IncludeFiles.Add(file.Clone());
+ 			}
+ 		}
+ 		if (metadata.VariantGroups != null)
+ 		{
+ 			VariantGroups = new List<List<string>>();
+ 		}
++		List<List<string>>? variantGroups = metadata.VariantGroups;
+-		List<List<string>> variantGroups = metadata.VariantGroups;
+ 		if (variantGroups != null && variantGroups.Count > 0)
+ 		{
++			foreach (List<string> variantGroup in AssetContract.Required(metadata.VariantGroups)) // ArmAgedon seam
+-			foreach (List<string> variantGroup in metadata.VariantGroups)
+ 			{
+ 				List<string> list = new List<string>();
+ 				foreach (string e in variantGroup)
+ 				{
+ 					list.Add(e);
+ 				}
++				AssetContract.Required(VariantGroups).Add(list); // ArmAgedon seam
+-				VariantGroups.Add(list);
+ 			}
+ 		}
+ 		if (metadata.UniqueKeywords != null)
+ 		{
+ 			UniqueKeywords = new List<string>();
+ 		}
++		List<string>? uniqueKeywords = metadata.UniqueKeywords;
+-		List<string> uniqueKeywords = metadata.UniqueKeywords;
+ 		if (uniqueKeywords == null || uniqueKeywords.Count <= 0)
+ 		{
+ 			return;
+ 		}
++		foreach (string keyword in AssetContract.Required(metadata.UniqueKeywords)) // ArmAgedon seam
+-		foreach (string keyword in metadata.UniqueKeywords)
+ 		{
++			AssetContract.Required(UniqueKeywords).Add(keyword); // ArmAgedon seam
+-			UniqueKeywords.Add(keyword);
+ 		}
+ 	}
+ 
+ 	public IEnumerable<List<string>> EnumerateAllVariants(bool returnCopy = true)
+ 	{
++		if (AssetContract.Required(VariantGroups).Count == 0) // ArmAgedon seam
+-		if (VariantGroups.Count == 0)
+ 		{
+ 			yield return new List<string>();
+ 			yield break;
+@@ -178,7 +178,7 @@
+ 
+ 	private IEnumerable<List<string>> EnumerateVariants(List<string> baseVariants, int groupIndex, bool returnCopy = true)
+ 	{
++		List<string> group = AssetContract.Required(VariantGroups)[groupIndex]; // ArmAgedon seam
+-		List<string> group = VariantGroups[groupIndex];
+ 		foreach (string keyword in group)
+ 		{
+ 			if (baseVariants.Contains(keyword))
+@@ -225,7 +225,7 @@
+ 				index |= (uint)(1 << keywordIndex);
+ 			}
+ 		}
++		foreach (List<string> group in AssetContract.Required(VariantGroups)) // ArmAgedon seam
+-		foreach (List<string> group in VariantGroups)
+ 		{
+ 			if (!(group[0] == "_") && !group.Any((string k) => keywords.Contains(k)))
+ 			{
+@@ -238,19 +238,19 @@
+ 
+ 	public int GetKeywordIndex(string keyword)
+ 	{
++		return AssetContract.Required(UniqueKeywords).IndexOf(keyword); // ArmAgedon seam
+-		return UniqueKeywords.IndexOf(keyword);
+ 	}
+ 
+ 	public bool IsValidIndex(uint index)
+ 	{
++		int maxIndex = 1 << AssetContract.Required(UniqueKeywords).Count; // ArmAgedon seam
+-		int maxIndex = 1 << UniqueKeywords.Count;
+ 		return index < maxIndex;
+ 	}
+ 
+ 	public void GenerateUniqueKeywords()
+ 	{
+ 		HashSet<string> map = new HashSet<string>();
++		foreach (List<string> variantGroup in AssetContract.Required(VariantGroups)) // ArmAgedon seam
+-		foreach (List<string> variantGroup in VariantGroups)
+ 		{
+ 			foreach (string keyword in variantGroup)
+ 			{

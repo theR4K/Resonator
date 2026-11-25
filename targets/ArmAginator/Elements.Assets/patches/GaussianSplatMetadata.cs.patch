@@ -1,0 +1,11 @@
+--- a/Elements/Assets/GaussianSplatMetadata.cs
++++ b/Elements/Assets/GaussianSplatMetadata.cs
+@@ -25,7 +25,7 @@
+ 
+ 	[JsonProperty(PropertyName = "assetIdenfitier")]
+ 	[JsonPropertyName("assetIdenfitier")]
++	public string? AssetIdentifier { get; set; }
+-	public string AssetIdentifier { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "splatCount")]
+ 	[JsonPropertyName("splatCount")]

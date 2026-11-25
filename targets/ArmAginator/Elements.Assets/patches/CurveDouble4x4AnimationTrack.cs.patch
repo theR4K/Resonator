@@ -1,0 +1,38 @@
+--- a/Elements/Assets/CurveDouble4x4AnimationTrack.cs
++++ b/Elements/Assets/CurveDouble4x4AnimationTrack.cs
+@@ -40,7 +40,7 @@
+ 			}
+ 			InternKeyframe frame = keyframes[index];
+ 			InternKeyframe nextFrame = keyframes[index + 1];
++			double4x4 fromTangent = AssetContract.Required(tangents)[index].right; // ArmAgedon seam
+-			double4x4 fromTangent = tangents[index].right;
+ 			double4x4 toTangent = tangents[index + 1].left;
+ 			float r = MathX.InverseLerp(frame.time, nextFrame.time, position);
+ 			float o = 1f - r;
+@@ -54,7 +54,7 @@
+ 			}
+ 			InternKeyframe frame = keyframes[index];
+ 			InternKeyframe nextFrame = keyframes[index + 1];
++			double4x4 fromTangent = AssetContract.Required(tangents)[index].right; // ArmAgedon seam
+-			double4x4 fromTangent = tangents[index].right;
+ 			double4x4 toTangent = tangents[index + 1].left;
+ 			float lerp = MathX.InverseLerp(frame.time, nextFrame.time, position);
+ 			return MathX.BezierCurve(in frame.value, in nextFrame.value, in fromTangent, in toTangent, lerp);
+@@ -78,7 +78,7 @@
+ 	{
+ 		for (int i = 0; i < FrameCount; i++)
+ 		{
++			InternTangents internTangents = AssetContract.Required(tangents)[i]; // ArmAgedon seam
+-			InternTangents internTangents = tangents[i];
+ 			bw.Write(in internTangents.left);
+ 			internTangents = tangents[i];
+ 			bw.Write(in internTangents.right);
+@@ -97,7 +97,7 @@
+ 	{
+ 		for (int i = 0; i < count; i++)
+ 		{
++			AssetContract.Required(tangents).Add(new InternTangents(br.Read4x4MatrixDouble(), br.Read4x4MatrixDouble())); // ArmAgedon seam
+-			tangents.Add(new InternTangents(br.Read4x4MatrixDouble(), br.Read4x4MatrixDouble()));
+ 		}
+ 	}
+ }

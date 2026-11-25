@@ -1,0 +1,53 @@
+--- a/Elements/Assets/ShaderVariantDescriptor.cs
++++ b/Elements/Assets/ShaderVariantDescriptor.cs
+@@ -41,7 +41,7 @@
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
+ 	[Newtonsoft.Json.JsonIgnore]
++	public string? ValidationError
+-	public string ValidationError
+ 	{
+ 		get
+ 		{
+@@ -105,7 +105,7 @@
+ 		return new ShaderVariantDescriptor(variantIndex, targetPlatform);
+ 	}
+ 
++	public bool Equals(ShaderVariantDescriptor? other, VersionComparison versionComparison)
+-	public bool Equals(ShaderVariantDescriptor other, VersionComparison versionComparison)
+ 	{
+ 		if (!AssetVariantHelper.VersionEquals(this, other, versionComparison))
+ 		{
+@@ -118,7 +118,7 @@
+ 		return false;
+ 	}
+ 
++	public bool Equals(ShaderVariantDescriptor? other)
+-	public bool Equals(ShaderVariantDescriptor other)
+ 	{
+ 		return Equals(other, VersionComparison.Exact);
+ 	}
+@@ -133,19 +133,19 @@
+ 		return new List<ShaderVariantDescriptor> { this };
+ 	}
+ 
++	public void GenerateLoadChain(List<string?> chain)
+-	public void GenerateLoadChain(List<string> chain)
+ 	{
+ 		chain.Add(null);
+ 	}
+ 
++	public List<ShaderVariantDescriptor>? GetBestAlternateChain(List<ShaderVariantDescriptor> availableDescriptors, Predicate<ShaderVariantDescriptor>? variantFilter = null)
+-	public List<ShaderVariantDescriptor> GetBestAlternateChain(List<ShaderVariantDescriptor> availableDescriptors, Predicate<ShaderVariantDescriptor> variantFilter = null)
+ 	{
+ 		return null;
+ 	}
+ 
++	public string? ValidateCloudVariant(ShaderMetadata metadata)
+-	public string ValidateCloudVariant(ShaderMetadata metadata)
+ 	{
++		string? baseError = ValidationError;
+-		string baseError = ValidationError;
+ 		if (baseError != null)
+ 		{
+ 			return baseError;

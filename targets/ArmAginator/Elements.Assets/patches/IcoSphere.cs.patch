@@ -1,0 +1,58 @@
+--- a/Elements/Assets/IcoSphere.cs
++++ b/Elements/Assets/IcoSphere.cs
+@@ -28,7 +28,7 @@
+ 		Submesh = submesh;
+ 		Subdivisions = subdivisions;
+ 		FlatShading = flatShading;
++		AssetContract.Required(Mesh).HasNormals = true; // ArmAgedon seam
+-		Mesh.HasNormals = true;
+ 		Mesh.AddVertices(12, AllVertices);
+ 		Submesh.AddTriangles(20, AllTriangles);
+ 		float o = (1f + MathX.Sqrt(5f)) / 2f;
+@@ -64,8 +64,8 @@
+ 		AllTriangles[17].Set(6, 2, 10);
+ 		AllTriangles[18].Set(8, 6, 7);
+ 		AllTriangles[19].Set(9, 8, 1);
++		Dictionary<ulong, int>? middlePointCache = null;
++		HashSet<int>? originalsInUse = null;
+-		Dictionary<ulong, int> middlePointCache = null;
+-		HashSet<int> originalsInUse = null;
+ 		if (FlatShading)
+ 		{
+ 			Mesh.GenerateFlatShadingTriangles(AllTriangles);
+@@ -90,7 +90,7 @@
+ 				int v0 = t.Vertex0Index;
+ 				int v1 = t.Vertex1Index;
+ 				int v2 = t.Vertex2Index;
++				int a = GetMiddlePoint(v0, v1, AssetContract.Required(middlePointCache)); // ArmAgedon seam
+-				int a = GetMiddlePoint(v0, v1, middlePointCache);
+ 				int b = GetMiddlePoint(v1, v2, middlePointCache);
+ 				int c = GetMiddlePoint(v2, v0, middlePointCache);
+ 				if (FlatShading)
+@@ -101,7 +101,7 @@
+ 					int b3 = Mesh.DuplicateVertex(b).Index;
+ 					int c2 = Mesh.DuplicateVertex(c).Index;
+ 					int c3 = Mesh.DuplicateVertex(c).Index;
++					v0 = GetUnique(v0, AssetContract.Required(originalsInUse)); // ArmAgedon seam
+-					v0 = GetUnique(v0, originalsInUse);
+ 					v1 = GetUnique(v1, originalsInUse);
+ 					v2 = GetUnique(v2, originalsInUse);
+ 					AllVertices.Add(Mesh.GetVertex(a2));
+@@ -169,7 +169,7 @@
+ 		{
+ 			return point;
+ 		}
++		float3 pos0 = AssetContract.Required(Mesh).GetPosition(p0); // ArmAgedon seam
+-		float3 pos0 = Mesh.GetPosition(p0);
+ 		float3 pos1 = Mesh.GetPosition(p1);
+ 		float3 middle = ((pos0 + pos1) / 2f).Normalized;
+ 		Vertex middleVert = Mesh.AddVertex(in middle);
+@@ -186,7 +186,7 @@
+ 	{
+ 		if (inUse.Contains(index))
+ 		{
++			Vertex v = AssetContract.Required(Mesh).DuplicateVertex(index); // ArmAgedon seam
+-			Vertex v = Mesh.DuplicateVertex(index);
+ 			AllVertices.Add(v);
+ 			return v.Index;
+ 		}

@@ -1,0 +1,170 @@
+--- a/Elements/Assets/RecordPackage.cs
++++ b/Elements/Assets/RecordPackage.cs
+@@ -23,7 +23,7 @@
+ 
+ 	public const string RECORD_EXTENSION = ".record";
+ 
++	private ZipArchive? _archive;
+-	private ZipArchive _archive;
+ 
+ 	private Dictionary<string, Record> _records = new Dictionary<string, Record>();
+ 
+@@ -31,17 +31,17 @@
+ 
+ 	private Dictionary<string, Dictionary<string, ZipArchiveEntry>> _variants = new Dictionary<string, Dictionary<string, ZipArchiveEntry>>();
+ 
++	private Dictionary<string, IAssetMetadata?> _metadata = new Dictionary<string, IAssetMetadata?>();
+-	private Dictionary<string, IAssetMetadata> _metadata = new Dictionary<string, IAssetMetadata>();
+ 
+ 	public int RecordCount => _records.Count;
+ 
+ 	public int AssetCount => _assets.Count;
+ 
++	public Record? MainRecord
+-	public Record MainRecord
+ 	{
+ 		get
+ 		{
++			_records.TryGetValue("R-Main", out Record? record);
+-			_records.TryGetValue("R-Main", out Record record);
+ 			return record;
+ 		}
+ 	}
+@@ -50,14 +50,14 @@
+ 
+ 	public IEnumerable<string> Assets => _assets.Keys;
+ 
++	public IEnumerable<IAssetMetadata?> Metadata => _metadata.Values;
+-	public IEnumerable<IAssetMetadata> Metadata => _metadata.Values;
+ 
+ 	public static Uri GetAssetURL(string signature)
+ 	{
+ 		return new Uri("packdb:///" + signature);
+ 	}
+ 
++	public static string? GetAssetSignature(Uri uri)
+-	public static string GetAssetSignature(Uri uri)
+ 	{
+ 		if (uri.Scheme != "packdb")
+ 		{
+@@ -92,13 +92,13 @@
+ 
+ 	public bool HasAsset(string signature)
+ 	{
++		return _assets.ContainsKey(AssetContract.Required(signature?.ToLower())); // ArmAgedon seam
+-		return _assets.ContainsKey(signature?.ToLower());
+ 	}
+ 
+ 	public bool HasVariant(string signature, string variantIdentifier)
+ 	{
+ 		signature = signature.ToLower();
++		if (!_variants.TryGetValue(signature, out Dictionary<string, ZipArchiveEntry>? entries))
+-		if (!_variants.TryGetValue(signature, out Dictionary<string, ZipArchiveEntry> entries))
+ 		{
+ 			return false;
+ 		}
+@@ -108,7 +108,7 @@
+ 	public IEnumerable<string> EnumerateVariantsForAsset(string signature)
+ 	{
+ 		signature = signature.ToLower();
++		if (!_variants.TryGetValue(signature, out Dictionary<string, ZipArchiveEntry>? entries))
+-		if (!_variants.TryGetValue(signature, out Dictionary<string, ZipArchiveEntry> entries))
+ 		{
+ 			yield break;
+ 		}
+@@ -118,9 +118,9 @@
+ 		}
+ 	}
+ 
++	public IAssetMetadata? TryGetMetadata(string signature)
+-	public IAssetMetadata TryGetMetadata(string signature)
+ 	{
++		if (_metadata.TryGetValue(signature, out IAssetMetadata? metadata))
+-		if (_metadata.TryGetValue(signature, out IAssetMetadata metadata))
+ 		{
+ 			return metadata;
+ 		}
+@@ -138,7 +138,7 @@
+ 			throw new ArgumentException("RecordId is empty");
+ 		}
+ 		_records.Add(record.RecordId, record);
++		using Stream stream = AssetContract.Required(_archive).CreateEntry(record.RecordId + ".record", CompressionLevel.Optimal).Open(); // ArmAgedon seam
+-		using Stream stream = _archive.CreateEntry(record.RecordId + ".record", CompressionLevel.Optimal).Open();
+ 		JsonSerializer.Serialize(stream, record);
+ 	}
+ 
+@@ -197,14 +197,14 @@
+ 
+ 	private void WriteMetadata<M>(M metadata, string extension) where M : IAssetMetadata
+ 	{
++		using Stream stream = AssetContract.Required(_archive).CreateEntry($"{"Metadata"}/{metadata.AssetIdentifier}.{extension}", CompressionLevel.Optimal).Open(); // ArmAgedon seam
+-		using Stream stream = _archive.CreateEntry($"{"Metadata"}/{metadata.AssetIdentifier}.{extension}", CompressionLevel.Optimal).Open();
+ 		JsonSerializer.Serialize(stream, metadata);
+ 	}
+ 
+ 	private void DecodeMetadata<M>(string signature, ZipArchiveEntry entry) where M : IAssetMetadata
+ 	{
+ 		using Stream stream = entry.Open();
++		M? metadata = JsonSerializer.Deserialize<M>(stream);
+-		M metadata = JsonSerializer.Deserialize<M>(stream);
+ 		_metadata.Add(signature, metadata);
+ 	}
+ 
+@@ -250,7 +250,7 @@
+ 
+ 	public void WriteVariant(string signature, string variantIdentifier, Stream assetData)
+ 	{
++		if (!_variants.TryGetValue(signature, out Dictionary<string, ZipArchiveEntry>? entries))
+-		if (!_variants.TryGetValue(signature, out Dictionary<string, ZipArchiveEntry> entries))
+ 		{
+ 			entries = new Dictionary<string, ZipArchiveEntry>();
+ 			_variants.Add(signature, entries);
+@@ -266,7 +266,7 @@
+ 
+ 	private Stream Read(Dictionary<string, ZipArchiveEntry> entries, string identifier)
+ 	{
++		if (!entries.TryGetValue(identifier, out ZipArchiveEntry? entry))
+-		if (!entries.TryGetValue(identifier, out ZipArchiveEntry entry))
+ 		{
+ 			throw new KeyNotFoundException("Package doesn't contain asset/variant " + identifier);
+ 		}
+@@ -279,7 +279,7 @@
+ 		{
+ 			throw new InvalidOperationException("Asset/Variant " + identifier + " has already been written");
+ 		}
++		ZipArchiveEntry entry = AssetContract.Required(_archive).CreateEntry(folder + "/" + identifier, CompressionLevel.NoCompression); // ArmAgedon seam
+-		ZipArchiveEntry entry = _archive.CreateEntry(folder + "/" + identifier, CompressionLevel.NoCompression);
+ 		using (Stream entryStream = entry.Open())
+ 		{
+ 			sourceData.CopyTo(entryStream);
+@@ -299,8 +299,8 @@
+ 			if (".record".Equals(Path.GetExtension(entry.FullName), StringComparison.OrdinalIgnoreCase))
+ 			{
+ 				using Stream entryStream = entry.Open();
++				Record? record = JsonSerializer.Deserialize<Record>(entryStream);
++				_records.Add(AssetContract.Required(record).RecordId, record); // ArmAgedon seam
+-				Record record = JsonSerializer.Deserialize<Record>(entryStream);
+-				_records.Add(record.RecordId, record);
+ 			}
+ 			else if (entry.FullName.StartsWith("Assets", ignoreCase: true, CultureInfo.InvariantCulture))
+ 			{
+@@ -310,8 +310,8 @@
+ 			else if (entry.FullName.StartsWith("Variants", ignoreCase: true, CultureInfo.InvariantCulture))
+ 			{
+ 				string identifier = Path.GetFileNameWithoutExtension(entry.FullName);
++				string? signature2 = Path.GetFileName(Path.GetDirectoryName(entry.FullName));
++				if (!_variants.TryGetValue(AssetContract.Required(signature2), out Dictionary<string, ZipArchiveEntry>? entries)) // ArmAgedon seam
+-				string signature2 = Path.GetFileName(Path.GetDirectoryName(entry.FullName));
+-				if (!_variants.TryGetValue(signature2, out Dictionary<string, ZipArchiveEntry> entries))
+ 				{
+ 					entries = new Dictionary<string, ZipArchiveEntry>();
+ 					_variants.Add(signature2, entries);
+@@ -320,7 +320,7 @@
+ 			}
+ 			else if (entry.FullName.StartsWith("Metadata", ignoreCase: true, CultureInfo.InvariantCulture))
+ 			{
++				string? ext = Path.GetExtension(entry.FullName)?.Replace(".", "");
+-				string ext = Path.GetExtension(entry.FullName)?.Replace(".", "");
+ 				string signature3 = Path.GetFileNameWithoutExtension(entry.FullName);
+ 				switch (ext)
+ 				{

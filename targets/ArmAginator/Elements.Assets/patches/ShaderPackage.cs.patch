@@ -1,0 +1,76 @@
+--- a/Elements/Assets/ShaderPackage.cs
++++ b/Elements/Assets/ShaderPackage.cs
+@@ -10,11 +10,11 @@
+ 
+ public class ShaderPackage : IDisposable
+ {
++	private ZipArchive? _archive;
+-	private ZipArchive _archive;
+ 
++	private Dictionary<string, ShaderSource>? _cachedSources;
+-	private Dictionary<string, ShaderSource> _cachedSources;
+ 
++	public ShaderMetadata? Metadata { get; private set; }
+-	public ShaderMetadata Metadata { get; private set; }
+ 
+ 	public static string MetadataPath => "metadata.json";
+ 
+@@ -87,7 +87,7 @@
+ 			_cachedSources = new Dictionary<string, ShaderSource>();
+ 		}
+ 		_cachedSources.Add(source.File, source);
++		using Stream entryStream = AssetContract.Required(_archive).CreateEntry(SourcePath(source.File), CompressionLevel.Optimal).Open(); // ArmAgedon seam
+-		using Stream entryStream = _archive.CreateEntry(SourcePath(source.File), CompressionLevel.Optimal).Open();
+ 		StreamWriter streamWriter = new StreamWriter(entryStream);
+ 		streamWriter.Write(source.GetSource());
+ 		streamWriter.Flush();
+@@ -99,19 +99,19 @@
+ 		{
+ 			_cachedSources = new Dictionary<string, ShaderSource>();
+ 		}
++		if (_cachedSources.TryGetValue(filename, out ShaderSource? source))
+-		if (_cachedSources.TryGetValue(filename, out ShaderSource source))
+ 		{
+ 			return source;
+ 		}
++		using (Stream entryStream = AssetContract.Required(AssetContract.Required(_archive).GetEntry(SourcePath(filename))).Open()) // ArmAgedon seam // ArmAgedon seam
+-		using (Stream entryStream = _archive.GetEntry(SourcePath(filename)).Open())
+ 		{
+ 			StreamReader reader = new StreamReader(entryStream);
+ 			List<string> lines = new List<string>();
+ 			while (!reader.EndOfStream)
+ 			{
++				lines.Add(AssetContract.Required(reader.ReadLine())); // ArmAgedon seam
+-				lines.Add(reader.ReadLine());
+ 			}
++			source = new ShaderSource(filename, lines.ToArray(), filename != AssetContract.Required(AssetContract.Required(Metadata).SourceFile).FileName); // ArmAgedon seam // ArmAgedon seam
+-			source = new ShaderSource(filename, lines.ToArray(), filename != Metadata.SourceFile.FileName);
+ 		}
+ 		_cachedSources.Add(filename, source);
+ 		return source;
+@@ -119,14 +119,14 @@
+ 
+ 	public void WriteVariant(string platform, uint variant, Stream stream)
+ 	{
++		Stream targetStream = AssetContract.Required(_archive).CreateEntry(VariantPath(platform, variant), CompressionLevel.NoCompression).Open(); // ArmAgedon seam
+-		Stream targetStream = _archive.CreateEntry(VariantPath(platform, variant), CompressionLevel.NoCompression).Open();
+ 		stream.CopyTo(targetStream);
+ 		targetStream.Close();
+ 	}
+ 
++	public byte[]? ReadVariant(string platform, uint variant)
+-	public byte[] ReadVariant(string platform, uint variant)
+ 	{
++		ZipArchiveEntry? entry = AssetContract.Required(_archive).GetEntry(VariantPath(platform, variant)); // ArmAgedon seam
+-		ZipArchiveEntry entry = _archive.GetEntry(VariantPath(platform, variant));
+ 		if (entry == null)
+ 		{
+ 			return null;
+@@ -160,6 +160,6 @@
+ 
+ 	public void Dispose()
+ 	{
++		AssetContract.Required(_archive).Dispose(); // ArmAgedon seam
+-		_archive.Dispose();
+ 	}
+ }

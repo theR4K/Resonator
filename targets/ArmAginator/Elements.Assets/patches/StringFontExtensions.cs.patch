@@ -1,0 +1,20 @@
+--- a/Elements/Assets/StringFontExtensions.cs
++++ b/Elements/Assets/StringFontExtensions.cs
+@@ -2,7 +2,7 @@
+ 
+ public static class StringFontExtensions
+ {
++	public static FontSet? GetFontSet(this StringNode node, bool spriteFontSet = false)
+-	public static FontSet GetFontSet(this StringNode node, bool spriteFontSet = false)
+ 	{
+ 		if (!(node is StringRenderTree tree))
+ 		{
+@@ -17,7 +17,7 @@
+ 			{
+ 				return fontNode.FontSet;
+ 			}
++			return AssetContract.Required(node.Parent).GetFontSet(spriteFontSet); // ArmAgedon seam
+-			return node.Parent.GetFontSet(spriteFontSet);
+ 		}
+ 		if (spriteFontSet)
+ 		{

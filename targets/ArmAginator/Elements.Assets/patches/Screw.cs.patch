@@ -1,0 +1,20 @@
+--- a/Elements/Assets/Screw.cs
++++ b/Elements/Assets/Screw.cs
+@@ -45,7 +45,7 @@
+ 		Submesh = submesh;
+ 		Segments = segments;
+ 		this.curvePoints = new float3[curvePoints];
++		AssetContract.Required(Mesh).AddVertices(curvePoints * (Segments + 1), AllVertices); // ArmAgedon seam
+-		Mesh.AddVertices(curvePoints * (Segments + 1), AllVertices);
+ 		for (int s = 0; s < segments; s++)
+ 		{
+ 			for (int c = 0; c < curvePoints - 1; c++)
+@@ -77,7 +77,7 @@
+ 				v.UV0Unsafe = new float2(_segmentLerp, (float)c / (float)(CurvePoints - 1)) * UVScale;
+ 			}
+ 		}
++		AssetContract.Required(Mesh).RecalculateNormals(AllTriangles); // ArmAgedon seam
+-		Mesh.RecalculateNormals(AllTriangles);
+ 		Mesh.RecalculateTangents(AllTriangles);
+ 		if (WrapAroundCurve)
+ 		{

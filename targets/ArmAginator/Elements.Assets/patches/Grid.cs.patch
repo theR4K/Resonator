@@ -1,0 +1,44 @@
+--- a/Elements/Assets/Grid.cs
++++ b/Elements/Assets/Grid.cs
+@@ -31,11 +31,11 @@
+ 
+ 	public float2 UVOffset = float2.Zero;
+ 
++	public Func<int2, float3>? PointDisplacement;
+-	public Func<int2, float3> PointDisplacement;
+ 
++	public Func<int2, float2>? UVDisplacement;
+-	public Func<int2, float2> UVDisplacement;
+ 
++	public Func<int2, color>? PointColor;
+-	public Func<int2, color> PointColor;
+ 
+ 	public Grid(TriangleSubmesh submesh, int2 points, bool flatShading, bool reverseWinding = false)
+ 		: base(submesh.Mesh)
+@@ -47,7 +47,7 @@
+ 		int2 quads = points - 1;
+ 		int totalQuads = quads.x * quads.y;
+ 		int totalVerts = ((!flatShading) ? (points.x * points.y) : (totalQuads * 6));
++		AssetContract.Required(Mesh).AddVertices(totalVerts, AllVertices); // ArmAgedon seam
+-		Mesh.AddVertices(totalVerts, AllVertices);
+ 		if (flatShading)
+ 		{
+ 			for (int q = 0; q < totalQuads; q++)
+@@ -132,7 +132,7 @@
+ 	public override void Update()
+ 	{
+ 		int2 quads = Points - 1;
++		RawList<Vertex>? verts = Pool.BorrowRawList<Vertex>();
+-		RawList<Vertex> verts = Pool.BorrowRawList<Vertex>();
+ 		float2 step = 1f / (Points - 1);
+ 		for (int y = 0; y < Points.y; y++)
+ 		{
+@@ -161,7 +161,7 @@
+ 			}
+ 		}
+ 		Pool.Return(ref verts);
++		AssetContract.Required(Mesh).RecalculateNormals(AllTriangles); // ArmAgedon seam
+-		Mesh.RecalculateNormals(AllTriangles);
+ 		Mesh.RecalculateTangents(AllTriangles);
+ 		static ref readonly T ILSpyHelper_AsRefReadOnly<T>(in T temp)
+ 		{

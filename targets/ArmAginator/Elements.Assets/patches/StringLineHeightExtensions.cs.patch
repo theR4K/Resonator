@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringLineHeightExtensions.cs
++++ b/Elements/Assets/StringLineHeightExtensions.cs
+@@ -10,7 +10,7 @@
+ 			{
+ 				return lineHeight.Height;
+ 			}
++			return AssetContract.Required(node.Parent).GetLineHeight(); // ArmAgedon seam
+-			return node.Parent.GetLineHeight();
+ 		}
+ 		return tree.LineHeight;
+ 	}

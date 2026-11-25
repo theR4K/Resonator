@@ -1,0 +1,83 @@
+--- a/Elements/Assets/Texture3DVariantDescriptor.cs
++++ b/Elements/Assets/Texture3DVariantDescriptor.cs
+@@ -38,11 +38,11 @@
+ 	}
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
++	public override string? ValidationError
+-	public override string ValidationError
+ 	{
+ 		get
+ 		{
++			string? baseError = base.ValidationError;
+-			string baseError = base.ValidationError;
+ 			if (baseError != null)
+ 			{
+ 				return baseError;
+@@ -68,11 +68,11 @@
+ 	}
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
++	public override string? VariantIdentifier => GenerateVariantIdentifier(Width, Height, Depth, MipMaps);
+-	public override string VariantIdentifier => GenerateVariantIdentifier(Width, Height, Depth, MipMaps);
+ 
++	public override string? ValidateCloudVariant(VolumeMetadata metadata)
+-	public override string ValidateCloudVariant(VolumeMetadata metadata)
+ 	{
++		string? baseError = base.ValidateCloudVariant(metadata);
+-		string baseError = base.ValidateCloudVariant(metadata);
+ 		if (baseError != null)
+ 		{
+ 			return baseError;
+@@ -116,7 +116,7 @@
+ 
+ 	public static Texture3DVariantDescriptor FromIdentifier(string identifier)
+ 	{
++		Dictionary<string, string>? parameters = TextureVariantDescriptor<Texture3DVariantDescriptor, VolumeMetadata>.ParseBase(identifier, out var compression, out var quality, out var mips, out var colorPreprocess, out var alphaPreprocess, out var version);
+-		Dictionary<string, string> parameters = TextureVariantDescriptor<Texture3DVariantDescriptor, VolumeMetadata>.ParseBase(identifier, out var compression, out var quality, out var mips, out var colorPreprocess, out var alphaPreprocess, out var version);
+ 		if (parameters == null)
+ 		{
+ 			return new Texture3DVariantDescriptor();
+@@ -144,7 +144,7 @@
+ 		return new Texture3DVariantDescriptor(compression, quality, width, height, depth, mips, colorPreprocess, alphaPreprocess, version);
+ 	}
+ 
++	private string? GenerateVariantIdentifier(int width, int height, int depth, bool mips)
+-	private string GenerateVariantIdentifier(int width, int height, int depth, bool mips)
+ 	{
+ 		if (OriginalAsset)
+ 		{
+@@ -158,7 +158,7 @@
+ 		return $"{version}compression={TextureCompression}&quality={CompressionQuality}&width={width}&height={height}&depth={depth}&mips={mips}&colorPreprocess={ColorPreprocess}&alphaPreprocess={AlphaPreprocess}";
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is Texture3DVariantDescriptor descriptor)
+ 		{
+@@ -167,13 +167,13 @@
+ 		return false;
+ 	}
+ 
++	public override bool Equals(Texture3DVariantDescriptor? other, VersionComparison versionComparison)
+-	public override bool Equals(Texture3DVariantDescriptor other, VersionComparison versionComparison)
+ 	{
+ 		if (!base.Equals(other, versionComparison))
+ 		{
+ 			return false;
+ 		}
++		if (Width == AssetContract.Required(other).Width && Height == other.Height) // ArmAgedon seam
+-		if (Width == other.Width && Height == other.Height)
+ 		{
+ 			return Depth == other.Depth;
+ 		}
+@@ -204,7 +204,7 @@
+ 		return !(left == right);
+ 	}
+ 
++	public override void GenerateLoadChain(List<string?> chain)
+-	public override void GenerateLoadChain(List<string> chain)
+ 	{
+ 		if (OriginalAsset)
+ 		{

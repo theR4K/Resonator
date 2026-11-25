@@ -1,0 +1,14 @@
+--- a/Elements/Assets/AppendResult.cs
++++ b/Elements/Assets/AppendResult.cs
+@@ -4,9 +4,9 @@
+ 
+ public struct AppendResult
+ {
++	public List<int>? boneMapping;
+-	public List<int> boneMapping;
+ 
++	public List<int>? blendshapeMapping;
+-	public List<int> blendshapeMapping;
+ 
+ 	public List<int> submeshMapping;
+ }

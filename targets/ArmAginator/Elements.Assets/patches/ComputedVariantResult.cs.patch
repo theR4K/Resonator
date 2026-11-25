@@ -1,0 +1,17 @@
+--- a/Elements/Assets/ComputedVariantResult.cs
++++ b/Elements/Assets/ComputedVariantResult.cs
+@@ -5,11 +5,11 @@
+ /// </summary>
+ public class ComputedVariantResult
+ {
++	public readonly string? identifier;
+-	public readonly string identifier;
+ 
++	public readonly string? file;
+-	public readonly string file;
+ 
++	public ComputedVariantResult(string? identifier, string? file)
+-	public ComputedVariantResult(string identifier, string file)
+ 	{
+ 		this.identifier = identifier;
+ 		this.file = file;

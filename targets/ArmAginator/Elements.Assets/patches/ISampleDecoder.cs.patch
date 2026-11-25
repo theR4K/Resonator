@@ -1,0 +1,20 @@
+--- a/Elements/Assets/ISampleDecoder.cs
++++ b/Elements/Assets/ISampleDecoder.cs
+@@ -5,7 +5,7 @@
+ 
+ public interface ISampleDecoder : IDisposable
+ {
++	Stream? InputStream { get; }
+-	Stream InputStream { get; }
+ 
+ 	int Samples { get; }
+ 
+@@ -15,7 +15,7 @@
+ 
+ 	long Position { get; set; }
+ 
++	AudioEncodeSettings? EncodeSettings { get; }
+-	AudioEncodeSettings EncodeSettings { get; }
+ 
+ 	int Read(float[] buffer, int offset, int count);
+ }

@@ -1,0 +1,131 @@
+--- a/Elements/Assets/FontX.cs
++++ b/Elements/Assets/FontX.cs
+@@ -9,11 +9,11 @@
+ 
+ public class FontX : IDisposable
+ {
++	private ConcurrentDictionary<uint, GlyphMetrics?> glyphMetrics = new ConcurrentDictionary<uint, GlyphMetrics?>();
+-	private ConcurrentDictionary<uint, GlyphMetrics> glyphMetrics = new ConcurrentDictionary<uint, GlyphMetrics>();
+ 
++	private ConcurrentDictionary<uint, GlyphOutline?> glyphOutlines = new ConcurrentDictionary<uint, GlyphOutline?>();
+-	private ConcurrentDictionary<uint, GlyphOutline> glyphOutlines = new ConcurrentDictionary<uint, GlyphOutline>();
+ 
++	private ConcurrentDictionary<uint, GlyphMetrics?> charMapping = new ConcurrentDictionary<uint, GlyphMetrics?>();
+-	private ConcurrentDictionary<uint, GlyphMetrics> charMapping = new ConcurrentDictionary<uint, GlyphMetrics>();
+ 
+ 	private ConcurrentDictionary<uint, ConcurrentDictionary<uint, float2>> kerningCache = new ConcurrentDictionary<uint, ConcurrentDictionary<uint, float2>>();
+ 
+@@ -21,9 +21,9 @@
+ 
+ 	private List<GlyphAtlas> atlases = new List<GlyphAtlas>();
+ 
++	private IFontDataSource? fontDataSource;
+-	private IFontDataSource fontDataSource;
+ 
++	public string? Name { get; private set; }
+-	public string Name { get; private set; }
+ 
+ 	public float LineHeight { get; private set; }
+ 
+@@ -48,9 +48,9 @@
+ 		return int2.Zero;
+ 	}
+ 
++	public GlyphMetrics? GetGlyphMetrics(uint glyphId)
+-	public GlyphMetrics GetGlyphMetrics(uint glyphId)
+ 	{
++		if (glyphMetrics.TryGetValue(glyphId, out GlyphMetrics? metrics))
+-		if (glyphMetrics.TryGetValue(glyphId, out GlyphMetrics metrics))
+ 		{
+ 			return metrics;
+ 		}
+@@ -71,14 +71,14 @@
+ 		return true;
+ 	}
+ 
++	public GlyphMetrics? GetCharMetrics(char ch)
+-	public GlyphMetrics GetCharMetrics(char ch)
+ 	{
+ 		return GetCharMetrics((uint)ch);
+ 	}
+ 
++	public GlyphMetrics? GetCharMetrics(uint charcode)
+-	public GlyphMetrics GetCharMetrics(uint charcode)
+ 	{
++		if (charMapping.TryGetValue(charcode, out GlyphMetrics? metrics))
+-		if (charMapping.TryGetValue(charcode, out GlyphMetrics metrics))
+ 		{
+ 			return metrics;
+ 		}
+@@ -101,12 +101,12 @@
+ 
+ 	public void ClearCachedCharMapping(uint charcode)
+ 	{
++		charMapping.TryRemove(charcode, out GlyphMetrics? _);
+-		charMapping.TryRemove(charcode, out GlyphMetrics _);
+ 	}
+ 
+ 	public float2 GetKerning(uint leftGlyphId, uint rightGlyphId)
+ 	{
++		if (kerningCache.TryGetValue(leftGlyphId, out ConcurrentDictionary<uint, float2>? glyphCache) && glyphCache.TryGetValue(rightGlyphId, out var kern))
+-		if (kerningCache.TryGetValue(leftGlyphId, out ConcurrentDictionary<uint, float2> glyphCache) && glyphCache.TryGetValue(rightGlyphId, out var kern))
+ 		{
+ 			return kern;
+ 		}
+@@ -131,9 +131,9 @@
+ 		return GetCharMetrics(ch)?.glyphId ?? 0;
+ 	}
+ 
++	public GlyphOutline? GetOutline(uint glyphId)
+-	public GlyphOutline GetOutline(uint glyphId)
+ 	{
++		if (glyphOutlines.TryGetValue(glyphId, out GlyphOutline? outline))
+-		if (glyphOutlines.TryGetValue(glyphId, out GlyphOutline outline))
+ 		{
+ 			return outline;
+ 		}
+@@ -162,8 +162,8 @@
+ 		}
+ 	}
+ 
++	public static FontX Load(string file, string? extension = null)
+-	public static FontX Load(string file, string extension = null)
+ 	{
+ 		if (extension == null)
+ 		{
+ 			extension = Path.GetExtension(file).ToLower().Replace(".", "");
+@@ -198,13 +198,13 @@
+ 
+ 	public unsafe bool RenderGlyphMSDF(uint glyphId, Bitmap2D bitmap, Rect region, int pixelRange, bool rotated)
+ 	{
++		GlyphOutline? outline = GetOutline(glyphId);
+-		GlyphOutline outline = GetOutline(glyphId);
+ 		if (outline == null || outline.ContourCount == 0)
+ 		{
+ 			return false;
+ 		}
++		GlyphMetrics? metrics = GetGlyphMetrics(glyphId);
++		float2 glyphSize = new float2(AssetContract.Required(metrics).width, metrics.height); // ArmAgedon seam
+-		GlyphMetrics metrics = GetGlyphMetrics(glyphId);
+-		float2 glyphSize = new float2(metrics.width, metrics.height);
+ 		float2 rawTargetSize = region.size - pixelRange;
+ 		if (rotated)
+ 		{
+@@ -255,7 +255,7 @@
+ 			offsetX += (double)((float)pixelRange * 0.5f);
+ 			offsetY += (double)((float)pixelRange * 0.5f);
+ 			MSDF_Native.shape_edge_coloring_simple(shape, 3.0, 0uL);
++			RawValueList<float3>? buffer = Pool.BorrowRawValueList<float3>();
+-			RawValueList<float3> buffer = Pool.BorrowRawValueList<float3>();
+ 			int2 pixelRegionSize = MathX.CeilToInt(in regionSize);
+ 			int pixels = pixelRegionSize.x * pixelRegionSize.y;
+ 			if (buffer.Capacity < pixels)
+@@ -290,7 +290,7 @@
+ 
+ 	public bool RenderGlyphRaster(uint glyphId, Bitmap2D bitmap, Rect region, bool rotated)
+ 	{
++		if (!AssetContract.Required(fontDataSource).SupportsRenderMethod(GlyphRenderMethod.Raster)) // ArmAgedon seam
+-		if (!fontDataSource.SupportsRenderMethod(GlyphRenderMethod.Raster))
+ 		{
+ 			return false;
+ 		}

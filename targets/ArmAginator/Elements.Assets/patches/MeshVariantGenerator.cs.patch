@@ -1,0 +1,19 @@
+--- a/Elements/Assets/MeshVariantGenerator.cs
++++ b/Elements/Assets/MeshVariantGenerator.cs
+@@ -10,14 +10,14 @@
+ 
+ public static class MeshVariantGenerator
+ {
++	public static List<ComputedVariantResult> GenerateVariants(string file, MeshVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler? variantGenerated = null, Predicate<string>? variantFilter = null)
+-	public static List<ComputedVariantResult> GenerateVariants(string file, MeshVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler variantGenerated = null, Predicate<string> variantFilter = null)
+ 	{
+ 		List<ComputedVariantResult> results = new List<ComputedVariantResult>();
+ 		List<MeshVariantDescriptor> list = variantDescriptor.GenerateCloudChain();
+ 		MeshX meshx = new MeshX(file);
+ 		foreach (MeshVariantDescriptor v in list)
+ 		{
++			if (variantFilter != null && !variantFilter(AssetContract.Required(v.VariantIdentifier) /* ArmAgedon seam */))
+-			if (variantFilter != null && !variantFilter(v.VariantIdentifier))
+ 			{
+ 				continue;
+ 			}

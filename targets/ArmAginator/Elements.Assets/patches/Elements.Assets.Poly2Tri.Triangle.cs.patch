@@ -1,0 +1,218 @@
+--- a/Elements/Assets/Poly2Tri/Triangle.cs
++++ b/Elements/Assets/Poly2Tri/Triangle.cs
+@@ -4,34 +4,34 @@
+ 
+ public class Triangle
+ {
++	public TriPoint?[] Points;
+-	public TriPoint[] Points;
+ 
+ 	public bool[] ConstrainedEdge;
+ 
+ 	public bool[] DelaunayEdge;
+ 
++	private Triangle?[] _neighbours;
+-	private Triangle[] _neighbours;
+ 
+ 	private bool _interior;
+ 
+ 	public Triangle(TriPoint a, TriPoint b, TriPoint c)
+ 	{
++		Points = new TriPoint?[3] { a, b, c };
+-		Points = new TriPoint[3] { a, b, c };
+ 		ConstrainedEdge = new bool[3];
+ 		DelaunayEdge = new bool[3];
++		_neighbours = new Triangle?[3];
+-		_neighbours = new Triangle[3];
+ 	}
+ 
++	public Triangle? GetNeighbor(int index)
+-	public Triangle GetNeighbor(int index)
+ 	{
+ 		return _neighbours[index];
+ 	}
+ 
+ 	public bool Contains(TriPoint p)
+ 	{
++		if (!AssetContract.Required(Points[0]).Equals(p) && !AssetContract.Required(Points[1]).Equals(p)) // ArmAgedon seam
+-		if (!Points[0].Equals(p) && !Points[1].Equals(p))
+ 		{
++			return AssetContract.Required(Points[2]).Equals(p); // ArmAgedon seam
+-			return Points[2].Equals(p);
+ 		}
+ 		return true;
+ 	}
+@@ -92,20 +92,20 @@
+ 	/// <param name="t"></param>
+ 	public void MarkNeighbor(Triangle t)
+ 	{
++		if (t.Contains(AssetContract.Required(Points[1]), AssetContract.Required(Points[2]))) // ArmAgedon seam
+-		if (t.Contains(Points[1], Points[2]))
+ 		{
+ 			_neighbours[0] = t;
++			t.MarkNeighbor(AssetContract.Required(Points[1]), AssetContract.Required(Points[2]), this); // ArmAgedon seam
+-			t.MarkNeighbor(Points[1], Points[2], this);
+ 		}
++		else if (t.Contains(AssetContract.Required(Points[0]), AssetContract.Required(Points[2]))) // ArmAgedon seam
+-		else if (t.Contains(Points[0], Points[2]))
+ 		{
+ 			_neighbours[1] = t;
++			t.MarkNeighbor(AssetContract.Required(Points[0]), AssetContract.Required(Points[2]), this); // ArmAgedon seam
+-			t.MarkNeighbor(Points[0], Points[2], this);
+ 		}
++		else if (t.Contains(AssetContract.Required(Points[0]), AssetContract.Required(Points[1]))) // ArmAgedon seam
+-		else if (t.Contains(Points[0], Points[1]))
+ 		{
+ 			_neighbours[2] = t;
++			t.MarkNeighbor(AssetContract.Required(Points[0]), AssetContract.Required(Points[1]), this); // ArmAgedon seam
+-			t.MarkNeighbor(Points[0], Points[1], this);
+ 		}
+ 	}
+ 
+@@ -148,10 +148,10 @@
+ 		delaunayEdge[0] = flag;
+ 	}
+ 
++	public TriPoint? OppositePoint(Triangle t, TriPoint p)
+-	public TriPoint OppositePoint(Triangle t, TriPoint p)
+ 	{
++		TriPoint? cw = t.PointCW(p);
++		return PointCW(AssetContract.Required(cw)); // ArmAgedon seam
+-		TriPoint cw = t.PointCW(p);
+-		return PointCW(cw);
+ 	}
+ 
+ 	/// <summary>
+@@ -211,35 +211,35 @@
+ 
+ 	public int EdgeIndex(TriPoint p1, TriPoint p2)
+ 	{
++		if (AssetContract.Required(Points[0]).Equals(p1)) // ArmAgedon seam
+-		if (Points[0].Equals(p1))
+ 		{
++			if (AssetContract.Required(Points[1]).Equals(p2)) // ArmAgedon seam
+-			if (Points[1].Equals(p2))
+ 			{
+ 				return 2;
+ 			}
++			if (AssetContract.Required(Points[2]).Equals(p2)) // ArmAgedon seam
+-			if (Points[2].Equals(p2))
+ 			{
+ 				return 1;
+ 			}
+ 		}
++		else if (AssetContract.Required(Points[1]).Equals(p1)) // ArmAgedon seam
+-		else if (Points[1].Equals(p1))
+ 		{
++			if (AssetContract.Required(Points[2]).Equals(p2)) // ArmAgedon seam
+-			if (Points[2].Equals(p2))
+ 			{
+ 				return 0;
+ 			}
++			if (AssetContract.Required(Points[0]).Equals(p2)) // ArmAgedon seam
+-			if (Points[0].Equals(p2))
+ 			{
+ 				return 2;
+ 			}
+ 		}
++		else if (AssetContract.Required(Points[2]).Equals(p1)) // ArmAgedon seam
+-		else if (Points[2].Equals(p1))
+ 		{
++			if (AssetContract.Required(Points[0]).Equals(p2)) // ArmAgedon seam
+-			if (Points[0].Equals(p2))
+ 			{
+ 				return 1;
+ 			}
++			if (AssetContract.Required(Points[1]).Equals(p2)) // ArmAgedon seam
+-			if (Points[1].Equals(p2))
+ 			{
+ 				return 0;
+ 			}
+@@ -283,7 +283,7 @@
+ 	/// </summary>
+ 	/// <param name="point"></param>
+ 	/// <returns></returns>
++	public TriPoint? PointCW(TriPoint point)
+-	public TriPoint PointCW(TriPoint point)
+ 	{
+ 		if (point.Equals(Points[0]))
+ 		{
+@@ -305,7 +305,7 @@
+ 	/// </summary>
+ 	/// <param name="point"></param>
+ 	/// <returns></returns>
++	public TriPoint? PointCCW(TriPoint point)
+-	public TriPoint PointCCW(TriPoint point)
+ 	{
+ 		if (point.Equals(Points[0]))
+ 		{
+@@ -322,7 +322,7 @@
+ 		return null;
+ 	}
+ 
++	public Triangle? NeighborAcross(TriPoint point)
+-	public Triangle NeighborAcross(TriPoint point)
+ 	{
+ 		if (point.Equals(Points[0]))
+ 		{
+@@ -340,7 +340,7 @@
+ 	/// </summary>
+ 	/// <param name="point"></param>
+ 	/// <returns></returns>
++	public Triangle? NeighborCW(TriPoint point)
+-	public Triangle NeighborCW(TriPoint point)
+ 	{
+ 		if (point.Equals(Points[0]))
+ 		{
+@@ -353,7 +353,7 @@
+ 		return _neighbours[0];
+ 	}
+ 
++	public Triangle? NeighborCCW(TriPoint point)
+-	public Triangle NeighborCCW(TriPoint point)
+ 	{
+ 		if (point.Equals(Points[0]))
+ 		{
+@@ -484,17 +484,17 @@
+ 
+ 	public override string ToString()
+ 	{
++		return $"{AssetContract.Required(Points[0]).X},{AssetContract.Required(Points[0]).Y} | {AssetContract.Required(Points[1]).X},{AssetContract.Required(Points[1]).Y} | {AssetContract.Required(Points[2]).X},{AssetContract.Required(Points[2]).Y}"; // ArmAgedon seam
+-		return $"{Points[0].X},{Points[0].Y} | {Points[1].X},{Points[1].Y} | {Points[2].X},{Points[2].Y}";
+ 	}
+ 
+ 	public bool CircumcicleContains(TriPoint point)
+ 	{
++		double num = AssetContract.Required(Points[0]).X - point.X; // ArmAgedon seam
++		double dy = AssetContract.Required(Points[0]).Y - point.Y; // ArmAgedon seam
++		double ex = AssetContract.Required(Points[1]).X - point.X; // ArmAgedon seam
++		double ey = AssetContract.Required(Points[1]).Y - point.Y; // ArmAgedon seam
++		double fx = AssetContract.Required(Points[2]).X - point.X; // ArmAgedon seam
++		double fy = AssetContract.Required(Points[2]).Y - point.Y; // ArmAgedon seam
+-		double num = Points[0].X - point.X;
+-		double dy = Points[0].Y - point.Y;
+-		double ex = Points[1].X - point.X;
+-		double ey = Points[1].Y - point.Y;
+-		double fx = Points[2].X - point.X;
+-		double fy = Points[2].Y - point.Y;
+ 		double ap = num * num + dy * dy;
+ 		double bp = ex * ex + ey * ey;
+ 		double cp = fx * fx + fy * fy;
+@@ -503,7 +503,7 @@
+ 
+ 	public bool IsCounterClockwise()
+ 	{
++		return (AssetContract.Required(Points[1]).X - AssetContract.Required(Points[0]).X) * (AssetContract.Required(Points[2]).Y - AssetContract.Required(Points[0]).Y) - (AssetContract.Required(Points[2]).X - AssetContract.Required(Points[0]).X) * (AssetContract.Required(Points[1]).Y - AssetContract.Required(Points[0]).Y) > 0f; // ArmAgedon seam
+-		return (Points[1].X - Points[0].X) * (Points[2].Y - Points[0].Y) - (Points[2].X - Points[0].X) * (Points[1].Y - Points[0].Y) > 0f;
+ 	}
+ 
+ 	public bool IsDelaunay(List<Triangle> triangles)
+@@ -518,7 +518,7 @@
+ 				}
+ 				for (int i = 0; i < 3; i++)
+ 				{
++					if (triangle.CircumcicleContains(AssetContract.Required(other.Points[i]))) // ArmAgedon seam
+-					if (triangle.CircumcicleContains(other.Points[i]))
+ 					{
+ 						return false;
+ 					}

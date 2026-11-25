@@ -1,0 +1,228 @@
+--- a/Elements/Assets/GaussianCloud.cs
++++ b/Elements/Assets/GaussianCloud.cs
+@@ -23,7 +23,7 @@
+ 
+ 	private int _bytesPerColorElement;
+ 
++	private IBackingBufferAllocator? allocator;
+-	private IBackingBufferAllocator allocator;
+ 
+ 	public const uint GLB_MAGIC = 1179937895u;
+ 
+@@ -43,29 +43,29 @@
+ 
+ 	public int SplatCount { get; private set; }
+ 
++	public unsafe long MemoryUsageBytes => SplatCount * (sizeof(float3) + sizeof(floatQ) + sizeof(float3) + 4) + AssetContract.Required(ColorDataBuffer).SizeBytes; // ArmAgedon seam
+-	public unsafe long MemoryUsageBytes => SplatCount * (sizeof(float3) + sizeof(floatQ) + sizeof(float3) + 4) + ColorDataBuffer.SizeBytes;
+ 
++	public IBackingMemoryBuffer? PositionsBuffer { get; private set; }
+-	public IBackingMemoryBuffer PositionsBuffer { get; private set; }
+ 
++	public IBackingMemoryBuffer? RotationsBuffer { get; private set; }
+-	public IBackingMemoryBuffer RotationsBuffer { get; private set; }
+ 
++	public IBackingMemoryBuffer? ScalesBuffer { get; private set; }
+-	public IBackingMemoryBuffer ScalesBuffer { get; private set; }
+ 
++	public IBackingMemoryBuffer? AlphasBuffer { get; private set; }
+-	public IBackingMemoryBuffer AlphasBuffer { get; private set; }
+ 
++	public IBackingMemoryBuffer? ColorDataBuffer { get; private set; }
+-	public IBackingMemoryBuffer ColorDataBuffer { get; private set; }
+ 
++	public Span<float3> Positions => MemoryMarshal.Cast<byte, float3>(AssetContract.Required(PositionsBuffer).RawData).Slice(0, SplatCount); // ArmAgedon seam
+-	public Span<float3> Positions => MemoryMarshal.Cast<byte, float3>(PositionsBuffer.RawData).Slice(0, SplatCount);
+ 
++	public Span<floatQ> Rotations => MemoryMarshal.Cast<byte, floatQ>(AssetContract.Required(RotationsBuffer).RawData).Slice(0, SplatCount); // ArmAgedon seam
+-	public Span<floatQ> Rotations => MemoryMarshal.Cast<byte, floatQ>(RotationsBuffer.RawData).Slice(0, SplatCount);
+ 
++	public Span<float3> Scales => MemoryMarshal.Cast<byte, float3>(AssetContract.Required(ScalesBuffer).RawData).Slice(0, SplatCount); // ArmAgedon seam
+-	public Span<float3> Scales => MemoryMarshal.Cast<byte, float3>(ScalesBuffer.RawData).Slice(0, SplatCount);
+ 
++	public Span<float> Alphas => MemoryMarshal.Cast<byte, float>(AssetContract.Required(AlphasBuffer).RawData).Slice(0, SplatCount); // ArmAgedon seam
+-	public Span<float> Alphas => MemoryMarshal.Cast<byte, float>(AlphasBuffer.RawData).Slice(0, SplatCount);
+ 
++	public Span<byte> RawColorData => AssetContract.Required(ColorDataBuffer).RawData.Slice(0, SplatCount * ColorDataType.BytesForGaussianColorData()); // ArmAgedon seam
+-	public Span<byte> RawColorData => ColorDataBuffer.RawData.Slice(0, SplatCount * ColorDataType.BytesForGaussianColorData());
+ 
++	public GaussianCloud(int splatCount, GaussianColorType colorType, IBackingBufferAllocator? allocator = null)
+-	public GaussianCloud(int splatCount, GaussianColorType colorType, IBackingBufferAllocator allocator = null)
+ 	{
+ 		this.allocator = allocator;
+ 		SplatCount = splatCount;
+@@ -73,7 +73,7 @@
+ 		AllocateCount(splatCount);
+ 	}
+ 
++	public GaussianCloud(GaussianCloud copy, IBackingBufferAllocator? allocator = null)
+-	public GaussianCloud(GaussianCloud copy, IBackingBufferAllocator allocator = null)
+ 	{
+ 		this.allocator = allocator;
+ 		SplatCount = copy.SplatCount;
+@@ -123,11 +123,11 @@
+ 		}
+ 		if (count > Positions.Length)
+ 		{
++			IBackingMemoryBuffer? positionsBuffer = PositionsBuffer;
++			IBackingMemoryBuffer? prevRotBuffer = RotationsBuffer;
++			IBackingMemoryBuffer? prevSclBuffer = ScalesBuffer;
++			IBackingMemoryBuffer? prevAlphasBuffer = AlphasBuffer;
++			IBackingMemoryBuffer? prevColorsBuffer = ColorDataBuffer;
+-			IBackingMemoryBuffer positionsBuffer = PositionsBuffer;
+-			IBackingMemoryBuffer prevRotBuffer = RotationsBuffer;
+-			IBackingMemoryBuffer prevSclBuffer = ScalesBuffer;
+-			IBackingMemoryBuffer prevAlphasBuffer = AlphasBuffer;
+-			IBackingMemoryBuffer prevColorsBuffer = ColorDataBuffer;
+ 			Span<float3> prevPos = Positions;
+ 			Span<floatQ> prevRot = Rotations;
+ 			Span<float3> prevScl = Scales;
+@@ -286,12 +286,12 @@
+ 		sourceCloud.RawColorData.Slice(colorSourceIndex, _bytesPerColorElement).CopyTo(RawColorData.Slice(colorTargetIndex, _bytesPerColorElement));
+ 	}
+ 
++	public void ClipWithBoundingBox(BoundingBox bounds, IProgressIndicator? progress = null)
+-	public void ClipWithBoundingBox(BoundingBox bounds, IProgressIndicator progress = null)
+ 	{
+ 		RemoveGaussians((GaussianTransform t) => bounds.Contains(in t.position), progress);
+ 	}
+ 
++	public void ClipWithBoundingBox(BoundingBox bounds, floatQ orientation, IProgressIndicator? progress = null)
+-	public void ClipWithBoundingBox(BoundingBox bounds, floatQ orientation, IProgressIndicator progress = null)
+ 	{
+ 		floatQ invOrientation = orientation.Inverted;
+ 		BoundingBox centeredBox = BoundingBox.CenterSize(float3.Zero, bounds.Size);
+@@ -305,12 +305,12 @@
+ 		}, progress);
+ 	}
+ 
++	public void ClipWithSphere(float3 center, float radius, IProgressIndicator? progress = null)
+-	public void ClipWithSphere(float3 center, float radius, IProgressIndicator progress = null)
+ 	{
+ 		RemoveGaussians((GaussianTransform t) => (t.position - center).Magnitude <= radius, progress);
+ 	}
+ 
++	public void ClipWithCylinder(float3 center, float radius, float height, floatQ orientation, IProgressIndicator? progress = null)
+-	public void ClipWithCylinder(float3 center, float radius, float height, floatQ orientation, IProgressIndicator progress = null)
+ 	{
+ 		floatQ invOrientation = orientation.Inverted;
+ 		float halfHeight = height * 0.5f;
+@@ -376,7 +376,7 @@
+ 		}
+ 	}
+ 
++	public void RemoveGaussians(Predicate<GaussianTransform> filter, IProgressIndicator? progress = null)
+-	public void RemoveGaussians(Predicate<GaussianTransform> filter, IProgressIndicator progress = null)
+ 	{
+ 		GaussianTransform g = default;
+ 		int bytesPerColor = ColorDataType.BytesForGaussianColorData();
+@@ -443,8 +443,8 @@
+ 		Span<float3> _positions = Positions;
+ 		for (int i = 0; i < SplatCount; i++)
+ 		{
++			AssetContract.Required(meshx.positions)[i] = _positions[i]; // ArmAgedon seam
++			AssetContract.Required(meshx.colors)[i] = GetBaseColor(i).ConvertProfile(ColorProfile.Linear, ColorProfile.sRGB); // ArmAgedon seam
+-			meshx.positions[i] = _positions[i];
+-			meshx.colors[i] = GetBaseColor(i).ConvertProfile(ColorProfile.Linear, ColorProfile.sRGB);
+ 		}
+ 		return meshx;
+ 	}
+@@ -478,13 +478,13 @@
+ 		return num == 1179937895;
+ 	}
+ 
++	public static GaussianCloud LoadFromPLY(string file, IProgressIndicator? progress = null)
+-	public static GaussianCloud LoadFromPLY(string file, IProgressIndicator progress = null)
+ 	{
+ 		using FileStream fstream = File.OpenRead(file);
+ 		return LoadFromPLY(fstream, progress);
+ 	}
+ 
++	public static GaussianCloud LoadFromPLY(Stream stream, IProgressIndicator? progress = null, IBackingBufferAllocator? allocator = null)
+-	public static GaussianCloud LoadFromPLY(Stream stream, IProgressIndicator progress = null, IBackingBufferAllocator allocator = null)
+ 	{
+ 		progress?.UpdateProgress(0f, "Importer.Splat.Progress.Importing".AsLocaleKey(), "Importer.Splat.Progress.ReadingHeader".AsLocaleKey());
+ 		return FromGsplat(PlayCanvasPlyReader.Read(stream, SourceCoordinates.RUB, (string info, float percent) =>
+@@ -504,13 +504,13 @@
+ 		return rot.Normalized;
+ 	}
+ 
++	public void WriteToPLY(string file, IProgressIndicator? progress = null)
+-	public void WriteToPLY(string file, IProgressIndicator progress = null)
+ 	{
+ 		using FileStream fstream = File.OpenWrite(file);
+ 		WriteToPLY(fstream, progress);
+ 	}
+ 
++	public unsafe void WriteToPLY(Stream stream, IProgressIndicator? progress = null)
+-	public unsafe void WriteToPLY(Stream stream, IProgressIndicator progress = null)
+ 	{
+ 		WritePLY_Header(stream);
+ 		Span<float3> positions = Positions;
+@@ -553,14 +553,14 @@
+ 		streamWriter.Flush();
+ 	}
+ 
++	public GaussianCloud(string file, IBackingBufferAllocator? allocator = null)
+-	public GaussianCloud(string file, IBackingBufferAllocator allocator = null)
+ 	{
+ 		this.allocator = allocator;
+ 		using FileStream fstream = File.OpenRead(file);
+ 		DecodeAuto(fstream);
+ 	}
+ 
++	public GaussianCloud(Stream stream, IBackingBufferAllocator? allocator = null)
+-	public GaussianCloud(Stream stream, IBackingBufferAllocator allocator = null)
+ 	{
+ 		this.allocator = allocator;
+ 		DecodeAuto(stream);
+@@ -599,13 +599,13 @@
+ 		}
+ 	}
+ 
++	public void SaveToFile(string file, BinaryEncoding encoding = BinaryEncoding.LZ4, IProgressIndicator? progress = null)
+-	public void SaveToFile(string file, BinaryEncoding encoding = BinaryEncoding.LZ4, IProgressIndicator progress = null)
+ 	{
+ 		using FileStream fstream = new FileStream(file, FileMode.Create, FileAccess.Write);
+ 		Encode(fstream, encoding, progress);
+ 	}
+ 
++	private void Encode(Stream stream, BinaryEncoding encoding = BinaryEncoding.LZ4, IProgressIndicator? progress = null)
+-	private void Encode(Stream stream, BinaryEncoding encoding = BinaryEncoding.LZ4, IProgressIndicator progress = null)
+ 	{
+ 		progress?.UpdateProgress(0f, "GaussianSplat.Encoding.Title".AsLocaleKey(), "GaussianSplat.Encoding.Metadata".AsLocaleKey());
+ 		BinaryWriter bw = new BinaryWriter(stream);
+@@ -710,7 +710,7 @@
+ 		return false;
+ 	}
+ 
++	private void DecodeFrSplt(Stream stream, bool skipMagicString = false, IBackingBufferAllocator? allocator = null)
+-	private void DecodeFrSplt(Stream stream, bool skipMagicString = false, IBackingBufferAllocator allocator = null)
+ 	{
+ 		UniLog.Log("Decoding FrSplt");
+ 		UniLog.Flush();
+@@ -807,7 +807,7 @@
+ 		};
+ 	}
+ 
++	private static GaussianCloud FromGsplat(GsplatDecodedData data, IProgressIndicator? progress = null, IBackingBufferAllocator? allocator = null)
+-	private static GaussianCloud FromGsplat(GsplatDecodedData data, IProgressIndicator? progress = null, IBackingBufferAllocator allocator = null)
+ 	{
+ 		GaussianCloud gaussianCloud = new GaussianCloud(data.Count, GetColorType(data.SHBands), allocator);
+ 		gaussianCloud.DecodeFromGSplat(data, progress);
+@@ -907,13 +907,13 @@
+ 		return num == 35615;
+ 	}
+ 
++	public void WriteToSPZ(string file, IProgressIndicator? progress = null)
+-	public void WriteToSPZ(string file, IProgressIndicator progress = null)
+ 	{
+ 		using FileStream fstream = File.OpenWrite(file);
+ 		WriteToSPZ(fstream, progress);
+ 	}
+ 
++	public unsafe void WriteToSPZ(Stream stream, IProgressIndicator? progress = null)
+-	public unsafe void WriteToSPZ(Stream stream, IProgressIndicator progress = null)
+ 	{
+ 		int elementCount = ColorDataType.ElementCount();
+ 		Spz.NET.GaussianCloud spz = new Spz.NET.GaussianCloud(SplatCount, elementCount - 1);

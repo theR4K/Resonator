@@ -1,0 +1,11 @@
+--- a/Elements/Assets/VolumeMetadata.cs
++++ b/Elements/Assets/VolumeMetadata.cs
+@@ -28,7 +28,7 @@
+ 
+ 	[JsonProperty(PropertyName = "baseFormat")]
+ 	[JsonPropertyName("baseFormat")]
++	public string? BaseFormat { get; set; }
+-	public string BaseFormat { get; set; }
+ 
+ 	public override void CopyFrom(IAssetMetadata metadata)
+ 	{

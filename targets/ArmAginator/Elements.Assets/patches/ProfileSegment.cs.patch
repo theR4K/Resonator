@@ -1,0 +1,15 @@
+--- a/Elements/Assets/ProfileSegment.cs
++++ b/Elements/Assets/ProfileSegment.cs
+@@ -19,10 +19,10 @@
+ 		}
+ 	}
+ 
++	protected override float SimpleCircumference => (AssetContract.Required((ProfileSegmentedBuilderBase?)Builder)).Circumference * _scale; // ArmAgedon seam
+-	protected override float SimpleCircumference => ((ProfileSegmentedBuilderBase)Builder).Circumference * _scale;
+ 
+ 	protected override float3 ComputeLocalPoint(int index)
+ 	{
++		return (AssetContract.Required((ProfileSegmentedBuilderBase?)Builder)).GetPoint(index) * Scale; // ArmAgedon seam
+-		return ((ProfileSegmentedBuilderBase)Builder).GetPoint(index) * Scale;
+ 	}
+ }

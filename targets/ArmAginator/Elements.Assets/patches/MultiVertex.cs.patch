@@ -1,0 +1,38 @@
+--- a/Elements/Assets/MultiVertex.cs
++++ b/Elements/Assets/MultiVertex.cs
+@@ -11,7 +11,7 @@
+ 
+ 	public int Count => _vertices?.Count ?? 0;
+ 
++	public MeshX? Mesh
+-	public MeshX Mesh
+ 	{
+ 		get
+ 		{
+@@ -267,22 +267,22 @@
+ 		});
+ 	}
+ 
++	void IVertex.SetUV(int channel, in float2 uv, bool throwIfDimensionMismatch)
+-	void IVertex.SetUV(int channel, in float2 uv, bool throwIfDimensionMismatch = false)
+ 	{
+ 		SetUV(channel, in uv, throwIfDimensionMismatch);
+ 	}
+ 
++	void IVertex.SetBlendShapePositionDelta(string key, in float3 delta, int frame)
+-	void IVertex.SetBlendShapePositionDelta(string key, in float3 delta, int frame = 0)
+ 	{
+ 		SetBlendShapePositionDelta(key, in delta, frame);
+ 	}
+ 
++	void IVertex.SetBlendShapeNormalDelta(string key, in float3 delta, int frame)
+-	void IVertex.SetBlendShapeNormalDelta(string key, in float3 delta, int frame = 0)
+ 	{
+ 		SetBlendShapeNormalDelta(key, in delta, frame);
+ 	}
+ 
++	void IVertex.SetBlendShapeTangentDelta(string key, in float3 delta, int frame)
+-	void IVertex.SetBlendShapeTangentDelta(string key, in float3 delta, int frame = 0)
+ 	{
+ 		SetBlendShapeTangentDelta(key, in delta, frame);
+ 	}

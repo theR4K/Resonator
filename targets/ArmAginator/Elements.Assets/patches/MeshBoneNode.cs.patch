@@ -1,0 +1,11 @@
+--- a/Elements/Assets/MeshBoneNode.cs
++++ b/Elements/Assets/MeshBoneNode.cs
+@@ -6,7 +6,7 @@
+ 
+ public class MeshBoneNode
+ {
++	public Bone? MeshBone;
+-	public Bone MeshBone;
+ 
+ 	public readonly string name;
+ 

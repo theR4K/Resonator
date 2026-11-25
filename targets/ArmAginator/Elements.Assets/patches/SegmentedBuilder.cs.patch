@@ -1,0 +1,91 @@
+--- a/Elements/Assets/SegmentedBuilder.cs
++++ b/Elements/Assets/SegmentedBuilder.cs
+@@ -136,9 +136,9 @@
+ 
+ 	private int _endCapVertOffset;
+ 
++	private Segment? _lastFirstSegment;
+-	private Segment _lastFirstSegment;
+ 
++	private Segment? _lastLastSegment;
+-	private Segment _lastLastSegment;
+ 
+ 	private bool _lastAutoOrientSegments;
+ 
+@@ -166,7 +166,7 @@
+ 	}
+ 
+ 	public SegmentedBuilder(TriangleSubmesh submesh)
++		: base(AssetContract.Required(submesh)) // ArmAgedon seam
+-		: base(submesh.Mesh)
+ 	{
+ 	}
+ 
+@@ -175,7 +175,7 @@
+ 		if (EndsType == Ends.Capped && TopologyType == Topology.Circle)
+ 		{
+ 			_beginCapVertOffset = AllVertices.Count;
++			AssetContract.Required(Mesh).AddVertices(Points, AllVertices); // ArmAgedon seam
+-			Mesh.AddVertices(Points, AllVertices);
+ 			_endCapVertOffset = AllVertices.Count;
+ 			Mesh.AddVertices(Points, AllVertices);
+ 			Submesh.AddTriangleFan(AllVertices, _beginCapVertOffset, Points, reverseOrder: false, AllTriangles);
+@@ -201,7 +201,7 @@
+ 
+ 	public S AddSegment(float3? pos = null)
+ 	{
++		S? endSegment = null;
+-		S endSegment = null;
+ 		if (segments.Count > 0)
+ 		{
+ 			endSegment = segments[segments.Count - 1];
+@@ -227,11 +227,11 @@
+ 			toRemove.AddRange(removed.ConnectToVertices);
+ 		}
+ 		AllVertices.RemoveRange(AllVertices.Count - toRemove.Count, toRemove.Count);
++		AssetContract.Required(Mesh).RemoveVertices(toRemove); // ArmAgedon seam
+-		Mesh.RemoveVertices(toRemove);
+ 		if (segments.Count > 0)
+ 		{
+ 			S last = segments[segments.Count - 1];
++			AllTriangles.RemoveRange(AllTriangles.Count - AssetContract.Required(last.Triangles).Count, last.Triangles.Count); // ArmAgedon seam
+-			AllTriangles.RemoveRange(AllTriangles.Count - last.Triangles.Count, last.Triangles.Count);
+ 			Submesh.Remove(last.Triangles);
+ 			last.Triangles = null;
+ 		}
+@@ -249,7 +249,7 @@
+ 		{
+ 			return;
+ 		}
++		AssetContract.Required(Mesh).HasNormals = true; // ArmAgedon seam
+-		Mesh.HasNormals = true;
+ 		Mesh.HasUV0s = true;
+ 		Mesh.HasTangents = true;
+ 		if (AutoOrientSegments && !_lastAutoOrientSegments)
+@@ -375,7 +375,7 @@
+ 				UpdateCapVerts(_endCapVertOffset, segments.GetLast(), flip: false);
+ 			}
+ 		}
++		TriangleCollection? triangles = Pool<TriangleCollection>.Borrow();
+-		TriangleCollection triangles = Pool<TriangleCollection>.Borrow();
+ 		foreach (S seg3 in segmentsToRefresh)
+ 		{
+ 			if (seg3.Triangles != null)
+@@ -397,7 +397,7 @@
+ 		{
+ 			S firstSegment = segments[0];
+ 			S lastSegment = segments.GetLast();
++			VertexCollection? lastVertices = lastSegment.ConnectToVertices ?? lastSegment.ConnectAtVertices;
+-			VertexCollection lastVertices = lastSegment.ConnectToVertices ?? lastSegment.ConnectAtVertices;
+ 			if (firstSegment.ConnectToVertices != null && lastVertices != null)
+ 			{
+ 				for (int i4 = 0; i4 < firstSegment.ConnectToVertices.Count; i4++)
+@@ -428,7 +428,7 @@
+ 			v.NormalUnsafe = segment.Rotation * (flip ? float3.Backward : float3.Forward);
+ 			v.UV0Unsafe = float2.Zero;
+ 			v.Tangent4Unsafe = segment.Rotation * (flip ? float3.Left : float3.Right);
++			AssetContract.Required(Mesh).Profile = segment.Profile; // ArmAgedon seam
+-			Mesh.Profile = segment.Profile;
+ 			if (Mesh.HasColors)
+ 			{
+ 				v.ColorUnsafe = segment.Color;

@@ -1,0 +1,174 @@
+--- a/FrooxEngine/CSCoreAudioInputDriver.cs
++++ b/FrooxEngine/CSCoreAudioInputDriver.cs
+@@ -11,30 +11,30 @@
+ 
+ public class CSCoreAudioInputDriver
+ {
++	private struct DeviceData(CSCoreAudioInputDriver input, CSCoreAudioOutputDriver? output)
+-	private struct DeviceData(CSCoreAudioInputDriver input, CSCoreAudioOutputDriver output)
+ 	{
+ 		public readonly CSCoreAudioInputDriver input = input;
+ 
++		public readonly CSCoreAudioOutputDriver? output = output;
+-		public readonly CSCoreAudioOutputDriver output = output;
+ 	}
+ 
+ 	private volatile bool activeState;
+ 
++	private MMDevice? device;
+-	private MMDevice device;
+ 
++	private AudioInput? audioInput;
+-	private AudioInput audioInput;
+ 
++	private volatile WasapiCapture? capture;
+-	private volatile WasapiCapture capture;
+ 
++	private volatile WasapiLoopbackCapture? loopbackCapture;
+-	private volatile WasapiLoopbackCapture loopbackCapture;
+ 
+ 	private object lockobj = new object();
+ 
+ 	private static Dictionary<string, DeviceData> _initializedDevices = new Dictionary<string, DeviceData>();
+ 
++	private static InputInterface? inputInterface;
+-	private static InputInterface inputInterface;
+ 
++	private static MMDeviceEnumerator? enumerator;
+-	private static MMDeviceEnumerator enumerator;
+ 
+ 	private static bool refreshScheduled;
+ 
+@@ -50,7 +50,7 @@
+ 
+ 	private Surround71Sample lastSurround71sample;
+ 
++	private static AudioSystem AudioSystem => WasapiContract.Required(inputInterface).Engine.AudioSystem; // ArmAgedon seam
+-	private static AudioSystem AudioSystem => inputInterface.Engine.AudioSystem;
+ 
+ 	public static void Initialize(InputInterface input)
+ 	{
+@@ -84,7 +84,7 @@
+ 	{
+ 		Task.Run(async () =>
+ 		{
++			lock (WasapiContract.Required(enumerator)) // ArmAgedon seam
+-			lock (enumerator)
+ 			{
+ 				if (refreshScheduled)
+ 				{
+@@ -94,7 +94,7 @@
+ 			}
+ 			await Task.Delay(200).ConfigureAwait(continueOnCapturedContext: false);
+ 			UniLog.Log("Refreshing audio devices due to a change");
++			lock (WasapiContract.Required(enumerator)) // ArmAgedon seam
+-			lock (enumerator)
+ 			{
+ 				InitializeDevices();
+ 				refreshScheduled = false;
+@@ -104,14 +104,14 @@
+ 
+ 	public static void InitializeDevices()
+ 	{
++		MMDevice? defaultCapture = null;
++		MMDevice? defaultOutput = null;
+-		MMDevice defaultCapture = null;
+-		MMDevice defaultOutput = null;
+ 		try
+ 		{
+ 			defaultCapture = MMDeviceEnumerator.TryGetDefaultAudioEndpoint(DataFlow.Capture, Role.Multimedia) ?? MMDeviceEnumerator.TryGetDefaultAudioEndpoint(DataFlow.Capture, Role.Communications) ?? MMDeviceEnumerator.TryGetDefaultAudioEndpoint(DataFlow.Capture, Role.Console);
+ 			defaultOutput = MMDeviceEnumerator.TryGetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia) ?? MMDeviceEnumerator.TryGetDefaultAudioEndpoint(DataFlow.Render, Role.Communications) ?? MMDeviceEnumerator.TryGetDefaultAudioEndpoint(DataFlow.Render, Role.Console);
++			UniLog.Log("DefaultCapture: " + WasapiContract.Describe(defaultCapture) /* ArmAgedon seam */);
++			UniLog.Log("DefaultOutput: " + WasapiContract.Describe(defaultOutput) /* ArmAgedon seam */);
+-			UniLog.Log("DefaultCapture: " + defaultCapture.FriendlyName + ", ID: " + defaultCapture.DeviceID);
+-			UniLog.Log("DefaultOutput: " + defaultOutput.FriendlyName + ", ID: " + defaultOutput.DeviceID);
+ 		}
+ 		catch (Exception ex)
+ 		{
+@@ -126,9 +126,9 @@
+ 		bool defaultOutputChanged = false;
+ 		foreach (MMDevice device in MMDeviceEnumerator.EnumerateDevices(DataFlow.All, DeviceState.Active))
+ 		{
++			if (_initializedDevices.TryGetValue(WasapiContract.DeviceId(device) /* ArmAgedon seam */, out var data))
+-			if (_initializedDevices.TryGetValue(device.DeviceID, out var data))
+ 			{
++				WasapiContract.Required(data.input.audioInput).Connected(); // ArmAgedon seam
+-				data.input.audioInput.Connected();
+ 				defaultInputChanged |= data.input.audioInput.UpdateDefault(device == defaultCapture || device == defaultOutput);
+ 				if (data.output != null)
+ 				{
+@@ -136,25 +136,25 @@
+ 					defaultOutputChanged |= data.output.UpdateDefault(device == defaultOutput);
+ 					defaultOutputChanged |= data.output.UpdateDevice(device);
+ 				}
++				devices.Remove(WasapiContract.DeviceId(device)); // ArmAgedon seam
+-				devices.Remove(device.DeviceID);
+ 			}
+ 			else
+ 			{
+ 				CSCoreAudioInputDriver input = new CSCoreAudioInputDriver();
++				input.Initialize(device, WasapiContract.Required(inputInterface) /* ArmAgedon seam */, device == defaultCapture || device == defaultOutput);
++				CSCoreAudioOutputDriver? output = null;
+-				input.Initialize(device, inputInterface, device == defaultCapture || device == defaultOutput);
+-				CSCoreAudioOutputDriver output = null;
+ 				if (device.DataFlow == DataFlow.Render)
+ 				{
++					output = new CSCoreAudioOutputDriver(WasapiContract.Required(inputInterface).Engine.AudioSystem /* ArmAgedon seam */, device, device == defaultOutput);
+-					output = new CSCoreAudioOutputDriver(inputInterface.Engine.AudioSystem, device, device == defaultOutput);
+ 					AudioSystem.RegisterAudioOutput(output);
+ 				}
++				_initializedDevices.Add(WasapiContract.DeviceId(device) /* ArmAgedon seam */, new DeviceData(input, output));
+-				_initializedDevices.Add(device.DeviceID, new DeviceData(input, output));
+ 			}
+ 		}
+ 		foreach (string d in devices)
+ 		{
+ 			DeviceData deviceData = _initializedDevices[d];
++			WasapiContract.Required(deviceData.input.audioInput).Disconnected(); // ArmAgedon seam
+-			deviceData.input.audioInput.Disconnected();
+ 			deviceData.output?.Disconnected();
+ 		}
+ 		if (defaultInputChanged)
+@@ -172,7 +172,7 @@
+ 		try
+ 		{
+ 			this.device = device;
++			string name = WasapiContract.DeviceName(device); // ArmAgedon seam
+-			string name = device.FriendlyName;
+ 			if (device.DataFlow == DataFlow.Render)
+ 			{
+ 				name += " (loopback)";
+@@ -213,7 +213,7 @@
+ 			{
+ 				try
+ 				{
++					if (WasapiContract.Required(device).DataFlow == DataFlow.Capture) // ArmAgedon seam
+-					if (device.DataFlow == DataFlow.Capture)
+ 					{
+ 						if (capture == null)
+ 						{
+@@ -286,7 +286,7 @@
+ 		}
+ 	}
+ 
++	private void Capture_Stopped(object? sender, RecordingStoppedEventArgs e)
+-	private void Capture_Stopped(object sender, RecordingStoppedEventArgs e)
+ 	{
+ 		if (!e.HasError)
+ 		{
+@@ -308,13 +308,13 @@
+ 		});
+ 	}
+ 
++	private void Capture_DataAvailable(object? sender, DataAvailableEventArgs e)
+-	private void Capture_DataAvailable(object sender, DataAvailableEventArgs e)
+ 	{
+ 		try
+ 		{
+ 			Span<float> data = MemoryMarshal.Cast<byte, float>(e.Data.AsSpan().Slice(e.Offset, e.ByteCount));
+ 			int channels = e.Format.Channels;
++			WasapiContract.Required(audioInput).SetSampleRate(e.Format.SampleRate); // ArmAgedon seam
+-			audioInput.SetSampleRate(e.Format.SampleRate);
+ 			switch (channels)
+ 			{
+ 			case 1:

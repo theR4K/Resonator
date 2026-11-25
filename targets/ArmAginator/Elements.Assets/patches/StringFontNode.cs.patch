@@ -1,0 +1,23 @@
+--- a/Elements/Assets/StringFontNode.cs
++++ b/Elements/Assets/StringFontNode.cs
+@@ -5,9 +5,9 @@
+ 
+ public class StringFontNode : StringContainerNode
+ {
++	public FontSet? FontSet { get; private set; }
+-	public FontSet FontSet { get; private set; }
+ 
++	public string? FontName { get; private set; }
+-	public string FontName { get; private set; }
+ 
+ 	public int FontIndex { get; private set; } = -1;
+ 
+@@ -44,7 +44,7 @@
+ 		}
+ 	}
+ 
++	public static StringFontNode? Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+-	public static StringFontNode Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+ 	{
+ 		parameter = StringNode.ExtractRawParameter(parameter, out var hasQuotes);
+ 		if (hasQuotes)

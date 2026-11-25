@@ -1,0 +1,26 @@
+--- a/Elements/Assets/AudioEncodeSettings.cs
++++ b/Elements/Assets/AudioEncodeSettings.cs
+@@ -12,7 +12,7 @@
+ 
+ 	public abstract string Extension { get; }
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj == null)
+ 		{
+@@ -41,12 +41,12 @@
+ 		Channels = audio.Channels;
+ 	}
+ 
++	public static bool operator ==(AudioEncodeSettings? left, AudioEncodeSettings? right)
+-	public static bool operator ==(AudioEncodeSettings left, AudioEncodeSettings right)
+ 	{
+ 		return EqualityComparer<AudioEncodeSettings>.Default.Equals(left, right);
+ 	}
+ 
++	public static bool operator !=(AudioEncodeSettings? left, AudioEncodeSettings? right)
+-	public static bool operator !=(AudioEncodeSettings left, AudioEncodeSettings right)
+ 	{
+ 		return !(left == right);
+ 	}

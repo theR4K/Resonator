@@ -1,0 +1,233 @@
+--- a/Elements/Assets/BlendShapeFrame.cs
++++ b/Elements/Assets/BlendShapeFrame.cs
+@@ -10,19 +10,19 @@
+ 
+ 	public float Weight;
+ 
++	internal float3[]? positions;
+-	internal float3[] positions;
+ 
++	internal float3[]? normals;
+-	internal float3[] normals;
+ 
++	internal float3[]? tangents;
+-	internal float3[] tangents;
+ 
+ 	public MeshX Mesh => BlendShape.Mesh;
+ 
++	public float3[]? RawPositions => positions;
+-	public float3[] RawPositions => positions;
+ 
++	public float3[]? RawNormals => normals;
+-	public float3[] RawNormals => normals;
+ 
++	public float3[]? RawTangents => tangents;
+-	public float3[] RawTangents => tangents;
+ 
+ 	internal BlendShapeFrame(BlendShape shape, float weight)
+ 	{
+@@ -42,56 +42,56 @@
+ 	public float3 GetPositionDelta(int index)
+ 	{
+ 		Mesh.VerifyVertexIndex(index);
++		return AssetContract.Required(positions)[index]; // ArmAgedon seam
+-		return positions[index];
+ 	}
+ 
+ 	public float3 GetNormalDelta(int index)
+ 	{
+ 		Mesh.VerifyVertexIndex(index);
++		return AssetContract.Required(normals)[index]; // ArmAgedon seam
+-		return normals[index];
+ 	}
+ 
+ 	public float3 GetTangentDelta(int index)
+ 	{
+ 		Mesh.VerifyVertexIndex(index);
++		return AssetContract.Required(tangents)[index]; // ArmAgedon seam
+-		return tangents[index];
+ 	}
+ 
+ 	public void SetPositionDelta(int index, float3 delta)
+ 	{
+ 		Mesh.VerifyVertexIndex(index);
++		AssetContract.Required(positions)[index] = delta; // ArmAgedon seam
+-		positions[index] = delta;
+ 	}
+ 
+ 	public void SetNormalDelta(int index, float3 delta)
+ 	{
+ 		Mesh.VerifyVertexIndex(index);
+ 		BlendShape.HasNormals = true;
++		AssetContract.Required(normals)[index] = delta; // ArmAgedon seam
+-		normals[index] = delta;
+ 	}
+ 
+ 	public void SetTangentDelta(int index, float3 delta)
+ 	{
+ 		Mesh.VerifyVertexIndex(index);
+ 		BlendShape.HasTangents = true;
++		AssetContract.Required(tangents)[index] = delta; // ArmAgedon seam
+-		tangents[index] = delta;
+ 	}
+ 
+ 	public void SetPositionDeltas(float3[] deltas, int? count = null, int sourceOffset = 0, int targetOffset = 0)
+ 	{
++		CopyArray(deltas, AssetContract.Required(positions), count, sourceOffset, targetOffset); // ArmAgedon seam
+-		CopyArray(deltas, positions, count, sourceOffset, targetOffset);
+ 	}
+ 
+ 	public void SetNormalDeltas(float3[] deltas, int? count = null, int sourceOffset = 0, int targetOffset = 0)
+ 	{
+ 		BlendShape.HasNormals = true;
++		CopyArray(deltas, AssetContract.Required(normals), count, sourceOffset, targetOffset); // ArmAgedon seam
+-		CopyArray(deltas, normals, count, sourceOffset, targetOffset);
+ 	}
+ 
+ 	public void SetTangentDeltas(float3[] deltas, int? count = null, int sourceOffset = 0, int targetOffset = 0)
+ 	{
+ 		BlendShape.HasTangents = true;
++		CopyArray(deltas, AssetContract.Required(tangents), count, sourceOffset, targetOffset); // ArmAgedon seam
+-		CopyArray(deltas, tangents, count, sourceOffset, targetOffset);
+ 	}
+ 
+ 	private void CopyArray(float3[] source, float3[] target, int? count, int sourceOffset, int targetOffset)
+@@ -102,7 +102,7 @@
+ 
+ 	public bool AffectsVertex(int vertexIndex)
+ 	{
++		if (!MathX.Approximately(float3.Zero, in AssetContract.Required(RawPositions)[vertexIndex])) // ArmAgedon seam
+-		if (!MathX.Approximately(float3.Zero, in RawPositions[vertexIndex]))
+ 		{
+ 			return true;
+ 		}
+@@ -119,10 +119,10 @@
+ 
+ 	public void CalculateDeltaNormalsFromFull()
+ 	{
++		float3[]? baseNormals = Mesh.RawNormals;
+-		float3[] baseNormals = Mesh.RawNormals;
+ 		for (int i = 0; i < Mesh.VertexCount; i++)
+ 		{
++			AssetContract.Required(normals)[i] = normals[i].Normalized - AssetContract.Required(baseNormals)[i].Normalized; // ArmAgedon seam
+-			normals[i] = normals[i].Normalized - baseNormals[i].Normalized;
+ 		}
+ 	}
+ 
+@@ -134,17 +134,17 @@
+ 		}
+ 		for (int i = 0; i < Mesh.VertexCount; i++)
+ 		{
++			AssetContract.Required(normals)[i] = float3.Zero; // ArmAgedon seam
+-			normals[i] = float3.Zero;
+ 		}
++		float3[]? basePositions = Mesh.RawPositions;
+-		float3[] basePositions = Mesh.RawPositions;
+ 		foreach (Triangle t in Mesh.Triangles)
+ 		{
+ 			int v0 = t.Vertex0IndexUnsafe;
+ 			int v1 = t.Vertex1IndexUnsafe;
+ 			int v2 = t.Vertex2IndexUnsafe;
++			if (MathX.TryComputeTriangleNormal(AssetContract.Required(basePositions)[v0] + AssetContract.Required(positions)[v0], basePositions[v1] + positions[v1], basePositions[v2] + positions[v2], out var normal)) // ArmAgedon seam
+-			if (MathX.TryComputeTriangleNormal(basePositions[v0] + positions[v0], basePositions[v1] + positions[v1], basePositions[v2] + positions[v2], out var normal))
+ 			{
++				ref float3 reference = ref AssetContract.Required(normals)[v0]; // ArmAgedon seam
+-				ref float3 reference = ref normals[v0];
+ 				reference += normal;
+ 				ref float3 reference2 = ref normals[v1];
+ 				reference2 += normal;
+@@ -161,8 +161,8 @@
+ 		{
+ 			throw new InvalidOperationException("Blendshape doesn't have normals");
+ 		}
++		float3[]? basePositions = Mesh.RawPositions;
++		float3[]? baseNormals = Mesh.RawNormals;
+-		float3[] basePositions = Mesh.RawPositions;
+-		float3[] baseNormals = Mesh.RawNormals;
+ 		SmoothNormalsContext smoothNormals = new SmoothNormalsContext(cellSize);
+ 		try
+ 		{
+@@ -171,7 +171,7 @@
+ 				int v0 = t.Vertex0IndexUnsafe;
+ 				int v1 = t.Vertex1IndexUnsafe;
+ 				int v2 = t.Vertex2IndexUnsafe;
++				float3 p0 = AssetContract.Required(basePositions)[v0] + AssetContract.Required(positions)[v0]; // ArmAgedon seam
+-				float3 p0 = basePositions[v0] + positions[v0];
+ 				float3 p1 = basePositions[v1] + positions[v1];
+ 				float3 p2 = basePositions[v2] + positions[v2];
+ 				if (MathX.TryComputeTriangleNormal(in p0, in p1, in p2, out var normal))
+@@ -201,14 +201,14 @@
+ 		CalculateDeltaNormalsFromFull();
+ 		void AssignNormal(int index)
+ 		{
++			float3 p3 = AssetContract.Required(basePositions)[index] + AssetContract.Required(positions)[index]; // ArmAgedon seam
+-			float3 p3 = basePositions[index] + positions[index];
+ 			if (smoothNormals.TryGetNormal(in p3, out var n))
+ 			{
++				AssetContract.Required(normals)[index] = n; // ArmAgedon seam
+-				normals[index] = n;
+ 			}
+ 			else
+ 			{
++				AssetContract.Required(normals)[index] = AssetContract.Required(baseNormals)[index]; // ArmAgedon seam
+-				normals[index] = baseNormals[index];
+ 			}
+ 		}
+ 	}
+@@ -223,16 +223,16 @@
+ 		{
+ 			throw new InvalidOperationException("Mesh doesn't have normals");
+ 		}
++		float3[]? basePositions = Mesh.RawPositions;
++		float3[]? baseNormals = Mesh.RawNormals;
++		float2[]? uvs = Mesh.GetRawUVs(uvChannel);
++		float4[]? baseTangents = Mesh.RawTangents;
+-		float3[] basePositions = Mesh.RawPositions;
+-		float3[] baseNormals = Mesh.RawNormals;
+-		float2[] uvs = Mesh.GetRawUVs(uvChannel);
+-		float4[] baseTangents = Mesh.RawTangents;
+ 		int totalFaceCount = Mesh.TotalFaceCount;
+ 		VerticesPerFaceHandler _getVertsPerFace = (int face) => Mesh.GetSubmeshForFace(face)?.IndiciesPerElement ?? 0;
+ 		VertexPositionHandler _getPosition = delegate(int face, int vert, out float x, out float y, out float z)
+ 		{
+ 			int vertexIndexUnsafe = Mesh.GetTriangleByFaceIndex(face).GetVertexIndexUnsafe(vert);
++			float3 float5 = AssetContract.Required(basePositions)[vertexIndexUnsafe] + AssetContract.Required(positions)[vertexIndexUnsafe]; // ArmAgedon seam
+-			float3 float5 = basePositions[vertexIndexUnsafe] + positions[vertexIndexUnsafe];
+ 			x = float5.x;
+ 			y = float5.y;
+ 			z = float5.z;
+@@ -240,14 +240,14 @@
+ 		VertexNormalHandler _getNormal = ((!BlendShape.HasNormals) ? ((VertexNormalHandler)delegate(int face, int vert, out float x, out float y, out float z)
+ 		{
+ 			int vertexIndexUnsafe = Mesh.GetTriangleByFaceIndex(face).GetVertexIndexUnsafe(vert);
++			float3 float5 = AssetContract.Required(baseNormals)[vertexIndexUnsafe]; // ArmAgedon seam
+-			float3 float5 = baseNormals[vertexIndexUnsafe];
+ 			x = float5.x;
+ 			y = float5.y;
+ 			z = float5.z;
+ 		}) : ((VertexNormalHandler)delegate(int face, int vert, out float x, out float y, out float z)
+ 		{
+ 			int vertexIndexUnsafe = Mesh.GetTriangleByFaceIndex(face).GetVertexIndexUnsafe(vert);
++			float3 normalized = (AssetContract.Required(baseNormals)[vertexIndexUnsafe] + AssetContract.Required(normals)[vertexIndexUnsafe]).Normalized; // ArmAgedon seam
+-			float3 normalized = (baseNormals[vertexIndexUnsafe] + normals[vertexIndexUnsafe]).Normalized;
+ 			x = normalized.x;
+ 			y = normalized.y;
+ 			z = normalized.z;
+@@ -255,7 +255,7 @@
+ 		VertexUVHandler _getUV = delegate(int face, int vert, out float x, out float y)
+ 		{
+ 			int vertexIndexUnsafe = Mesh.GetTriangleByFaceIndex(face).GetVertexIndexUnsafe(vert);
++			float2 float5 = AssetContract.Required(uvs)[vertexIndexUnsafe]; // ArmAgedon seam
+-			float2 float5 = uvs[vertexIndexUnsafe];
+ 			x = float5.x;
+ 			y = float5.y;
+ 		};
+@@ -263,7 +263,7 @@
+ 		{
+ 			int vertexIndexUnsafe = Mesh.GetTriangleByFaceIndex(face).GetVertexIndexUnsafe(vert);
+ 			float3 float5 = new float3(x, y, z);
++			AssetContract.Required(tangents)[vertexIndexUnsafe] = float5.Normalized - AssetContract.Required(baseTangents)[vertexIndexUnsafe].xyz.Normalized; // ArmAgedon seam
+-			tangents[vertexIndexUnsafe] = float5.Normalized - baseTangents[vertexIndexUnsafe].xyz.Normalized;
+ 		};
+ 		return MikkGenerator.GenerateTangentSpace(totalFaceCount, _getVertsPerFace, _getPosition, _getNormal, _getUV, _setTangent);
+ 	}

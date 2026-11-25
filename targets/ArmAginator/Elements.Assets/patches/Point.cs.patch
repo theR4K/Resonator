@@ -1,0 +1,55 @@
+--- a/Elements/Assets/Point.cs
++++ b/Elements/Assets/Point.cs
+@@ -10,7 +10,7 @@
+ 
+ 	public PointSubmesh Submesh => submesh;
+ 
++	public MeshX? Mesh => submesh?.Mesh;
+-	public MeshX Mesh => submesh?.Mesh;
+ 
+ 	Submesh IMeshXPrimitive.Submesh => submesh;
+ 
+@@ -33,7 +33,7 @@
+ 		set
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(AssetContract.Required(Mesh).TryGetSubmesh<PointSubmesh>(value)).AddPoint(AssetContract.Required(submesh.indicies)[index]); // ArmAgedon seam // ArmAgedon seam
+-			Mesh.TryGetSubmesh<PointSubmesh>(value).AddPoint(submesh.indicies[index]);
+ 			submesh.Remove(index);
+ 		}
+ 	}
+@@ -43,13 +43,13 @@
+ 		get
+ 		{
+ 			UpdateIndex();
++			return AssetContract.Required(submesh.indicies)[index]; // ArmAgedon seam
+-			return submesh.indicies[index];
+ 		}
+ 		set
+ 		{
+ 			UpdateIndex();
++			AssetContract.Required(Mesh).VerifyVertexIndex(value); // ArmAgedon seam
++			AssetContract.Required(submesh.indicies)[index] = value; // ArmAgedon seam
+-			Mesh.VerifyVertexIndex(value);
+-			submesh.indicies[index] = value;
+ 		}
+ 	}
+ 
+@@ -57,7 +57,7 @@
+ 	{
+ 		get
+ 		{
++			return new Vertex(VertexIndex, AssetContract.Required(Mesh)); // ArmAgedon seam
+-			return new Vertex(VertexIndex, Mesh);
+ 		}
+ 		set
+ 		{
+@@ -71,7 +71,7 @@
+ 		this.submesh = submesh;
+ 		if (submesh.Mesh.TrackRemovals)
+ 		{
++			version = AssetContract.Required(submesh.primitiveIDs)[index]; // ArmAgedon seam
+-			version = submesh.primitiveIDs[index];
+ 		}
+ 		else
+ 		{

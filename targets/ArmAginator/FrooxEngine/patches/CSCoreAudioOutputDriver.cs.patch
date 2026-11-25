@@ -1,0 +1,115 @@
+--- a/FrooxEngine/CSCoreAudioOutputDriver.cs
++++ b/FrooxEngine/CSCoreAudioOutputDriver.cs
+@@ -13,13 +13,13 @@
+ {
+ 	private AudioSystem system;
+ 
++	private MMDevice? _device;
+-	private MMDevice _device;
+ 
++	private string? _deviceName;
+-	private string _deviceName;
+ 
++	private WasapiOut? _out;
+-	private WasapiOut _out;
+ 
++	private WaveFormat? _format;
+-	private WaveFormat _format;
+ 
+ 	private int _latency;
+ 
+@@ -27,11 +27,11 @@
+ 
+ 	private Stopwatch playbackUpdateTimer = new Stopwatch();
+ 
++	public override int OutputSampleRate => _out?.ActualOutputFormat?.SampleRate ?? WasapiContract.Required(_format).SampleRate; // ArmAgedon seam
+-	public override int OutputSampleRate => _out?.ActualOutputFormat?.SampleRate ?? _format.SampleRate;
+ 
+ 	public bool CanSeek => false;
+ 
++	public WaveFormat WaveFormat => WasapiContract.Required(_format); // ArmAgedon seam
+-	public WaveFormat WaveFormat => _format;
+ 
+ 	public override int AvailablePlaybackSamples => _out?.CurrentPadding ?? (-1);
+ 
+@@ -58,7 +58,7 @@
+ 	public override int Quantum => 1024;
+ 
+ 	public CSCoreAudioOutputDriver(AudioSystem system, MMDevice device, bool isDefault)
++		: base(WasapiContract.DeviceName(device), WasapiContract.DeviceId(device) /* ArmAgedon seam */, isDefault, system)
+-		: base(device.FriendlyName, device.DeviceID ?? device.FriendlyName, isDefault, system)
+ 	{
+ 		this.system = system;
+ 		InitDevice(device);
+@@ -71,7 +71,7 @@
+ 
+ 	internal bool UpdateDevice(MMDevice device)
+ 	{
++		if (!WasapiContract.Required(_device).IsDisposed /* ArmAgedon seam */)
+-		if (!_device.IsDisposed)
+ 		{
+ 			return false;
+ 		}
+@@ -100,7 +100,7 @@
+ 	{
+ 		try
+ 		{
++			_format = new WaveFormat(WasapiContract.Required(device.DeviceFormat).SampleRate /* ArmAgedon seam */, 32, device.DeviceFormat.Channels, AudioEncoding.IeeeFloat);
+-			_format = new WaveFormat(device.DeviceFormat.SampleRate, 32, device.DeviceFormat.Channels, AudioEncoding.IeeeFloat);
+ 			_latency = ComputePlaybackLatency();
+ 			_refreshLatency = ComputeRefreshLatency();
+ 			_device = device;
+@@ -135,7 +135,7 @@
+ 	{
+ 		try
+ 		{
++			WaveFormat? format = _out?.ActualOutputFormat;
+-			WaveFormat format = _out?.ActualOutputFormat;
+ 			if (format == null)
+ 			{
+ 				return 0;
+@@ -186,7 +186,7 @@
+ 	{
+ 		try
+ 		{
++			WaveFormat? format = _out?.ActualOutputFormat;
+-			WaveFormat format = _out?.ActualOutputFormat;
+ 			if (format == null)
+ 			{
+ 				return 0;
+@@ -209,7 +209,7 @@
+ 			4 => ReadConvert(rawBuffer.AsQuadBuffer()), 
+ 			6 => ReadConvert(rawBuffer.AsSurround51Buffer()), 
+ 			8 => ReadConvert(rawBuffer.AsSurround71Buffer()), 
++			_ => throw new Exception("Unsupported channel count: " + format.Channels),
+-			_ => throw new Exception("Unsupported channel count: " + _format.Channels), 
+ 		} * 4 * format.Channels;
+ 	}
+ 
+@@ -223,7 +223,7 @@
+ 
+ 	private void PlaybackUpdateStarted(WasapiOut wasapi)
+ 	{
++		if (WasapiContract.Required(_out).CurrentPadding == 0 && RenderAudio != null) // ArmAgedon seam
+-		if (_out.CurrentPadding == 0 && RenderAudio != null)
+ 		{
+ 			BufferUnderruns++;
+ 		}
+@@ -242,7 +242,7 @@
+ 			try
+ 			{
+ 				_out = new WasapiOut(eventSync: false, AudioClientShareMode.Shared, _latency, system.Engine.UniqueSessionID, crossProcessSession: true);
++				_out.Device = WasapiContract.Required(_device); // ArmAgedon seam
+-				_out.Device = _device;
+ 				_out.ComputeLatency = _refreshLatency;
+ 				_out.AbortOnZeroData = false;
+ 				_out.Initialize(this);
+@@ -257,7 +257,7 @@
+ 				return;
+ 			}
+ 		}
++		UniLog.Log($"Starting audio device: {_device} (Context: {CurrentContext})\nDevice format: {WasapiContract.Required(_device).DeviceFormat}\nTarget format: {_format}\nActualFormat: {_out.ActualOutputFormat}"); // ArmAgedon seam
+-		UniLog.Log($"Starting audio device: {_device} (Context: {CurrentContext})\nDevice format: {_device.DeviceFormat}\nTarget format: {_format}\nActualFormat: {_out.ActualOutputFormat}");
+ 		_out.Latency = _latency;
+ 		_out.Latency = _refreshLatency;
+ 		_out.Play();

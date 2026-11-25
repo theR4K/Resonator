@@ -1,0 +1,44 @@
+--- a/Elements/Assets/SliceAccessor.cs
++++ b/Elements/Assets/SliceAccessor.cs
+@@ -5,9 +5,9 @@
+ 
+ internal class SliceAccessor
+ {
++	private List<string>? paths;
+-	private List<string> paths;
+ 
++	private List<Bitmap2D?> slices;
+-	private List<Bitmap2D> slices;
+ 
+ 	private int slice0layer = -1;
+ 
+@@ -18,17 +18,17 @@
+ 	public SliceAccessor(List<string> paths)
+ 	{
+ 		this.paths = paths;
++		slices = new List<Bitmap2D?>();
+-		slices = new List<Bitmap2D>();
+ 		slices.Add(null);
+ 		slices.Add(null);
+ 	}
+ 
++	public SliceAccessor(List<Bitmap2D?> slices)
+-	public SliceAccessor(List<Bitmap2D> slices)
+ 	{
+ 		this.slices = slices;
+ 	}
+ 
++	public Bitmap2D? GetSlice(int layer)
+-	public Bitmap2D GetSlice(int layer)
+ 	{
+ 		if (paths == null)
+ 		{
+@@ -46,7 +46,7 @@
+ 		slice0layer = slice1layer;
+ 		slice1layer = layer;
+ 		slices[1] = Bitmap2D.Load(paths[layer], false);
++		if (AssetContract.Required(slices[1]).Size.x == 0 || AssetContract.Required(slices[1]).Size.y == 0) // ArmAgedon seam
+-		if (slices[1].Size.x == 0 || slices[1].Size.y == 0)
+ 		{
+ 			throw new Exception("Error loading slice file: " + paths[layer]);
+ 		}

@@ -1,0 +1,11 @@
+--- a/Elements/Assets/CircularAudioBuffer.cs
++++ b/Elements/Assets/CircularAudioBuffer.cs
+@@ -26,7 +26,7 @@
+ 
+ 	public override int Length => data.Length;
+ 
++	public CircularAudioBuffer(int length, CircularAudioBuffer<S>? initializeWith = null)
+-	public CircularAudioBuffer(int length, CircularAudioBuffer<S> initializeWith = null)
+ 	{
+ 		data = new S[length];
+ 		if (initializeWith != null)

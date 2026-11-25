@@ -1,0 +1,20 @@
+--- a/Elements/Assets/StringNode.cs
++++ b/Elements/Assets/StringNode.cs
+@@ -6,7 +6,7 @@
+ 
+ public abstract class StringNode
+ {
++	public StringContainerNode? Parent { get; private set; }
+-	public StringContainerNode Parent { get; private set; }
+ 
+ 	public StringRenderTree Root { get; private set; }
+ 
+@@ -53,7 +53,7 @@
+ 		}
+ 	}
+ 
++	public T? GetParentNode<T>() where T : class
+-	public T GetParentNode<T>() where T : class
+ 	{
+ 		if (this is T typedNode)
+ 		{

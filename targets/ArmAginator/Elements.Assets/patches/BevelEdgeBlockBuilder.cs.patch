@@ -1,0 +1,11 @@
+--- a/Elements/Assets/BevelEdgeBlockBuilder.cs
++++ b/Elements/Assets/BevelEdgeBlockBuilder.cs
+@@ -44,7 +44,7 @@
+ 	public override bool FlatShading => _flatShading;
+ 
+ 	public BevelEdgeBlockBuilder(MeshX meshx, bool flatShading = true)
++		: base(AssetContract.Required(meshx.TryGetSubmesh<TriangleSubmesh>())) // ArmAgedon seam
+-		: base(meshx)
+ 	{
+ 		_flatShading = flatShading;
+ 	}

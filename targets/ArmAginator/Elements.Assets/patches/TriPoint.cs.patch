@@ -1,0 +1,71 @@
+--- a/Elements/Assets/Poly2Tri/TriPoint.cs
++++ b/Elements/Assets/Poly2Tri/TriPoint.cs
+@@ -4,30 +4,14 @@
+ 
+ namespace Elements.Assets.Poly2Tri;
+ 
++public partial class TriPoint /* ArmAgedon seam */ : IEquatable<TriPoint>
+-public class TriPoint : IEquatable<TriPoint>
+ {
+ 	public class Comparer : IComparer<TriPoint>
+ 	{
++		public int Compare(TriPoint? a, TriPoint? b)
+-		public int Compare(TriPoint a, TriPoint b)
+ 		{
++			return ComparePoints(a, b); // ArmAgedon seam
++	}
+-			if (a.Y < b.Y)
+-			{
+-				return -1;
+-			}
+-			if (a.Y > b.Y)
+-			{
+-				return 1;
+-			}
+-			if (a.X < b.X)
+-			{
+-				return -1;
+-			}
+-			if (a.X > b.X)
+-			{
+-				return 1;
+-			}
+-			return 0;
+-		}
+ 	}
+ 
+ 	/// <summary>
+@@ -41,7 +25,7 @@
+ 
+ 	public float Y;
+ 
++	public List<Edge>? EdgeList;
+-	public List<Edge> EdgeList;
+ 
+ 	public TriPoint()
+ 	{
+@@ -162,7 +146,7 @@
+ 		return false;
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is TriPoint op)
+ 		{
+@@ -175,13 +159,9 @@
+ 		return false;
+ 	}
+ 
++	public bool Equals(TriPoint? other)
+-	public bool Equals(TriPoint other)
+ 	{
++		return EqualCoordinates(other); // ArmAgedon seam
+-		if (X == other.X)
+-		{
+-			return Y == other.Y;
+-		}
+-		return false;
+ 	}
+ 
+ 	public static TriPoint operator *(TriPoint a, float scale)

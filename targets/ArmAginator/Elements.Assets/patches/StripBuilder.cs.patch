@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StripBuilder.cs
++++ b/Elements/Assets/StripBuilder.cs
+@@ -19,7 +19,7 @@
+ 
+ 	private float3 _baseOffset;
+ 
++	internal float3[]? _offsets;
+-	internal float3[] _offsets;
+ 
+ 	public override bool DualSided => _dualSided;
+ 

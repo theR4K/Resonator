@@ -1,0 +1,38 @@
+--- a/Elements/Assets/CurveDecimalAnimationTrack.cs
++++ b/Elements/Assets/CurveDecimalAnimationTrack.cs
+@@ -40,7 +40,7 @@
+ 			}
+ 			InternKeyframe frame = keyframes[index];
+ 			InternKeyframe nextFrame = keyframes[index + 1];
++			decimal fromTangent = AssetContract.Required(tangents)[index].right; // ArmAgedon seam
+-			decimal fromTangent = tangents[index].right;
+ 			decimal toTangent = tangents[index + 1].left;
+ 			decimal r = (decimal)MathX.InverseLerp(frame.time, nextFrame.time, position);
+ 			decimal o = 1m - r;
+@@ -54,7 +54,7 @@
+ 			}
+ 			InternKeyframe frame = keyframes[index];
+ 			InternKeyframe nextFrame = keyframes[index + 1];
++			decimal fromTangent = AssetContract.Required(tangents)[index].right; // ArmAgedon seam
+-			decimal fromTangent = tangents[index].right;
+ 			decimal toTangent = tangents[index + 1].left;
+ 			float lerp = MathX.InverseLerp(frame.time, nextFrame.time, position);
+ 			return (decimal)MathX.BezierCurve((double)frame.value, (double)nextFrame.value, (double)fromTangent, (double)toTangent, lerp);
+@@ -77,7 +77,7 @@
+ 	{
+ 		for (int i = 0; i < FrameCount; i++)
+ 		{
++			bw.Write(AssetContract.Required(tangents)[i].left); // ArmAgedon seam
+-			bw.Write(tangents[i].left);
+ 			bw.Write(tangents[i].right);
+ 		}
+ 	}
+@@ -94,7 +94,7 @@
+ 	{
+ 		for (int i = 0; i < count; i++)
+ 		{
++			AssetContract.Required(tangents).Add(new InternTangents(br.ReadDecimal(), br.ReadDecimal())); // ArmAgedon seam
+-			tangents.Add(new InternTangents(br.ReadDecimal(), br.ReadDecimal()));
+ 		}
+ 	}
+ }

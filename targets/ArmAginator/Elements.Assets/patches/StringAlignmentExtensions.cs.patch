@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringAlignmentExtensions.cs
++++ b/Elements/Assets/StringAlignmentExtensions.cs
+@@ -11,7 +11,7 @@
+ 				isOverride = true;
+ 				return alignNode.Alignment;
+ 			}
++			return AssetContract.Required(node.Parent).GetHorizontalAlignment(out isOverride); // ArmAgedon seam
+-			return node.Parent.GetHorizontalAlignment(out isOverride);
+ 		}
+ 		isOverride = false;
+ 		return tree.HorizontalAlignment;

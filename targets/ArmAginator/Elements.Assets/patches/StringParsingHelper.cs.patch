@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringParsingHelper.cs
++++ b/Elements/Assets/StringParsingHelper.cs
+@@ -2,7 +2,7 @@
+ 
+ public static class StringParsingHelper
+ {
++	public static string? SanitizeFormatTags(this string str)
+-	public static string SanitizeFormatTags(this string str)
+ 	{
+ 		if (str == null)
+ 		{

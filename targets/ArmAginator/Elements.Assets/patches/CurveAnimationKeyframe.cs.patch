@@ -1,0 +1,19 @@
+--- a/Elements/Assets/CurveAnimationKeyframe.cs
++++ b/Elements/Assets/CurveAnimationKeyframe.cs
+@@ -8,13 +8,13 @@
+ 	public float Time { get; set; }
+ 
+ 	[JsonPropertyName("value")]
++	public T? Value { get; set; }
+-	public T Value { get; set; }
+ 
+ 	[JsonPropertyName("leftTangent")]
++	public T? LeftTangent { get; set; }
+-	public T LeftTangent { get; set; }
+ 
+ 	[JsonPropertyName("rightTangent")]
++	public T? RightTangent { get; set; }
+-	public T RightTangent { get; set; }
+ 
+ 	[JsonPropertyName("interpolation")]
+ 	[JsonConverter(typeof(JsonStringEnumConverter))]

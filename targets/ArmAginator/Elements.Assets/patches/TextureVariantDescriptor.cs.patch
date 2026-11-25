@@ -1,0 +1,116 @@
+--- a/Elements/Assets/TextureVariantDescriptor.cs
++++ b/Elements/Assets/TextureVariantDescriptor.cs
+@@ -25,11 +25,11 @@
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
+ 	[Newtonsoft.Json.JsonIgnore]
++	public abstract string? ValidationError { get; }
+-	public abstract string ValidationError { get; }
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
+ 	[Newtonsoft.Json.JsonIgnore]
++	public abstract string? VariantIdentifier { get; }
+-	public abstract string VariantIdentifier { get; }
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
+ 	[Newtonsoft.Json.JsonIgnore]
+@@ -39,9 +39,9 @@
+ 
+ 	public abstract List<IAssetVariantDescriptor> GenerateCloudChainNonGeneric();
+ 
++	public abstract void GenerateLoadChain(List<string?> chain);
+-	public abstract void GenerateLoadChain(List<string> chain);
+ }
++public abstract partial class TextureVariantDescriptor<D, M> /* ArmAgedon seam */ : TextureVariantDescriptor, IAssetVariantDescriptor<D, M>, IAssetVariantDescriptor, IEquatable<D> where D : TextureVariantDescriptor<D, M> where M : ImageMetadataBase
+-public abstract class TextureVariantDescriptor<D, M> : TextureVariantDescriptor, IAssetVariantDescriptor<D, M>, IAssetVariantDescriptor, IEquatable<D> where D : TextureVariantDescriptor<D, M> where M : ImageMetadataBase
+ {
+ 	public const int CLOUD_MIPS_MAX_PIXELS = 16384;
+ 
+@@ -49,7 +49,7 @@
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
+ 	[Newtonsoft.Json.JsonIgnore]
++	public override string? ValidationError
+-	public override string ValidationError
+ 	{
+ 		get
+ 		{
+@@ -152,7 +152,7 @@
+ 		ColorPreprocess = colorPreprocess;
+ 	}
+ 
++	protected static Dictionary<string, string>? ParseBase(string identifier, out TextureCompression compression, out int quality, out bool mips, out ColorPreprocess colorPreprocess, out AlphaPreprocess alphaPreprocess, out int version)
+-	protected static Dictionary<string, string> ParseBase(string identifier, out TextureCompression compression, out int quality, out bool mips, out ColorPreprocess colorPreprocess, out AlphaPreprocess alphaPreprocess, out int version)
+ 	{
+ 		if (string.IsNullOrWhiteSpace(identifier))
+ 		{
+@@ -259,7 +259,7 @@
+ 		return true;
+ 	}
+ 
++	public List<D>? GetBestAlternateChain(List<D> availableDescriptors, Predicate<D>? variantFilter = null)
+-	public List<D> GetBestAlternateChain(List<D> availableDescriptors, Predicate<D> variantFilter = null)
+ 	{
+ 		List<D> cloudChain = GenerateCloudChain();
+ 		TextureCompression? requireCompression = null;
+@@ -268,27 +268,19 @@
+ 		{
+ 			requireCompression = null;
+ 		}
++		if (!SelectAlternate(cloudChain, 0, availableDescriptors, cloudChain[0].TextureCompression, variantFilter)) return null; // ArmAgedon seam
+-		cloudChain[0] = cloudChain[0].GetBestAlternateDescriptor(availableDescriptors, cloudChain[0].TextureCompression, variantFilter);
+-		if (cloudChain[0] == null)
+-		{
+-			return null;
+-		}
+ 		TextureCompression compression = cloudChain[0].TextureCompression;
+ 		for (int i = 1; i < cloudChain.Count; i++)
+ 		{
++			if (!SelectAlternate(cloudChain, i, availableDescriptors, compression, variantFilter)) return null; // ArmAgedon seam
+-			cloudChain[i] = cloudChain[i].GetBestAlternateDescriptor(availableDescriptors, compression, variantFilter);
+-			if (cloudChain[i] == null)
+-			{
+-				return null;
+-			}
+ 		}
+ 		return cloudChain;
+ 	}
+ 
++	public D? GetBestAlternateDescriptor(List<D> availableDescriptors, TextureCompression? requireCompression = null, Predicate<D>? variantFilter = null)
+-	public D GetBestAlternateDescriptor(List<D> availableDescriptors, TextureCompression? requireCompression = null, Predicate<D> variantFilter = null)
+ 	{
+ 		float minScore = float.NegativeInfinity;
++		D? bestAlternative = null;
+-		D bestAlternative = null;
+ 		foreach (D descriptor in availableDescriptors)
+ 		{
+ 			if (IsPotentialAlternative(descriptor, requireCompression) && (variantFilter == null || variantFilter(descriptor)))
+@@ -309,13 +301,14 @@
+ 		return 0f + (float)(other.CompressionQuality - CompressionQuality) / 100f + (float)(other.TextureCompression - TextureCompression) + (float)(VariantVersion - other.VariantVersion) * 0.1f;
+ 	}
+ 
++	public bool Equals(D? other)
+-	public bool Equals(D other)
+ 	{
+ 		return Equals(other, VersionComparison.Exact);
+ 	}
+ 
++	public virtual bool Equals(D? other, VersionComparison versionComparison)
+-	public virtual bool Equals(D other, VersionComparison versionComparison)
+ 	{
++		if (AssetContract.MissingVariant(other)) return false; // ArmAgedon seam
+ 		if (OriginalAsset != other.OriginalAsset)
+ 		{
+ 			return false;
+@@ -335,9 +328,9 @@
+ 		return false;
+ 	}
+ 
++	public virtual string? ValidateCloudVariant(M metadata)
+-	public virtual string ValidateCloudVariant(M metadata)
+ 	{
++		string? baseError = ValidationError;
+-		string baseError = ValidationError;
+ 		if (baseError != null)
+ 		{
+ 			return baseError;

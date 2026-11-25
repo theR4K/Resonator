@@ -1,0 +1,11 @@
+--- a/Elements/Assets/ImageMetadataBase.cs
++++ b/Elements/Assets/ImageMetadataBase.cs
+@@ -28,7 +28,7 @@
+ 
+ 	[JsonProperty(PropertyName = "assetIdenfitier")]
+ 	[JsonPropertyName("assetIdenfitier")]
++	public string? AssetIdentifier { get; set; }
+-	public string AssetIdentifier { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "bitsPerPixel")]
+ 	[JsonPropertyName("bitsPerPixel")]

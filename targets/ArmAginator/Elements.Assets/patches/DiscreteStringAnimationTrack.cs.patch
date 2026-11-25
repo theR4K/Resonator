@@ -1,0 +1,11 @@
+--- a/Elements/Assets/DiscreteStringAnimationTrack.cs
++++ b/Elements/Assets/DiscreteStringAnimationTrack.cs
+@@ -20,7 +20,7 @@
+ 		for (int i = 0; i < count; i++)
+ 		{
+ 			float time = br.ReadSingle();
++			string? value = br.ReadNullableString();
+-			string value = br.ReadNullableString();
+ 			keyframes.Add(new DiscreteKeyframe<string>(value, time));
+ 		}
+ 	}

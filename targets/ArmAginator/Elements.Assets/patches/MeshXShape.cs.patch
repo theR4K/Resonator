@@ -1,0 +1,29 @@
+--- a/Elements/Assets/MeshXShape.cs
++++ b/Elements/Assets/MeshXShape.cs
+@@ -10,7 +10,7 @@
+ 
+ 	public float3 Scale = float3.One;
+ 
++	public MeshX? Mesh { get; private set; }
+-	public MeshX Mesh { get; private set; }
+ 
+ 	public VertexCollection AllVertices { get; protected set; }
+ 
+@@ -41,7 +41,7 @@
+ 
+ 	public virtual void RemoveGeometry()
+ 	{
++		AssetContract.Required(Mesh).RemoveTriangles(AllTriangles); // ArmAgedon seam
+-		Mesh.RemoveTriangles(AllTriangles);
+ 		Mesh.RemovePoints(AllPoints);
+ 		Mesh.RemoveVertices(AllVertices);
+ 		AllTriangles.Clear();
+@@ -63,7 +63,7 @@
+ 			v.Position = pos;
+ 			if (normalsAndTangents)
+ 			{
++				if (AssetContract.Required(Mesh).HasNormals) // ArmAgedon seam
+-				if (Mesh.HasNormals)
+ 				{
+ 					v.Normal = Rotation * ILSpyHelper_AsRefReadOnly(v.Normal);
+ 				}

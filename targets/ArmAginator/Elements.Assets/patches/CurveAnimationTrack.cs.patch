@@ -1,0 +1,55 @@
+--- a/Elements/Assets/CurveAnimationTrack.cs
++++ b/Elements/Assets/CurveAnimationTrack.cs
+@@ -12,27 +12,27 @@
+ /// <typeparam name="T"></typeparam>
+ public abstract class CurveAnimationTrack<T> : AnimationTrack
+ {
++	protected struct InternKeyframe(T? value, float time)
+-	protected struct InternKeyframe(T value, float time)
+ 	{
++		public T? value = value;
+-		public T value = value;
+ 
+ 		public float time = time;
+ 	}
+ 
++	protected struct InternTangents(T? left, T? right)
+-	protected struct InternTangents(T left, T right)
+ 	{
++		public T? left = left;
+-		public T left = left;
+ 
++		public T? right = right;
+-		public T right = right;
+ 	}
+ 
+ 	protected List<InternKeyframe> keyframes = new List<InternKeyframe>();
+ 
+ 	protected KeyframeInterpolation sharedInterpolation;
+ 
++	protected List<KeyframeInterpolation>? interpolations;
+-	protected List<KeyframeInterpolation> interpolations;
+ 
++	protected List<InternTangents>? tangents;
+-	protected List<InternTangents> tangents;
+ 
+ 	private int lastIndex;
+ 
+@@ -87,7 +87,7 @@
+ 		return new Keyframe<T>(frame.value, frame.time, interpolation, tan.left, tan.right);
+ 	}
+ 
++	public int InsertKeyFrame(T? value, float time, KeyframeInterpolation interpolation = KeyframeInterpolation.Linear, T? leftTangent = default(T), T? rightTangent = default(T))
+-	public int InsertKeyFrame(T value, float time, KeyframeInterpolation interpolation = KeyframeInterpolation.Linear, T leftTangent = default(T), T rightTangent = default(T))
+ 	{
+ 		return InsertKeyFrame(new Keyframe<T>(value, time, interpolation, leftTangent, rightTangent));
+ 	}
+@@ -196,7 +196,7 @@
+ 		{
+ 			for (int i = 0; i < FrameCount; i++)
+ 			{
++				bw.Write((byte)AssetContract.Required(interpolations)[i]); // ArmAgedon seam
+-				bw.Write((byte)interpolations[i]);
+ 			}
+ 		}
+ 		else

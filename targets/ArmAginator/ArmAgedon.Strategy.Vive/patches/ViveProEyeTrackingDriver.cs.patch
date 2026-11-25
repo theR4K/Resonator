@@ -1,0 +1,20 @@
+--- a/ViveProEyeTrackingDriver.cs
++++ b/ViveProEyeTrackingDriver.cs
+@@ -17,8 +17,6 @@
+ 	private InputInterface input;
+ 
+ 	private Eyes eyes;
+-
+-	private VerboseData latestVerboseData;
+ 
+ 	private EyeData_v2 latestEyeData;
+ 
+@@ -37,8 +35,6 @@
+ 	private volatile bool eyeApiInitialized;
+ 
+ 	private volatile bool lipApiInitialized;
+-
+-	private int lastTimestamp;
+ 
+ 	private object _lock = new object();
+ 

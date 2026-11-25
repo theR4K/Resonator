@@ -1,0 +1,54 @@
+--- a/Elements/Assets/Bitmap.cs
++++ b/Elements/Assets/Bitmap.cs
+@@ -13,7 +13,7 @@
+ {
+ 	private int _bytesPerPixel;
+ 
++	protected List<int>? mipmapOrigins;
+-	protected List<int> mipmapOrigins;
+ 
+ 	private static float3x3 LOGLUV_ENCODE_MAT = new float3x3(0.2209f, 0.339f, 0.4184f, 0.1138f, 0.678f, 0.7319f, 0.0102f, 0.113f, 0.2969f);
+ 
+@@ -22,10 +22,10 @@
+ 	public double BitsPerPixel { get; private set; }
+ 
+ 	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
++	public IBackingMemoryBuffer? Buffer { get; private set; }
+-	public IBackingMemoryBuffer Buffer { get; private set; }
+ 
+ 	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
++	public Span<byte> RawData => AssetContract.Required(Buffer).RawData; // ArmAgedon seam
+-	public Span<byte> RawData => Buffer.RawData;
+ 
+ 	public int TotalPixels { get; private set; }
+ 
+@@ -33,10 +33,11 @@
+ 
+ 	public int ElementTotalBytes { get; private set; }
+ 
++	public string? OriginalFormat { get; private set; }
+-	public string OriginalFormat { get; private set; }
+ 
+ 	public ColorProfile Profile { get; protected set; }
+ 
++	[System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(Buffer))]
+ 	public bool BufferExists => !(Buffer?.IsDisposed ?? true);
+ 
+ 	public bool CanRead
+@@ -88,14 +89,14 @@
+ 	{
+ 		if (!(Buffer is ArrayBackingMemoryBuffer))
+ 		{
++			ArrayBackingMemoryBuffer array = new ArrayBackingMemoryBuffer(new byte[AssetContract.Required(Buffer).SizeBytes]); // ArmAgedon seam
+-			ArrayBackingMemoryBuffer array = new ArrayBackingMemoryBuffer(new byte[Buffer.SizeBytes]);
+ 			Buffer.RawData.CopyTo(array.RawData);
+ 			Buffer.Dispose();
+ 			Buffer = array;
+ 		}
+ 	}
+ 
++	protected void Init(IBackingMemoryBuffer? backingBuffer, TextureFormat format, bool mipmaps, string? originalFormat, ColorProfile profile, IBackingBufferAllocator? allocator)
+-	protected void Init(IBackingMemoryBuffer backingBuffer, TextureFormat format, bool mipmaps, string originalFormat, ColorProfile profile, IBackingBufferAllocator allocator)
+ 	{
+ 		Format = format;
+ 		OriginalFormat = originalFormat;

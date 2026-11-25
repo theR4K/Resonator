@@ -1,0 +1,11 @@
+--- a/Elements/Assets/TextureCompressionExtensions.cs
++++ b/Elements/Assets/TextureCompressionExtensions.cs
+@@ -98,7 +98,7 @@
+ 		return true;
+ 	}
+ 
++	public static TextureFormat ToFormat(this TextureCompression compression, ImageMetadataBase? metadata = null, bool threeChannelSupported = false, ColorProfile profile = ColorProfile.sRGB)
+-	public static TextureFormat ToFormat(this TextureCompression compression, ImageMetadataBase metadata = null, bool threeChannelSupported = false, ColorProfile profile = ColorProfile.sRGB)
+ 	{
+ 		switch (compression)
+ 		{

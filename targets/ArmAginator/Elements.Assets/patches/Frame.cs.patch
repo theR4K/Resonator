@@ -1,0 +1,46 @@
+--- a/Elements/Assets/Frame.cs
++++ b/Elements/Assets/Frame.cs
+@@ -16,7 +16,7 @@
+ 	public Frame(TriangleSubmesh submesh)
+ 		: base(submesh.Mesh)
+ 	{
++		AssetContract.Required(Mesh).AddVertices(8, AllVertices); // ArmAgedon seam
+-		Mesh.AddVertices(8, AllVertices);
+ 		int index = AllVertices[0].IndexUnsafe;
+ 		for (int i = 0; i < 4; i++)
+ 		{
+@@ -29,7 +29,7 @@
+ 
+ 	public override void Update()
+ 	{
++		AssetContract.Required(Mesh).HasNormals = true; // ArmAgedon seam
+-		Mesh.HasNormals = true;
+ 		Mesh.HasTangents = true;
+ 		Mesh.HasUV0s = true;
+ 		float2 halfSize = ContentSize * 0.5f;
+@@ -41,7 +41,7 @@
+ 			int mody = ((i != 2 && i != 3) ? 1 : (-1));
+ 			int idx0 = index + i * 2;
+ 			int idx1 = idx0 + 1;
++			AssetContract.Required(Mesh.RawPositions)[idx0] = new float3((halfSize.x + Thickness) * (float)modx, (halfSize.y + Thickness) * (float)mody); // ArmAgedon seam
+-			Mesh.RawPositions[idx0] = new float3((halfSize.x + Thickness) * (float)modx, (halfSize.y + Thickness) * (float)mody);
+ 			Mesh.RawPositions[idx1] = new float3(halfSize.x * (float)modx, halfSize.y * (float)mody);
+ 			float2 uvOuter = new float2(modx, mody);
+ 			float2 uvInner = uvOuter * uvThicknessOff;
+@@ -49,13 +49,13 @@
+ 			uvInner = uvInner * 0.5f + 0.5f;
+ 			uvOuter = new float2(uvOuter.x, 1f - uvOuter.y);
+ 			uvInner = new float2(uvInner.x, 1f - uvInner.y);
++			AssetContract.Required(Mesh.RawUV0s)[idx0] = uvOuter * UVScale; // ArmAgedon seam
+-			Mesh.RawUV0s[idx0] = uvOuter * UVScale;
+ 			Mesh.RawUV0s[idx1] = uvInner * UVScale;
+ 		}
+ 		for (int j = 0; j < 8; j++)
+ 		{
++			AssetContract.Required(Mesh.RawNormals)[index + j] = float3.Backward; // ArmAgedon seam
++			AssetContract.Required(Mesh.RawTangents)[index + j] = new float4(float3.Right, -1f); // ArmAgedon seam
+-			Mesh.RawNormals[index + j] = float3.Backward;
+-			Mesh.RawTangents[index + j] = new float4(float3.Right, -1f);
+ 		}
+ 		TransformVertices(normalsAndTangents: true);
+ 	}

@@ -1,0 +1,50 @@
+--- a/Elements/Assets/BlendShape.cs
++++ b/Elements/Assets/BlendShape.cs
+@@ -137,20 +137,20 @@
+ 			bw.Write(frame.Weight);
+ 			for (int i = 0; i < Mesh.VertexCount; i++)
+ 			{
++				bw.Write(in AssetContract.Required(frame.positions)[i]); // ArmAgedon seam
+-				bw.Write(in frame.positions[i]);
+ 			}
+ 			if (HasNormals)
+ 			{
+ 				for (int j = 0; j < Mesh.VertexCount; j++)
+ 				{
++					bw.Write(in AssetContract.Required(frame.normals)[j]); // ArmAgedon seam
+-					bw.Write(in frame.normals[j]);
+ 				}
+ 			}
+ 			if (HasTangents)
+ 			{
+ 				for (int k = 0; k < Mesh.VertexCount; k++)
+ 				{
++					bw.Write(in AssetContract.Required(frame.tangents)[k]); // ArmAgedon seam
+-					bw.Write(in frame.tangents[k]);
+ 				}
+ 			}
+ 		}
+@@ -167,20 +167,20 @@
+ 			BlendShapeFrame frame = AddFrame(br.ReadSingle());
+ 			for (int i = 0; i < Mesh.VertexCount; i++)
+ 			{
++				AssetContract.Required(frame.positions)[i] = br.Read3D_Single(); // ArmAgedon seam
+-				frame.positions[i] = br.Read3D_Single();
+ 			}
+ 			if (HasNormals)
+ 			{
+ 				for (int j = 0; j < Mesh.VertexCount; j++)
+ 				{
++					AssetContract.Required(frame.normals)[j] = br.Read3D_Single(); // ArmAgedon seam
+-					frame.normals[j] = br.Read3D_Single();
+ 				}
+ 			}
+ 			if (HasTangents)
+ 			{
+ 				for (int k = 0; k < Mesh.VertexCount; k++)
+ 				{
++					AssetContract.Required(frame.tangents)[k] = br.Read3D_Single(); // ArmAgedon seam
+-					frame.tangents[k] = br.Read3D_Single();
+ 				}
+ 			}
+ 		}

@@ -1,0 +1,24 @@
+--- a/Elements/Assets/Poly2Tri/Shape.cs
++++ b/Elements/Assets/Poly2Tri/Shape.cs
+@@ -14,7 +14,7 @@
+ 	/// <summary>
+ 	/// Extra points inserted within the shape's area to control or increase triangulation.
+ 	/// </summary>
++	public readonly List<TriPoint>? SteinerPoints;
+-	public readonly List<TriPoint> SteinerPoints;
+ 
+ 	/// <summary>
+ 	/// A list of subtraction shapes fully contained inside this shape.<para />
+@@ -129,9 +129,9 @@
+ 		new Sweep().Triangulate(tcx);
+ 		foreach (Triangle tri in tcx.GetTriangles())
+ 		{
++			output.Add((float2)AssetContract.Required(tri.Points[0]) * scale + offset); // ArmAgedon seam
++			output.Add((float2)AssetContract.Required(tri.Points[2]) * scale + offset); // ArmAgedon seam
++			output.Add((float2)AssetContract.Required(tri.Points[1]) * scale + offset); // ArmAgedon seam
+-			output.Add((float2)tri.Points[0] * scale + offset);
+-			output.Add((float2)tri.Points[2] * scale + offset);
+-			output.Add((float2)tri.Points[1] * scale + offset);
+ 		}
+ 	}
+ 

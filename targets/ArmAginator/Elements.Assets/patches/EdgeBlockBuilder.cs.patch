@@ -1,0 +1,20 @@
+--- a/Elements/Assets/EdgeBlockBuilder.cs
++++ b/Elements/Assets/EdgeBlockBuilder.cs
+@@ -176,7 +176,7 @@
+ 		if (!_geometryBuilt)
+ 		{
+ 			changedGeometry = true;
++			AssetContract.Required(Mesh).RemoveTriangles(AllTriangles); // ArmAgedon seam
+-			Mesh.RemoveTriangles(AllTriangles);
+ 			Mesh.RemoveVertices(AllVertices);
+ 			AllTriangles.Clear();
+ 			AllVertices.Clear();
+@@ -229,7 +229,7 @@
+ 		TransformVertices(normalsAndTangents: false);
+ 		if (CalculateNormals)
+ 		{
++			if (AssetContract.Required(Mesh).TotalTriangleCount == AllTriangles.Count) // ArmAgedon seam
+-			if (Mesh.TotalTriangleCount == AllTriangles.Count)
+ 			{
+ 				Mesh.RecalculateNormals();
+ 			}

@@ -1,0 +1,86 @@
+--- a/Elements/Assets/Texture2DVariantGenerator.cs
++++ b/Elements/Assets/Texture2DVariantGenerator.cs
+@@ -8,19 +8,19 @@
+ 
+ public static class Texture2DVariantGenerator
+ {
++	public static List<ComputedVariantResult> GenerateVariants(string file, Texture2DVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler? variantGenerated = null, Predicate<string>? variantFilter = null)
+-	public static List<ComputedVariantResult> GenerateVariants(string file, Texture2DVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler variantGenerated = null, Predicate<string> variantFilter = null)
+ 	{
+ 		List<ComputedVariantResult> results = new List<ComputedVariantResult>();
+ 		List<Texture2DVariantDescriptor> variants = variantDescriptor.GenerateCloudChain();
++		Bitmap2D? bitmap = Bitmap2D.Load(file, (!variantDescriptor.Filtering.HasValue) ? ((bool?)null) : new bool?(false));
++		bitmap = TextureVariantGenerator.Preprocess(AssetContract.Required(bitmap), /* ArmAgedon seam */ variantDescriptor.TextureCompression, variantDescriptor.ColorPreprocess, variantDescriptor.AlphaPreprocess, allowARGB: true);
++		List<Bitmap2D?> bitmaps = new List<Bitmap2D?>();
+-		Bitmap2D bitmap = Bitmap2D.Load(file, (!variantDescriptor.Filtering.HasValue) ? ((bool?)null) : new bool?(false));
+-		bitmap = TextureVariantGenerator.Preprocess(bitmap, variantDescriptor.TextureCompression, variantDescriptor.ColorPreprocess, variantDescriptor.AlphaPreprocess, allowARGB: true);
+-		List<Bitmap2D> bitmaps = new List<Bitmap2D>();
+ 		if (variantDescriptor.Filtering.HasValue)
+ 		{
++			foreach (Texture2DVariantDescriptor? v in variants)
+-			foreach (Texture2DVariantDescriptor v in variants)
+ 			{
++				bitmap = AssetContract.Required(bitmap).GetRescaled(new int2(v.Width, v.Height), v.MipMaps, forceRescale: false, AssetContract.Value(v.Filtering) /* ArmAgedon seam */); // ArmAgedon seam
++				bitmaps.Add(AssetContract.Required(bitmap)); // ArmAgedon seam
+-				bitmap = bitmap.GetRescaled(new int2(v.Width, v.Height), v.MipMaps, forceRescale: false, v.Filtering.Value);
+-				bitmaps.Add(bitmap);
+ 			}
+ 		}
+ 		else
+@@ -28,7 +28,7 @@
+ 			int mip = 0;
+ 			foreach (Texture2DVariantDescriptor v2 in variants)
+ 			{
++				Bitmap2D mipmap = AssetContract.Required(bitmap).ExtractMipMap(mip++, v2.MipMaps); // ArmAgedon seam
+-				Bitmap2D mipmap = bitmap.ExtractMipMap(mip++, v2.MipMaps);
+ 				if (mipmap.Size.x != v2.Width && mipmap.Size.y != v2.Height)
+ 				{
+ 					throw new InvalidOperationException($"Pre-computed mipmap size doesn't match expected. Precomputed: {mipmap.Size}, Expected: {v2.Width}x{v2.Height}");
+@@ -39,16 +39,16 @@
+ 		for (int i = variants.Count - 1; i >= 0; i--)
+ 		{
+ 			Texture2DVariantDescriptor v3 = variants[i];
++			Bitmap2D? b = bitmaps[i];
++			if (variantFilter == null || variantFilter(AssetContract.Required(v3.VariantIdentifier) /* ArmAgedon seam */))
+-			Bitmap2D b = bitmaps[i];
+-			if (variantFilter == null || variantFilter(v3.VariantIdentifier))
+ 			{
++				string? generatedFile = Path.Combine(AssetVariantHelper.TempFolder ?? Path.GetTempPath(), Guid.NewGuid().ToString());
+-				string generatedFile = Path.Combine(AssetVariantHelper.TempFolder ?? Path.GetTempPath(), Guid.NewGuid().ToString());
+ 				if (v3.TextureCompression.IsBlockCompressed())
+ 				{
+ 					TextureFormat targetFormat = v3.TextureCompression.ToFormat();
+ 					if (Bitmap2D.SupportsBlockCompression(targetFormat))
+ 					{
++						if (!AssetContract.Required(b).FlipY) // ArmAgedon seam
+-						if (!b.FlipY)
+ 						{
+ 							b.FlipYInMemory();
+ 						}
+@@ -61,7 +61,7 @@
+ 				}
+ 				else if (v3.TextureCompression.IsCrunchCompressed())
+ 				{
++					if (!AssetContract.Required(b).FlipY) // ArmAgedon seam
+-					if (!b.FlipY)
+ 					{
+ 						b.FlipYInMemory();
+ 					}
+@@ -75,7 +75,7 @@
+ 					switch (v3.TextureCompression)
+ 					{
+ 					case TextureCompression.RawRGBA:
++						if ((AssetContract.Required(b).Size >= 16384).Any()) // ArmAgedon seam
+-						if ((b.Size >= 16384).Any())
+ 						{
+ 							generatedFile += ".png";
+ 							if (!b.Save(generatedFile, 100))
+@@ -94,7 +94,7 @@
+ 						break;
+ 					case TextureCompression.RawRGBAHalf:
+ 						generatedFile += ".exr";
++						if (!AssetContract.Required(b).Save(generatedFile)) // ArmAgedon seam
+-						if (!b.Save(generatedFile))
+ 						{
+ 							throw new Exception("Failed to encode RawRGBAHalf");
+ 						}

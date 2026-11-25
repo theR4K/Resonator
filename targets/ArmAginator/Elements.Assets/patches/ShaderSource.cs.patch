@@ -1,0 +1,24 @@
+--- a/Elements/Assets/ShaderSource.cs
++++ b/Elements/Assets/ShaderSource.cs
+@@ -24,7 +24,7 @@
+ 
+ 	public bool IsInclude { get; private set; }
+ 
++	public string? ShaderName { get; private set; }
+-	public string ShaderName { get; private set; }
+ 
+ 	public int ShaderNameLine { get; private set; }
+ 
+@@ -297,10 +297,10 @@
+ 		{
+ 			throw new Exception("No original file! Cannot resolve includes");
+ 		}
++		string? root = Path.GetDirectoryName(File);
+-		string root = Path.GetDirectoryName(File);
+ 		for (int i = 0; i < Includes.Count; i++)
+ 		{
++			string includeFile = Path.GetFullPath(Path.Combine(AssetContract.Required(root), Includes[i])); // ArmAgedon seam
+-			string includeFile = Path.GetFullPath(Path.Combine(root, Includes[i]));
+ 			if (!System.IO.File.Exists(includeFile))
+ 			{
+ 				includeFile = Path.GetFullPath(Includes[i]);

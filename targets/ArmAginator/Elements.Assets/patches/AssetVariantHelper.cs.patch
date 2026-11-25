@@ -1,0 +1,31 @@
+--- a/Elements/Assets/AssetVariantHelper.cs
++++ b/Elements/Assets/AssetVariantHelper.cs
+@@ -18,7 +18,7 @@
+ 	/// <param name="variantFilter">A list of variants to filter from the generation process.</param>
+ 	/// <returns>A list of computed variants.</returns>
+ 	/// <exception cref="T:System.Exception">Throws an exception when an unsupported variant descriptor has been provided.</exception>
++	public static List<ComputedVariantResult> GenerateVariants(string file, IAssetVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler? variantGenerated = null, Predicate<string>? variantFilter = null)
+-	public static List<ComputedVariantResult> GenerateVariants(string file, IAssetVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler variantGenerated = null, Predicate<string> variantFilter = null)
+ 	{
+ 		if (!(variantDescriptor is Texture2DVariantDescriptor textureVariant))
+ 		{
+@@ -47,7 +47,7 @@
+ 		return Texture2DVariantGenerator.GenerateVariants(file, textureVariant, maxThreads, variantGenerated, variantFilter);
+ 	}
+ 
++	public static D? FromIdentifier<D>(string identifier) where D : class, IAssetVariantDescriptor
+-	public static D FromIdentifier<D>(string identifier) where D : class, IAssetVariantDescriptor
+ 	{
+ 		return FromIdentifier(typeof(D), identifier) as D;
+ 	}
+@@ -100,8 +100,9 @@
+ 		};
+ 	}
+ 
++	public static bool VersionEquals(IAssetVariantDescriptor a, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] IAssetVariantDescriptor? b, VersionComparison versionComparison)
+-	public static bool VersionEquals(IAssetVariantDescriptor a, IAssetVariantDescriptor b, VersionComparison versionComparison)
+ 	{
++		if (AssetContract.MissingVariant(b)) return false; // ArmAgedon seam
+ 		switch (versionComparison)
+ 		{
+ 		case VersionComparison.Exact:

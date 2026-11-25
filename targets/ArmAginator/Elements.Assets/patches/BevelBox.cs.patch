@@ -1,0 +1,20 @@
+--- a/Elements/Assets/BevelBox.cs
++++ b/Elements/Assets/BevelBox.cs
+@@ -44,7 +44,7 @@
+ 	{
+ 		Submesh = submesh;
+ 		faceVertOffset = AllVertices.Count;
++		AssetContract.Required(Mesh).AddVertices(24, AllVertices); // ArmAgedon seam
+-		Mesh.AddVertices(24, AllVertices);
+ 		for (int s = 0; s < 6; s++)
+ 		{
+ 			int index = s * 4 + faceVertOffset;
+@@ -144,7 +144,7 @@
+ 			basePos *= halfSize;
+ 			PositionEdge(ref basePos, ref edgeAxis, ref moveAxis0, ref moveAxis1, bevelSize, sideLength, i2);
+ 		}
++		AssetContract.Required(Mesh).RecalculateTangents(AllTriangles); // ArmAgedon seam
+-		Mesh.RecalculateTangents(AllTriangles);
+ 	}
+ 
+ 	private void PositionFace(float3 sideOffset, Func<float2, float3> vertexOffset, float2 uvScale, int side)

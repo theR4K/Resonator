@@ -1,0 +1,65 @@
+--- a/Elements/Assets/AnimX.cs
++++ b/Elements/Assets/AnimX.cs
+@@ -20,7 +20,7 @@
+ 
+ 	public const string MAGIC_STRING = "AnimX";
+ 
++	private string? _name;
+-	private string _name;
+ 
+ 	private float _globalDuration;
+ 
+@@ -30,11 +30,12 @@
+ 
+ 	private static Dictionary<string, Type> elementNameToType;
+ 
++	[System.Diagnostics.CodeAnalysis.AllowNull]
+ 	public string Name
+ 	{
+ 		get
+ 		{
++			return AssetContract.Required(_name); // ArmAgedon seam
+-			return _name;
+ 		}
+ 		set
+ 		{
+@@ -66,7 +67,7 @@
+ 
+ 	public AnimationTrack this[int index] => tracks[index];
+ 
++	public AnimX(float globalDuration = float.MaxValue, string? name = "")
+-	public AnimX(float globalDuration = float.MaxValue, string name = "")
+ 	{
+ 		Name = name;
+ 		GlobalDuration = globalDuration;
+@@ -88,8 +89,8 @@
+ 		{
+ 			throw new ArgumentException("Invalid track type: " + type);
+ 		}
++		AnimationTrack? track = (AnimationTrack?)Activator.CreateInstance(type);
++		AssetContract.Required(track).SetOwner(this); // ArmAgedon seam
+-		AnimationTrack track = (AnimationTrack)Activator.CreateInstance(type);
+-		track.SetOwner(this);
+ 		tracks.Add(track);
+ 		return track;
+ 	}
+@@ -121,7 +122,7 @@
+ 		tracks.Clear();
+ 	}
+ 
++	public AnimationTrack? FindTrack(string node, string property)
+-	public AnimationTrack FindTrack(string node, string property)
+ 	{
+ 		node = node ?? "";
+ 		property = property ?? "";
+@@ -323,8 +324,8 @@
+ 				trackType = (TrackType)br.ReadByte();
+ 				typeIndex = br.ReadByte();
+ 			}
++			AnimationTrack? track = (AnimationTrack?)Activator.CreateInstance(GetTrackType(trackType, elementTypes[typeIndex]));
++			AssetContract.Required(track).SetOwner(this); // ArmAgedon seam
+-			AnimationTrack track = (AnimationTrack)Activator.CreateInstance(GetTrackType(trackType, elementTypes[typeIndex]));
+-			track.SetOwner(this);
+ 			tracks.Add(track);
+ 			track.Decode(br);
+ 		}

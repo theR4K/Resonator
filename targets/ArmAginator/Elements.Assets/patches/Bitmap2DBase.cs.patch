@@ -1,0 +1,76 @@
+--- a/Elements/Assets/Bitmap2DBase.cs
++++ b/Elements/Assets/Bitmap2DBase.cs
+@@ -13,7 +13,7 @@
+ 
+ 	private float2 _uvToPixel;
+ 
++	protected List<int2>? mipmapSizes;
+-	protected List<int2> mipmapSizes;
+ 
+ 	public int2 Size
+ 	{
+@@ -54,8 +54,8 @@
+ 			}
+ 			return x + y * AlignedSize.x;
+ 		}
++		int2 size = AssetContract.Required(mipmapSizes)[mip]; // ArmAgedon seam
++		int num = AssetContract.Required(mipmapOrigins)[mip]; // ArmAgedon seam
+-		int2 size = mipmapSizes[mip];
+-		int num = mipmapOrigins[mip];
+ 		if (FlipY)
+ 		{
+ 			y = size.y - y - 1;
+@@ -77,7 +77,7 @@
+ 	{
+ 		if (mip != 0)
+ 		{
++			return AssetContract.Required(mipmapOrigins)[mip]; // ArmAgedon seam
+-			return mipmapOrigins[mip];
+ 		}
+ 		return 0;
+ 	}
+@@ -89,7 +89,7 @@
+ 			int origin = offset + MipmapByteOrigin(mip);
+ 			int count = MipmapTotalBytes(mip);
+ 			MipMapSize(mip);
++			Memory<byte> buffer = AssetContract.Required(Buffer).Memory.Slice(origin, count); // ArmAgedon seam
+-			Memory<byte> buffer = Buffer.Memory.Slice(origin, count);
+ 			mipBuffers.Add(buffer);
+ 		}
+ 	}
+@@ -101,7 +101,7 @@
+ 			int origin = offset + MipmapByteOrigin(mip);
+ 			int count = MipmapTotalBytes(mip);
+ 			int2 size = MipMapSize(mip);
++			Memory<byte> buffer = AssetContract.Required(Buffer).Memory.Slice(origin, count); // ArmAgedon seam
+-			Memory<byte> buffer = Buffer.Memory.Slice(origin, count);
+ 			mipBuffers.Add(new MipMapBuffer(size, face, buffer));
+ 		}
+ 	}
+@@ -115,7 +115,7 @@
+ 
+ 	public override int MipmapTotalPixels(int mip)
+ 	{
++		int2 size = AlignSize((mip == 0) ? Size : AssetContract.Required(mipmapSizes)[mip], Format); // ArmAgedon seam
+-		int2 size = AlignSize((mip == 0) ? Size : mipmapSizes[mip], Format);
+ 		return size.x * size.y;
+ 	}
+ 
+@@ -123,7 +123,7 @@
+ 	{
+ 		if (mip != 0)
+ 		{
++			return AssetContract.Required(mipmapSizes)[mip]; // ArmAgedon seam
+-			return mipmapSizes[mip];
+ 		}
+ 		return AlignedSize;
+ 	}
+@@ -155,7 +155,7 @@
+ 		return count;
+ 	}
+ 
++	public static int MipmapLevels(in int2 size, List<int2>? sizes)
+-	public static int MipmapLevels(in int2 size, List<int2> sizes)
+ 	{
+ 		if (size.x > 1 || size.y > 1)
+ 		{

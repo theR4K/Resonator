@@ -1,0 +1,11 @@
+--- a/Elements/Assets/GlyphAtlasData.cs
++++ b/Elements/Assets/GlyphAtlasData.cs
+@@ -25,7 +25,7 @@
+ 
+ 	public void CalculateRenderParameters(GlyphAtlas atlas)
+ 	{
++		float2 mul = 1f / AssetContract.Required(atlas.Atlas).Size; // ArmAgedon seam
+-		float2 mul = 1f / atlas.Atlas.Size;
+ 		float2 pos = region.position * mul;
+ 		float2 size = region.size * mul;
+ 		offset = (float2)MathX.CeilToInt(in region.size) - region.size;

@@ -1,0 +1,11 @@
+--- a/Elements/Assets/BufferBlockKey.cs
++++ b/Elements/Assets/BufferBlockKey.cs
+@@ -9,7 +9,7 @@
+ 
+ 	public readonly int position = position;
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is BufferBlockKey key)
+ 		{

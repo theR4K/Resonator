@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringNoParseNode.cs
++++ b/Elements/Assets/StringNoParseNode.cs
+@@ -33,7 +33,7 @@
+ 		return false;
+ 	}
+ 
++	public static StringNoParseNode? Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+-	public static StringNoParseNode Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+ 	{
+ 		if (parameter.Length == 0)
+ 		{

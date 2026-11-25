@@ -1,0 +1,57 @@
+--- a/Elements/Assets/Poly2Tri/AdvancingFront.cs
++++ b/Elements/Assets/Poly2Tri/AdvancingFront.cs
+@@ -6,7 +6,7 @@
+ 
+ 	internal Node _tail;
+ 
++	private Node? _search_node;
+-	private Node _search_node;
+ 
+ 	internal AdvancingFront(Node head, Node tail)
+ 	{
+@@ -20,10 +20,10 @@
+ 		_search_node = node;
+ 	}
+ 
++	public Node? LocateNode(float x)
+-	public Node LocateNode(float x)
+ 	{
++		Node? node = _search_node;
++		if (x < AssetContract.Required(node).Value) // ArmAgedon seam
+-		Node node = _search_node;
+-		if (x < node.Value)
+ 		{
+ 			while ((node = node.Prev) != null)
+ 			{
+@@ -48,25 +48,25 @@
+ 		return null;
+ 	}
+ 
++	private Node? FindSearchNode(float x)
+-	private Node FindSearchNode(float x)
+ 	{
+ 		return _search_node;
+ 	}
+ 
++	public Node? LocatePoint(TriPoint point)
+-	public Node LocatePoint(TriPoint point)
+ 	{
+ 		float px = point.X;
++		Node? node = FindSearchNode(px);
++		float nx = AssetContract.Required(node).Point.X; // ArmAgedon seam
+-		Node node = FindSearchNode(px);
+-		float nx = node.Point.X;
+ 		if (px == nx)
+ 		{
+ 			if (point != node.Point)
+ 			{
++				if (point.Equals(AssetContract.Required(node.Prev).Point)) // ArmAgedon seam
+-				if (point.Equals(node.Prev.Point))
+ 				{
+ 					node = node.Prev;
+ 				}
++				else if (point.Equals(AssetContract.Required(node.Next).Point)) // ArmAgedon seam
+-				else if (point.Equals(node.Next.Point))
+ 				{
+ 					node = node.Next;
+ 				}

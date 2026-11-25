@@ -1,0 +1,11 @@
+--- a/Elements/Assets/IAssetMetadata.cs
++++ b/Elements/Assets/IAssetMetadata.cs
+@@ -5,7 +5,7 @@
+ [DataModelType]
+ public interface IAssetMetadata
+ {
++	string? AssetIdentifier { get; set; }
+-	string AssetIdentifier { get; set; }
+ 
+ 	int MetadataVersion { get; set; }
+ 

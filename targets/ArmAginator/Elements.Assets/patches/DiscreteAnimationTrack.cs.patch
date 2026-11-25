@@ -1,0 +1,20 @@
+--- a/Elements/Assets/DiscreteAnimationTrack.cs
++++ b/Elements/Assets/DiscreteAnimationTrack.cs
+@@ -35,7 +35,7 @@
+ 
+ 	public override TrackType TrackType => TrackType.Discrete;
+ 
++	public T? Sample(float time)
+-	public T Sample(float time)
+ 	{
+ 		int index = GetKeyframeIndex(time);
+ 		if (index < 0)
+@@ -67,7 +67,7 @@
+ 		return keyframes[index];
+ 	}
+ 
++	public int InsertKeyFrame(T? value, float time)
+-	public int InsertKeyFrame(T value, float time)
+ 	{
+ 		return InsertKeyFrame(new DiscreteKeyframe<T>(value, time));
+ 	}

@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringNoLineBreakExtensions.cs
++++ b/Elements/Assets/StringNoLineBreakExtensions.cs
+@@ -10,7 +10,7 @@
+ 			{
+ 				return true;
+ 			}
++			return AssetContract.Required(node.Parent).DisableLineBreaking(); // ArmAgedon seam
+-			return node.Parent.DisableLineBreaking();
+ 		}
+ 		return false;
+ 	}

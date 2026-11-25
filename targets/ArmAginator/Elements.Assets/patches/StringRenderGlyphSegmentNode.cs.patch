@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringRenderGlyphSegmentNode.cs
++++ b/Elements/Assets/StringRenderGlyphSegmentNode.cs
+@@ -23,7 +23,7 @@
+ 		ClearRenderGlyphs();
+ 	}
+ 
++	internal abstract void Shape(bool kerning, ref uint? lastGlyphId, ref FontX? lastFont, ref float lastSize, List<ICharacterFilter> characterFilterCache, List<ISizeFilter> sizeFilterCache);
+-	internal abstract void Shape(bool kerning, ref uint? lastGlyphId, ref FontX lastFont, ref float lastSize, List<ICharacterFilter> characterFilterCache, List<ISizeFilter> sizeFilterCache);
+ 
+ 	protected void AppendGlyph(float glyphSize, int stringIndex, in float2 offset, GlyphMetrics metrics, FontX font, uint? lastGlyphId)
+ 	{

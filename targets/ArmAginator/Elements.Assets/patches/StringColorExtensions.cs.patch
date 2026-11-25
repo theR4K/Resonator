@@ -1,0 +1,22 @@
+--- a/Elements/Assets/StringColorExtensions.cs
++++ b/Elements/Assets/StringColorExtensions.cs
+@@ -12,16 +12,16 @@
+ 			{
+ 				if (node is StringGlyphNode glyphNode)
+ 				{
++					colorX baseColor = AssetContract.Required(node.Parent).GetFontColor(); // ArmAgedon seam
+-					colorX baseColor = node.Parent.GetFontColor();
+ 					if (!glyphNode.Tint)
+ 					{
+ 						baseColor = new colorX(1f, baseColor.a, baseColor.profile);
+ 					}
+ 					return baseColor;
+ 				}
++				return AssetContract.Required(node.Parent).GetFontColor(); // ArmAgedon seam
+-				return node.Parent.GetFontColor();
+ 			}
++			colorX color33 = AssetContract.Required(node.Parent).GetFontColor(); // ArmAgedon seam
+-			colorX color33 = node.Parent.GetFontColor();
+ 			if ((colorNode.Mode & StringColorNode.MixMode.Alpha) != 0)
+ 			{
+ 				color33 = color33.MulA(colorNode.Color.a);

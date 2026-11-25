@@ -1,0 +1,41 @@
+--- a/Elements/Assets/VorbisEncoder.cs
++++ b/Elements/Assets/VorbisEncoder.cs
+@@ -10,9 +10,9 @@
+ {
+ 	public const int BUFFER_SIZE = 512;
+ 
++	private OggStream? oggStream;
+-	private OggStream oggStream;
+ 
++	private ProcessingState? processingState;
+-	private ProcessingState processingState;
+ 
+ 	private float[][] buffer;
+ 
+@@ -63,7 +63,7 @@
+ 					buffer[ch][i] = samples[i * Channels + ch];
+ 				}
+ 			}
++			AssetContract.Required(processingState).WriteData(buffer, toRead); // ArmAgedon seam
+-			processingState.WriteData(buffer, toRead);
+ 			WritePackets();
+ 			samples = samples.Slice(toRead * Channels);
+ 		}
+@@ -89,7 +89,7 @@
+ 	private void WritePackets()
+ 	{
+ 		OggPacket packet;
++		while (!AssetContract.Required(oggStream).Finished && AssetContract.Required(processingState).PacketOut(out packet)) // ArmAgedon seam
+-		while (!oggStream.Finished && processingState.PacketOut(out packet))
+ 		{
+ 			oggStream.PacketIn(packet);
+ 			FlushPages(force: false);
+@@ -99,7 +99,7 @@
+ 	private void FlushPages(bool force)
+ 	{
+ 		OggPage page;
++		while (AssetContract.Required(oggStream).PageOut(out page, force)) // ArmAgedon seam
+-		while (oggStream.PageOut(out page, force))
+ 		{
+ 			OutputStream.Write(page.Header, 0, page.Header.Length);
+ 			OutputStream.Write(page.Body, 0, page.Body.Length);

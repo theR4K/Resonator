@@ -1,0 +1,52 @@
+--- a/Elements/Assets/GaussianSplatCompressor.cs
++++ b/Elements/Assets/GaussianSplatCompressor.cs
+@@ -204,11 +204,11 @@
+ 		return bitmap;
+ 	}
+ 
++	public unsafe static byte[]? EncodeColorBuffer(GaussianCloud cloud, GaussianColorFormat format)
+-	public unsafe static byte[] EncodeColorBuffer(GaussianCloud cloud, GaussianColorFormat format)
+ 	{
+ 		Span<SphericalHarmonicsL3<PixelRGB_Float>> shs = cloud.ColorData<SphericalHarmonicsL3<PixelRGB_Float>>();
+ 		Span<float> alphas = cloud.Alphas;
++		byte[]? buffer;
+-		byte[] buffer;
+ 		switch (format)
+ 		{
+ 		case GaussianColorFormat.Float32x4:
+@@ -249,7 +249,7 @@
+ 			break;
+ 		}
+ 		case GaussianColorFormat.BC7:
++			buffer = (AssetContract.Required((ArrayBackingMemoryBuffer?)PackColorsToTexture(cloud).BlockCompress(TextureFormat.BC7).Buffer)).Array; // ArmAgedon seam
+-			buffer = ((ArrayBackingMemoryBuffer)PackColorsToTexture(cloud).BlockCompress(TextureFormat.BC7).Buffer).Array;
+ 			break;
+ 		default:
+ 			throw new ArgumentException("Unsupported color format: " + format);
+@@ -262,7 +262,7 @@
+ 		}
+ 	}
+ 
++	public static GaussianCloud ReorderMorton(GaussianCloud cloud, BoundingBox? precomputedBounds = null, int[]? indexMapping = null)
+-	public static GaussianCloud ReorderMorton(GaussianCloud cloud, BoundingBox? precomputedBounds = null, int[] indexMapping = null)
+ 	{
+ 		BoundingBox bounds;
+ 		if (precomputedBounds.HasValue)
+@@ -326,7 +326,7 @@
+ 		};
+ 	}
+ 
++	public unsafe static ClusteredSH_Data ClusterSHs(GaussianCloud cloud, GaussianSHFormat format, IProgressIndicator? progress = null, CancellationToken cancel = default(CancellationToken))
+-	public unsafe static ClusteredSH_Data ClusterSHs(GaussianCloud cloud, GaussianSHFormat format, IProgressIndicator progress = null, CancellationToken cancel = default(CancellationToken))
+ 	{
+ 		if (cloud.ColorDataType != GaussianColorType.SH3_RGB_Float)
+ 		{
+@@ -404,7 +404,7 @@
+ 	{
+ 		Span<SphericalHarmonicsL3<PixelRGB_Float>> shs = cloud.ColorData<SphericalHarmonicsL3<PixelRGB_Float>>();
+ 		int coeffCount = cloud.ColorDataType.ElementCount() - 1;
++		byte[]? buffer;
+-		byte[] buffer;
+ 		switch (format)
+ 		{
+ 		case GaussianSHFormat.Float16:

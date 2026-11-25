@@ -1,0 +1,17 @@
+--- a/Elements/Assets/LocaleData.cs
++++ b/Elements/Assets/LocaleData.cs
+@@ -6,11 +6,11 @@
+ public class LocaleData
+ {
+ 	[JsonPropertyName("localeCode")]
++	public string? LocaleCode { get; set; }
+-	public string LocaleCode { get; set; }
+ 
+ 	[JsonPropertyName("authors")]
++	public List<string>? Authors { get; set; }
+-	public List<string> Authors { get; set; }
+ 
+ 	[JsonPropertyName("messages")]
++	public Dictionary<string, string>? Messages { get; set; }
+-	public Dictionary<string, string> Messages { get; set; }
+ }

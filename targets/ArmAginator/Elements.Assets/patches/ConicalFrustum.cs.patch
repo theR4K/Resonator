@@ -1,0 +1,20 @@
+--- a/Elements/Assets/ConicalFrustum.cs
++++ b/Elements/Assets/ConicalFrustum.cs
+@@ -78,7 +78,7 @@
+ 		BaseVertexOffset = new float3[sides];
+ 		TopVertexOffset = new float3[sides];
+ 		_baseVertOffset = AllVertices.Count;
++		AssetContract.Required(Mesh).AddVertices(SideVerts, AllVertices); // ArmAgedon seam
+-		Mesh.AddVertices(SideVerts, AllVertices);
+ 		_topVertOffset = AllVertices.Count;
+ 		Mesh.AddVertices(SideVerts, AllVertices);
+ 		if (Cap)
+@@ -110,7 +110,7 @@
+ 		float3 normalBasis = new float3(0f, 0f - sideSlope.x, sideSlope.y).Normalized;
+ 		float angleStep = (float)Math.PI * 2f / (float)Sides;
+ 		float uvStep = 1f / (float)Sides * UVScale.x;
++		AssetContract.Required(Mesh).HasNormals = true; // ArmAgedon seam
+-		Mesh.HasNormals = true;
+ 		Mesh.HasTangents = true;
+ 		Mesh.HasUV0s = true;
+ 		for (int i = 0; i < SideVerts; i++)

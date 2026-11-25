@@ -1,0 +1,56 @@
+--- a/Elements/Assets/MeshVariantDescriptor.cs
++++ b/Elements/Assets/MeshVariantDescriptor.cs
+@@ -26,7 +26,7 @@
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
+ 	[Newtonsoft.Json.JsonIgnore]
++	public string? ValidationError
+-	public string ValidationError
+ 	{
+ 		get
+ 		{
+@@ -126,7 +126,7 @@
+ 		VariantVersion = 2;
+ 	}
+ 
++	public bool Equals(MeshVariantDescriptor? other, VersionComparison versionComparison)
+-	public bool Equals(MeshVariantDescriptor other, VersionComparison versionComparison)
+ 	{
+ 		if (!AssetVariantHelper.VersionEquals(this, other, versionComparison))
+ 		{
+@@ -143,7 +143,7 @@
+ 		return true;
+ 	}
+ 
++	public bool Equals(MeshVariantDescriptor? other)
+-	public bool Equals(MeshVariantDescriptor other)
+ 	{
+ 		return Equals(other, VersionComparison.Exact);
+ 	}
+@@ -158,12 +158,12 @@
+ 		return new List<MeshVariantDescriptor> { this };
+ 	}
+ 
++	public void GenerateLoadChain(List<string?> chain)
+-	public void GenerateLoadChain(List<string> chain)
+ 	{
+ 		chain.Add(null);
+ 	}
+ 
++	public List<MeshVariantDescriptor>? GetBestAlternateChain(List<MeshVariantDescriptor> availableDescriptors, Predicate<MeshVariantDescriptor>? variantFilter = null)
+-	public List<MeshVariantDescriptor> GetBestAlternateChain(List<MeshVariantDescriptor> availableDescriptors, Predicate<MeshVariantDescriptor> variantFilter = null)
+ 	{
+ 		foreach (MeshVariantDescriptor alternate in availableDescriptors)
+ 		{
+@@ -175,9 +175,9 @@
+ 		return null;
+ 	}
+ 
++	public string? ValidateCloudVariant(MeshMetadata metadata)
+-	public string ValidateCloudVariant(MeshMetadata metadata)
+ 	{
++		string? baseError = ValidationError;
+-		string baseError = ValidationError;
+ 		if (baseError != null)
+ 		{
+ 			return baseError;

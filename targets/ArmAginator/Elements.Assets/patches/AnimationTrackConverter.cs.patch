@@ -1,0 +1,38 @@
+--- a/Elements/Assets/AnimationTrackConverter.cs
++++ b/Elements/Assets/AnimationTrackConverter.cs
+@@ -12,7 +12,7 @@
+ 		return typeof(AnimationTrackData).IsAssignableFrom(typeToConvert);
+ 	}
+ 
++	public override AnimationTrackData? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+-	public override AnimationTrackData Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+ 	{
+ 		if (reader.TokenType != JsonTokenType.StartObject)
+ 		{
+@@ -26,7 +26,7 @@
+ 		{
+ 			throw new JsonException();
+ 		}
++		TrackType trackType = (TrackType)Enum.Parse(typeof(TrackType), AssetContract.Required(reader.GetString())); // ArmAgedon seam
+-		TrackType trackType = (TrackType)Enum.Parse(typeof(TrackType), reader.GetString());
+ 		if (!reader.Read() || reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != "valueType")
+ 		{
+ 			throw new JsonException();
+@@ -35,7 +35,7 @@
+ 		{
+ 			throw new JsonException();
+ 		}
++		Type elementType = AnimX.ElementNameToType(AssetContract.Required(reader.GetString())); // ArmAgedon seam
+-		Type elementType = AnimX.ElementNameToType(reader.GetString());
+ 		Type type = trackType switch
+ 		{
+ 			TrackType.Raw => typeof(RawAnimationTrackData<>).MakeGenericType(elementType), 
+@@ -51,7 +51,7 @@
+ 		{
+ 			throw new JsonException();
+ 		}
++		AnimationTrackData? result = (AnimationTrackData?)JsonSerializer.Deserialize(ref reader, type);
+-		AnimationTrackData result = (AnimationTrackData)JsonSerializer.Deserialize(ref reader, type);
+ 		if (!reader.Read() || reader.TokenType != JsonTokenType.EndObject)
+ 		{
+ 			throw new JsonException();

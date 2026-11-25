@@ -1,0 +1,131 @@
+--- a/Elements/Assets/GeometryMask.cs
++++ b/Elements/Assets/GeometryMask.cs
+@@ -7,11 +7,11 @@
+ {
+ 	private BitArray _vertexMask;
+ 
++	private BitArray[]? _primitiveMasks;
+-	private BitArray[] _primitiveMasks;
+ 
++	private int[]? _maskedPrimitiveCounts;
+-	private int[] _maskedPrimitiveCounts;
+ 
++	private int[]? _remappedIndexes;
+-	private int[] _remappedIndexes;
+ 
+ 	public MeshX Mesh { get; private set; }
+ 
+@@ -53,31 +53,31 @@
+ 
+ 	public int MaskedPrimitiveCount(int submeshIndex)
+ 	{
++		return AssetContract.Required(_maskedPrimitiveCounts)[submeshIndex]; // ArmAgedon seam
+-		return _maskedPrimitiveCounts[submeshIndex];
+ 	}
+ 
+ 	public bool IsPrimitiveMasked(int submeshIndex, int indiceIndex)
+ 	{
++		return AssetContract.Required(_primitiveMasks)[submeshIndex][indiceIndex]; // ArmAgedon seam
+-		return _primitiveMasks[submeshIndex][indiceIndex];
+ 	}
+ 
+ 	public void MaskPrimitive(int submeshIndex, int indiceIndex)
+ 	{
++		BitArray mask = AssetContract.Required(_primitiveMasks)[submeshIndex]; // ArmAgedon seam
+-		BitArray mask = _primitiveMasks[submeshIndex];
+ 		if (!mask[indiceIndex])
+ 		{
+ 			mask[indiceIndex] = true;
++			AssetContract.Required(_maskedPrimitiveCounts)[submeshIndex]++; // ArmAgedon seam
+-			_maskedPrimitiveCounts[submeshIndex]++;
+ 		}
+ 	}
+ 
+ 	public void ClearPrimitive(int submeshIndex, int indiceIndex)
+ 	{
++		BitArray mask = AssetContract.Required(_primitiveMasks)[submeshIndex]; // ArmAgedon seam
+-		BitArray mask = _primitiveMasks[submeshIndex];
+ 		if (mask[indiceIndex])
+ 		{
+ 			mask[indiceIndex] = false;
++			AssetContract.Required(_maskedPrimitiveCounts)[submeshIndex]--; // ArmAgedon seam
+-			_maskedPrimitiveCounts[submeshIndex]--;
+ 		}
+ 	}
+ 
+@@ -91,7 +91,7 @@
+ 		_maskedPrimitiveCounts = new int[Mesh.SubmeshCount];
+ 		for (int i = 0; i < _primitiveMasks.Length; i++)
+ 		{
++			_primitiveMasks[i] = new BitArray(AssetContract.Required(Mesh.submeshes[i]).Count); // ArmAgedon seam
+-			_primitiveMasks[i] = new BitArray(Mesh.submeshes[i].Count);
+ 		}
+ 	}
+ 
+@@ -122,7 +122,7 @@
+ 
+ 	public int GetNewVertexIndex(int vertexIndex)
+ 	{
++		return AssetContract.Required(_remappedIndexes)[vertexIndex]; // ArmAgedon seam
+-		return _remappedIndexes[vertexIndex];
+ 	}
+ 
+ 	public void MaskPrimitivesFromVertices()
+@@ -133,14 +133,14 @@
+ 		}
+ 		for (int s = 0; s < Mesh.SubmeshCount; s++)
+ 		{
++			Submesh? submesh = Mesh.submeshes[s];
++			for (int i = 0; i < AssetContract.Required(submesh).Count; i++) // ArmAgedon seam
+-			Submesh submesh = Mesh.submeshes[s];
+-			for (int i = 0; i < submesh.Count; i++)
+ 			{
+ 				int offset = i * submesh.IndiciesPerElement;
+ 				bool affected = false;
+ 				for (int v = 0; v < submesh.IndiciesPerElement; v++)
+ 				{
++					if (_vertexMask[AssetContract.Required(submesh.RawIndicies)[offset + v]]) // ArmAgedon seam
+-					if (_vertexMask[submesh.RawIndicies[offset + v]])
+ 					{
+ 						affected = true;
+ 						break;
+@@ -158,8 +158,8 @@
+ 	{
+ 		for (int s = 0; s < Mesh.SubmeshCount; s++)
+ 		{
++			Submesh? submesh = Mesh.submeshes[s];
++			for (int i = 0; i < AssetContract.Required(submesh).Count; i++) // ArmAgedon seam
+-			Submesh submesh = Mesh.submeshes[s];
+-			for (int i = 0; i < submesh.Count; i++)
+ 			{
+ 				if (IsPrimitiveMasked(s, i))
+ 				{
+@@ -167,7 +167,7 @@
+ 					for (int v = 0; v < submesh.IndiciesPerElement; v++)
+ 					{
+ 						int index = offset + v;
++						int indicie = AssetContract.Required(submesh.RawIndicies)[index]; // ArmAgedon seam
+-						int indicie = submesh.RawIndicies[index];
+ 						MaskVertex(indicie);
+ 					}
+ 				}
+@@ -179,8 +179,8 @@
+ 	{
+ 		for (int s = 0; s < Mesh.SubmeshCount; s++)
+ 		{
++			Submesh? submesh = Mesh.submeshes[s];
++			for (int i = 0; i < AssetContract.Required(submesh).Count; i++) // ArmAgedon seam
+-			Submesh submesh = Mesh.submeshes[s];
+-			for (int i = 0; i < submesh.Count; i++)
+ 			{
+ 				if (!IsPrimitiveMasked(s, i))
+ 				{
+@@ -188,7 +188,7 @@
+ 					for (int v = 0; v < submesh.IndiciesPerElement; v++)
+ 					{
+ 						int index = offset + v;
++						int indicie = AssetContract.Required(submesh.RawIndicies)[index]; // ArmAgedon seam
+-						int indicie = submesh.RawIndicies[index];
+ 						ClearVertex(indicie);
+ 					}
+ 				}

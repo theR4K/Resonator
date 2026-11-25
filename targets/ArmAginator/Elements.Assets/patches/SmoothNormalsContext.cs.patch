@@ -1,0 +1,43 @@
+--- a/Elements/Assets/SmoothNormalsContext.cs
++++ b/Elements/Assets/SmoothNormalsContext.cs
+@@ -10,7 +10,7 @@
+ 
+ 	private readonly double multiplier;
+ 
++	private Dictionary<int3, float3>? normals;
+-	private Dictionary<int3, float3> normals;
+ 
+ 	public SmoothNormalsContext(double cellSize = 0.001)
+ 	{
+@@ -22,19 +22,19 @@
+ 	public float3 GetNormal(in float3 position)
+ 	{
+ 		int3 cell = MathX.FloorToInt(position * multiplier);
++		return AssetContract.Required(normals)[cell]; // ArmAgedon seam
+-		return normals[cell];
+ 	}
+ 
+ 	public bool TryGetNormal(in float3 position, out float3 normal)
+ 	{
+ 		int3 cell = MathX.FloorToInt(position * multiplier);
++		return AssetContract.Required(normals).TryGetValue(cell, out normal); // ArmAgedon seam
+-		return normals.TryGetValue(cell, out normal);
+ 	}
+ 
+ 	public void AssignNormal(Vertex vertex)
+ 	{
+ 		int3 cell = MathX.FloorToInt(vertex.PositionUnsafe * multiplier);
++		if (AssetContract.Required(normals).TryGetValue(cell, out var normal)) // ArmAgedon seam
+-		if (normals.TryGetValue(cell, out var normal))
+ 		{
+ 			vertex.NormalUnsafe = normal;
+ 		}
+@@ -43,7 +43,7 @@
+ 	public void StoreNormal(in float3 normal, in float3 position)
+ 	{
+ 		int3 cell = MathX.FloorToInt(position * multiplier);
++		if (AssetContract.Required(normals).TryGetValue(cell, out var existingNormal)) // ArmAgedon seam
+-		if (normals.TryGetValue(cell, out var existingNormal))
+ 		{
+ 			normals[cell] = existingNormal + normal;
+ 		}

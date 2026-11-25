@@ -1,0 +1,11 @@
+--- a/Elements/Assets/FlacEncodeSettings.cs
++++ b/Elements/Assets/FlacEncodeSettings.cs
+@@ -17,7 +17,7 @@
+ 		BitsPerSample = 16;
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (!base.Equals(obj))
+ 		{

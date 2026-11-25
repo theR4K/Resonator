@@ -1,0 +1,49 @@
+--- a/Elements/Assets/StringSegmentNode.cs
++++ b/Elements/Assets/StringSegmentNode.cs
+@@ -36,12 +36,12 @@
+ 		ClearRenderGlyphs();
+ 	}
+ 
++	internal override void Shape(bool kerning, ref uint? lastGlyphId, ref FontX? lastFont, ref float lastSize, List<ICharacterFilter> characterFilterCache, List<ISizeFilter> sizeFilterCache)
+-	internal override void Shape(bool kerning, ref uint? lastGlyphId, ref FontX lastFont, ref float lastSize, List<ICharacterFilter> characterFilterCache, List<ISizeFilter> sizeFilterCache)
+ 	{
+ 		ClearRenderGlyphs();
+ 		float size = this.GetFontSize();
+ 		this.GetFontFormatting();
++		FontSet? fontSet = this.GetFontSet();
+-		FontSet fontSet = this.GetFontSet();
+ 		GetParentNodes(characterFilterCache);
+ 		GetParentNodes(sizeFilterCache);
+ 		float baseline = 0f;
+@@ -59,19 +59,19 @@
+ 				ch = item2.FilterCharacter(ch, StartIndex + i);
+ 			}
+ 			bool isSurrogate = false;
++			GlyphMetrics? metrics;
+-			GlyphMetrics metrics;
+ 			FontX font;
+ 			switch (ch)
+ 			{
+ 			case '\n':
+ 				metrics = StringRenderTree.EMPTY_GLYPH;
++				font = AssetContract.Required(fontSet).MainFont; // ArmAgedon seam
+-				font = fontSet.MainFont;
+ 				lastGlyphId = null;
+ 				lastSize = size;
+ 				break;
+ 			case '\t':
+ 				metrics = StringRenderTree.TINY_GLYPH;
++				font = AssetContract.Required(fontSet).MainFont; // ArmAgedon seam
+-				font = fontSet.MainFont;
+ 				lastGlyphId = null;
+ 				break;
+ 			default:
+@@ -102,7 +102,7 @@
+ 				{
+ 					charcode = ch;
+ 				}
++				AssetContract.Required(fontSet).GetGlyphByUnicode(charcode, out metrics, out font); // ArmAgedon seam
+-				fontSet.GetGlyphByUnicode(charcode, out metrics, out font);
+ 				if (metrics == null)
+ 				{
+ 					continue;

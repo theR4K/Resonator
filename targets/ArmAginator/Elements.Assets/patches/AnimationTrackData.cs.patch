@@ -1,0 +1,15 @@
+--- a/Elements/Assets/AnimationTrackData.cs
++++ b/Elements/Assets/AnimationTrackData.cs
+@@ -12,10 +12,10 @@
+ 	public abstract Type ValueType { get; }
+ 
+ 	[JsonPropertyName("node")]
++	public string? Node { get; set; }
+-	public string Node { get; set; }
+ 
+ 	[JsonPropertyName("property")]
++	public string? Property { get; set; }
+-	public string Property { get; set; }
+ 
+ 	internal abstract float AddTo(AnimX animx);
+ }

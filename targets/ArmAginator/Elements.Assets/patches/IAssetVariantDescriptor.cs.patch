@@ -1,0 +1,38 @@
+--- a/Elements/Assets/IAssetVariantDescriptor.cs
++++ b/Elements/Assets/IAssetVariantDescriptor.cs
+@@ -21,12 +21,12 @@
+ 	/// <summary>
+ 	/// If the variant isn't valid, this will indicate why it's not a valid one.
+ 	/// </summary>
++	string? ValidationError { get; }
+-	string ValidationError { get; }
+ 
+ 	/// <summary>
+ 	/// A unique string identifier in a form of a query that fully identifiers this particular variant.
+ 	/// </summary>
++	string? VariantIdentifier { get; }
+-	string VariantIdentifier { get; }
+ 
+ 	/// <summary>
+ 	/// A composite variant is a description that doesn't represent an asset itself, but rather a set of
+@@ -44,7 +44,7 @@
+ 	/// </summary>
+ 	void EnsureCurrentVersion();
+ 
++	void GenerateLoadChain(List<string?> chain);
+-	void GenerateLoadChain(List<string> chain);
+ 
+ 	List<IAssetVariantDescriptor> GenerateCloudChainNonGeneric();
+ }
+@@ -52,9 +52,9 @@
+ {
+ 	List<D> GenerateCloudChain();
+ 
++	List<D>? GetBestAlternateChain(List<D> availableDescriptors, Predicate<D>? variantFilter = null);
+-	List<D> GetBestAlternateChain(List<D> availableDescriptors, Predicate<D> variantFilter = null);
+ 
+ 	bool Equals(D other, VersionComparison versionComparison);
+ 
++	string? ValidateCloudVariant(M metadata);
+-	string ValidateCloudVariant(M metadata);
+ }

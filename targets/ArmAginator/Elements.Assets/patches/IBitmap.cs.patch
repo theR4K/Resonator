@@ -1,0 +1,9 @@
+--- a/Elements/Assets/IBitmap.cs
++++ b/Elements/Assets/IBitmap.cs
+@@ -9,5 +9,5 @@
+ }
+ public interface IBitmap<B> : IBitmap where B : IBitmap<B>
+ {
++	B ConvertTo(TextureFormat format, IBackingBufferAllocator? allocator = null);
+-	B ConvertTo(TextureFormat format, IBackingBufferAllocator allocator = null);
+ }

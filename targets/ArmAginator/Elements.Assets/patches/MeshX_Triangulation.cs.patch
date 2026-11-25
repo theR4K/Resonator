@@ -1,0 +1,50 @@
+--- a/Elements/Assets/MeshX_Triangulation.cs
++++ b/Elements/Assets/MeshX_Triangulation.cs
+@@ -7,17 +7,17 @@
+ 
+ public static class MeshX_Triangulation
+ {
++	public static void TriangulateConstrainedDelaunay(this TriangleSubmesh submesh, in float3 planeCenter, in float3 planeNormal, bool autoRejectDuplicateVertices = true, bool ignoreInvalidTriangles = false, List<int>? rejectedVertices = null)
+-	public static void TriangulateConstrainedDelaunay(this TriangleSubmesh submesh, in float3 planeCenter, in float3 planeNormal, bool autoRejectDuplicateVertices = true, bool ignoreInvalidTriangles = false, List<int> rejectedVertices = null)
+ 	{
+ 		submesh.TriangulateConstrainedDelaunay(planeCenter, in planeNormal, submesh.Mesh.VertexCount, (int i) => i, 0, null, null, autoRejectDuplicateVertices, ignoreInvalidTriangles, rejectedVertices);
+ 	}
+ 
++	public static void TriangulateConstrainedDelaunay(this TriangleSubmesh submesh, in float3 planeCenter, in float3 planeNormal, IList<int> vertices, IList<IList<int>> holeVertices, bool autoRejectDuplicateVertices = true, bool ignoreInvalidTriangles = false, List<int>? duplicateVertices = null)
+-	public static void TriangulateConstrainedDelaunay(this TriangleSubmesh submesh, in float3 planeCenter, in float3 planeNormal, IList<int> vertices, IList<IList<int>> holeVertices, bool autoRejectDuplicateVertices = true, bool ignoreInvalidTriangles = false, List<int> duplicateVertices = null)
+ 	{
+ 		submesh.TriangulateConstrainedDelaunay(planeCenter, in planeNormal, vertices.Count, (int i) => vertices[i], holeVertices?.Count ?? 0, (holeVertices == null) ? null : ((Func<int, int>)((int holeIndex) => holeVertices[holeIndex].Count)), (holeVertices == null) ? null : ((HoleVertexGetter)((int holeIndex, int vertexIndex) => holeVertices[holeIndex][vertexIndex])), autoRejectDuplicateVertices, ignoreInvalidTriangles, duplicateVertices);
+ 	}
+ 
++	public static void TriangulateConstrainedDelaunay(this TriangleSubmesh submesh, float3 planeCenter, in float3 planeNormal, int vertexCount, Func<int, int> getVertexIndex, int holeCount = 0, Func<int, int>? holeVertexCountGetter = null, HoleVertexGetter? holeVertexGetter = null, bool autoRejectDuplicateVertices = true, bool ignoreInvalidTriangles = false, List<int>? duplicateVertices = null)
+-	public static void TriangulateConstrainedDelaunay(this TriangleSubmesh submesh, float3 planeCenter, in float3 planeNormal, int vertexCount, Func<int, int> getVertexIndex, int holeCount = 0, Func<int, int> holeVertexCountGetter = null, HoleVertexGetter holeVertexGetter = null, bool autoRejectDuplicateVertices = true, bool ignoreInvalidTriangles = false, List<int> duplicateVertices = null)
+ 	{
+ 		if (holeCount > 0)
+ 		{
+@@ -42,7 +42,7 @@
+ 			int holeIndex;
+ 			for (holeIndex = 0; holeIndex < holeCount; holeIndex++)
+ 			{
++				Shape holeShape = BuildShape(AssetContract.Required(holeVertexCountGetter)(holeIndex), (int vertexIndex) => AssetContract.Required(holeVertexGetter)(holeIndex, vertexIndex)); // ArmAgedon seam
+-				Shape holeShape = BuildShape(holeVertexCountGetter(holeIndex), (int vertexIndex) => holeVertexGetter(holeIndex, vertexIndex));
+ 				if (holeShape.Points.Count >= 3)
+ 				{
+ 					shape.Holes.Add(holeShape);
+@@ -67,7 +67,7 @@
+ 		}
+ 		foreach (Elements.Assets.Poly2Tri.Triangle t in triangles)
+ 		{
++			if (AssetContract.Required(t.Points[0]).Index < 0 || AssetContract.Required(t.Points[1]).Index < 0 || AssetContract.Required(t.Points[2]).Index < 0) // ArmAgedon seam
+-			if (t.Points[0].Index < 0 || t.Points[1].Index < 0 || t.Points[2].Index < 0)
+ 			{
+ 				if (!ignoreInvalidTriangles)
+ 				{
+@@ -76,7 +76,7 @@
+ 			}
+ 			else
+ 			{
++				submesh.AddTriangle(AssetContract.Required(t.Points[0]).Index, AssetContract.Required(t.Points[1]).Index, AssetContract.Required(t.Points[2]).Index); // ArmAgedon seam
+-				submesh.AddTriangle(t.Points[0].Index, t.Points[1].Index, t.Points[2].Index);
+ 			}
+ 		}
+ 		Shape BuildShape(int num, Func<int, int> func)

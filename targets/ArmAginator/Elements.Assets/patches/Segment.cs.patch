@@ -1,0 +1,207 @@
+--- a/Elements/Assets/Segment.cs
++++ b/Elements/Assets/Segment.cs
+@@ -20,37 +20,37 @@
+ 
+ 	internal float3 _dir;
+ 
++	private SegmentedBuilder? builder;
+-	private SegmentedBuilder builder;
+ 
++	internal VertexCollection? ConnectToVertices;
+-	internal VertexCollection ConnectToVertices;
+ 
++	internal VertexCollection? ConnectAtVertices;
+-	internal VertexCollection ConnectAtVertices;
+ 
++	internal TriangleCollection? Triangles;
+-	internal TriangleCollection Triangles;
+ 
++	private float[]? vertexCircumferences;
+-	private float[] vertexCircumferences;
+ 
+ 	public bool IsDirty => _dirty;
+ 
+ 	public int Index { get; internal set; }
+ 
++	public Segment? PreviousSegment
+-	public Segment PreviousSegment
+ 	{
+ 		get
+ 		{
+ 			if (Index != 0)
+ 			{
++				return AssetContract.Required(builder).GetSegment(Index - 1); // ArmAgedon seam
+-				return builder.GetSegment(Index - 1);
+ 			}
+ 			return null;
+ 		}
+ 	}
+ 
++	public Segment? NextSegment
+-	public Segment NextSegment
+ 	{
+ 		get
+ 		{
++			if (Index != AssetContract.Required(builder).SegmentCount - 1) // ArmAgedon seam
+-			if (Index != builder.SegmentCount - 1)
+ 			{
+ 				return builder.GetSegment(Index + 1);
+ 			}
+@@ -123,23 +123,23 @@
+ 		}
+ 	}
+ 
++	protected TriangleSubmesh Submesh => AssetContract.Required(builder).Submesh; // ArmAgedon seam
+-	protected TriangleSubmesh Submesh => builder.Submesh;
+ 
++	protected bool IsCircle => AssetContract.Required(builder).TopologyType == SegmentedBuilder.Topology.Circle; // ArmAgedon seam
+-	protected bool IsCircle => builder.TopologyType == SegmentedBuilder.Topology.Circle;
+ 
++	protected MeshX? Mesh => AssetContract.Required(builder).Mesh; // ArmAgedon seam
+-	protected MeshX Mesh => builder.Mesh;
+ 
++	protected int Points => AssetContract.Required(builder).Points; // ArmAgedon seam
+-	protected int Points => builder.Points;
+ 
++	protected float PointStep => AssetContract.Required(builder).PointStep; // ArmAgedon seam
+-	protected float PointStep => builder.PointStep;
+ 
++	protected int Sides => AssetContract.Required(builder).Sides; // ArmAgedon seam
+-	protected int Sides => builder.Sides;
+ 
++	protected bool DualSided => AssetContract.Required(builder).DualSided; // ArmAgedon seam
+-	protected bool DualSided => builder.DualSided;
+ 
++	protected bool FlatSides => AssetContract.Required(builder).FlatSides; // ArmAgedon seam
+-	protected bool FlatSides => builder.FlatSides;
+ 
++	protected bool FlatSegments => AssetContract.Required(builder).FlatSegments; // ArmAgedon seam
+-	protected bool FlatSegments => builder.FlatSegments;
+ 
+ 	protected int SegmentVerts => (FlatSides ? (Sides * 2) : (Sides + 1)) * Faces;
+ 
+@@ -157,15 +157,15 @@
+ 		}
+ 	}
+ 
++	protected SegmentedBuilder? Builder => builder;
+-	protected SegmentedBuilder Builder => builder;
+ 
+ 	public float Circumference
+ 	{
+ 		get
+ 		{
++			if (AssetContract.Required(builder).PreciseUV) // ArmAgedon seam
+-			if (builder.PreciseUV)
+ 			{
++				return AssetContract.Required(vertexCircumferences)[vertexCircumferences.Length - 1]; // ArmAgedon seam
+-				return vertexCircumferences[vertexCircumferences.Length - 1];
+ 			}
+ 			return SimpleCircumference;
+ 		}
+@@ -175,7 +175,7 @@
+ 
+ 	public float GetCircumferenceToVertex(int index)
+ 	{
++		return AssetContract.Required(vertexCircumferences)[index]; // ArmAgedon seam
+-		return vertexCircumferences[index];
+ 	}
+ 
+ 	internal virtual void Setup(SegmentedBuilder builder, int index)
+@@ -203,7 +203,7 @@
+ 					vIndex += SegmentVerts / 2;
+ 					tIndex += SegmentTrigs / 2;
+ 				}
++				AssetContract.Required(Mesh).SetQuadAsTriangles(source[vIndex], target[vIndex], target[vIndex + 1], source[vIndex + 1], Triangles[tIndex], Triangles[tIndex + 1], f == 1); // ArmAgedon seam
+-				Mesh.SetQuadAsTriangles(source[vIndex], target[vIndex], target[vIndex + 1], source[vIndex + 1], Triangles[tIndex], Triangles[tIndex + 1], f == 1);
+ 			}
+ 		}
+ 	}
+@@ -233,11 +233,11 @@
+ 			{
+ 				if (p == 0)
+ 				{
++					AssetContract.Required(vertexCircumferences)[p] = 0f; // ArmAgedon seam
+-					vertexCircumferences[p] = 0f;
+ 				}
+ 				else
+ 				{
++					AssetContract.Required(vertexCircumferences)[p] = vertexCircumferences[p - 1] + MathX.Distance(in pos, in prevPos); // ArmAgedon seam
+-					vertexCircumferences[p] = vertexCircumferences[p - 1] + MathX.Distance(in pos, in prevPos);
+ 				}
+ 				prevPos = pos;
+ 			}
+@@ -282,9 +282,9 @@
+ 				}
+ 			}
+ 		}
++		if (updateVertexCircumferences && AssetContract.Required(builder).TopologyType == SegmentedBuilder.Topology.Circle) // ArmAgedon seam
+-		if (updateVertexCircumferences && builder.TopologyType == SegmentedBuilder.Topology.Circle)
+ 		{
++			AssetContract.Required(vertexCircumferences)[vertexCircumferences.Length - 1] = vertexCircumferences[1] + vertexCircumferences[vertexCircumferences.Length - 2]; // ArmAgedon seam
+-			vertexCircumferences[vertexCircumferences.Length - 1] = vertexCircumferences[1] + vertexCircumferences[vertexCircumferences.Length - 2];
+ 		}
+ 	}
+ 
+@@ -294,7 +294,7 @@
+ 		{
+ 			return;
+ 		}
++		AssetContract.Required(Mesh).Profile = _profile; // ArmAgedon seam
+-		Mesh.Profile = _profile;
+ 		for (int v = 0; v < SegmentVerts; v++)
+ 		{
+ 			if (ConnectAtVertices != null)
+@@ -317,7 +317,7 @@
+ 		bool secondaryVertex = true;
+ 		bool secondFace = false;
+ 		float uCoord = 0f;
++		float uCoordStep = (AssetContract.Required(builder).PreciseUV ? (1f / Circumference) : (1f / (float)Sides)); // ArmAgedon seam
+-		float uCoordStep = (builder.PreciseUV ? (1f / Circumference) : (1f / (float)Sides));
+ 		int uvVert = 0;
+ 		int halfwayPoint = SegmentVerts >> 1;
+ 		for (int v = 0; v < SegmentVerts; v++)
+@@ -410,7 +410,7 @@
+ 	{
+ 		TriangleCollection trigs = new TriangleCollection();
+ 		Submesh.AddTriangles(SegmentTrigs, trigs);
++		AssetContract.Required(builder).AllTriangles.AddRange(trigs); // ArmAgedon seam
+-		builder.AllTriangles.AddRange(trigs);
+ 		return trigs;
+ 	}
+ 
+@@ -418,8 +418,8 @@
+ 	{
+ 		MarkDirty();
+ 		VertexCollection verts = new VertexCollection();
++		AssetContract.Required(Mesh).AddVertices(SegmentVerts, verts); // ArmAgedon seam
++		AssetContract.Required(builder).AllVertices.AddRange(verts); // ArmAgedon seam
+-		Mesh.AddVertices(SegmentVerts, verts);
+-		builder.AllVertices.AddRange(verts);
+ 		return verts;
+ 	}
+ 
+@@ -432,18 +432,18 @@
+ 	{
+ 		if (!_dirty)
+ 		{
++			AssetContract.Required(builder).RegisterDirtySegment(this); // ArmAgedon seam
+-			builder.RegisterDirtySegment(this);
+ 			_dirty = true;
+ 		}
+ 	}
+ 
++	public int CompareTo(Segment? other)
+-	public int CompareTo(Segment other)
+ 	{
++		return Index.CompareTo(AssetContract.Required(other).Index); // ArmAgedon seam
+-		return Index.CompareTo(other.Index);
+ 	}
+ 
++	public int CompareTo(object? obj)
+-	public int CompareTo(object obj)
+ 	{
++		return CompareTo((Segment?)obj);
+-		return CompareTo((Segment)obj);
+ 	}
+ }

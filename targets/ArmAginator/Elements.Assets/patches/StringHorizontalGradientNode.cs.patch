@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringHorizontalGradientNode.cs
++++ b/Elements/Assets/StringHorizontalGradientNode.cs
+@@ -28,7 +28,7 @@
+ 		return new StringHorizontalGradientNode(colors, startIndex, parent);
+ 	}
+ 
++	public static StringHorizontalGradientNode? Parse(ReadOnlySpan<char> parameters, int startIndex, StringContainerNode parent)
+-	public static StringHorizontalGradientNode Parse(ReadOnlySpan<char> parameters, int startIndex, StringContainerNode parent)
+ 	{
+ 		if (parameters.Length == 0)
+ 		{

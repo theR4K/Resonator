@@ -1,0 +1,45 @@
+--- a/Elements/Assets/AnimationTrack.cs
++++ b/Elements/Assets/AnimationTrack.cs
+@@ -9,8 +9,9 @@
+ 
+ 	private string _property = "";
+ 
++	public AnimX? Animation { get; private set; }
+-	public AnimX Animation { get; private set; }
+ 
++	[System.Diagnostics.CodeAnalysis.AllowNull]
+ 	public string Node
+ 	{
+ 		get
+@@ -19,11 +20,12 @@
+ 		}
+ 		set
+ 		{
++			CheckModification(); // ArmAgedon seam
+-			Animation.CheckModification();
+ 			_node = value ?? "";
+ 		}
+ 	}
+ 
++	[System.Diagnostics.CodeAnalysis.AllowNull]
+ 	public string Property
+ 	{
+ 		get
+@@ -32,7 +34,7 @@
+ 		}
+ 		set
+ 		{
++			CheckModification(); // ArmAgedon seam
+-			Animation.CheckModification();
+ 			_property = value ?? "";
+ 		}
+ 	}
+@@ -70,7 +72,7 @@
+ 	{
+ 		if (Animation != null)
+ 		{
++			CheckModification(); // ArmAgedon seam
+-			Animation.CheckModification();
+ 		}
+ 	}
+ }

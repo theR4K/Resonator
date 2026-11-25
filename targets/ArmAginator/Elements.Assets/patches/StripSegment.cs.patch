@@ -1,0 +1,20 @@
+--- a/Elements/Assets/StripSegment.cs
++++ b/Elements/Assets/StripSegment.cs
+@@ -4,7 +4,7 @@
+ 
+ public class StripSegment : Segment
+ {
++	private StripBuilder? _stripBuilder;
+-	private StripBuilder _stripBuilder;
+ 
+ 	private float _width = 1f;
+ 
+@@ -34,7 +34,7 @@
+ 
+ 	protected override float3 ComputeLocalPoint(int index)
+ 	{
++		float3 p = ((float)index * PointStep * _width - _halfWidth) * AssetContract.Required(_stripBuilder).BaseOffset; // ArmAgedon seam
+-		float3 p = ((float)index * PointStep * _width - _halfWidth) * _stripBuilder.BaseOffset;
+ 		if (_stripBuilder._offsets != null)
+ 		{
+ 			p += _stripBuilder._offsets[index];

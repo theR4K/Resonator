@@ -1,0 +1,20 @@
+--- a/Elements/Assets/FontSet.cs
++++ b/Elements/Assets/FontSet.cs
+@@ -13,7 +13,7 @@
+ 		Fonts.Add(mainFont);
+ 	}
+ 
++	public bool GetGlyphByUnicode(uint charcode, out GlyphMetrics? metrics, out FontX font)
+-	public bool GetGlyphByUnicode(uint charcode, out GlyphMetrics metrics, out FontX font)
+ 	{
+ 		foreach (FontX f in Fonts)
+ 		{
+@@ -29,7 +29,7 @@
+ 		return false;
+ 	}
+ 
++	public bool GetGlyphByName(string name, out GlyphMetrics? metrics, out uint glyphId, out FontX? font)
+-	public bool GetGlyphByName(string name, out GlyphMetrics metrics, out uint glyphId, out FontX font)
+ 	{
+ 		foreach (FontX f in Fonts)
+ 		{

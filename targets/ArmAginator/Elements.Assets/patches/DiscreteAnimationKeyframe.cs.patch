@@ -1,0 +1,9 @@
+--- a/Elements/Assets/DiscreteAnimationKeyframe.cs
++++ b/Elements/Assets/DiscreteAnimationKeyframe.cs
+@@ -8,5 +8,5 @@
+ 	public float Time { get; set; }
+ 
+ 	[JsonPropertyName("value")]
++	public T? Value { get; set; }
+-	public T Value { get; set; }
+ }

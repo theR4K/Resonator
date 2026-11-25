@@ -1,0 +1,11 @@
+--- a/Elements/Assets/BoneBinding.cs
++++ b/Elements/Assets/BoneBinding.cs
+@@ -365,7 +365,7 @@
+ 		}
+ 	}
+ 
++	public Bone? GetBone(MeshX meshx, int bindingIndex)
+-	public Bone GetBone(MeshX meshx, int bindingIndex)
+ 	{
+ 		int index = GetBoneIndex(bindingIndex);
+ 		if (index < 0)

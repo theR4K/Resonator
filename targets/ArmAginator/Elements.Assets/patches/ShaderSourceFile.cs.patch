@@ -1,0 +1,23 @@
+--- a/Elements/Assets/ShaderSourceFile.cs
++++ b/Elements/Assets/ShaderSourceFile.cs
+@@ -8,17 +8,17 @@
+ {
+ 	[JsonProperty(PropertyName = "filename")]
+ 	[JsonPropertyName("filename")]
++	public string? FileName { get; set; }
+-	public string FileName { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "hash")]
+ 	[JsonPropertyName("hash")]
++	public string? Hash { get; set; }
+-	public string Hash { get; set; }
+ 
+ 	public ShaderSourceFile()
+ 	{
+ 	}
+ 
++	public ShaderSourceFile(string? filename, string? hash)
+-	public ShaderSourceFile(string filename, string hash)
+ 	{
+ 		FileName = filename;
+ 		Hash = hash;

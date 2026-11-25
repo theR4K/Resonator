@@ -1,0 +1,11 @@
+--- a/Elements/Assets/AnimationData.cs
++++ b/Elements/Assets/AnimationData.cs
+@@ -6,7 +6,7 @@
+ public class AnimationData
+ {
+ 	[JsonPropertyName("name")]
++	public string? Name { get; set; }
+-	public string Name { get; set; }
+ 
+ 	[JsonPropertyName("globalDuration")]
+ 	public float GlobalDuration { get; set; }

@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringMarkNode.cs
++++ b/Elements/Assets/StringMarkNode.cs
+@@ -18,7 +18,7 @@
+ 		return new StringMarkNode(MarkColor, startIndex, parent);
+ 	}
+ 
++	public static StringMarkNode? Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+-	public static StringMarkNode Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+ 	{
+ 		if (parameter.Length == 0)
+ 		{

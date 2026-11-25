@@ -1,0 +1,47 @@
+--- a/Elements/Assets/PointCloudDecoder.cs
++++ b/Elements/Assets/PointCloudDecoder.cs
+@@ -29,23 +29,23 @@
+ 		using StreamReader fstream = File.OpenText(file);
+ 		MeshX meshx = new MeshX();
+ 		PointSubmesh points = meshx.AddSubmesh<PointSubmesh>();
++		int pointCount = int.Parse(AssetContract.Required(fstream.ReadLine())); // ArmAgedon seam
+-		int pointCount = int.Parse(fstream.ReadLine());
+ 		meshx.IncreaseVertexCount(pointCount);
+ 		meshx.IncreasePointCount(pointCount);
+ 		for (int i = 0; i < pointCount; i++)
+ 		{
++			string[] parts = AssetContract.Required(fstream.ReadLine()).Split(' '); // ArmAgedon seam
++			AssetContract.Required(points.RawIndicies)[i] = i; // ArmAgedon seam
+-			string[] parts = fstream.ReadLine().Split(' ');
+-			points.RawIndicies[i] = i;
+ 			try
+ 			{
++				AssetContract.Required(meshx.RawPositions)[i] = new float3(float.Parse(parts[0], CultureInfo.InvariantCulture), float.Parse(parts[1], CultureInfo.InvariantCulture), float.Parse(parts[2], CultureInfo.InvariantCulture)); // ArmAgedon seam
+-				meshx.RawPositions[i] = new float3(float.Parse(parts[0], CultureInfo.InvariantCulture), float.Parse(parts[1], CultureInfo.InvariantCulture), float.Parse(parts[2], CultureInfo.InvariantCulture));
+ 				if (parts.Length >= 6)
+ 				{
+ 					byte r = byte.Parse(parts[4]);
+ 					byte g = byte.Parse(parts[5]);
+ 					byte b = byte.Parse(parts[6]);
+ 					meshx.HasColors = true;
++					AssetContract.Required(meshx.RawColors)[i] = new color32(r, g, b); // ArmAgedon seam
+-					meshx.RawColors[i] = new color32(r, g, b);
+ 				}
+ 			}
+ 			catch (Exception ex)
+@@ -72,12 +72,12 @@
+ 		{
+ 			reader.laszip_read_point();
+ 			reader.laszip_get_coordinates(coords);
++			AssetContract.Required(points.RawIndicies)[i] = i; // ArmAgedon seam
++			AssetContract.Required(meshx.RawPositions)[i] = new float3((float)coords[0], (float)coords[1], (float)coords[2]); // ArmAgedon seam
+-			points.RawIndicies[i] = i;
+-			meshx.RawPositions[i] = new float3((float)coords[0], (float)coords[1], (float)coords[2]);
+ 			if (reader.point.rgb != null && reader.point.rgb.Length >= 3)
+ 			{
+ 				meshx.HasColors = true;
++				AssetContract.Required(meshx.RawColors)[i] = new color((float)(int)reader.point.rgb[0] / 65535f, (float)(int)reader.point.rgb[1] / 65535f, (float)(int)reader.point.rgb[2] / 65535f); // ArmAgedon seam
+-				meshx.RawColors[i] = new color((float)(int)reader.point.rgb[0] / 65535f, (float)(int)reader.point.rgb[1] / 65535f, (float)(int)reader.point.rgb[2] / 65535f);
+ 			}
+ 		}
+ 		reader.laszip_close_reader();

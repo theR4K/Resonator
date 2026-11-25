@@ -1,0 +1,20 @@
+--- a/Elements/Assets/ShaderVariantGenerator.cs
++++ b/Elements/Assets/ShaderVariantGenerator.cs
+@@ -7,7 +7,7 @@
+ 
+ public static class ShaderVariantGenerator
+ {
++	public static List<ComputedVariantResult> GenerateVariants(string file, ShaderVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler? variantGenerated = null, Predicate<string>? variantFilter = null)
+-	public static List<ComputedVariantResult> GenerateVariants(string file, ShaderVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler variantGenerated = null, Predicate<string> variantFilter = null)
+ 	{
+ 		List<ComputedVariantResult> results = new List<ComputedVariantResult>();
+ 		if (!File.Exists(file))
+@@ -19,7 +19,7 @@
+ 		{
+ 			using ShaderPackage shaderPackage = new ShaderPackage(file);
+ 			string generatedFile = Path.Combine(AssetVariantHelper.TempFolder ?? Path.GetTempPath(), Guid.NewGuid().ToString());
++			byte[]? data = shaderPackage.ReadVariant(variantDescriptor.TargetPlatform.PackageName(), variantDescriptor.VariantIndex);
+-			byte[] data = shaderPackage.ReadVariant(variantDescriptor.TargetPlatform.PackageName(), variantDescriptor.VariantIndex);
+ 			if (data != null)
+ 			{
+ 				File.WriteAllBytes(generatedFile, data);

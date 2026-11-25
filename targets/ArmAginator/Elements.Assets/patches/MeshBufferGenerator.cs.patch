@@ -1,0 +1,67 @@
+--- a/Elements/Assets/MeshBufferGenerator.cs
++++ b/Elements/Assets/MeshBufferGenerator.cs
+@@ -8,7 +8,7 @@
+ 
+ public static class MeshBufferGenerator
+ {
++	public static void UpdateMeshBufferData(MeshX mesh, MeshBuffer data, IBackingBufferAllocator allocator, ColorProfile targetColorProfile, ref MeshUploadHint hint, MeshMetadata? metadata = null, BoundingBox? overrideBounds = null, object? owner = null)
+-	public static void UpdateMeshBufferData(MeshX mesh, MeshBuffer data, IBackingBufferAllocator allocator, ColorProfile targetColorProfile, ref MeshUploadHint hint, MeshMetadata metadata = null, BoundingBox? overrideBounds = null, object owner = null)
+ 	{
+ 		if (EnsureValidVertexAttributes(mesh, data, hint))
+ 		{
+@@ -131,7 +131,7 @@
+ 		}
+ 	}
+ 
++	public static bool EnsureValidSubmeshes(MeshX mesh, MeshBuffer data, MeshMetadata? metadata, BoundingBox? overrideBounds = null)
+-	public static bool EnsureValidSubmeshes(MeshX mesh, MeshBuffer data, MeshMetadata metadata, BoundingBox? overrideBounds = null)
+ 	{
+ 		bool changed = false;
+ 		if (data.Submeshes.Count != mesh.SubmeshCount)
+@@ -146,14 +146,14 @@
+ 		int indexOffset = 0;
+ 		for (int s = 0; s < mesh.SubmeshCount; s++)
+ 		{
++			Submesh? submesh = mesh.GetSubmesh(s);
+-			Submesh submesh = mesh.GetSubmesh(s);
+ 			SubmeshBufferDescriptor descriptor = new SubmeshBufferDescriptor
+ 			{
++				topology = AssetContract.Required(submesh).Topology, // ArmAgedon seam
+-				topology = submesh.Topology,
+ 				indexStart = indexOffset,
+ 				indexCount = submesh.IndicieCount
+ 			};
++			BoundingBox bounds = ((metadata == null || metadata.SubmeshCount != mesh.SubmeshCount) ? (overrideBounds ?? submesh.CalculateBoundingBox()) : AssetContract.Required(metadata.SubmeshMetadata)[s].bounds); // ArmAgedon seam
+-			BoundingBox bounds = ((metadata == null || metadata.SubmeshCount != mesh.SubmeshCount) ? (overrideBounds ?? submesh.CalculateBoundingBox()) : metadata.SubmeshMetadata[s].bounds);
+ 			if (!bounds.IsValid)
+ 			{
+ 				bounds = new BoundingBox(float3.Zero);
+@@ -189,7 +189,7 @@
+ 		int boneWeightCount = 0;
+ 		for (int i = 0; i < mesh.VertexCount; i++)
+ 		{
++			boneWeightCount += AssetContract.Required(mesh.RawBoneBindings)[i].ActiveBoneCount; // ArmAgedon seam
+-			boneWeightCount += mesh.RawBoneBindings[i].ActiveBoneCount;
+ 		}
+ 		data.BoneWeightCount = boneWeightCount;
+ 	}
+@@ -730,8 +730,8 @@
+ 		for (int s = 0; s < data.Submeshes.Count; s++)
+ 		{
+ 			_ = data.Submeshes[s];
++			Submesh? submesh = mesh.GetSubmesh(s);
++			Span<uint> sourceIndicies = MemoryMarshal.Cast<int, uint>(AssetContract.Required(submesh).RawIndicies.AsSpan(0, submesh.IndicieCount)); // ArmAgedon seam
+-			Submesh submesh = mesh.GetSubmesh(s);
+-			Span<uint> sourceIndicies = MemoryMarshal.Cast<int, uint>(submesh.RawIndicies.AsSpan(0, submesh.IndicieCount));
+ 			switch (data.IndexBufferFormat)
+ 			{
+ 			case IndexBufferFormat.UInt16:
+@@ -765,7 +765,7 @@
+ 		int boneWeightIndex = 0;
+ 		for (int i = 0; i < mesh.VertexCount; i++)
+ 		{
++			BoneBinding binding = AssetContract.Required(mesh.RawBoneBindings)[i]; // ArmAgedon seam
+-			BoneBinding binding = mesh.RawBoneBindings[i];
+ 			boneCounts[i] = (byte)binding.ActiveBoneCount;
+ 			for (int b = 0; b < boneCounts[i]; b++)
+ 			{

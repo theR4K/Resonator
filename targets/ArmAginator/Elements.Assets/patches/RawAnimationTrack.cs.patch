@@ -1,0 +1,29 @@
+--- a/Elements/Assets/RawAnimationTrack.cs
++++ b/Elements/Assets/RawAnimationTrack.cs
+@@ -12,7 +12,7 @@
+ /// <typeparam name="T"></typeparam>
+ public abstract class RawAnimationTrack<T> : AnimationTrack
+ {
++	internal readonly List<T?> frames = new List<T?>();
+-	internal readonly List<T> frames = new List<T>();
+ 
+ 	private float _interval;
+ 
+@@ -47,7 +47,7 @@
+ 		lerp = (time - _interval * (float)index) * _intervalOverOne;
+ 	}
+ 
++	public T? GetFrame(int index)
+-	public T GetFrame(int index)
+ 	{
+ 		return frames[index];
+ 	}
+@@ -89,7 +89,7 @@
+ 		frames.RemoveRange(index, count);
+ 	}
+ 
++	public T? SampleRaw(float position)
+-	public T SampleRaw(float position)
+ 	{
+ 		GetSampleIndex(position, out var index, out var _);
+ 		return frames[index];

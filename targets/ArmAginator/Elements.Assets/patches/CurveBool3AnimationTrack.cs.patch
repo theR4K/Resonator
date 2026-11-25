@@ -1,0 +1,20 @@
+--- a/Elements/Assets/CurveBool3AnimationTrack.cs
++++ b/Elements/Assets/CurveBool3AnimationTrack.cs
+@@ -55,7 +55,7 @@
+ 	{
+ 		for (int i = 0; i < FrameCount; i++)
+ 		{
++			InternTangents internTangents = AssetContract.Required(tangents)[i]; // ArmAgedon seam
+-			InternTangents internTangents = tangents[i];
+ 			bw.Write(in internTangents.left);
+ 			internTangents = tangents[i];
+ 			bw.Write(in internTangents.right);
+@@ -74,7 +74,7 @@
+ 	{
+ 		for (int i = 0; i < count; i++)
+ 		{
++			AssetContract.Required(tangents).Add(new InternTangents(br.Read3D_Boolean(), br.Read3D_Boolean())); // ArmAgedon seam
+-			tangents.Add(new InternTangents(br.Read3D_Boolean(), br.Read3D_Boolean()));
+ 		}
+ 	}
+ }

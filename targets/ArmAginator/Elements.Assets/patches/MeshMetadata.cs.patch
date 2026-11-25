@@ -1,0 +1,48 @@
+--- a/Elements/Assets/MeshMetadata.cs
++++ b/Elements/Assets/MeshMetadata.cs
+@@ -25,7 +25,7 @@
+ 
+ 	[JsonProperty(PropertyName = "assetIdenfitier")]
+ 	[JsonPropertyName("assetIdenfitier")]
++	public string? AssetIdentifier { get; set; }
+-	public string AssetIdentifier { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "vertexCount")]
+ 	[JsonPropertyName("vertexCount")]
+@@ -125,15 +125,15 @@
+ 
+ 	[JsonProperty(PropertyName = "submeshMetadata")]
+ 	[JsonPropertyName("submeshMetadata")]
++	public List<SubmeshMetadata>? SubmeshMetadata { get; set; }
+-	public List<SubmeshMetadata> SubmeshMetadata { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "boneMetadata")]
+ 	[JsonPropertyName("boneMetadata")]
++	public List<BoneMetadata>? BoneMetadata { get; set; }
+-	public List<BoneMetadata> BoneMetadata { get; set; }
+ 
+ 	[JsonProperty(PropertyName = "approximateBoneBounds")]
+ 	[JsonPropertyName("approximateBoneBounds")]
++	public List<ApproximateBoneBounds>? ApproximateBoneBounds { get; set; }
+-	public List<ApproximateBoneBounds> ApproximateBoneBounds { get; set; }
+ 
+ 	public void CopyFrom(IAssetMetadata metadata)
+ 	{
+@@ -199,7 +199,7 @@
+ 
+ 	public static MeshMetadata GenerateMetadata(string file)
+ 	{
++		MeshX? meshx = null;
+-		MeshX meshx = null;
+ 		try
+ 		{
+ 			meshx = new MeshX(file);
+@@ -208,7 +208,7 @@
+ 		{
+ 			UniLog.Error($"Exception when decoding MeshX file {file}:\n{value}");
+ 		}
++		MeshMetadata meshMetadata = GenerateMetadata(AssetContract.Required(meshx)); // ArmAgedon seam
+-		MeshMetadata meshMetadata = GenerateMetadata(meshx);
+ 		meshMetadata.AssetIdentifier = file;
+ 		return meshMetadata;
+ 	}

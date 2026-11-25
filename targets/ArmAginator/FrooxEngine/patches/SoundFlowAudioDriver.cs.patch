@@ -9,7 +9,7 @@
  {
  	private static bool _initialized;
  
-@@ -38,8 +38,8 @@
+@@ -38,15 +38,15 @@
  		{
  			_initialized = true;
  			SoundFlowAudioDriver.inputInterface = inputInterface;
@@ -20,3 +20,29 @@
  		}
  	}
  
+ 	private static void InitializeDevices()
+ 	{
+ 		UniLog.Log("Enumerating audio devices:\n");
++		engine.UpdateAudioDevicesInfo();
+-		engine.UpdateDevicesInfo();
+ 		DeviceInfo[] sources = engine.CaptureDevices;
+ 		DeviceInfo[] playbacks = engine.PlaybackDevices;
+ 		IEnumerable<SoundFlowRecordingDevice> inputs = AudioSystem.AudioInputs.Where((AudioInput audioInput) => audioInput is SoundFlowRecordingDevice).Cast<SoundFlowRecordingDevice>();
+@@ -59,7 +59,7 @@
+ 		for (int num = 0; num < array.Length; num++)
+ 		{
+ 			DeviceInfo device = array[num];
++			SoundFlowRecordingDevice? input = inputs.FirstOrDefault((SoundFlowRecordingDevice soundFlowRecordingDevice) => device.Name == soundFlowRecordingDevice.DeviceID);
+-			SoundFlowRecordingDevice input = inputs.FirstOrDefault((SoundFlowRecordingDevice soundFlowRecordingDevice) => device.Name == soundFlowRecordingDevice.DeviceID);
+ 			if (input == null)
+ 			{
+ 				input = new SoundFlowRecordingDevice(device);
+@@ -84,7 +84,7 @@
+ 		for (int num = 0; num < array.Length; num++)
+ 		{
+ 			DeviceInfo device2 = array[num];
++			SoundFlowPlaybackDevice? output = outputs.FirstOrDefault((SoundFlowPlaybackDevice soundFlowPlaybackDevice) => device2.Name == soundFlowPlaybackDevice.Name);
+-			SoundFlowPlaybackDevice output = outputs.FirstOrDefault((SoundFlowPlaybackDevice soundFlowPlaybackDevice) => device2.Name == soundFlowPlaybackDevice.Name);
+ 			if (output == null)
+ 			{
+ 				output = new SoundFlowPlaybackDevice(device2);

@@ -1,0 +1,9 @@
+--- a/Elements/Assets/ComputedConvexHull.cs
++++ b/Elements/Assets/ComputedConvexHull.cs
+@@ -8,5 +8,5 @@
+ 
+ 	public floatQ Rotation;
+ 
++	public MeshX? Mesh;
+-	public MeshX Mesh;
+ }

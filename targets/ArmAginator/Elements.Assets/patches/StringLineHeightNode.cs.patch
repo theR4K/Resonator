@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringLineHeightNode.cs
++++ b/Elements/Assets/StringLineHeightNode.cs
+@@ -18,7 +18,7 @@
+ 		return new StringLineHeightNode(Height, startIndex, parent);
+ 	}
+ 
++	public static StringLineHeightNode? Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+-	public static StringLineHeightNode Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+ 	{
+ 		if (parameter.Length == 0)
+ 		{

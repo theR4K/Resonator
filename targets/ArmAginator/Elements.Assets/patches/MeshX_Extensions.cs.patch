@@ -1,0 +1,168 @@
+--- a/Elements/Assets/MeshX_Extensions.cs
++++ b/Elements/Assets/MeshX_Extensions.cs
+@@ -30,12 +30,12 @@
+ 
+ 	public static QuadTriangles AddQuadAsTriangles(this MeshX mesh, Vertex v0, Vertex v1, Vertex v2, Vertex v3, int submesh = 0, bool reverse = false)
+ 	{
++		return AssetContract.Required(mesh.TryGetSubmesh<TriangleSubmesh>(submesh)).AddQuadAsTriangles(v0, v1, v2, v3, reverse); // ArmAgedon seam
+-		return mesh.TryGetSubmesh<TriangleSubmesh>(submesh).AddQuadAsTriangles(v0, v1, v2, v3, reverse);
+ 	}
+ 
+ 	public static QuadTriangles AddQuadAsTriangles(this MeshX mesh, int v0, int v1, int v2, int v3, int submesh = 0, bool reverse = false)
+ 	{
++		return AssetContract.Required(mesh.TryGetSubmesh<TriangleSubmesh>(submesh)).AddQuadAsTriangles(v0, v1, v2, v3, reverse); // ArmAgedon seam
+-		return mesh.TryGetSubmesh<TriangleSubmesh>(submesh).AddQuadAsTriangles(v0, v1, v2, v3, reverse);
+ 	}
+ 
+ 	public static void SetQuadAsTriangles(this TriangleSubmesh triangles, int v0, int v1, int v2, int v3, int t0, int t1, bool reverse = false)
+@@ -61,47 +61,47 @@
+ 
+ 	public static void SetQuadAsTriangles(this MeshX mesh, int v0, int v1, int v2, int v3, int t0, int t1, bool reverse = false, int submesh = 0)
+ 	{
++		AssetContract.Required(mesh.TryGetSubmesh<TriangleSubmesh>(submesh)).SetQuadAsTriangles(v0, v1, v2, v3, t0, t1, reverse); // ArmAgedon seam
+-		mesh.TryGetSubmesh<TriangleSubmesh>(submesh).SetQuadAsTriangles(v0, v1, v2, v3, t0, t1, reverse);
+ 	}
+ 
+ 	public static void SetQuadAsTriangles(this MeshX mesh, Vertex v0, Vertex v1, Vertex v2, Vertex v3, int t0, int t1, bool reverse = false, int submesh = 0)
+ 	{
++		AssetContract.Required(mesh.TryGetSubmesh<TriangleSubmesh>(submesh)).SetQuadAsTriangles(v0, v1, v2, v3, t0, t1, reverse); // ArmAgedon seam
+-		mesh.TryGetSubmesh<TriangleSubmesh>(submesh).SetQuadAsTriangles(v0, v1, v2, v3, t0, t1, reverse);
+ 	}
+ 
+ 	public static void SetQuadAsTriangles(this MeshX mesh, Vertex v0, Vertex v1, Vertex v2, Vertex v3, Triangle t0, Triangle t1, bool reverse = false, int submesh = 0)
+ 	{
++		AssetContract.Required(mesh.TryGetSubmesh<TriangleSubmesh>(submesh)).SetQuadAsTriangles(v0, v1, v2, v3, t0, t1, reverse); // ArmAgedon seam
+-		mesh.TryGetSubmesh<TriangleSubmesh>(submesh).SetQuadAsTriangles(v0, v1, v2, v3, t0, t1, reverse);
+ 	}
+ 
++	public static void AddTriangleFan(this TriangleSubmesh submesh, IList<int> vertices, bool reverseOrder = false, TriangleCollection? triangles = null)
+-	public static void AddTriangleFan(this TriangleSubmesh submesh, IList<int> vertices, bool reverseOrder = false, TriangleCollection triangles = null)
+ 	{
+ 		submesh.AddTriangleFan(vertices, 0, vertices.Count, reverseOrder, triangles);
+ 	}
+ 
++	public static void AddTriangleFan(this TriangleSubmesh submesh, IList<Vertex> vertices, bool reverseOrder = false, TriangleCollection? triangles = null)
+-	public static void AddTriangleFan(this TriangleSubmesh submesh, IList<Vertex> vertices, bool reverseOrder = false, TriangleCollection triangles = null)
+ 	{
+ 		submesh.AddTriangleFan(vertices, 0, vertices.Count, reverseOrder, triangles);
+ 	}
+ 
++	public static void AddTriangleFan<T>(this TriangleSubmesh submesh, IList<T> vertices, Func<T, int> getIndex, bool reverseOrder = false, TriangleCollection? triangles = null)
+-	public static void AddTriangleFan<T>(this TriangleSubmesh submesh, IList<T> vertices, Func<T, int> getIndex, bool reverseOrder = false, TriangleCollection triangles = null)
+ 	{
+ 		submesh.AddTriangleFan(vertices, 0, vertices.Count, getIndex, reverseOrder, triangles);
+ 	}
+ 
++	public static void AddTriangleFan(this TriangleSubmesh submesh, IList<int> vertices, int offset, int count, bool reverseOrder = false, TriangleCollection? triangles = null)
+-	public static void AddTriangleFan(this TriangleSubmesh submesh, IList<int> vertices, int offset, int count, bool reverseOrder = false, TriangleCollection triangles = null)
+ 	{
+ 		submesh.AddTriangleFan(vertices, offset, count, (int i) => i, reverseOrder, triangles);
+ 	}
+ 
++	public static void AddTriangleFan(this TriangleSubmesh submesh, IList<Vertex> vertices, int offset, int count, bool reverseOrder = false, TriangleCollection? triangles = null)
+-	public static void AddTriangleFan(this TriangleSubmesh submesh, IList<Vertex> vertices, int offset, int count, bool reverseOrder = false, TriangleCollection triangles = null)
+ 	{
+ 		submesh.AddTriangleFan(vertices, offset, count, (Vertex v) => v.Index, reverseOrder, triangles);
+ 	}
+ 
++	public static void AddTriangleFan<T>(this TriangleSubmesh submesh, IList<T> vertices, int offset, int count, Func<T, int> getIndex, bool reverseOrder = false, TriangleCollection? triangles = null)
+-	public static void AddTriangleFan<T>(this TriangleSubmesh submesh, IList<T> vertices, int offset, int count, Func<T, int> getIndex, bool reverseOrder = false, TriangleCollection triangles = null)
+ 	{
++		TriangleCollection? trigs = Pool.Borrow<TriangleCollection>();
+-		TriangleCollection trigs = Pool.Borrow<TriangleCollection>();
+ 		submesh.AddTriangles(count - 2, trigs);
+ 		int trigIndex = 0;
+ 		submesh.ConnectTriangleFan(offset, count, (int i) => getIndex(vertices[i]), () => trigs[trigIndex++].IndexUnsafe, reverseOrder);
+@@ -111,14 +111,14 @@
+ 
+ 	public static void AddTriangleFan(this TriangleSubmesh submesh, int vertexCount, Func<int, int> getVertexIndex, bool reverseOrder = false)
+ 	{
++		TriangleCollection? trigs = Pool.Borrow<TriangleCollection>();
+-		TriangleCollection trigs = Pool.Borrow<TriangleCollection>();
+ 		submesh.AddTriangles(vertexCount - 2, trigs);
+ 		int trigIndex = 0;
+ 		submesh.ConnectTriangleFan(0, vertexCount, getVertexIndex, () => trigs[trigIndex++].IndexUnsafe, reverseOrder);
+ 		Pool.Return(ref trigs);
+ 	}
+ 
++	public static void ConnectTriangleFan(this TriangleSubmesh submesh, IList<int> vertices, Func<int> getNextTriangle, bool reverseOrder = false, TriangleCollection? triangles = null)
+-	public static void ConnectTriangleFan(this TriangleSubmesh submesh, IList<int> vertices, Func<int> getNextTriangle, bool reverseOrder = false, TriangleCollection triangles = null)
+ 	{
+ 		submesh.ConnectTriangleFan(0, vertices.Count, (int i) => vertices[i], getNextTriangle, reverseOrder);
+ 	}
+@@ -152,59 +152,59 @@
+ 		}
+ 	}
+ 
++	public static void AddTriangleFan(this MeshX mesh, IList<int> vertices, bool reverseOrder = false, int submesh = 0, TriangleCollection? triangles = null)
+-	public static void AddTriangleFan(this MeshX mesh, IList<int> vertices, bool reverseOrder = false, int submesh = 0, TriangleCollection triangles = null)
+ 	{
++		AssetContract.Required(mesh.TryGetSubmesh<TriangleSubmesh>(submesh)).AddTriangleFan(vertices, reverseOrder, triangles); // ArmAgedon seam
+-		mesh.TryGetSubmesh<TriangleSubmesh>(submesh).AddTriangleFan(vertices, reverseOrder, triangles);
+ 	}
+ 
++	public static void AddTriangleFan(this MeshX mesh, IList<Vertex> vertices, bool reverseOrder = false, int submesh = 0, TriangleCollection? triangles = null)
+-	public static void AddTriangleFan(this MeshX mesh, IList<Vertex> vertices, bool reverseOrder = false, int submesh = 0, TriangleCollection triangles = null)
+ 	{
++		AssetContract.Required(mesh.TryGetSubmesh<TriangleSubmesh>(submesh)).AddTriangleFan(vertices, reverseOrder, triangles); // ArmAgedon seam
+-		mesh.TryGetSubmesh<TriangleSubmesh>(submesh).AddTriangleFan(vertices, reverseOrder, triangles);
+ 	}
+ 
++	public static void AddTriangleFan<T>(this MeshX mesh, IList<T> vertices, Func<T, int> getIndex, bool reverseOrder = false, int submesh = 0, TriangleCollection? triangles = null)
+-	public static void AddTriangleFan<T>(this MeshX mesh, IList<T> vertices, Func<T, int> getIndex, bool reverseOrder = false, int submesh = 0, TriangleCollection triangles = null)
+ 	{
++		AssetContract.Required(mesh.TryGetSubmesh<TriangleSubmesh>(submesh)).AddTriangleFan(vertices, getIndex, reverseOrder, triangles); // ArmAgedon seam
+-		mesh.TryGetSubmesh<TriangleSubmesh>(submesh).AddTriangleFan(vertices, getIndex, reverseOrder, triangles);
+ 	}
+ 
+ 	public static void AddTriangleFan(this MeshX mesh, int vertexCount, Func<int, int> getVertexIndex, bool reverseOrder = false, int submesh = 0)
+ 	{
++		AssetContract.Required(mesh.TryGetSubmesh<TriangleSubmesh>(submesh)).AddTriangleFan(vertexCount, getVertexIndex, reverseOrder); // ArmAgedon seam
+-		mesh.TryGetSubmesh<TriangleSubmesh>(submesh).AddTriangleFan(vertexCount, getVertexIndex, reverseOrder);
+ 	}
+ 
++	public static void ConnectTriangleFan(this MeshX mesh, IList<int> vertices, Func<int> getNextTriangle, bool reverseOrder = false, int submesh = 0, TriangleCollection? triangles = null)
+-	public static void ConnectTriangleFan(this MeshX mesh, IList<int> vertices, Func<int> getNextTriangle, bool reverseOrder = false, int submesh = 0, TriangleCollection triangles = null)
+ 	{
++		AssetContract.Required(mesh.TryGetSubmesh<TriangleSubmesh>(submesh)).ConnectTriangleFan(vertices, getNextTriangle, reverseOrder, triangles); // ArmAgedon seam
+-		mesh.TryGetSubmesh<TriangleSubmesh>(submesh).ConnectTriangleFan(vertices, getNextTriangle, reverseOrder, triangles);
+ 	}
+ 
+ 	public static void SetupAsPointCloud(this MeshX mesh)
+ 	{
++		PointSubmesh? points = mesh.TryGetSubmesh<PointSubmesh>();
++		if (AssetContract.Required(points).Count > 0) // ArmAgedon seam
+-		PointSubmesh points = mesh.TryGetSubmesh<PointSubmesh>();
+-		if (points.Count > 0)
+ 		{
+ 			throw new Exception("Mesh already contains points");
+ 		}
+ 		points.IncreaseCount(mesh.VertexCount);
+ 		for (int i = 0; i < mesh.VertexCount; i++)
+ 		{
++			AssetContract.Required(points.indicies)[i] = i; // ArmAgedon seam
+-			points.indicies[i] = i;
+ 		}
+ 	}
+ 
+ 	public static void ConvertToPointCloud(this MeshX mesh)
+ 	{
++		HashSet<int>? indicies = Pool.BorrowHashSet<int>();
+-		HashSet<int> indicies = Pool.BorrowHashSet<int>();
+ 		for (int s = 0; s < mesh.SubmeshCount; s++)
+ 		{
++			Submesh? submesh = mesh.GetSubmesh(s);
++			if (AssetContract.Required(submesh).Topology == SubmeshTopology.Points) // ArmAgedon seam
+-			Submesh submesh = mesh.GetSubmesh(s);
+-			if (submesh.Topology == SubmeshTopology.Points)
+ 			{
+ 				continue;
+ 			}
+ 			PointSubmesh points = mesh.InsertSubmesh<PointSubmesh>(s);
+ 			for (int i = 0; i < submesh.IndicieCount; i++)
+ 			{
++				int idx = AssetContract.Required(submesh.RawIndicies)[i]; // ArmAgedon seam
+-				int idx = submesh.RawIndicies[i];
+ 				if (indicies.Add(idx))
+ 				{
+ 					points.AddPoint(idx);

@@ -1,0 +1,14 @@
+--- a/Elements/Assets/AnimJImporter.cs
++++ b/Elements/Assets/AnimJImporter.cs
+@@ -29,9 +29,9 @@
+ 		}));
+ 	}
+ 
++	public static AnimX CreateFrom(AnimationData? animation)
+-	public static AnimX CreateFrom(AnimationData animation)
+ 	{
++		AnimX animx = new AnimX(AssetContract.Required(animation).GlobalDuration, animation.Name);
+-		AnimX animx = new AnimX(animation.GlobalDuration, animation.Name);
+ 		float duration = 0f;
+ 		foreach (AnimationTrackData track in animation.Tracks)
+ 		{

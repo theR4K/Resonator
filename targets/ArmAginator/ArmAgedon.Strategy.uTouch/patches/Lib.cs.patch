@@ -1,0 +1,13 @@
+--- a/uTouchInjection/Lib.cs
++++ b/uTouchInjection/Lib.cs
+@@ -21,8 +21,8 @@
+ 	[DllImport("uTouchInjection")]
+ 	public static extern void Initialize(int touchNum);
+ 
++	[DllImport("uTouchInjection", EntryPoint = "Finalize")]
++	public static extern void FinalizeInjection();
+-	[DllImport("uTouchInjection")]
+-	public static extern void Finalize();
+ 
+ 	[DllImport("uTouchInjection")]
+ 	public static extern void Update();

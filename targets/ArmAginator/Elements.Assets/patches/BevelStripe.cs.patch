@@ -1,0 +1,85 @@
+--- a/Elements/Assets/BevelStripe.cs
++++ b/Elements/Assets/BevelStripe.cs
+@@ -18,7 +18,7 @@
+ 
+ 	public float RightSlantAngle = 45f;
+ 
++	private BevelEdgeBlockBuilder? builder;
+-	private BevelEdgeBlockBuilder builder;
+ 
+ 	private EdgeBlockBuilder.Point p0;
+ 
+@@ -32,11 +32,11 @@
+ 	{
+ 		get
+ 		{
++			return AssetContract.Required(builder).Position; // ArmAgedon seam
+-			return builder.Position;
+ 		}
+ 		set
+ 		{
++			AssetContract.Required(builder).Position = value; // ArmAgedon seam
+-			builder.Position = value;
+ 		}
+ 	}
+ 
+@@ -44,11 +44,11 @@
+ 	{
+ 		get
+ 		{
++			return AssetContract.Required(builder).Rotation; // ArmAgedon seam
+-			return builder.Rotation;
+ 		}
+ 		set
+ 		{
++			AssetContract.Required(builder).Rotation = value; // ArmAgedon seam
+-			builder.Rotation = value;
+ 		}
+ 	}
+ 
+@@ -56,11 +56,11 @@
+ 	{
+ 		get
+ 		{
++			return AssetContract.Required(builder).Scale; // ArmAgedon seam
+-			return builder.Scale;
+ 		}
+ 		set
+ 		{
++			AssetContract.Required(builder).Scale = value; // ArmAgedon seam
+-			builder.Scale = value;
+ 		}
+ 	}
+ 
+@@ -104,11 +104,11 @@
+ 	{
+ 		get
+ 		{
++			return AssetContract.Required(builder).Relief; // ArmAgedon seam
+-			return builder.Relief;
+ 		}
+ 		set
+ 		{
++			AssetContract.Required(builder).Relief = value; // ArmAgedon seam
+-			builder.Relief = value;
+ 		}
+ 	}
+ 
+@@ -191,7 +191,7 @@
+ 		}
+ 		float _thickness = MathX.Min(Thickness, p1.Position.x - p0.Position.x, p2.Position.x - p3.Position.x);
+ 		float _border = ComputeBorderWidth(_thickness);
++		AssetContract.Required(builder).CalculatePointNormals(); // ArmAgedon seam
+-		builder.CalculatePointNormals();
+ 		EdgeBlockBuilder.Point point5 = p0;
+ 		point5.Normal *= -1;
+ 		EdgeBlockBuilder.Point point6 = p1;
+@@ -234,7 +234,7 @@
+ 
+ 	public void Remove()
+ 	{
++		AssetContract.Required(builder).Remove(); // ArmAgedon seam
+-		builder.Remove();
+ 		builder = null;
+ 	}
+ 

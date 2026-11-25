@@ -1,0 +1,114 @@
+--- a/Elements/Assets/GlyphAtlasMeshGenerator.cs
++++ b/Elements/Assets/GlyphAtlasMeshGenerator.cs
+@@ -26,8 +26,8 @@
+ 		_ = meshx.VertexCount;
+ 		int glyphs = renderTree.GlyphLayoutLength;
+ 		meshx.EnsureFreeCapacity(glyphs * 4);
++		TriangleSubmesh? auxiliarySubmesh = null;
++		Dictionary<FontSet, List<AtlasSubmesh>>? renderDataSet = Pool.BorrowDictionary<FontSet, List<AtlasSubmesh>>();
+-		TriangleSubmesh auxiliarySubmesh = null;
+-		Dictionary<FontSet, List<AtlasSubmesh>> renderDataSet = Pool.BorrowDictionary<FontSet, List<AtlasSubmesh>>();
+ 		foreach (KeyValuePair<FontSet, List<AtlasData>> atlasSet in fontSetAtlases)
+ 		{
+ 			List<AtlasSubmesh> submeshData = Pool.BorrowList<AtlasSubmesh>();
+@@ -37,12 +37,12 @@
+ 			}
+ 			renderDataSet.Add(atlasSet.Key, submeshData);
+ 		}
++		List<LineSegment>? lineSegments = Pool.BorrowList<LineSegment>();
+-		List<LineSegment> lineSegments = Pool.BorrowList<LineSegment>();
+ 		foreach (StringRenderGlyphSegmentNode segment in renderTree)
+ 		{
+ 			float size = segment.GetFontSize();
+ 			color color33 = segment.GetFontColor().ToProfile(meshx.Profile);
++			FontSet? fontSet = segment.GetFontSet();
+-			FontSet fontSet = segment.GetFontSet();
+ 			if (fontSet == null)
+ 			{
+ 				continue;
+@@ -58,7 +58,7 @@
+ 					continue;
+ 				}
+ 				AtlasSubmesh submeshData2 = default;
++				GlyphAtlasData? atlasData2 = null;
+-				GlyphAtlasData atlasData2 = null;
+ 				for (int a = 0; a < renderData.Count; a++)
+ 				{
+ 					submeshData2 = renderData[a];
+@@ -96,36 +96,36 @@
+ 					}
+ 					topOffset += offset;
+ 					bottomOffset += offset;
++					AssetContract.Required(meshx.RawPositions)[v0] = new float3(rect.xmax, 0f - rect.ymin) + (float3)topOffset; // ArmAgedon seam
+-					meshx.RawPositions[v0] = new float3(rect.xmax, 0f - rect.ymin) + (float3)topOffset;
+ 					meshx.RawPositions[v1] = new float3(rect.xmax, 0f - rect.ymax) + (float3)bottomOffset;
+ 					meshx.RawPositions[v2] = new float3(rect.xmin, 0f - rect.ymax) + (float3)bottomOffset;
+ 					meshx.RawPositions[v3] = new float3(rect.xmin, 0f - rect.ymin) + (float3)topOffset;
+ 					if (atlasData2.rotated)
+ 					{
++						AssetContract.Required(meshx.RawUV0s)[v0] = new float2(atlasData2.uv.xmin, atlasData2.uv.ymin); // ArmAgedon seam
+-						meshx.RawUV0s[v0] = new float2(atlasData2.uv.xmin, atlasData2.uv.ymin);
+ 						meshx.RawUV0s[v1] = new float2(atlasData2.uv.xmax, atlasData2.uv.ymin);
+ 						meshx.RawUV0s[v2] = new float2(atlasData2.uv.xmax, atlasData2.uv.ymax);
+ 						meshx.RawUV0s[v3] = new float2(atlasData2.uv.xmin, atlasData2.uv.ymax);
+ 					}
+ 					else
+ 					{
++						AssetContract.Required(meshx.RawUV0s)[v0] = new float2(atlasData2.uv.xmax, atlasData2.uv.ymax); // ArmAgedon seam
+-						meshx.RawUV0s[v0] = new float2(atlasData2.uv.xmax, atlasData2.uv.ymax);
+ 						meshx.RawUV0s[v1] = new float2(atlasData2.uv.xmax, atlasData2.uv.ymin);
+ 						meshx.RawUV0s[v2] = new float2(atlasData2.uv.xmin, atlasData2.uv.ymin);
+ 						meshx.RawUV0s[v3] = new float2(atlasData2.uv.xmin, atlasData2.uv.ymax);
+ 					}
+ 					float3 extraData = new float3(formatting.bold ? 0.5f : 0f);
++					if (AssetContract.Required(submeshData2.atlas).PixelRange > 0) // ArmAgedon seam
+-					if (submeshData2.atlas.PixelRange > 0)
+ 					{
+ 						extraData /= submeshData2.atlas.PixelRange;
+ 					}
+ 					for (int j = 0; j < 4; j++)
+ 					{
+ 						int _v = v0 + j;
++						AssetContract.Required(meshx.RawColors)[_v] = color33; // ArmAgedon seam
++						AssetContract.Required(meshx.RawNormals)[_v] = extraData; // ArmAgedon seam
+-						meshx.RawColors[_v] = color33;
+-						meshx.RawNormals[_v] = extraData;
+ 					}
++					AssetContract.Required(submeshData2.submesh).AddQuadAsTriangles(v0, v1, v2, v3); // ArmAgedon seam
+-					submeshData2.submesh.AddQuadAsTriangles(v0, v1, v2, v3);
+ 				}
+ 			}
+ 			if (!formatting.underline && !formatting.strikethrough && !markColor.HasValue)
+@@ -199,7 +199,7 @@
+ 		}
+ 		foreach (KeyValuePair<FontSet, List<AtlasSubmesh>> item3 in renderDataSet)
+ 		{
++			List<AtlasSubmesh>? _list = item3.Value;
+-			List<AtlasSubmesh> _list = item3.Value;
+ 			Pool.Return(ref _list);
+ 		}
+ 		Pool.Return(ref renderDataSet);
+@@ -276,19 +276,19 @@
+ 		int v2 = v1 + 1;
+ 		int v3 = v2 + 1;
+ 		float halfThickness = thickness * 0.5f;
++		AssetContract.Required(mesh.RawPositions)[v0] = startPoint - new float2(0f, halfThickness) + offset; // ArmAgedon seam
+-		mesh.RawPositions[v0] = startPoint - new float2(0f, halfThickness) + offset;
+ 		mesh.RawPositions[v1] = startPoint + new float2(0f, halfThickness) + offset;
+ 		mesh.RawPositions[v2] = endPoint + new float2(0f, halfThickness) + offset;
+ 		mesh.RawPositions[v3] = endPoint - new float2(0f, halfThickness) + offset;
++		AssetContract.Required(mesh.RawUV0s)[v0] = new float2(0f, 0f); // ArmAgedon seam
+-		mesh.RawUV0s[v0] = new float2(0f, 0f);
+ 		mesh.RawUV0s[v1] = new float2(0f, 1f);
+ 		mesh.RawUV0s[v2] = new float2(1f, 1f);
+ 		mesh.RawUV0s[v3] = new float2(1f);
+ 		for (int i = 0; i < 4; i++)
+ 		{
+ 			int _v = v0 + i;
++			AssetContract.Required(mesh.RawColors)[_v] = color; // ArmAgedon seam
++			AssetContract.Required(mesh.RawNormals)[_v] = new float3(0f, 0f, 0f); // ArmAgedon seam
+-			mesh.RawColors[_v] = color;
+-			mesh.RawNormals[_v] = new float3(0f, 0f, 0f);
+ 		}
+ 		submesh.AddQuadAsTriangles(v0, v1, v2, v3);
+ 	}

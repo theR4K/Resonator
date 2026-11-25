@@ -1,0 +1,17 @@
+--- a/Elements/Assets/BitmapQRCodeGenerator.cs
++++ b/Elements/Assets/BitmapQRCodeGenerator.cs
+@@ -8,12 +8,12 @@
+ {
+ 	public static Bitmap2D Generate(string payload, QRCodeGenerator.ECCLevel eccLevel = QRCodeGenerator.ECCLevel.Q, TextureFormat format = TextureFormat.RGBA32, color? trueColor = null, color? falseColor = null)
+ 	{
++		Bitmap2D? bitmap = null;
+-		Bitmap2D bitmap = null;
+ 		Generate(ref bitmap, payload, eccLevel, format, trueColor, falseColor);
+ 		return bitmap;
+ 	}
+ 
++	public static void Generate([System.Diagnostics.CodeAnalysis.NotNull] ref Bitmap2D? bitmap, string payload, QRCodeGenerator.ECCLevel eccLevel = QRCodeGenerator.ECCLevel.Q, TextureFormat format = TextureFormat.RGBA32, color? trueColor = null, color? falseColor = null, IBackingBufferAllocator? allocator = null)
+-	public static void Generate(ref Bitmap2D bitmap, string payload, QRCodeGenerator.ECCLevel eccLevel = QRCodeGenerator.ECCLevel.Q, TextureFormat format = TextureFormat.RGBA32, color? trueColor = null, color? falseColor = null, IBackingBufferAllocator allocator = null)
+ 	{
+ 		color c1 = trueColor ?? color.Black;
+ 		color c2 = falseColor ?? color.White;

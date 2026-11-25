@@ -1,0 +1,11 @@
+--- a/Elements/Assets/TubeBuilder.cs
++++ b/Elements/Assets/TubeBuilder.cs
+@@ -17,7 +17,7 @@
+ 
+ 	private float _pointStep;
+ 
++	internal float3[]? _offsets = null; // Optional legacy offsets are never populated by this builder.
+-	internal float3[] _offsets;
+ 
+ 	public override bool DualSided => _dualSided;
+ 

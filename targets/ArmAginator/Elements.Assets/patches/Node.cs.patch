@@ -1,0 +1,17 @@
+--- a/Elements/Assets/Poly2Tri/Node.cs
++++ b/Elements/Assets/Poly2Tri/Node.cs
+@@ -4,11 +4,11 @@
+ {
+ 	public TriPoint Point;
+ 
++	public Triangle? Triangle;
+-	public Triangle Triangle;
+ 
++	public Node? Next;
+-	public Node Next;
+ 
++	public Node? Prev;
+-	public Node Prev;
+ 
+ 	public float Value;
+ 

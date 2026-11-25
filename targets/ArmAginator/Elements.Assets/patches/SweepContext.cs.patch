@@ -1,0 +1,84 @@
+--- a/Elements/Assets/Poly2Tri/SweepContext.cs
++++ b/Elements/Assets/Poly2Tri/SweepContext.cs
+@@ -14,17 +14,17 @@
+ 
+ 	private List<Edge> _edge_list;
+ 
++	private TriPoint? _head;
+-	private TriPoint _head;
+ 
++	private TriPoint? _tail;
+-	private TriPoint _tail;
+ 
++	private Node? _af_head;
+-	private Node _af_head;
+ 
++	private Node? _af_middle;
+-	private Node _af_middle;
+ 
++	private Node? _af_tail;
+-	private Node _af_tail;
+ 
++	internal AdvancingFront? Front;
+-	internal AdvancingFront Front;
+ 
+ 	private TriPoint.Comparer _cmp;
+ 
+@@ -134,18 +134,18 @@
+ 		_map.Add(triangle);
+ 	}
+ 
++	public Node? LocateNode(TriPoint point)
+-	public Node LocateNode(TriPoint point)
+ 	{
++		return AssetContract.Required(Front).LocateNode(point.X); // ArmAgedon seam
+-		return Front.LocateNode(point.X);
+ 	}
+ 
+ 	public void CreateAdvancingFront(List<Node> nodes)
+ 	{
++		Triangle triangle = new Triangle(_points[0], AssetContract.Required(_head), AssetContract.Required(_tail)); // ArmAgedon seam
+-		Triangle triangle = new Triangle(_points[0], _head, _tail);
+ 		_map.Add(triangle);
++		_af_head = new Node(AssetContract.Required(triangle.Points[1]), triangle); // ArmAgedon seam
++		_af_middle = new Node(AssetContract.Required(triangle.Points[0]), triangle); // ArmAgedon seam
++		_af_tail = new Node(AssetContract.Required(triangle.Points[2])); // ArmAgedon seam
+-		_af_head = new Node(triangle.Points[1], triangle);
+-		_af_middle = new Node(triangle.Points[0], triangle);
+-		_af_tail = new Node(triangle.Points[2]);
+ 		Front = new AdvancingFront(_af_head, _af_tail);
+ 		_af_head.Next = _af_middle;
+ 		_af_middle.Next = _af_tail;
+@@ -163,7 +163,7 @@
+ 		{
+ 			if (t.GetNeighbor(i) == null)
+ 			{
++				Node? n = AssetContract.Required(Front).LocatePoint(AssetContract.Required(t.PointCW(AssetContract.Required(t.Points[i])))); // ArmAgedon seam // ArmAgedon seam
+-				Node n = Front.LocatePoint(t.PointCW(t.Points[i]));
+ 				if (n != null)
+ 				{
+ 					n.Triangle = t;
+@@ -179,12 +179,12 @@
+ 
+ 	public void MeshClean(Triangle triangle)
+ 	{
++		List<Triangle?> triangles = new List<Triangle?>();
+-		List<Triangle> triangles = new List<Triangle>();
+ 		triangles.Add(triangle);
+ 		while (triangles.Count != 0)
+ 		{
+ 			int last = triangles.Count - 1;
++			Triangle? t = triangles[last];
+-			Triangle t = triangles[last];
+ 			triangles.RemoveAt(last);
+ 			if (t == null || t.IsInterior())
+ 			{
+@@ -212,7 +212,7 @@
+ 		_head = p1;
+ 	}
+ 
++	public TriPoint? GetHead()
+-	public TriPoint GetHead()
+ 	{
+ 		return _head;
+ 	}

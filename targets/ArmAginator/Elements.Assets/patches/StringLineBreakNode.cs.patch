@@ -1,0 +1,23 @@
+--- a/Elements/Assets/StringLineBreakNode.cs
++++ b/Elements/Assets/StringLineBreakNode.cs
+@@ -28,17 +28,17 @@
+ 		str.AppendLine();
+ 	}
+ 
++	internal override void Shape(bool kerning, ref uint? lastGlyphId, ref FontX? lastFont, ref float lastSize, List<ICharacterFilter> characterFilterCache, List<ISizeFilter> sizeFilterCache)
+-	internal override void Shape(bool kerning, ref uint? lastGlyphId, ref FontX lastFont, ref float lastSize, List<ICharacterFilter> characterFilterCache, List<ISizeFilter> sizeFilterCache)
+ 	{
+ 		float size = this.GetFontSize();
+ 		this.GetFontFormatting();
++		FontSet? fontSet = this.GetFontSet();
+-		FontSet fontSet = this.GetFontSet();
+ 		float glyphSize = size;
+ 		GetParentNodes(sizeFilterCache);
+ 		float baseline = 0f;
+ 		this.AdjustSizeAndBaseline(ref size, ref baseline);
+ 		GlyphMetrics metrics = StringRenderTree.EMPTY_GLYPH;
++		FontX font = AssetContract.Required(fontSet).MainFont; // ArmAgedon seam
+-		FontX font = fontSet.MainFont;
+ 		lastGlyphId = null;
+ 		lastSize = size;
+ 		AppendGlyph(glyphSize, StartIndex, new float2(0f, baseline), metrics, font, lastGlyphId);

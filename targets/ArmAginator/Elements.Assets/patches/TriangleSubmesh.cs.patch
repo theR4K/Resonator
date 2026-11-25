@@ -1,0 +1,29 @@
+--- a/Elements/Assets/TriangleSubmesh.cs
++++ b/Elements/Assets/TriangleSubmesh.cs
+@@ -21,7 +21,7 @@
+ 		return new Triangle(Count - 1, this);
+ 	}
+ 
++	public void AddTriangles(int count, TriangleCollection? trigs = null)
+-	public void AddTriangles(int count, TriangleCollection trigs = null)
+ 	{
+ 		IncreaseCount(count);
+ 		if (trigs != null)
+@@ -65,7 +65,7 @@
+ 	{
+ 		VerifyIndex(index);
+ 		index *= 3;
++		AssetContract.Required(indicies)[index] = v0; // ArmAgedon seam
+-		indicies[index] = v0;
+ 		indicies[index + 1] = v1;
+ 		indicies[index + 2] = v2;
+ 	}
+@@ -90,7 +90,7 @@
+ 	public void GetIndiciesUnsafe(int index, out int v0, out int v1, out int v2)
+ 	{
+ 		index *= 3;
++		v0 = AssetContract.Required(indicies)[index]; // ArmAgedon seam
+-		v0 = indicies[index];
+ 		v1 = indicies[index + 1];
+ 		v2 = indicies[index + 2];
+ 	}

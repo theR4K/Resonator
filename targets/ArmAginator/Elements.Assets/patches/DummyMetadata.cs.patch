@@ -1,0 +1,11 @@
+--- a/Elements/Assets/DummyMetadata.cs
++++ b/Elements/Assets/DummyMetadata.cs
+@@ -4,7 +4,7 @@
+ {
+ 	public static readonly DummyMetadata Dummy = new DummyMetadata();
+ 
++	public string? AssetIdentifier { get; set; }
+-	public string AssetIdentifier { get; set; }
+ 
+ 	public int MetadataVersion { get; set; }
+ 

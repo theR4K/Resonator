@@ -1,0 +1,214 @@
+--- a/Elements/Assets/Bitmap2D.cs
++++ b/Elements/Assets/Bitmap2D.cs
+@@ -56,18 +56,18 @@
+ 
+ 	public color this[float2 point] => GetPixelBilinear(point.x, point.y);
+ 
++	public Bitmap2D(byte[] data, int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, bool flipY = true, string? originalFormat = null)
+-	public Bitmap2D(byte[] data, int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, bool flipY = true, string originalFormat = null)
+ 		: this(new ArrayBackingMemoryBuffer(data), width, height, format, mipmaps, profile, flipY, originalFormat)
+ 	{
+ 	}
+ 
++	public Bitmap2D(IBackingMemoryBuffer buffer, int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, bool flipY = true, string? originalFormat = null)
+-	public Bitmap2D(IBackingMemoryBuffer buffer, int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, bool flipY = true, string originalFormat = null)
+ 	{
+ 		InitSize(new int2(width, height), flipY, format);
+ 		Init(buffer, format, mipmaps, originalFormat, profile, null);
+ 	}
+ 
++	public Bitmap2D(int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, bool flipY = true, string? originalFormat = null, IBackingBufferAllocator? allocator = null)
+-	public Bitmap2D(int width, int height, TextureFormat format, bool mipmaps, ColorProfile profile, bool flipY = true, string originalFormat = null, IBackingBufferAllocator allocator = null)
+ 	{
+ 		InitSize(new int2(width, height), flipY, format);
+ 		Init(null, format, mipmaps, originalFormat, profile, allocator);
+@@ -161,7 +161,7 @@
+ 
+ 	public bool VerifyRegion(int x, int y, int width, int height, int mip = 0)
+ 	{
++		int2 size = ((mip == 0) ? Size : AssetContract.Required(mipmapSizes)[mip]); // ArmAgedon seam
+-		int2 size = ((mip == 0) ? Size : mipmapSizes[mip]);
+ 		if (x >= 0 && y >= 0 && x + width <= size.x)
+ 		{
+ 			return y + height <= size.y;
+@@ -207,7 +207,7 @@
+ 		return extracted;
+ 	}
+ 
++	public Bitmap2D ConvertTo(TextureFormat format, IBackingBufferAllocator? allocator = null)
+-	public Bitmap2D ConvertTo(TextureFormat format, IBackingBufferAllocator allocator = null)
+ 	{
+ 		Bitmap2D bitmap2D = new Bitmap2D(Size.x, Size.y, format, HasMipMaps, Profile, FlipY, OriginalFormat, allocator);
+ 		bitmap2D.FillFrom(this);
+@@ -231,7 +231,7 @@
+ 		return $"Bitmap2D. Size: {Size.x}x{Size.y}, Format: {Format}, MipLevels: {MipMapLevels}, Bytes: {Buffer?.SizeBytes ?? (-1)}, Profile: {Profile}";
+ 	}
+ 
++	public void KMeansCluster(int k, float positionWeight, int batchSize = 1024, float passesOverData = 1f, IProgressIndicator? progress = null)
+-	public void KMeansCluster(int k, float positionWeight, int batchSize = 1024, float passesOverData = 1f, IProgressIndicator progress = null)
+ 	{
+ 		float[] pixelsBuffer = new float[TotalPixels * 6];
+ 		Span<ClusterPixel> pixels = MemoryMarshal.Cast<float, ClusterPixel>(pixelsBuffer.AsSpan());
+@@ -277,23 +277,23 @@
+ 		});
+ 	}
+ 
++	public static Bitmap2D? Load(string file, bool? generateMipmaps, AlphaHandling alphaHandling = AlphaHandling.KeepOriginal, int maxSize = int.MaxValue, float sizeRatio = 1f)
+-	public static Bitmap2D Load(string file, bool? generateMipmaps, AlphaHandling alphaHandling = AlphaHandling.KeepOriginal, int maxSize = int.MaxValue, float sizeRatio = 1f)
+ 	{
+ 		return TextureDecoder.Decode(file, generateMipmaps, alphaHandling, maxSize, sizeRatio);
+ 	}
+ 
++	public static Bitmap2D? Load(Stream stream, string extension, bool? generateMipmaps, AlphaHandling alphaHandling = AlphaHandling.KeepOriginal, int maxSize = int.MaxValue, float sizeRatio = 1f)
+-	public static Bitmap2D Load(Stream stream, string extension, bool? generateMipmaps, AlphaHandling alphaHandling = AlphaHandling.KeepOriginal, int maxSize = int.MaxValue, float sizeRatio = 1f)
+ 	{
+ 		return TextureDecoder.Decode(stream, extension, generateMipmaps, alphaHandling, maxSize, sizeRatio);
+ 	}
+ 
++	public static Bitmap2D LoadRaw(string file, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap2D LoadRaw(string file, IBackingBufferAllocator allocator = null)
+ 	{
+ 		using FileStream stream = File.OpenRead(file);
+ 		return LoadRaw(stream, allocator);
+ 	}
+ 
++	public static Bitmap2D LoadRaw(Stream stream, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap2D LoadRaw(Stream stream, IBackingBufferAllocator allocator = null)
+ 	{
+ 		BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
+ 		string magicString = reader.ReadString();
+@@ -333,7 +333,7 @@
+ 		}
+ 		case RawBitmapEncoding.LZMA:
+ 		{
++			using (Stream data2 = AssetContract.Required(bmp.Buffer).Memory.AsStream()) // ArmAgedon seam
+-			using (Stream data2 = bmp.Buffer.Memory.AsStream())
+ 			{
+ 				LZMAHelper.Decompress(stream, data2);
+ 			}
+@@ -371,7 +371,7 @@
+ 			break;
+ 		case RawBitmapEncoding.LZMA:
+ 		{
++			using Stream data = AssetContract.Required(Buffer).Memory.AsStream(); // ArmAgedon seam
+-			using Stream data = Buffer.Memory.AsStream();
+ 			LZMAHelper.Compress(data, stream);
+ 			break;
+ 		}
+@@ -559,37 +559,37 @@
+ 			int sourceMip = mip;
+ 			mip++;
+ 			region = new IntRect(MathX.FloorToInt((float)sourceRegion.x * 0.5f), MathX.FloorToInt((float)sourceRegion.y * 0.5f), MathX.CeilToInt((float)sourceRegion.width * 0.5f), MathX.CeilToInt((float)sourceRegion.height * 0.5f));
++			Bitmap2D? rescaled = GetRescaled(sourceRegion, sourceMip, region.Size, false, forceRescale: true, filtering);
+-			Bitmap2D rescaled = GetRescaled(sourceRegion, sourceMip, region.Size, false, forceRescale: true, filtering);
+ 			for (int y = 0; y < region.height; y++)
+ 			{
+ 				int _y = region.y + y;
+ 				for (int x = 0; x < region.width; x++)
+ 				{
++					SetPixel(region.x + x, _y, AssetContract.Required(rescaled).GetPixel(x, y), mip); // ArmAgedon seam
+-					SetPixel(region.x + x, _y, rescaled.GetPixel(x, y), mip);
+ 				}
+ 			}
+ 		}
+ 		while (mip < MipMapLevels && region.width > 1 && region.height > 1);
+ 	}
+ 
++	public Bitmap2D? GetRescaled(int longestSize, bool? mipmaps = null, bool forceRescale = false, Filtering filtering = Filtering.Box, IBackingBufferAllocator? allocator = null)
+-	public Bitmap2D GetRescaled(int longestSize, bool? mipmaps = null, bool forceRescale = false, Filtering filtering = Filtering.Box, IBackingBufferAllocator allocator = null)
+ 	{
+ 		int max = MathX.MaxComponent(Size);
+ 		double ratio = (double)longestSize / (double)max;
+ 		return GetRescaled((int2)(Size * ratio), mipmaps, forceRescale, filtering, allocator);
+ 	}
+ 
++	public Bitmap2D? GetRescaled(int width, int height, bool? mipmaps = null, bool forceRescale = false, Filtering filtering = Filtering.Box)
+-	public Bitmap2D GetRescaled(int width, int height, bool? mipmaps = null, bool forceRescale = false, Filtering filtering = Filtering.Box)
+ 	{
+ 		return GetRescaled(new int2(width, height), mipmaps, forceRescale, filtering);
+ 	}
+ 
++	public Bitmap2D? GetRescaled(int2 size, bool? mipmaps = null, bool forceRescale = false, Filtering filtering = Filtering.Box, IBackingBufferAllocator? allocator = null)
+-	public Bitmap2D GetRescaled(int2 size, bool? mipmaps = null, bool forceRescale = false, Filtering filtering = Filtering.Box, IBackingBufferAllocator allocator = null)
+ 	{
+ 		return GetRescaled(new IntRect(int2.Zero, Size), 0, size, mipmaps, forceRescale, filtering, allocator);
+ 	}
+ 
++	public Bitmap2D? GetRescaled(IntRect region, int sourceMip, int2 size, bool? mipmaps = null, bool forceRescale = false, Filtering filtering = Filtering.Box, IBackingBufferAllocator? allocator = null)
+-	public Bitmap2D GetRescaled(IntRect region, int sourceMip, int2 size, bool? mipmaps = null, bool forceRescale = false, Filtering filtering = Filtering.Box, IBackingBufferAllocator allocator = null)
+ 	{
+ 		if (!forceRescale && region.Size == size && (!mipmaps.HasValue || mipmaps.Value == HasMipMaps))
+ 		{
+@@ -722,7 +722,7 @@
+ 		}
+ 	}
+ 
++	public Bitmap2D? MakeSquare()
+-	public Bitmap2D MakeSquare()
+ 	{
+ 		int size = MathX.MaxComponent(Size);
+ 		return GetRescaled(size, size, false);
+@@ -993,7 +993,7 @@
+ 		});
+ 	}
+ 
++	public Bitmap2D ForEachPixelCopy(Func<int2, color, color> filter, IBackingBufferAllocator? allocator = null)
+-	public Bitmap2D ForEachPixelCopy(Func<int2, color, color> filter, IBackingBufferAllocator allocator = null)
+ 	{
+ 		Bitmap2D copy = new Bitmap2D(Size.x, Size.y, Format, HasMipMaps, Profile, FlipY, OriginalFormat, allocator);
+ 		Parallel.For(0, Size.y, (int y) =>
+@@ -1019,7 +1019,7 @@
+ 		});
+ 	}
+ 
++	public Bitmap2D? GenerateTileableLoop(float2 transitionRatio)
+-	public Bitmap2D GenerateTileableLoop(float2 transitionRatio)
+ 	{
+ 		int2 transitionSize = MathX.RoundToInt((float2)Size * transitionRatio);
+ 		int2 newSize = Size - transitionSize;
+@@ -1091,7 +1091,7 @@
+ 
+ 	public void BleedColorToAlpha()
+ 	{
++		RawValueList<int2>? nextCoords = Pool.BorrowRawValueList<int2>();
+-		RawValueList<int2> nextCoords = Pool.BorrowRawValueList<int2>();
+ 		Bit2DArray alphaOverrides = new Bit2DArray(Size);
+ 		Bit2DArray processed = new Bit2DArray(Size);
+ 		for (int y = 0; y < Size.y; y++)
+@@ -1153,7 +1153,7 @@
+ 		}
+ 	}
+ 
++	public color? AverageRGBFromVisibleSurroundings(int x, int y, Bit2DArray? overrides = null)
+-	public color? AverageRGBFromVisibleSurroundings(int x, int y, Bit2DArray overrides = null)
+ 	{
+ 		int count = 0;
+ 		float3 accumulated = float3.Zero;
+@@ -1298,7 +1298,7 @@
+ 		}
+ 		List<Memory<byte>> mipBuffers = new List<Memory<byte>>();
+ 		GetMipMapBuffers(mipBuffers);
++		byte[]? data = Crunch.Compress(new List<List<Memory<byte>>> { mipBuffers }, comp_params, null, maxThreads);
+-		byte[] data = Crunch.Compress(new List<List<Memory<byte>>> { mipBuffers }, comp_params, null, maxThreads);
+ 		if (data != null && data.Length != 0)
+ 		{
+ 			File.WriteAllBytes(file, data);
+@@ -1307,15 +1307,15 @@
+ 		return false;
+ 	}
+ 
++	public static Bitmap2D? LoadCRN(string file, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap2D LoadCRN(string file, IBackingBufferAllocator allocator = null)
+ 	{
+ 		using FileStream fstream = File.OpenRead(file);
+ 		return LoadCRN(fstream, allocator);
+ 	}
+ 
++	public static Bitmap2D? LoadCRN(Stream stream, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap2D LoadCRN(Stream stream, IBackingBufferAllocator allocator = null)
+ 	{
++		Bitmap2D? bitmap = null;
+-		Bitmap2D bitmap = null;
+ 		byte[] data = new byte[stream.Length];
+ 		stream.ReadExactly(data, 0, data.Length);
+ 		List<List<Memory<byte>>> buffers = new List<List<Memory<byte>>>();

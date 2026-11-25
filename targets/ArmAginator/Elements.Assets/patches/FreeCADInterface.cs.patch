@@ -1,0 +1,27 @@
+--- a/Elements/Assets/FreeCADInterface.cs
++++ b/Elements/Assets/FreeCADInterface.cs
+@@ -14,9 +14,9 @@
+ 
+ 	public static bool IsAvailable => File.Exists(Executable);
+ 
++	public static string? RootDir { get; private set; }
+-	public static string RootDir { get; private set; }
+ 
++	public static string? Executable
+-	public static string Executable
+ 	{
+ 		get
+ 		{
+@@ -76,10 +76,10 @@
+ 	{
+ 		string filename = Path.Combine(Path.GetTempPath(), Path.GetTempFileName() + ".py");
+ 		File.WriteAllText(filename, script);
++		AssetContract.Required(Process.Start(new ProcessStartInfo(AssetContract.Required(Executable), "\"" + filename + "\"") // ArmAgedon seam
+-		Process.Start(new ProcessStartInfo(Executable, "\"" + filename + "\"")
+ 		{
+ 			WindowStyle = ProcessWindowStyle.Hidden
++		})).WaitForExit(); // ArmAgedon seam
+-		}).WaitForExit();
+ 		File.Delete(filename);
+ 	}
+ }

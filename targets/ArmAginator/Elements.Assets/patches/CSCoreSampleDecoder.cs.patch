@@ -1,0 +1,95 @@
+--- a/Elements/Assets/CSCoreSampleDecoder.cs
++++ b/Elements/Assets/CSCoreSampleDecoder.cs
+@@ -13,11 +13,11 @@
+ 
+ public class CSCoreSampleDecoder : ISampleDecoder, IDisposable
+ {
++	private IWaveSource? waveSource;
+-	private IWaveSource waveSource;
+ 
++	private ISampleSource? sampleSource;
+-	private ISampleSource sampleSource;
+ 
++	public Stream? InputStream { get; private set; }
+-	public Stream InputStream { get; private set; }
+ 
+ 	public int Samples { get; private set; }
+ 
+@@ -29,15 +29,15 @@
+ 	{
+ 		get
+ 		{
++			return AssetContract.Required(sampleSource).Position; // ArmAgedon seam
+-			return sampleSource.Position;
+ 		}
+ 		set
+ 		{
++			AssetContract.Required(sampleSource).Position = value; // ArmAgedon seam
+-			sampleSource.Position = value;
+ 		}
+ 	}
+ 
++	public AudioEncodeSettings? EncodeSettings { get; private set; }
+-	public AudioEncodeSettings EncodeSettings { get; private set; }
+ 
+ 	public void Dispose()
+ 	{
+@@ -48,7 +48,7 @@
+ 
+ 	public int Read(float[] buffer, int offset, int count)
+ 	{
++		int read = AssetContract.Required(sampleSource).Read(buffer, offset, count); // ArmAgedon seam
+-		int read = sampleSource.Read(buffer, offset, count);
+ 		if (read < count && offset + read < Samples)
+ 		{
+ 			Array.Clear(buffer, read, buffer.Length - read);
+@@ -60,14 +60,14 @@
+ 	// Flatweave: the official CSCore has neither CodecFactory.GetCodec(Stream, string) nor an OGG codec. This is the codec
+ 	// set Yellow Dog Man's fork registers (WAV PCM/float, FLAC, AIFF, OGG Vorbis; MP3/MediaFoundation removed), chosen by
+ 	// extension the same way.
++	private static IWaveSource? OpenCodec(Stream stream, string extension)
+-	private static IWaveSource OpenCodec(Stream stream, string extension)
+ 	{
+ 		switch (extension.ToLowerInvariant())
+ 		{
+ 		case "wav":
+ 		case "wave":
+ 		{
++			IWaveSource? res = new WaveFileReader(stream);
+-			IWaveSource res = new WaveFileReader(stream);
+ 			if (res.WaveFormat.WaveFormatTag != AudioEncoding.Pcm && res.WaveFormat.WaveFormatTag != AudioEncoding.IeeeFloat && res.WaveFormat.WaveFormatTag != AudioEncoding.Extensible)
+ 			{
+ 				res.Dispose();
+@@ -95,12 +95,12 @@
+ 		Load(File.OpenRead(file), extension);
+ 	}
+ 
++	public CSCoreSampleDecoder(Stream stream, string? extension = null)
+-	public CSCoreSampleDecoder(Stream stream, string extension = null)
+ 	{
+ 		Load(stream, extension);
+ 	}
+ 
++	private void Load(Stream stream, string? extension)
+-	private void Load(Stream stream, string extension)
+ 	{
+ 		InputStream = stream;
+ 		if (string.IsNullOrEmpty(extension))
+@@ -122,7 +122,7 @@
+ 			extension = extension.Substring(1);
+ 		}
+ 		this.waveSource = OpenCodec(stream, extension);
++		sampleSource = AssetContract.Required(this.waveSource).ToSampleSource(); // ArmAgedon seam
+-		sampleSource = this.waveSource.ToSampleSource();
+ 		IWaveSource waveSource = this.waveSource;
+ 		if (!(waveSource is WaveFileReader wave))
+ 		{
+@@ -224,7 +224,7 @@
+ 
+ 	public int UpperBitrate => _vorbisReader?.UpperBitrate ?? 0;
+ 
++	public string[]? Comments => _vorbisReader?.Tags?.All?.SelectMany(kvp => kvp.Value.Select(item => kvp.Key + "=" + item)).ToArray();
+-	public string[] Comments => _vorbisReader?.Tags?.All?.SelectMany(kvp => kvp.Value.Select(item => kvp.Key + "=" + item)).ToArray();
+ 
+ 	public bool CanSeek => _stream.CanSeek;
+ 

@@ -1,0 +1,38 @@
+--- a/Elements/Assets/CurveLongAnimationTrack.cs
++++ b/Elements/Assets/CurveLongAnimationTrack.cs
+@@ -40,7 +40,7 @@
+ 			}
+ 			InternKeyframe frame = keyframes[index];
+ 			InternKeyframe nextFrame = keyframes[index + 1];
++			long fromTangent = AssetContract.Required(tangents)[index].right; // ArmAgedon seam
+-			long fromTangent = tangents[index].right;
+ 			long toTangent = tangents[index + 1].left;
+ 			float r = MathX.InverseLerp(frame.time, nextFrame.time, position);
+ 			float o = 1f - r;
+@@ -54,7 +54,7 @@
+ 			}
+ 			InternKeyframe frame = keyframes[index];
+ 			InternKeyframe nextFrame = keyframes[index + 1];
++			long fromTangent = AssetContract.Required(tangents)[index].right; // ArmAgedon seam
+-			long fromTangent = tangents[index].right;
+ 			long toTangent = tangents[index + 1].left;
+ 			float lerp = MathX.InverseLerp(frame.time, nextFrame.time, position);
+ 			return (long)MathX.BezierCurve(frame.value, nextFrame.value, fromTangent, toTangent, lerp);
+@@ -77,7 +77,7 @@
+ 	{
+ 		for (int i = 0; i < FrameCount; i++)
+ 		{
++			bw.Write(AssetContract.Required(tangents)[i].left); // ArmAgedon seam
+-			bw.Write(tangents[i].left);
+ 			bw.Write(tangents[i].right);
+ 		}
+ 	}
+@@ -94,7 +94,7 @@
+ 	{
+ 		for (int i = 0; i < count; i++)
+ 		{
++			AssetContract.Required(tangents).Add(new InternTangents(br.ReadInt64(), br.ReadInt64())); // ArmAgedon seam
+-			tangents.Add(new InternTangents(br.ReadInt64(), br.ReadInt64()));
+ 		}
+ 	}
+ }

@@ -1,7 +1,11 @@
 --- a/Elements/Core/ListEnumerableWrapper.cs
 +++ b/Elements/Core/ListEnumerableWrapper.cs
-@@ -7,7 +7,7 @@
- [Obsolete("Likely no longer needed with current .net versions")]
+@@ -4,14 +4,14 @@
+ 
+ namespace Elements.Core;
+ 
++// Retained as the public MeshX.Submeshes return type for binary compatibility.
+-[Obsolete("Likely no longer needed with current .net versions")]
  public readonly struct ListEnumerableWrapper<T> : IEnumerable<T>, IEnumerable
  {
 +	private static List<T>? emptyList;
@@ -9,3 +13,17 @@
  
  	private readonly List<T> list;
  
++	// Retained as the public MeshX.Submeshes return type for binary compatibility.
+-	[Obsolete("Likely no longer needed with current .net versions")]
+ 	public ListEnumerableWrapper(List<T> list)
+ 	{
+ 		if (list == null)
+@@ -43,7 +43,7 @@
+ 		return GetEnumerator();
+ 	}
+ 
++	// Retained as the public MeshX.Submeshes return type for binary compatibility.
+-	[Obsolete("Likely no longer needed with current .net versions")]
+ 	public static implicit operator ListEnumerableWrapper<T>(List<T> list)
+ 	{
+ 		return new ListEnumerableWrapper<T>(list);

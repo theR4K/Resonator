@@ -1,0 +1,2077 @@
+--- a/Elements/Assets/MeshX.cs
++++ b/Elements/Assets/MeshX.cs
+@@ -18,11 +18,11 @@
+ {
+ 	internal struct UV_Array
+ 	{
++		internal float2[]? uv_2D;
+-		internal float2[] uv_2D;
+ 
++		internal float3[]? uv_3D;
+-		internal float3[] uv_3D;
+ 
++		internal float4[]? uv_4D;
+-		internal float4[] uv_4D;
+ 
+ 		public int Dimensions
+ 		{
+@@ -47,13 +47,13 @@
+ 
+ 	public struct PrimitiveEnumerator<T> : IEnumerator<T>, IEnumerator, IDisposable where T : struct, IMeshXPrimitive
+ 	{
++		private List<Submesh?>.Enumerator _submeshEnumerator;
+-		private List<Submesh>.Enumerator _submeshEnumerator;
+ 
+ 		private int _currentIndex;
+ 
++		private ISubmesh<T>? _currentSubmesh;
+-		private ISubmesh<T> _currentSubmesh;
+ 
++		public T Current => AssetContract.Required(_currentSubmesh)[_currentIndex]; // ArmAgedon seam
+-		public T Current => _currentSubmesh[_currentIndex];
+ 
+ 		object IEnumerator.Current => Current;
+ 
+@@ -87,7 +87,7 @@
+ 					}
+ 				}
+ 				_currentIndex++;
++				if (_currentIndex < AssetContract.Required(_submeshEnumerator.Current).Count) // ArmAgedon seam
+-				if (_currentIndex < _submeshEnumerator.Current.Count)
+ 				{
+ 					break;
+ 				}
+@@ -106,11 +106,11 @@
+ 
+ 	public struct VertexEnumerator : IEnumerator<Vertex>, IEnumerator, IDisposable
+ 	{
++		private MeshX? meshx;
+-		private MeshX meshx;
+ 
+ 		private int _index;
+ 
++		public Vertex Current => AssetContract.Required(meshx).GetVertex(_index); // ArmAgedon seam
+-		public Vertex Current => meshx.GetVertex(_index);
+ 
+ 		object IEnumerator.Current => Current;
+ 
+@@ -129,7 +129,7 @@
+ 		public bool MoveNext()
+ 		{
+ 			_index++;
++			return _index < AssetContract.Required(meshx).VertexCount; // ArmAgedon seam
+-			return _index < meshx.VertexCount;
+ 		}
+ 
+ 		public void Reset()
+@@ -172,7 +172,7 @@
+ 			return false;
+ 		}
+ 
++		public override bool Equals(object? obj)
+-		public override bool Equals(object obj)
+ 		{
+ 			if (obj is SubmeshMergeKey key)
+ 			{
+@@ -197,7 +197,7 @@
+ 		}
+ 	}
+ 
++	internal List<Submesh?> submeshes = new List<Submesh?>();
+-	internal List<Submesh> submeshes = new List<Submesh>();
+ 
+ 	internal List<BlendShape> blendshapes = new List<BlendShape>();
+ 
+@@ -205,23 +205,23 @@
+ 
+ 	internal List<Bone> bones = new List<Bone>();
+ 
++	internal int[]? vertexIDs;
+-	internal int[] vertexIDs;
+ 
+ 	private int _vertexID;
+ 
++	internal float3[]? positions;
+-	internal float3[] positions;
+ 
++	internal float3[]? normals;
+-	internal float3[] normals;
+ 
++	internal float4[]? tangents;
+-	internal float4[] tangents;
+ 
++	internal color[]? colors;
+-	internal color[] colors;
+ 
++	internal UV_Array[]? uv_channels;
+-	internal UV_Array[] uv_channels;
+ 
++	internal BoneBinding[]? boneBindings;
+-	internal BoneBinding[] boneBindings;
+ 
++	internal BitArray? flags;
+-	internal BitArray flags;
+ 
+ 	public const int MESHX_BINARY_VERSION = 7;
+ 
+@@ -229,25 +229,25 @@
+ 
+ 	private static byte[] _magicHeader = new byte[6] { 5, 77, 101, 115, 104, 88 };
+ 
++	public float3[]? RawPositions => positions;
+-	public float3[] RawPositions => positions;
+ 
++	public float3[]? RawNormals => normals;
+-	public float3[] RawNormals => normals;
+ 
++	public float4[]? RawTangents => tangents;
+-	public float4[] RawTangents => tangents;
+ 
++	public color[]? RawColors => colors;
+-	public color[] RawColors => colors;
+ 
++	public float2[]? RawUV0s => TryGetRawUV_Array(0).uv_2D;
+-	public float2[] RawUV0s => TryGetRawUV_Array(0).uv_2D;
+ 
++	public float2[]? RawUV1s => TryGetRawUV_Array(1).uv_2D;
+-	public float2[] RawUV1s => TryGetRawUV_Array(1).uv_2D;
+ 
++	public float2[]? RawUV2s => TryGetRawUV_Array(2).uv_2D;
+-	public float2[] RawUV2s => TryGetRawUV_Array(2).uv_2D;
+ 
++	public float2[]? RawUV3s => TryGetRawUV_Array(3).uv_2D;
+-	public float2[] RawUV3s => TryGetRawUV_Array(3).uv_2D;
+ 
++	public BoneBinding[]? RawBoneBindings => boneBindings;
+-	public BoneBinding[] RawBoneBindings => boneBindings;
+ 
++	public BitArray? RawFlags => flags;
+-	public BitArray RawFlags => flags;
+ 
+ 	public int VertexCount { get; private set; }
+ 
+@@ -260,7 +260,7 @@
+ 		get
+ 		{
+ 			int count = 0;
++			foreach (Submesh? submesh in submeshes)
+-			foreach (Submesh submesh in submeshes)
+ 			{
+ 				if (submesh is PointSubmesh points)
+ 				{
+@@ -276,7 +276,7 @@
+ 		get
+ 		{
+ 			int count = 0;
++			foreach (Submesh? submesh in submeshes)
+-			foreach (Submesh submesh in submeshes)
+ 			{
+ 				if (submesh is TriangleSubmesh trigs)
+ 				{
+@@ -292,9 +292,9 @@
+ 		get
+ 		{
+ 			int count = 0;
++			foreach (Submesh? s in submeshes)
+-			foreach (Submesh s in submeshes)
+ 			{
++				count += AssetContract.Required(s).Count; // ArmAgedon seam
+-				count += s.Count;
+ 			}
+ 			return count;
+ 		}
+@@ -320,6 +320,7 @@
+ 
+ 	public int FreeCapacity => VertexCapacity - VertexCount;
+ 
++	[System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(vertexIDs))]
+ 	public bool TrackRemovals
+ 	{
+ 		get
+@@ -335,15 +336,16 @@
+ 			EnsureVertexArray(state: true, ref vertexIDs, 0);
+ 			for (int i = 0; i < VertexCount; i++)
+ 			{
++				AssetContract.Required(vertexIDs)[i] = _vertexID++; // ArmAgedon seam
+-				vertexIDs[i] = _vertexID++;
+ 			}
++			foreach (Submesh? submesh in submeshes)
+-			foreach (Submesh submesh in submeshes)
+ 			{
+ 				submesh?.EnableTrackRemovals();
+ 			}
+ 		}
+ 	}
+ 
++	[System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(normals))]
+ 	public bool HasNormals
+ 	{
+ 		get
+@@ -356,6 +358,7 @@
+ 		}
+ 	}
+ 
++	[System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(tangents))]
+ 	public bool HasTangents
+ 	{
+ 		get
+@@ -368,6 +371,7 @@
+ 		}
+ 	}
+ 
++	[System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(colors))]
+ 	public bool HasColors
+ 	{
+ 		get
+@@ -380,6 +384,7 @@
+ 		}
+ 	}
+ 
++	[System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(boneBindings))]
+ 	public bool HasBoneBindings
+ 	{
+ 		get
+@@ -444,8 +449,9 @@
+ 
+ 	public int SubmeshCount => submeshes.Count;
+ 
++	public ListEnumerableWrapper<Submesh?> Submeshes => new ListEnumerableWrapper<Submesh?>(submeshes);
+-	public ListEnumerableWrapper<Submesh> Submeshes => new ListEnumerableWrapper<Submesh>(submeshes);
+ 
++	[System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(flags))]
+ 	public bool HasFlags
+ 	{
+ 		get
+@@ -531,17 +537,17 @@
+ 		return uv_channels[uv];
+ 	}
+ 
++	public float2[]? GetRawUVs(int uv)
+-	public float2[] GetRawUVs(int uv)
+ 	{
+ 		return GetRawUV_Array(uv).uv_2D;
+ 	}
+ 
++	public float3[]? GetRawUVs_3D(int uv)
+-	public float3[] GetRawUVs_3D(int uv)
+ 	{
+ 		return GetRawUV_Array(uv).uv_3D;
+ 	}
+ 
++	public float4[]? GetRawUVs_4D(int uv)
+-	public float4[] GetRawUVs_4D(int uv)
+ 	{
+ 		return GetRawUV_Array(uv).uv_4D;
+ 	}
+@@ -675,26 +681,26 @@
+ 		array.uv_3D = null;
+ 	}
+ 
++	public static implicit operator TriangleSubmesh?(MeshX meshx)
+-	public static implicit operator TriangleSubmesh(MeshX meshx)
+ 	{
+ 		return meshx.TryGetSubmesh<TriangleSubmesh>();
+ 	}
+ 
++	public static implicit operator PointSubmesh?(MeshX meshx)
+-	public static implicit operator PointSubmesh(MeshX meshx)
+ 	{
+ 		return meshx.TryGetSubmesh<PointSubmesh>();
+ 	}
+ 
++	public Submesh? GetSubmesh(int index)
+-	public Submesh GetSubmesh(int index)
+ 	{
+ 		return submeshes[index];
+ 	}
+ 
++	public Submesh? GetSubmeshForFace(int faceIndex)
+-	public Submesh GetSubmeshForFace(int faceIndex)
+ 	{
++		foreach (Submesh? s in submeshes)
+-		foreach (Submesh s in submeshes)
+ 		{
++			if (faceIndex < AssetContract.Required(s).Count) // ArmAgedon seam
+-			if (faceIndex < s.Count)
+ 			{
+ 				return s;
+ 			}
+@@ -752,13 +758,13 @@
+ 		submeshes.Remove(submesh);
+ 	}
+ 
++	public T? TryGetSubmesh<T>(int index = 0) where T : Submesh
+-	public T TryGetSubmesh<T>(int index = 0) where T : Submesh
+ 	{
+ 		while (submeshes.Count <= index)
+ 		{
+ 			submeshes.Add(null);
+ 		}
++		Submesh? submesh = submeshes[index];
+-		Submesh submesh = submeshes[index];
+ 		if (submesh is T typeSubmesh)
+ 		{
+ 			return typeSubmesh;
+@@ -772,11 +778,11 @@
+ 		return null;
+ 	}
+ 
++	public Submesh? TryGetSubmesh(SubmeshTopology topology, int index = 0)
+-	public Submesh TryGetSubmesh(SubmeshTopology topology, int index = 0)
+ 	{
+ 		return topology switch
+ 		{
++			SubmeshTopology.Points => (Submesh?)TryGetSubmesh<PointSubmesh>(index), 
+-			SubmeshTopology.Points => (Submesh)TryGetSubmesh<PointSubmesh>(index), 
+ 			SubmeshTopology.Triangles => TryGetSubmesh<TriangleSubmesh>(index), 
+ 			_ => throw new ArgumentException("Invalid submesh topology"), 
+ 		};
+@@ -845,9 +851,9 @@
+ 		return blendshapes.IndexOf(GetBlendShape(name));
+ 	}
+ 
++	public BlendShape? TryGetBlendShape(string name)
+-	public BlendShape TryGetBlendShape(string name)
+ 	{
++		blendshapeMap.TryGetValue(name, out BlendShape? blendshape);
+-		blendshapeMap.TryGetValue(name, out BlendShape blendshape);
+ 		return blendshape;
+ 	}
+ 
+@@ -908,7 +914,7 @@
+ 		VerticesVersion--;
+ 		for (int i = 0; i < SubmeshCount; i++)
+ 		{
++			AssetContract.Required(submeshes[i]).Clear(); // ArmAgedon seam
+-			submeshes[i].Clear();
+ 		}
+ 	}
+ 
+@@ -939,14 +945,14 @@
+ 		Profile = source.Profile;
+ 	}
+ 
++	public AppendResult Copy(MeshX source, in float4x4? transform = null, GeometryMask? mask = null)
+-	public AppendResult Copy(MeshX source, in float4x4? transform = null, GeometryMask mask = null)
+ 	{
+ 		Clear();
+ 		CopyDataChannelFlags(source);
+ 		return Append(source, appendSubmeshes: true, in transform, null, mask);
+ 	}
+ 
++	public AppendResult Append(MeshX source, bool appendSubmeshes = true, in float4x4? transform = null, Func<Submesh, int>? submeshMapper = null, GeometryMask? mask = null)
+-	public AppendResult Append(MeshX source, bool appendSubmeshes = true, in float4x4? transform = null, Func<Submesh, int> submeshMapper = null, GeometryMask mask = null)
+ 	{
+ 		AppendResult appendResult = default;
+ 		int prevVertexCount = VertexCount;
+@@ -965,38 +971,38 @@
+ 		{
+ 			if (mask == null)
+ 			{
++				Array.Copy(AssetContract.Required(source.RawPositions), 0, AssetContract.Required(RawPositions), prevVertexCount, sourceVertexCount); // ArmAgedon seam
+-				Array.Copy(source.RawPositions, 0, RawPositions, prevVertexCount, sourceVertexCount);
+ 				if (source.HasNormals)
+ 				{
++					Array.Copy(AssetContract.Required(source.RawNormals), 0, AssetContract.Required(RawNormals), prevVertexCount, sourceVertexCount); // ArmAgedon seam
+-					Array.Copy(source.RawNormals, 0, RawNormals, prevVertexCount, sourceVertexCount);
+ 				}
+ 				if (source.HasTangents)
+ 				{
++					Array.Copy(AssetContract.Required(source.RawTangents), 0, AssetContract.Required(RawTangents), prevVertexCount, sourceVertexCount); // ArmAgedon seam
+-					Array.Copy(source.RawTangents, 0, RawTangents, prevVertexCount, sourceVertexCount);
+ 				}
+ 				else if (HasTangents)
+ 				{
+ 					for (int i = 0; i < sourceVertexCount; i++)
+ 					{
++						AssetContract.Required(RawTangents)[i + prevVertexCount] = new float4(1f); // ArmAgedon seam
+-						RawTangents[i + prevVertexCount] = new float4(1f);
+ 					}
+ 				}
+ 				if (source.HasColors)
+ 				{
++					Array.Copy(AssetContract.Required(source.RawColors), 0, AssetContract.Required(RawColors), prevVertexCount, sourceVertexCount); // ArmAgedon seam
+-					Array.Copy(source.RawColors, 0, RawColors, prevVertexCount, sourceVertexCount);
+ 				}
+ 				for (int j = 0; j < source.UV_ChannelCount; j++)
+ 				{
+ 					if (source.HasUV_2D(j))
+ 					{
++						Array.Copy(AssetContract.Required(source.GetRawUVs(j)), 0, AssetContract.Required(GetRawUVs(j)), prevVertexCount, sourceVertexCount); // ArmAgedon seam
+-						Array.Copy(source.GetRawUVs(j), 0, GetRawUVs(j), prevVertexCount, sourceVertexCount);
+ 					}
+ 				}
+ 				if (source.HasFlags)
+ 				{
+ 					for (int k = 0; k < sourceVertexCount; k++)
+ 					{
++						AssetContract.Required(flags)[k + prevVertexCount] = source.flags[k]; // ArmAgedon seam
+-						flags[k + prevVertexCount] = source.flags[k];
+ 					}
+ 				}
+ 			}
+@@ -1009,29 +1015,29 @@
+ 					{
+ 						continue;
+ 					}
++					AssetContract.Required(RawPositions)[targetIndex] = AssetContract.Required(source.RawPositions)[l]; // ArmAgedon seam
+-					RawPositions[targetIndex] = source.RawPositions[l];
+ 					if (source.HasNormals)
+ 					{
++						AssetContract.Required(RawNormals)[targetIndex] = AssetContract.Required(source.RawNormals)[l]; // ArmAgedon seam
+-						RawNormals[targetIndex] = source.RawNormals[l];
+ 					}
+ 					if (source.HasTangents)
+ 					{
++						AssetContract.Required(RawTangents)[targetIndex] = AssetContract.Required(source.RawTangents)[l]; // ArmAgedon seam
+-						RawTangents[targetIndex] = source.RawTangents[l];
+ 					}
+ 					if (source.HasColors)
+ 					{
++						AssetContract.Required(RawColors)[targetIndex] = AssetContract.Required(source.RawColors)[l]; // ArmAgedon seam
+-						RawColors[targetIndex] = source.RawColors[l];
+ 					}
+ 					for (int m = 0; m < source.UV_ChannelCount; m++)
+ 					{
+ 						if (source.HasUV_2D(m))
+ 						{
++							AssetContract.Required(GetRawUVs(m))[targetIndex] = AssetContract.Required(source.GetRawUVs(m))[l]; // ArmAgedon seam
+-							GetRawUVs(m)[targetIndex] = source.GetRawUVs(m)[l];
+ 						}
+ 					}
+ 					if (source.HasFlags)
+ 					{
++						AssetContract.Required(flags)[targetIndex] = source.flags[l]; // ArmAgedon seam
+-						flags[targetIndex] = source.flags[l];
+ 					}
+ 					targetIndex++;
+ 				}
+@@ -1041,7 +1047,7 @@
+ 				for (int n = 0; n < sourceVertexCount; n++)
+ 				{
+ 					int index = prevVertexCount + sourceVertexCount;
++					AssetContract.Required(RawColors)[index] = RawColors[index].ConvertProfile(source.Profile, Profile); // ArmAgedon seam
+-					RawColors[index] = RawColors[index].ConvertProfile(source.Profile, Profile);
+ 				}
+ 			}
+ 			if (transform.HasValue)
+@@ -1049,20 +1055,20 @@
+ 				float4x4 m2 = transform.Value;
+ 				for (int num = 0; num < sourceVertexCount; num++)
+ 				{
++					AssetContract.Required(RawPositions)[num + prevVertexCount] = m2.TransformPoint3x4(in RawPositions[num + prevVertexCount]); // ArmAgedon seam
+-					RawPositions[num + prevVertexCount] = m2.TransformPoint3x4(in RawPositions[num + prevVertexCount]);
+ 				}
+ 				if (source.HasNormals)
+ 				{
+ 					for (int num2 = 0; num2 < sourceVertexCount; num2++)
+ 					{
++						AssetContract.Required(RawNormals)[num2 + prevVertexCount] = m2.TransformDirection(in RawNormals[num2 + prevVertexCount]); // ArmAgedon seam
+-						RawNormals[num2 + prevVertexCount] = m2.TransformDirection(in RawNormals[num2 + prevVertexCount]);
+ 					}
+ 				}
+ 				if (source.HasTangents)
+ 				{
+ 					for (int num3 = 0; num3 < sourceVertexCount; num3++)
+ 					{
++						float4 tangent = AssetContract.Required(RawTangents)[num3 + prevVertexCount]; // ArmAgedon seam
+-						float4 tangent = RawTangents[num3 + prevVertexCount];
+ 						RawTangents[num3 + prevVertexCount] = new float4(m2.TransformDirection(tangent.xyz), tangent.w);
+ 					}
+ 				}
+@@ -1081,7 +1087,7 @@
+ 				{
+ 					bindPose = transform.Value * bindPose;
+ 				}
++				Bone? newBone = FindBone((Bone b) => b.Name == bone.Name && MathX.Approximately(in b.BindPose, in bindPose));
+-				Bone newBone = FindBone((Bone b) => b.Name == bone.Name && MathX.Approximately(in b.BindPose, in bindPose));
+ 				if (newBone == null)
+ 				{
+ 					newBone = AddBone(bone.Name);
+@@ -1091,7 +1097,7 @@
+ 			}
+ 			if (mask == null)
+ 			{
++				Array.Copy(AssetContract.Required(source.RawBoneBindings), 0, AssetContract.Required(RawBoneBindings), prevVertexCount, sourceVertexCount); // ArmAgedon seam
+-				Array.Copy(source.RawBoneBindings, 0, RawBoneBindings, prevVertexCount, sourceVertexCount);
+ 			}
+ 			else
+ 			{
+@@ -1100,7 +1106,7 @@
+ 				{
+ 					if (mask.IsVertexMasked(i2))
+ 					{
++						AssetContract.Required(RawBoneBindings)[targetIndex2] = AssetContract.Required(source.RawBoneBindings)[i2]; // ArmAgedon seam
+-						RawBoneBindings[targetIndex2] = source.RawBoneBindings[i2];
+ 						targetIndex2++;
+ 					}
+ 				}
+@@ -1109,7 +1115,7 @@
+ 			{
+ 				for (int i3 = 0; i3 < sourceVertexCount; i3++)
+ 				{
++					BoneBinding binding = AssetContract.Required(RawBoneBindings)[i3 + prevVertexCount]; // ArmAgedon seam
+-					BoneBinding binding = RawBoneBindings[i3 + prevVertexCount];
+ 					if (binding.boneIndex0 >= 0)
+ 					{
+ 						binding.boneIndex0 = boneMapping[binding.boneIndex0];
+@@ -1133,7 +1139,7 @@
+ 		appendResult.blendshapeMapping = new List<int>();
+ 		foreach (BlendShape sourceShape in source.BlendShapes)
+ 		{
++			BlendShape? targetShape = TryGetBlendShape(sourceShape.Name);
+-			BlendShape targetShape = TryGetBlendShape(sourceShape.Name);
+ 			if (targetShape == null)
+ 			{
+ 				targetShape = AddBlendShape(sourceShape.Name);
+@@ -1155,20 +1161,20 @@
+ 				{
+ 					for (int i4 = 0; i4 < sourceVertexCount; i4++)
+ 					{
++						AssetContract.Required(targetFrame.RawPositions)[i4 + prevVertexCount] = AssetContract.Required(sourceFrame.RawPositions)[i4]; // ArmAgedon seam
+-						targetFrame.RawPositions[i4 + prevVertexCount] = sourceFrame.RawPositions[i4];
+ 					}
+ 					if (sourceShape.HasNormals)
+ 					{
+ 						for (int i5 = 0; i5 < sourceVertexCount; i5++)
+ 						{
++							AssetContract.Required(targetFrame.RawNormals)[i5 + prevVertexCount] = AssetContract.Required(sourceFrame.RawNormals)[i5]; // ArmAgedon seam
+-							targetFrame.RawNormals[i5 + prevVertexCount] = sourceFrame.RawNormals[i5];
+ 						}
+ 					}
+ 					if (sourceShape.HasTangents)
+ 					{
+ 						for (int i6 = 0; i6 < sourceVertexCount; i6++)
+ 						{
++							AssetContract.Required(targetFrame.RawTangents)[i6 + prevVertexCount] = AssetContract.Required(sourceFrame.RawTangents)[i6]; // ArmAgedon seam
+-							targetFrame.RawTangents[i6 + prevVertexCount] = sourceFrame.RawTangents[i6];
+ 						}
+ 					}
+ 					continue;
+@@ -1178,14 +1184,14 @@
+ 				{
+ 					if (mask.IsVertexMasked(i7))
+ 					{
++						AssetContract.Required(targetFrame.RawPositions)[targetIndex3] = AssetContract.Required(sourceFrame.RawPositions)[i7]; // ArmAgedon seam
+-						targetFrame.RawPositions[targetIndex3] = sourceFrame.RawPositions[i7];
+ 						if (sourceShape.HasNormals)
+ 						{
++							AssetContract.Required(targetFrame.RawNormals)[targetIndex3] = AssetContract.Required(sourceFrame.RawNormals)[i7]; // ArmAgedon seam
+-							targetFrame.RawNormals[targetIndex3] = sourceFrame.RawNormals[i7];
+ 						}
+ 						if (sourceShape.HasTangents)
+ 						{
++							AssetContract.Required(targetFrame.RawTangents)[targetIndex3] = AssetContract.Required(sourceFrame.RawTangents)[i7]; // ArmAgedon seam
+-							targetFrame.RawTangents[targetIndex3] = sourceFrame.RawTangents[i7];
+ 						}
+ 						targetIndex3++;
+ 					}
+@@ -1199,14 +1205,14 @@
+ 			int sourceSubmeshCount = source.SubmeshCount;
+ 			for (int s = 0; s < sourceSubmeshCount; s++)
+ 			{
++				Submesh? sourceSubmesh = source.GetSubmesh(s);
++				int targetIndex4 = ((mask == null || mask.MaskedPrimitiveCount(s) != 0) ? (submeshMapper?.Invoke(AssetContract.Required(sourceSubmesh)) ?? SubmeshCount) : (-1)); // ArmAgedon seam
+-				Submesh sourceSubmesh = source.GetSubmesh(s);
+-				int targetIndex4 = ((mask == null || mask.MaskedPrimitiveCount(s) != 0) ? (submeshMapper?.Invoke(sourceSubmesh) ?? SubmeshCount) : (-1));
+ 				appendResult.submeshMapping.Add(targetIndex4);
+ 				if (targetIndex4 < 0)
+ 				{
+ 					continue;
+ 				}
++				Submesh? targetSubmesh = TryGetSubmesh(AssetContract.Required(sourceSubmesh).Topology, targetIndex4); // ArmAgedon seam
+-				Submesh targetSubmesh = TryGetSubmesh(sourceSubmesh.Topology, targetIndex4);
+ 				if (targetSubmesh == null)
+ 				{
+ 					throw new Exception($"Couldn't map source submesh {targetSubmesh} to target index {targetIndex4}. A submesh with different topology already exists.");
+@@ -1217,7 +1223,7 @@
+ 					targetSubmesh.IncreaseCount(sourceSubmesh.Count);
+ 					for (int n2 = 0; n2 < sourceSubmesh.IndicieCount; n2++)
+ 					{
++						AssetContract.Required(targetSubmesh.RawIndicies)[previousTargetIndiceCount + n2] = prevVertexCount + AssetContract.Required(sourceSubmesh.RawIndicies)[n2]; // ArmAgedon seam
+-						targetSubmesh.RawIndicies[previousTargetIndiceCount + n2] = prevVertexCount + sourceSubmesh.RawIndicies[n2];
+ 					}
+ 					continue;
+ 				}
+@@ -1231,8 +1237,8 @@
+ 						for (int v = 0; v < sourceSubmesh.IndiciesPerElement; v++)
+ 						{
+ 							int indiceIndex = offset + v;
++							int vertexIndex = AssetContract.Required(sourceSubmesh.RawIndicies)[indiceIndex]; // ArmAgedon seam
++							AssetContract.Required(targetSubmesh.RawIndicies)[indicieIndex++] = prevVertexCount + mask.GetNewVertexIndex(vertexIndex); // ArmAgedon seam
+-							int vertexIndex = sourceSubmesh.RawIndicies[indiceIndex];
+-							targetSubmesh.RawIndicies[indicieIndex++] = prevVertexCount + mask.GetNewVertexIndex(vertexIndex);
+ 						}
+ 					}
+ 				}
+@@ -1278,15 +1284,15 @@
+ 
+ 	public void IncreasePointCount(int count)
+ 	{
++		AssetContract.Required(TryGetSubmesh<PointSubmesh>()).IncreaseCount(count); // ArmAgedon seam
+-		TryGetSubmesh<PointSubmesh>().IncreaseCount(count);
+ 	}
+ 
+ 	public void IncreaseTriangleCount(int count)
+ 	{
++		AssetContract.Required(TryGetSubmesh<TriangleSubmesh>()).IncreaseCount(count); // ArmAgedon seam
+-		TryGetSubmesh<TriangleSubmesh>().IncreaseCount(count);
+ 	}
+ 
++	public void AddVertices(int count, VertexCollection? verts = null)
+-	public void AddVertices(int count, VertexCollection verts = null)
+ 	{
+ 		IncreaseVertexCount(count);
+ 		if (verts != null)
+@@ -1332,32 +1338,32 @@
+ 
+ 	public Triangle AddTriangle(int submesh = 0)
+ 	{
++		return AssetContract.Required(TryGetSubmesh<TriangleSubmesh>(submesh)).AddTriangle(); // ArmAgedon seam
+-		return TryGetSubmesh<TriangleSubmesh>(submesh).AddTriangle();
+ 	}
+ 
++	public void AddTriangles(int count, int submesh = 0, TriangleCollection? trigs = null)
+-	public void AddTriangles(int count, int submesh = 0, TriangleCollection trigs = null)
+ 	{
++		AssetContract.Required(TryGetSubmesh<TriangleSubmesh>(submesh)).AddTriangles(count, trigs); // ArmAgedon seam
+-		TryGetSubmesh<TriangleSubmesh>(submesh).AddTriangles(count, trigs);
+ 	}
+ 
+ 	public Triangle AddTriangle(int v0, int v1, int v2, int submesh = 0)
+ 	{
++		return AssetContract.Required(TryGetSubmesh<TriangleSubmesh>(submesh)).AddTriangle(v0, v1, v2); // ArmAgedon seam
+-		return TryGetSubmesh<TriangleSubmesh>(submesh).AddTriangle(v0, v1, v2);
+ 	}
+ 
+ 	public Triangle AddTriangle(Vertex v0, Vertex v1, Vertex v2, int submesh = 0)
+ 	{
++		return AssetContract.Required(TryGetSubmesh<TriangleSubmesh>(submesh)).AddTriangle(v0, v1, v2); // ArmAgedon seam
+-		return TryGetSubmesh<TriangleSubmesh>(submesh).AddTriangle(v0, v1, v2);
+ 	}
+ 
+ 	public Point AddPoint(int submesh)
+ 	{
++		return AssetContract.Required(TryGetSubmesh<PointSubmesh>(submesh)).AddPoint(); // ArmAgedon seam
+-		return TryGetSubmesh<PointSubmesh>(submesh).AddPoint();
+ 	}
+ 
++	public void AddPoints(int count, int submesh, PointCollection? points = null)
+-	public void AddPoints(int count, int submesh, PointCollection points = null)
+ 	{
++		AssetContract.Required(TryGetSubmesh<PointSubmesh>(submesh)).AddPoints(count, points); // ArmAgedon seam
+-		TryGetSubmesh<PointSubmesh>(submesh).AddPoints(count, points);
+ 	}
+ 
+ 	public Vertex GetVertex(int index)
+@@ -1368,19 +1374,19 @@
+ 
+ 	public Triangle GetTriangle(int index, int submesh = 0)
+ 	{
++		return AssetContract.Required(TryGetSubmesh<TriangleSubmesh>(submesh)).GetTriangle(index); // ArmAgedon seam
+-		return TryGetSubmesh<TriangleSubmesh>(submesh).GetTriangle(index);
+ 	}
+ 
+ 	public Point GetPoint(int index, int submesh = 0)
+ 	{
++		return AssetContract.Required(TryGetSubmesh<PointSubmesh>(submesh)).GetPoint(index); // ArmAgedon seam
+-		return TryGetSubmesh<PointSubmesh>(submesh).GetPoint(index);
+ 	}
+ 
+ 	public Triangle GetTriangleByFaceIndex(int faceIndex)
+ 	{
++		foreach (Submesh? submesh in submeshes)
+-		foreach (Submesh submesh in submeshes)
+ 		{
++			if (faceIndex < AssetContract.Required(submesh).Count) // ArmAgedon seam
+-			if (faceIndex < submesh.Count)
+ 			{
+ 				return (submesh as TriangleSubmesh)?.GetTriangle(faceIndex) ?? default(Triangle);
+ 			}
+@@ -1432,7 +1438,7 @@
+ 		RemoveElements(boneBindings, index, count, VertexCount);
+ 		for (int i = 0; i < UV_ChannelCount; i++)
+ 		{
++			UV_Array rawUv = AssetContract.Required(uv_channels)[i]; // ArmAgedon seam
+-			UV_Array rawUv = uv_channels[i];
+ 			RemoveElements(rawUv.uv_2D, index, count, VertexCount);
+ 			RemoveElements(rawUv.uv_3D, index, count, VertexCount);
+ 			RemoveElements(rawUv.uv_4D, index, count, VertexCount);
+@@ -1447,7 +1453,7 @@
+ 		{
+ 			return;
+ 		}
++		foreach (Submesh? submesh in submeshes)
+-		foreach (Submesh submesh in submeshes)
+ 		{
+ 			submesh?.VerticesRemoved(index, count, throwOnRemovedFromSubmeshes);
+ 		}
+@@ -1455,12 +1461,12 @@
+ 
+ 	public void RemoveTriangles(int index, int count, int submesh = 0)
+ 	{
++		AssetContract.Required(TryGetSubmesh<TriangleSubmesh>(submesh)).Remove(index, count); // ArmAgedon seam
+-		TryGetSubmesh<TriangleSubmesh>(submesh).Remove(index, count);
+ 	}
+ 
+ 	public void RemovePoints(int index, int count, int submesh = 0)
+ 	{
++		AssetContract.Required(TryGetSubmesh<PointSubmesh>(submesh)).Remove(index, count); // ArmAgedon seam
+-		TryGetSubmesh<PointSubmesh>(submesh).Remove(index, count);
+ 	}
+ 
+ 	public void RemoveVertex(int index)
+@@ -1515,7 +1521,7 @@
+ 			return;
+ 		}
+ 		Submesh checkSubmesh = list[0].Submesh;
++		HashSet<Submesh>? submeshes = null;
+-		HashSet<Submesh> submeshes = null;
+ 		for (int i = 1; i < list.Count; i++)
+ 		{
+ 			if (list[i].Submesh != checkSubmesh)
+@@ -1566,7 +1572,7 @@
+ 
+ 	public void RemoveTriangles(TriangleCollection triangles, int submesh)
+ 	{
++		AssetContract.Required(TryGetSubmesh<TriangleSubmesh>(submesh)).Remove(triangles); // ArmAgedon seam
+-		TryGetSubmesh<TriangleSubmesh>(submesh).Remove(triangles);
+ 	}
+ 
+ 	public void RemovePoint(int index, int submesh = 0)
+@@ -1582,8 +1588,8 @@
+ 		}
+ 		for (int s = 0; s < SubmeshCount; s++)
+ 		{
++			Submesh? submesh = submeshes[s];
++			for (int i = AssetContract.Required(submesh).Count - 1; i >= 0; i--) // ArmAgedon seam
+-			Submesh submesh = submeshes[s];
+-			for (int i = submesh.Count - 1; i >= 0; i--)
+ 			{
+ 				if (mask.IsPrimitiveMasked(s, i))
+ 				{
+@@ -1647,52 +1653,52 @@
+ 	public ref readonly float3 GetPosition(int index)
+ 	{
+ 		VerifyVertexIndex(index);
++		return ref AssetContract.Required(positions)[index]; // ArmAgedon seam
+-		return ref positions[index];
+ 	}
+ 
+ 	public ref readonly float3 GetNormal(int index)
+ 	{
+ 		VerifyVertexIndex(index);
++		return ref AssetContract.Required(normals)[index]; // ArmAgedon seam
+-		return ref normals[index];
+ 	}
+ 
+ 	public void SetVertex(int index, in float3 position)
+ 	{
+ 		VerifyVertexIndex(index);
++		AssetContract.Required(positions)[index] = position; // ArmAgedon seam
+-		positions[index] = position;
+ 	}
+ 
+ 	public void SetNormal(int index, in float3 normal)
+ 	{
+ 		VerifyVertexIndex(index);
+ 		HasNormals = true;
++		AssetContract.Required(normals)[index] = normal; // ArmAgedon seam
+-		normals[index] = normal;
+ 	}
+ 
+ 	public void SetTangent(int index, in float4 tangent)
+ 	{
+ 		VerifyVertexIndex(index);
+ 		HasTangents = true;
++		AssetContract.Required(tangents)[index] = tangent; // ArmAgedon seam
+-		tangents[index] = tangent;
+ 	}
+ 
+ 	public void SetColor(int index, in color color)
+ 	{
+ 		VerifyVertexIndex(index);
+ 		HasColors = true;
++		AssetContract.Required(colors)[index] = color; // ArmAgedon seam
+-		colors[index] = color;
+ 	}
+ 
+ 	public void SetUV(int index, int uvChannel, in float2 uv)
+ 	{
+ 		VerifyVertexIndex(index);
+ 		SetHasUV(uvChannel, state: true);
++		AssetContract.Required(GetRawUVs(uvChannel))[index] = uv; // ArmAgedon seam
+-		GetRawUVs(uvChannel)[index] = uv;
+ 	}
+ 
+ 	public void SetTriangle(int index, int v0, int v1, int v2, int submesh = 0)
+ 	{
++		AssetContract.Required(TryGetSubmesh<TriangleSubmesh>(submesh)).SetTriangle(index, v0, v1, v2); // ArmAgedon seam
+-		TryGetSubmesh<TriangleSubmesh>(submesh).SetTriangle(index, v0, v1, v2);
+ 	}
+ 
+ 	public Bone GetBone(int index)
+@@ -1700,7 +1706,7 @@
+ 		return bones[index];
+ 	}
+ 
++	public Bone? FindBone(Func<Bone, bool> filter)
+-	public Bone FindBone(Func<Bone, bool> filter)
+ 	{
+ 		return bones.FirstOrDefault(filter);
+ 	}
+@@ -1747,7 +1753,7 @@
+ 		{
+ 			for (int i = 0; i < VertexCount; i++)
+ 			{
++				AssetContract.Required(RawBoneBindings)[i].ClearBones(); // ArmAgedon seam
+-				RawBoneBindings[i].ClearBones();
+ 			}
+ 		}
+ 	}
+@@ -1808,12 +1814,12 @@
+ 		}
+ 	}
+ 
++	internal void EnsureVertexArray<T>(bool state, ref T[]? array, T defaultValue = default(T)) where T : struct
+-	internal void EnsureVertexArray<T>(bool state, ref T[] array, T defaultValue = default(T))
+ 	{
+ 		EnsureArray(state, ref array, VertexCapacity, defaultValue);
+ 	}
+ 
++	internal void EnsureArray<T>(bool state, ref T[]? array, int minSize, T defaultValue = default(T)) where T : struct
+-	internal void EnsureArray<T>(bool state, ref T[] array, int minSize, T defaultValue = default(T))
+ 	{
+ 		if (state)
+ 		{
+@@ -1821,7 +1827,7 @@
+ 			{
+ 				return;
+ 			}
++			T[]? oldArray = array;
+-			T[] oldArray = array;
+ 			array = new T[minSize];
+ 			int index = 0;
+ 			if (oldArray != null)
+@@ -1842,7 +1848,7 @@
+ 		}
+ 	}
+ 
++	private void EnsureBitArray(bool state, ref BitArray? array, int minSize)
+-	private void EnsureBitArray(bool state, ref BitArray array, int minSize)
+ 	{
+ 		if (state)
+ 		{
+@@ -1895,7 +1901,7 @@
+ 		}
+ 	}
+ 
++	internal void RemoveElements<T>(T[]? array, int index, int count, int length, bool clear = false, T clearVal = default(T)) where T : struct
+-	internal void RemoveElements<T>(T[] array, int index, int count, int length, bool clear = false, T clearVal = default(T))
+ 	{
+ 		if (array == null)
+ 		{
+@@ -1911,7 +1917,7 @@
+ 		}
+ 	}
+ 
++	private void RemoveElements(BitArray? bitArray, int index, int count, int length)
+-	private void RemoveElements(BitArray bitArray, int index, int count, int length)
+ 	{
+ 		if (bitArray != null)
+ 		{
+@@ -1983,7 +1989,7 @@
+ 		}
+ 	}
+ 
++	public void MergeBlendshapes(List<int>? indexes = null, string name = "Merged")
+-	public void MergeBlendshapes(List<int> indexes = null, string name = "Merged")
+ 	{
+ 		int count = indexes?.Count ?? BlendShapeCount;
+ 		if (count == 0)
+@@ -1992,7 +1998,7 @@
+ 		}
+ 		int firstIndex = indexes?[0] ?? 0;
+ 		BlendShape targetBlendshape = GetBlendShape(firstIndex);
++		List<int>? toRemove = Pool.BorrowList<int>();
+-		List<int> toRemove = Pool.BorrowList<int>();
+ 		for (int i = 1; i < count; i++)
+ 		{
+ 			int index = indexes?[i] ?? i;
+@@ -2001,16 +2007,16 @@
+ 			foreach (BlendShapeFrame sourceFrame in sourceBlendshape.Frames)
+ 			{
+ 				BlendShapeFrame targetFrame = targetBlendshape.AddFrame(1f);
++				Array.Copy(AssetContract.Required(sourceFrame.positions), AssetContract.Required(targetFrame.positions), VertexCount); // ArmAgedon seam
+-				Array.Copy(sourceFrame.positions, targetFrame.positions, VertexCount);
+ 				if (sourceBlendshape.HasNormals)
+ 				{
+ 					targetBlendshape.HasNormals = true;
++					Array.Copy(AssetContract.Required(sourceFrame.normals), AssetContract.Required(targetFrame.normals), VertexCount); // ArmAgedon seam
+-					Array.Copy(sourceFrame.normals, targetFrame.normals, VertexCount);
+ 				}
+ 				if (sourceBlendshape.HasTangents)
+ 				{
+ 					targetBlendshape.HasTangents = true;
++					Array.Copy(AssetContract.Required(sourceFrame.tangents), AssetContract.Required(targetFrame.tangents), VertexCount); // ArmAgedon seam
+-					Array.Copy(sourceFrame.tangents, targetFrame.tangents, VertexCount);
+ 				}
+ 			}
+ 		}
+@@ -2023,12 +2029,12 @@
+ 		Pool.Return(ref toRemove);
+ 	}
+ 
++	public void SortBlendshapesByName(List<int>? remapedOrder = null)
+-	public void SortBlendshapesByName(List<int> remapedOrder = null)
+ 	{
+ 		SortBlendshapes((BlendShape a, BlendShape b) => a.Name.CompareTo(b.Name), remapedOrder);
+ 	}
+ 
++	public void SortBlendshapesByNameLength(List<int>? remapedOrder = null)
+-	public void SortBlendshapesByNameLength(List<int> remapedOrder = null)
+ 	{
+ 		SortBlendshapes((BlendShape a, BlendShape b) =>
+ 		{
+@@ -2037,9 +2043,9 @@
+ 		}, remapedOrder);
+ 	}
+ 
++	public void SortBlendshapes(Comparison<BlendShape> comparison, List<int>? remappedOrder = null)
+-	public void SortBlendshapes(Comparison<BlendShape> comparison, List<int> remappedOrder = null)
+ 	{
++		List<BlendShape>? originalOrder = null;
+-		List<BlendShape> originalOrder = null;
+ 		if (remappedOrder != null)
+ 		{
+ 			originalOrder = new List<BlendShape>(blendshapes);
+@@ -2049,7 +2055,7 @@
+ 		{
+ 			return;
+ 		}
++		foreach (BlendShape b in AssetContract.Required(originalOrder)) // ArmAgedon seam
+-		foreach (BlendShape b in originalOrder)
+ 		{
+ 			remappedOrder.Add(b.Index);
+ 		}
+@@ -2067,8 +2073,8 @@
+ 		List<BoneBindCandidate> boneCandidates = new List<BoneBindCandidate>();
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			float3 pos = AssetContract.Required(RawPositions)[i]; // ArmAgedon seam
++			ref BoneBinding boneBinding = ref AssetContract.Required(RawBoneBindings)[i]; // ArmAgedon seam
+-			float3 pos = RawPositions[i];
+-			ref BoneBinding boneBinding = ref RawBoneBindings[i];
+ 			float highestDistance = 0f;
+ 			foreach (MeshBoneNode bone2 in bones)
+ 			{
+@@ -2096,24 +2102,24 @@
+ 			boneCandidates.Sort();
+ 			foreach (BoneBindCandidate candidate in boneCandidates)
+ 			{
++				boneBinding.AddBone(AssetContract.Required(candidate.node.parentNode.MeshBone), MathX.InverseLerp(maxDistance, lowestDistance, candidate.distance)); // ArmAgedon seam
+-				boneBinding.AddBone(candidate.node.parentNode.MeshBone, MathX.InverseLerp(maxDistance, lowestDistance, candidate.distance));
+ 			}
+ 			boneBinding.Normalize();
+ 			boneCandidates.Clear();
+ 		}
+ 	}
+ 
++	public bool RecalculateTangentsMikktspace(TriangleCollection? triangles = null, int uvChannel = 0)
+-	public bool RecalculateTangentsMikktspace(TriangleCollection triangles = null, int uvChannel = 0)
+ 	{
+ 		if (!HasNormals || !HasUV_2D(uvChannel))
+ 		{
+ 			return false;
+ 		}
+ 		HasTangents = true;
++		float3[]? positions = RawPositions;
++		float3[]? normals = RawNormals;
++		float2[]? uvs = GetRawUVs(uvChannel);
++		float4[]? tangents = RawTangents;
+-		float3[] positions = RawPositions;
+-		float3[] normals = RawNormals;
+-		float2[] uvs = GetRawUVs(uvChannel);
+-		float4[] tangents = RawTangents;
+ 		int faceCount = triangles?.Count ?? TotalFaceCount;
+ 		VerticesPerFaceHandler _getVertsPerFace;
+ 		VertexPositionHandler _getPosition;
+@@ -2126,7 +2132,7 @@
+ 			_getPosition = delegate(int face, int vert, out float x, out float y, out float z)
+ 			{
+ 				int vertexIndexUnsafe = GetTriangleByFaceIndex(face).GetVertexIndexUnsafe(vert);
++				float3 float5 = AssetContract.Required(positions)[vertexIndexUnsafe]; // ArmAgedon seam
+-				float3 float5 = positions[vertexIndexUnsafe];
+ 				x = float5.x;
+ 				y = float5.y;
+ 				z = float5.z;
+@@ -2134,7 +2140,7 @@
+ 			_getNormal = delegate(int face, int vert, out float x, out float y, out float z)
+ 			{
+ 				int vertexIndexUnsafe = GetTriangleByFaceIndex(face).GetVertexIndexUnsafe(vert);
++				float3 float5 = AssetContract.Required(normals)[vertexIndexUnsafe]; // ArmAgedon seam
+-				float3 float5 = normals[vertexIndexUnsafe];
+ 				x = float5.x;
+ 				y = float5.y;
+ 				z = float5.z;
+@@ -2142,14 +2148,14 @@
+ 			_getUV = delegate(int face, int vert, out float x, out float y)
+ 			{
+ 				int vertexIndexUnsafe = GetTriangleByFaceIndex(face).GetVertexIndexUnsafe(vert);
++				float2 float5 = AssetContract.Required(uvs)[vertexIndexUnsafe]; // ArmAgedon seam
+-				float2 float5 = uvs[vertexIndexUnsafe];
+ 				x = float5.x;
+ 				y = float5.y;
+ 			};
+ 			_setTangent = (int face, int vert, float x, float y, float z, float sign) =>
+ 			{
+ 				int vertexIndexUnsafe = GetTriangleByFaceIndex(face).GetVertexIndexUnsafe(vert);
++				AssetContract.Required(tangents)[vertexIndexUnsafe] = new float4(x, y, z, sign); // ArmAgedon seam
+-				tangents[vertexIndexUnsafe] = new float4(x, y, z, sign);
+ 			};
+ 		}
+ 		else
+@@ -2158,7 +2164,7 @@
+ 			_getPosition = delegate(int face, int vert, out float x, out float y, out float z)
+ 			{
+ 				int vertexIndexUnsafe = triangles[face].GetVertexIndexUnsafe(vert);
++				float3 float5 = AssetContract.Required(positions)[vertexIndexUnsafe]; // ArmAgedon seam
+-				float3 float5 = positions[vertexIndexUnsafe];
+ 				x = float5.x;
+ 				y = float5.y;
+ 				z = float5.z;
+@@ -2166,7 +2172,7 @@
+ 			_getNormal = delegate(int face, int vert, out float x, out float y, out float z)
+ 			{
+ 				int vertexIndexUnsafe = triangles[face].GetVertexIndexUnsafe(vert);
++				float3 float5 = AssetContract.Required(normals)[vertexIndexUnsafe]; // ArmAgedon seam
+-				float3 float5 = normals[vertexIndexUnsafe];
+ 				x = float5.x;
+ 				y = float5.y;
+ 				z = float5.z;
+@@ -2174,14 +2180,14 @@
+ 			_getUV = delegate(int face, int vert, out float x, out float y)
+ 			{
+ 				int vertexIndexUnsafe = triangles[face].GetVertexIndexUnsafe(vert);
++				float2 float5 = AssetContract.Required(uvs)[vertexIndexUnsafe]; // ArmAgedon seam
+-				float2 float5 = uvs[vertexIndexUnsafe];
+ 				x = float5.x;
+ 				y = float5.y;
+ 			};
+ 			_setTangent = (int face, int vert, float x, float y, float z, float sign) =>
+ 			{
+ 				int vertexIndexUnsafe = triangles[face].GetVertexIndexUnsafe(vert);
++				AssetContract.Required(tangents)[vertexIndexUnsafe] = new float4(x, y, z, sign); // ArmAgedon seam
+-				tangents[vertexIndexUnsafe] = new float4(x, y, z, sign);
+ 			};
+ 		}
+ 		return MikkGenerator.GenerateTangentSpace(faceCount, _getVertsPerFace, _getPosition, _getNormal, _getUV, _setTangent);
+@@ -2289,7 +2295,7 @@
+ 				break;
+ 			}
+ 		}
++		foreach (Submesh? s in submeshes)
+-		foreach (Submesh s in submeshes)
+ 		{
+ 			if (s == null)
+ 			{
+@@ -2445,7 +2451,7 @@
+ 		{
+ 			for (int i2 = 0; i2 < VertexCount; i2++)
+ 			{
++				AssetContract.Required(RawBoneBindings)[i2].Normalize(); // ArmAgedon seam
+-				RawBoneBindings[i2].Normalize();
+ 			}
+ 		}
+ 		for (int i3 = 0; i3 < UV_ChannelCount; i3++)
+@@ -2471,14 +2477,14 @@
+ 				if (!string.IsNullOrEmpty(typeStr))
+ 				{
+ 					SubmeshTopology type = (SubmeshTopology)Enum.Parse(typeof(SubmeshTopology), typeStr);
++					AssetContract.Required(TryGetSubmesh(type, i4)).Decode(br); // ArmAgedon seam
+-					TryGetSubmesh(type, i4).Decode(br);
+ 				}
+ 			}
+ 		}
+ 		else if (legacyMaterialCount == 1)
+ 		{
++			TriangleSubmesh? submesh = TryGetSubmesh<TriangleSubmesh>();
++			AssetContract.Required(submesh).IncreaseCount(legacyTrigs); // ArmAgedon seam
+-			TriangleSubmesh submesh = TryGetSubmesh<TriangleSubmesh>();
+-			submesh.IncreaseCount(legacyTrigs);
+ 			for (int i5 = 0; i5 < legacyTrigs; i5++)
+ 			{
+ 				int v0 = br.ReadInt32();
+@@ -2578,7 +2584,7 @@
+ 	public float3 TransformVertex(int index, Span<float4x4> boneTransforms)
+ 	{
+ 		VerifySkinnedTransformation(boneTransforms);
++		return AssetContract.Required(boneBindings)[index].TransformPosition(this, in AssetContract.Required(positions)[index], boneTransforms); // ArmAgedon seam
+-		return boneBindings[index].TransformPosition(this, in positions[index], boneTransforms);
+ 	}
+ 
+ 	public void TransformAllVertices(Span<float3> targetPoses, Span<float4x4> boneTransforms)
+@@ -2590,7 +2596,7 @@
+ 		}
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			targetPoses[i] = AssetContract.Required(boneBindings)[i].TransformPosition(this, in AssetContract.Required(positions)[i], boneTransforms); // ArmAgedon seam
+-			targetPoses[i] = boneBindings[i].TransformPosition(this, in positions[i], boneTransforms);
+ 		}
+ 	}
+ 
+@@ -2607,7 +2613,7 @@
+ 		}
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			targetNormals[i] = AssetContract.Required(boneBindings)[i].TransformDirection(this, in normals[i], boneTransforms).Normalized; // ArmAgedon seam
+-			targetNormals[i] = boneBindings[i].TransformDirection(this, in normals[i], boneTransforms).Normalized;
+ 		}
+ 	}
+ 
+@@ -2625,7 +2631,7 @@
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
+ 			float4 tangent = tangents[i];
++			targetTangents[i] = new float4(AssetContract.Required(boneBindings)[i].TransformDirection(this, tangent.xyz, boneTransforms).Normalized, tangent.w); // ArmAgedon seam
+-			targetTangents[i] = new float4(boneBindings[i].TransformDirection(this, tangent.xyz, boneTransforms).Normalized, tangent.w);
+ 		}
+ 	}
+ 
+@@ -2651,7 +2657,7 @@
+ 		BoundingBox bounds = BoundingBox.Empty();
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			float3 p = AssetContract.Required(boneBindings)[i].TransformPosition(this, in AssetContract.Required(positions)[i], boneTransforms); // ArmAgedon seam
+-			float3 p = boneBindings[i].TransformPosition(this, in positions[i], boneTransforms);
+ 			if (!p.IsInfinity && !p.IsNaN)
+ 			{
+ 				bounds.Encapsulate(in p);
+@@ -2680,7 +2686,7 @@
+ 		}
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			array[i] = convert(AssetContract.Required(positions)[i]); // ArmAgedon seam
+-			array[i] = convert(positions[i]);
+ 		}
+ 	}
+ 
+@@ -2692,7 +2698,7 @@
+ 		}
+ 		if (triangles.IndicieCount > 0)
+ 		{
++			Buffer.BlockCopy(AssetContract.Required(triangles.indicies), 0, array, arrayOffset * 4, triangles.IndicieCount * 4); // ArmAgedon seam
+-			Buffer.BlockCopy(triangles.indicies, 0, array, arrayOffset * 4, triangles.IndicieCount * 4);
+ 		}
+ 	}
+ 
+@@ -2705,7 +2711,7 @@
+ 		}
+ 		for (int i = 0; i < count; i++)
+ 		{
++			if (array[arrayOffset + i] != AssetContract.Required(triangles.indicies)[i]) // ArmAgedon seam
+-			if (array[arrayOffset + i] != triangles.indicies[i])
+ 			{
+ 				return false;
+ 			}
+@@ -2720,7 +2726,7 @@
+ 			throw new ArgumentOutOfRangeException("array.Length");
+ 		}
+ 		int offset = 0;
++		foreach (Submesh? submesh in submeshes)
+-		foreach (Submesh submesh in submeshes)
+ 		{
+ 			if (submesh is TriangleSubmesh triangles)
+ 			{
+@@ -2737,7 +2743,7 @@
+ 			return false;
+ 		}
+ 		int offset = 0;
++		foreach (Submesh? submesh in submeshes)
+-		foreach (Submesh submesh in submeshes)
+ 		{
+ 			if (submesh is TriangleSubmesh triangles)
+ 			{
+@@ -2776,7 +2782,7 @@
+ 	{
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			ref float3 reference = ref AssetContract.Required(normals)[i]; // ArmAgedon seam
+-			ref float3 reference = ref normals[i];
+ 			reference *= -1;
+ 		}
+ 		for (int j = 0; j < BlendShapeCount; j++)
+@@ -2790,7 +2796,7 @@
+ 			{
+ 				for (int v = 0; v < VertexCount; v++)
+ 				{
++					ref float3 reference2 = ref AssetContract.Required(frame.RawNormals)[v]; // ArmAgedon seam
+-					ref float3 reference2 = ref frame.RawNormals[v];
+ 					reference2 *= -1;
+ 				}
+ 			}
+@@ -2799,13 +2805,13 @@
+ 
+ 	public void ReverseWinding()
+ 	{
++		foreach (Submesh? submesh in submeshes)
+-		foreach (Submesh submesh in submeshes)
+ 		{
+ 			if (submesh is TriangleSubmesh trigs)
+ 			{
+ 				for (int i = 0; i < trigs.IndicieCount; i += 3)
+ 				{
++					int temp = AssetContract.Required(trigs.RawIndicies)[i]; // ArmAgedon seam
+-					int temp = trigs.RawIndicies[i];
+ 					trigs.RawIndicies[i] = trigs.RawIndicies[i + 2];
+ 					trigs.RawIndicies[i + 2] = temp;
+ 				}
+@@ -2819,27 +2825,27 @@
+ 		AddVertices(origVertexCount);
+ 		for (int i = 0; i < origVertexCount; i++)
+ 		{
++			AssetContract.Required(RawPositions)[origVertexCount + i] = RawPositions[i]; // ArmAgedon seam
+-			RawPositions[origVertexCount + i] = RawPositions[i];
+ 		}
+ 		if (HasNormals)
+ 		{
+ 			for (int j = 0; j < origVertexCount; j++)
+ 			{
++				AssetContract.Required(RawNormals)[origVertexCount + j] = -RawNormals[j]; // ArmAgedon seam
+-				RawNormals[origVertexCount + j] = -RawNormals[j];
+ 			}
+ 		}
+ 		if (HasTangents)
+ 		{
+ 			for (int k = 0; k < origVertexCount; k++)
+ 			{
++				AssetContract.Required(RawTangents)[origVertexCount + k] = RawTangents[k] * new float4(1f, 1f, 1f, -1f); // ArmAgedon seam
+-				RawTangents[origVertexCount + k] = RawTangents[k] * new float4(1f, 1f, 1f, -1f);
+ 			}
+ 		}
+ 		if (HasColors)
+ 		{
+ 			for (int l = 0; l < origVertexCount; l++)
+ 			{
++				AssetContract.Required(RawColors)[origVertexCount + l] = -RawColors[l]; // ArmAgedon seam
+-				RawColors[origVertexCount + l] = -RawColors[l];
+ 			}
+ 		}
+ 		for (int uv = 0; uv < UV_ChannelCount; uv++)
+@@ -2848,28 +2854,28 @@
+ 			{
+ 			case 2:
+ 			{
++				float2[]? array = GetRawUVs(uv);
+-				float2[] array = GetRawUVs(uv);
+ 				for (int n = 0; n < origVertexCount; n++)
+ 				{
++					AssetContract.Required(array)[origVertexCount + n] = array[n]; // ArmAgedon seam
+-					array[origVertexCount + n] = array[n];
+ 				}
+ 				break;
+ 			}
+ 			case 3:
+ 			{
++				float3[]? array3D = GetRawUVs_3D(uv);
+-				float3[] array3D = GetRawUVs_3D(uv);
+ 				for (int num = 0; num < origVertexCount; num++)
+ 				{
++					AssetContract.Required(array3D)[origVertexCount + num] = array3D[num]; // ArmAgedon seam
+-					array3D[origVertexCount + num] = array3D[num];
+ 				}
+ 				break;
+ 			}
+ 			case 4:
+ 			{
++				float4[]? array4D = GetRawUVs_4D(uv);
+-				float4[] array4D = GetRawUVs_4D(uv);
+ 				for (int m = 0; m < origVertexCount; m++)
+ 				{
++					AssetContract.Required(array4D)[origVertexCount + m] = array4D[m]; // ArmAgedon seam
+-					array4D[origVertexCount + m] = array4D[m];
+ 				}
+ 				break;
+ 			}
+@@ -2879,10 +2885,10 @@
+ 		{
+ 			for (int num2 = 0; num2 < origVertexCount; num2++)
+ 			{
++				AssetContract.Required(RawBoneBindings)[origVertexCount + num2] = RawBoneBindings[num2]; // ArmAgedon seam
+-				RawBoneBindings[origVertexCount + num2] = RawBoneBindings[num2];
+ 			}
+ 		}
++		foreach (Submesh? submesh in Submeshes)
+-		foreach (Submesh submesh in Submeshes)
+ 		{
+ 			if (submesh is TriangleSubmesh { Count: var origTrigCount } triangles)
+ 			{
+@@ -2903,13 +2909,13 @@
+ 		{
+ 			for (int i = 0; i < VertexCount; i++)
+ 			{
++				AssetContract.Required(normals)[i] = float3.Zero; // ArmAgedon seam
+-				normals[i] = float3.Zero;
+ 			}
+ 			foreach (Triangle t in Triangles)
+ 			{
+ 				if (t.TryComputeSurfaceNormalUnsafe(out var n))
+ 				{
++					ref float3 reference = ref AssetContract.Required(normals)[t.Vertex0IndexUnsafe]; // ArmAgedon seam
+-					ref float3 reference = ref normals[t.Vertex0IndexUnsafe];
+ 					reference += n;
+ 					ref float3 reference2 = ref normals[t.Vertex1IndexUnsafe];
+ 					reference2 += n;
+@@ -2919,7 +2925,7 @@
+ 			}
+ 			for (int j = 0; j < VertexCount; j++)
+ 			{
++				AssetContract.Required(normals)[j] = normals[j].Normalized; // ArmAgedon seam
+-				normals[j] = normals[j].Normalized;
+ 			}
+ 		}
+ 		catch (Exception innerException)
+@@ -2954,7 +2960,7 @@
+ 		}
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			AssetContract.Required(RawNormals)[i] = RawNormals[i].Normalized; // ArmAgedon seam
+-			RawNormals[i] = RawNormals[i].Normalized;
+ 		}
+ 	}
+ 
+@@ -2966,22 +2972,22 @@
+ 		{
+ 			if (onlyFlagged)
+ 			{
++				if (AssetContract.Required(flags)[t.Vertex0IndexUnsafe]) // ArmAgedon seam
+-				if (flags[t.Vertex0IndexUnsafe])
+ 				{
++					AssetContract.Required(normals)[t.Vertex0IndexUnsafe] = float3.Zero; // ArmAgedon seam
+-					normals[t.Vertex0IndexUnsafe] = float3.Zero;
+ 				}
+ 				if (flags[t.Vertex1IndexUnsafe])
+ 				{
++					AssetContract.Required(normals)[t.Vertex1IndexUnsafe] = float3.Zero; // ArmAgedon seam
+-					normals[t.Vertex1IndexUnsafe] = float3.Zero;
+ 				}
+ 				if (flags[t.Vertex2IndexUnsafe])
+ 				{
++					AssetContract.Required(normals)[t.Vertex2IndexUnsafe] = float3.Zero; // ArmAgedon seam
+-					normals[t.Vertex2IndexUnsafe] = float3.Zero;
+ 				}
+ 			}
+ 			else
+ 			{
++				AssetContract.Required(normals)[t.Vertex0IndexUnsafe] = float3.Zero; // ArmAgedon seam
+-				normals[t.Vertex0IndexUnsafe] = float3.Zero;
+ 				normals[t.Vertex1IndexUnsafe] = float3.Zero;
+ 				normals[t.Vertex2IndexUnsafe] = float3.Zero;
+ 			}
+@@ -2994,25 +3000,25 @@
+ 			}
+ 			if (onlyFlagged)
+ 			{
++				if (AssetContract.Required(flags)[t2.Vertex0IndexUnsafe]) // ArmAgedon seam
+-				if (flags[t2.Vertex0IndexUnsafe])
+ 				{
++					ref float3 reference = ref AssetContract.Required(normals)[t2.Vertex0IndexUnsafe]; // ArmAgedon seam
+-					ref float3 reference = ref normals[t2.Vertex0IndexUnsafe];
+ 					reference += n;
+ 				}
+ 				if (flags[t2.Vertex1IndexUnsafe])
+ 				{
++					ref float3 reference2 = ref AssetContract.Required(normals)[t2.Vertex1IndexUnsafe]; // ArmAgedon seam
+-					ref float3 reference2 = ref normals[t2.Vertex1IndexUnsafe];
+ 					reference2 += n;
+ 				}
+ 				if (flags[t2.Vertex2IndexUnsafe])
+ 				{
++					ref float3 reference3 = ref AssetContract.Required(normals)[t2.Vertex2IndexUnsafe]; // ArmAgedon seam
+-					ref float3 reference3 = ref normals[t2.Vertex2IndexUnsafe];
+ 					reference3 += n;
+ 				}
+ 			}
+ 			else
+ 			{
++				ref float3 reference4 = ref AssetContract.Required(normals)[t2.Vertex0IndexUnsafe]; // ArmAgedon seam
+-				ref float3 reference4 = ref normals[t2.Vertex0IndexUnsafe];
+ 				reference4 += n;
+ 				ref float3 reference5 = ref normals[t2.Vertex1IndexUnsafe];
+ 				reference5 += n;
+@@ -3024,9 +3030,9 @@
+ 		{
+ 			if (onlyFlagged)
+ 			{
++				if (AssetContract.Required(flags)[t3.Vertex0IndexUnsafe]) // ArmAgedon seam
+-				if (flags[t3.Vertex0IndexUnsafe])
+ 				{
++					AssetContract.Required(normals)[t3.Vertex0IndexUnsafe] = normals[t3.Vertex0IndexUnsafe].Normalized; // ArmAgedon seam
+-					normals[t3.Vertex0IndexUnsafe] = normals[t3.Vertex0IndexUnsafe].Normalized;
+ 					if (removeFlag)
+ 					{
+ 						flags[t3.Vertex0IndexUnsafe] = false;
+@@ -3034,7 +3040,7 @@
+ 				}
+ 				if (flags[t3.Vertex1IndexUnsafe])
+ 				{
++					AssetContract.Required(normals)[t3.Vertex1IndexUnsafe] = normals[t3.Vertex1IndexUnsafe].Normalized; // ArmAgedon seam
+-					normals[t3.Vertex1IndexUnsafe] = normals[t3.Vertex1IndexUnsafe].Normalized;
+ 					if (removeFlag)
+ 					{
+ 						flags[t3.Vertex1IndexUnsafe] = false;
+@@ -3042,7 +3048,7 @@
+ 				}
+ 				if (flags[t3.Vertex2IndexUnsafe])
+ 				{
++					AssetContract.Required(normals)[t3.Vertex2IndexUnsafe] = normals[t3.Vertex2IndexUnsafe].Normalized; // ArmAgedon seam
+-					normals[t3.Vertex2IndexUnsafe] = normals[t3.Vertex2IndexUnsafe].Normalized;
+ 					if (removeFlag)
+ 					{
+ 						flags[t3.Vertex2IndexUnsafe] = false;
+@@ -3051,22 +3057,22 @@
+ 			}
+ 			else
+ 			{
++				AssetContract.Required(normals)[t3.Vertex0IndexUnsafe] = normals[t3.Vertex0IndexUnsafe].Normalized; // ArmAgedon seam
+-				normals[t3.Vertex0IndexUnsafe] = normals[t3.Vertex0IndexUnsafe].Normalized;
+ 				normals[t3.Vertex1IndexUnsafe] = normals[t3.Vertex1IndexUnsafe].Normalized;
+ 				normals[t3.Vertex2IndexUnsafe] = normals[t3.Vertex2IndexUnsafe].Normalized;
+ 			}
+ 		}
+ 	}
+ 
++	public bool RecalculateTangents(TriangleCollection? triangles = null, int uvChannel = 0)
+-	public bool RecalculateTangents(TriangleCollection triangles = null, int uvChannel = 0)
+ 	{
+ 		if (!HasNormals || !HasUV_2D(uvChannel))
+ 		{
+ 			return false;
+ 		}
+ 		HasTangents = true;
++		float2[]? uvs = GetRawUVs(uvChannel);
++		RawValueList<float3>? binormsList = Pool.BorrowRawValueList<float3>();
+-		float2[] uvs = GetRawUVs(uvChannel);
+-		RawValueList<float3> binormsList = Pool.BorrowRawValueList<float3>();
+ 		if (binormsList.Capacity < VertexCount)
+ 		{
+ 			binormsList.Capacity = VertexCount;
+@@ -3076,7 +3082,7 @@
+ 		{
+ 			for (int i = 0; i < VertexCount; i++)
+ 			{
++				AssetContract.Required(tangents)[i] = float4.Zero; // ArmAgedon seam
+-				tangents[i] = float4.Zero;
+ 				binorms[i] = float3.Zero;
+ 			}
+ 		}
+@@ -3085,7 +3091,7 @@
+ 			for (int j = 0; j < triangles.Count; j++)
+ 			{
+ 				Triangle t = triangles[j];
++				AssetContract.Required(tangents)[t.Vertex0IndexUnsafe] = float4.Zero; // ArmAgedon seam
+-				tangents[t.Vertex0IndexUnsafe] = float4.Zero;
+ 				tangents[t.Vertex1IndexUnsafe] = float4.Zero;
+ 				tangents[t.Vertex2IndexUnsafe] = float4.Zero;
+ 				binorms[t.Vertex0IndexUnsafe] = float3.Zero;
+@@ -3097,21 +3103,21 @@
+ 		{
+ 			foreach (Triangle t2 in Triangles)
+ 			{
++				CalcTangentValues(t2, AssetContract.Required(uvs), binorms); // ArmAgedon seam
+-				CalcTangentValues(t2, uvs, binorms);
+ 			}
+ 		}
+ 		else
+ 		{
+ 			foreach (Triangle t3 in triangles)
+ 			{
++				CalcTangentValues(t3, AssetContract.Required(uvs), binorms); // ArmAgedon seam
+-				CalcTangentValues(t3, uvs, binorms);
+ 			}
+ 		}
+ 		if (triangles == null)
+ 		{
+ 			for (int k = 0; k < VertexCount; k++)
+ 			{
++				AssetContract.Required(tangents)[k] = CalcTangent(in normals[k], tangents[k].xyz, in binorms[k]); // ArmAgedon seam
+-				tangents[k] = CalcTangent(in normals[k], tangents[k].xyz, in binorms[k]);
+ 			}
+ 		}
+ 		else
+@@ -3121,7 +3127,7 @@
+ 				for (int l = 0; l < 3; l++)
+ 				{
+ 					int index = t4.GetVertexIndexUnsafe(l);
++					if (AssetContract.Required(tangents)[index].w == 0f) // ArmAgedon seam
+-					if (tangents[index].w == 0f)
+ 					{
+ 						tangents[index] = CalcTangent(in normals[index], tangents[index].xyz, in binorms[index]);
+ 					}
+@@ -3135,7 +3141,7 @@
+ 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+ 	private void CalcTangentValues(Triangle t, float2[] uvs, float3[] binorms)
+ 	{
++		float3 p0 = AssetContract.Required(positions)[t.Vertex0IndexUnsafe]; // ArmAgedon seam
+-		float3 p0 = positions[t.Vertex0IndexUnsafe];
+ 		float3 p1 = positions[t.Vertex1IndexUnsafe];
+ 		float3 p2 = positions[t.Vertex2IndexUnsafe];
+ 		float2 w0 = uvs[t.Vertex0IndexUnsafe];
+@@ -3148,7 +3154,7 @@
+ 		float r = 1f / (dw0.x * dw1.y - dw1.x * dw0.y);
+ 		float3 sdir = (dw1.y * dp0 - dw0.y * dp1) * r;
+ 		float3 tdir = (dw0.x * dp1 - dw1.x * dp0) * r;
++		ref float4 reference = ref AssetContract.Required(tangents)[t.Vertex0IndexUnsafe]; // ArmAgedon seam
+-		ref float4 reference = ref tangents[t.Vertex0IndexUnsafe];
+ 		reference += (float4)sdir;
+ 		ref float3 reference2 = ref binorms[t.Vertex0IndexUnsafe];
+ 		reference2 += tdir;
+@@ -3174,7 +3180,7 @@
+ 	{
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			AssetContract.Required(boneBindings)[i].Sort(); // ArmAgedon seam
+-			boneBindings[i].Sort();
+ 		}
+ 	}
+ 
+@@ -3182,7 +3188,7 @@
+ 	{
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			AssetContract.Required(boneBindings)[i].Normalize(); // ArmAgedon seam
+-			boneBindings[i].Normalize();
+ 		}
+ 	}
+ 
+@@ -3190,7 +3196,7 @@
+ 	{
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			AssetContract.Required(boneBindings)[i].Sort(); // ArmAgedon seam
+-			boneBindings[i].Sort();
+ 			boneBindings[i].TrimBoneCount(maxBoneCount);
+ 			boneBindings[i].Trim(trimThreshold);
+ 			boneBindings[i].Normalize();
+@@ -3201,11 +3207,11 @@
+ 	{
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			AssetContract.Required(boneBindings)[i].FillInEmpty(boneIndex); // ArmAgedon seam
+-			boneBindings[i].FillInEmpty(boneIndex);
+ 		}
+ 	}
+ 
++	public void StripEmptyBlendshapes(List<int>? removedBlendshapes = null)
+-	public void StripEmptyBlendshapes(List<int> removedBlendshapes = null)
+ 	{
+ 		for (int i = BlendShapeCount - 1; i >= 0; i--)
+ 		{
+@@ -3216,7 +3222,7 @@
+ 				BlendShapeFrame frame = blendshape[f];
+ 				for (int v = 0; v < VertexCount; v++)
+ 				{
++					if (IsValidBlendshapeValue(in AssetContract.Required(frame.positions)[v]) || (blendshape.HasNormals && IsValidBlendshapeValue(in AssetContract.Required(frame.normals)[v])) || (blendshape.HasTangents && IsValidBlendshapeValue(in AssetContract.Required(frame.tangents)[v]))) // ArmAgedon seam
+-					if (IsValidBlendshapeValue(in frame.positions[v]) || (blendshape.HasNormals && IsValidBlendshapeValue(in frame.normals[v])) || (blendshape.HasTangents && IsValidBlendshapeValue(in frame.tangents[v])))
+ 					{
+ 						strip = false;
+ 						break;
+@@ -3239,13 +3245,13 @@
+ 	{
+ 		for (int s = 0; s < SubmeshCount; s++)
+ 		{
++			if (!AssetContract.IsEmptySubmesh(GetSubmesh(s))) // ArmAgedon seam
+-			if (GetSubmesh(s).Count != 0)
+ 			{
+ 				indexRemap.Add(s);
+ 			}
+ 		}
+ 		int result = SubmeshCount - indexRemap.Count;
++		submeshes.RemoveAll(AssetContract.IsEmptySubmesh); // ArmAgedon seam
+-		submeshes.RemoveAll((Submesh submesh) => submesh.Count == 0);
+ 		return result;
+ 	}
+ 
+@@ -3254,18 +3260,18 @@
+ 		return StripEmptyBones(new List<int>());
+ 	}
+ 
++	public int StripEmptyBones(List<int> remapIndex, Predicate<Bone>? filter = null)
+-	public int StripEmptyBones(List<int> remapIndex, Predicate<Bone> filter = null)
+ 	{
+ 		return StripEmptyBones(CalculateBoneMetadata(), remapIndex, filter);
+ 	}
+ 
++	public int StripEmptyBones(IReadOnlyList<BoneMetadata>? precomputedMetadata, List<int>? remapIndex, Predicate<Bone>? filter = null)
+-	public int StripEmptyBones(IReadOnlyList<BoneMetadata> precomputedMetadata, List<int> remapIndex, Predicate<Bone> filter = null)
+ 	{
++		AssetContract.Required(remapIndex).Clear(); // ArmAgedon seam
+-		remapIndex.Clear();
+ 		int newBoneCount = 0;
+ 		for (int i = 0; i < BoneCount; i++)
+ 		{
++			BoneMetadata metadata = AssetContract.Required(precomputedMetadata)[i]; // ArmAgedon seam
+-			BoneMetadata metadata = precomputedMetadata[i];
+ 			if ((filter != null && filter(bones[i])) || metadata.TotalVertexCount > 0)
+ 			{
+ 				remapIndex.Add(newBoneCount++);
+@@ -3347,15 +3353,15 @@
+ 			float weight = blendshape.Value;
+ 			for (int i = 0; i < VertexCount; i++)
+ 			{
++				ref float3 reference = ref AssetContract.Required(RawPositions)[i]; // ArmAgedon seam
++				reference += AssetContract.Required(frame.RawPositions)[i] * weight; // ArmAgedon seam
+-				ref float3 reference = ref RawPositions[i];
+-				reference += frame.RawPositions[i] * weight;
+ 			}
+ 			if (blendshape.Key.HasNormals)
+ 			{
+ 				for (int j = 0; j < VertexCount; j++)
+ 				{
++					ref float3 reference2 = ref AssetContract.Required(RawNormals)[j]; // ArmAgedon seam
++					reference2 += AssetContract.Required(frame.RawNormals)[j] * weight; // ArmAgedon seam
+-					ref float3 reference2 = ref RawNormals[j];
+-					reference2 += frame.RawNormals[j] * weight;
+ 					RawNormals[j] = RawNormals[j].Normalized;
+ 				}
+ 			}
+@@ -3363,7 +3369,7 @@
+ 			{
+ 				for (int k = 0; k < VertexCount; k++)
+ 				{
++					float3 tangent = (AssetContract.Required(RawTangents)[k].xyz + AssetContract.Required(frame.RawTangents)[k] * weight).Normalized; // ArmAgedon seam
+-					float3 tangent = (RawTangents[k].xyz + frame.RawTangents[k] * weight).Normalized;
+ 					ref float4 reference3 = ref RawTangents[k];
+ 					reference3 += new float4(in tangent, 0f);
+ 				}
+@@ -3384,7 +3390,7 @@
+ 			{
+ 				for (int i = 0; i < VertexCount; i++)
+ 				{
++					if (!mask.IsVertexMasked(i) && (IsValidBlendshapeValue(in AssetContract.Required(frame.RawPositions)[i]) || (blendshape.HasNormals && IsValidBlendshapeValue(in AssetContract.Required(frame.RawNormals)[i])) || (blendshape.HasTangents && IsValidBlendshapeValue(in AssetContract.Required(frame.RawTangents)[i])))) // ArmAgedon seam
+-					if (!mask.IsVertexMasked(i) && (IsValidBlendshapeValue(in frame.RawPositions[i]) || (blendshape.HasNormals && IsValidBlendshapeValue(in frame.RawNormals[i])) || (blendshape.HasTangents && IsValidBlendshapeValue(in frame.RawTangents[i]))))
+ 					{
+ 						mask.MaskVertex(i);
+ 					}
+@@ -3396,7 +3402,7 @@
+ 		return mask;
+ 	}
+ 
++	public (MeshX? splitMesh, AppendResult mapping) SplitBlendShapesIntoStaticMesh(Dictionary<int, float> blendshapes)
+-	public (MeshX splitMesh, AppendResult mapping) SplitBlendShapesIntoStaticMesh(Dictionary<int, float> blendshapes)
+ 	{
+ 		MeshX splitMesh = new MeshX();
+ 		splitMesh.CopyDataChannelFlags(this);
+@@ -3411,7 +3417,7 @@
+ 		Dictionary<int, float> remappedWeights = new Dictionary<int, float>();
+ 		foreach (KeyValuePair<int, float> weight in blendshapes)
+ 		{
++			remappedWeights.Add(AssetContract.Required(result.blendshapeMapping)[weight.Key], weight.Value); // ArmAgedon seam
+-			remappedWeights.Add(result.blendshapeMapping[weight.Key], weight.Value);
+ 		}
+ 		splitMesh.BakeBlendShapes(remappedWeights);
+ 		splitMesh.ClearBlendShapes();
+@@ -3457,14 +3463,14 @@
+ 				int blendshapeIndex = ((!indexes.IsEmpty) ? indexes[i] : i);
+ 				BlendShape blendShape = blendshapes[blendshapeIndex];
+ 				BlendShapeFrame frame = blendShape[0];
++				pos += AssetContract.Required(frame.RawPositions)[vertexIndex] * weights[i]; // ArmAgedon seam
+-				pos += frame.RawPositions[vertexIndex] * weights[i];
+ 				if (blendShape.HasNormals)
+ 				{
++					normal += AssetContract.Required(frame.RawNormals)[vertexIndex] * weights[i]; // ArmAgedon seam
+-					normal += frame.RawNormals[vertexIndex] * weights[i];
+ 				}
+ 				if (blendShape.HasTangents)
+ 				{
++					t += AssetContract.Required(frame.RawTangents)[vertexIndex] * weights[i]; // ArmAgedon seam
+-					t += frame.RawTangents[vertexIndex] * weights[i];
+ 				}
+ 			}
+ 		}
+@@ -3479,7 +3485,7 @@
+ 			throw new ArgumentException("Bone Transform count must much the number of bones");
+ 		}
+ 		float3 t = tangent.xyz;
++		BoneBinding binding = AssetContract.Required(boneBindings)[vertexIndex]; // ArmAgedon seam
+-		BoneBinding binding = boneBindings[vertexIndex];
+ 		pos = binding.TransformPosition(this, in pos, boneTransforms);
+ 		normal = binding.TransformDirection(this, in normal, boneTransforms).Normalized;
+ 		tangent = new float4(binding.TransformDirection(this, in t, boneTransforms).Normalized, tangent.w);
+@@ -3510,24 +3516,24 @@
+ 		}
+ 		for (int v = 0; v < VertexCount; v++)
+ 		{
++			float lerpPositive = MathX.Clamp((AssetContract.Required(RawPositions)[v].GetElement(axis) - center) / transition, -0.5f, 0.5f) + 0.5f; // ArmAgedon seam
+-			float lerpPositive = MathX.Clamp((RawPositions[v].GetElement(axis) - center) / transition, -0.5f, 0.5f) + 0.5f;
+ 			float lerpNegative = 1f - lerpPositive;
+ 			for (int f = 0; f < blendshape.FrameCount; f++)
+ 			{
+ 				BlendShapeFrame frame2 = blendshape[f];
+ 				BlendShapeFrame posFrame = positiveBlendshape[f];
+ 				BlendShapeFrame negFrame = negativeBlendshape[f];
++				AssetContract.Required(posFrame.positions)[v] = AssetContract.Required(frame2.positions)[v] * lerpPositive; // ArmAgedon seam
++				AssetContract.Required(negFrame.positions)[v] = frame2.positions[v] * lerpNegative; // ArmAgedon seam
+-				posFrame.positions[v] = frame2.positions[v] * lerpPositive;
+-				negFrame.positions[v] = frame2.positions[v] * lerpNegative;
+ 				if (blendshape.HasNormals)
+ 				{
++					AssetContract.Required(posFrame.normals)[v] = AssetContract.Required(frame2.normals)[v] * lerpPositive; // ArmAgedon seam
++					AssetContract.Required(negFrame.normals)[v] = frame2.normals[v] * lerpNegative; // ArmAgedon seam
+-					posFrame.normals[v] = frame2.normals[v] * lerpPositive;
+-					negFrame.normals[v] = frame2.normals[v] * lerpNegative;
+ 				}
+ 				if (blendshape.HasTangents)
+ 				{
++					AssetContract.Required(posFrame.tangents)[v] = AssetContract.Required(frame2.tangents)[v] * lerpPositive; // ArmAgedon seam
++					AssetContract.Required(negFrame.tangents)[v] = frame2.tangents[v] * lerpNegative; // ArmAgedon seam
+-					posFrame.tangents[v] = frame2.tangents[v] * lerpPositive;
+-					negFrame.tangents[v] = frame2.tangents[v] * lerpNegative;
+ 				}
+ 			}
+ 		}
+@@ -3538,7 +3544,7 @@
+ 	{
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			ref float3 reference = ref AssetContract.Required(positions)[i]; // ArmAgedon seam
+-			ref float3 reference = ref positions[i];
+ 			reference += offset;
+ 		}
+ 	}
+@@ -3547,7 +3553,7 @@
+ 	{
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			AssetContract.Required(positions)[i] = rotation * positions[i]; // ArmAgedon seam
+-			positions[i] = rotation * positions[i];
+ 			if (HasNormals)
+ 			{
+ 				normals[i] = rotation * normals[i];
+@@ -3573,7 +3579,7 @@
+ 	{
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			ref float3 reference = ref AssetContract.Required(positions)[i]; // ArmAgedon seam
+-			ref float3 reference = ref positions[i];
+ 			reference *= scale;
+ 		}
+ 	}
+@@ -3583,7 +3589,7 @@
+ 		float3 acc = float3.Zero;
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			acc += AssetContract.Required(positions)[i]; // ArmAgedon seam
+-			acc += positions[i];
+ 		}
+ 		return acc / VertexCount;
+ 	}
+@@ -3600,7 +3606,7 @@
+ 		invalidVertexCount = 0;
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			float3 p = AssetContract.Required(positions)[i]; // ArmAgedon seam
+-			float3 p = positions[i];
+ 			if (p.IsValid())
+ 			{
+ 				bounds.Encapsulate(in p);
+@@ -3662,14 +3668,14 @@
+ 	public List<SubmeshMetadata> CalculateSubmeshMetadata()
+ 	{
+ 		List<SubmeshMetadata> list = new List<SubmeshMetadata>();
++		foreach (Submesh? submesh in Submeshes)
+-		foreach (Submesh submesh in Submeshes)
+ 		{
++			list.Add(AssetContract.Required(submesh).CalculateMetadata()); // ArmAgedon seam
+-			list.Add(submesh.CalculateMetadata());
+ 		}
+ 		return list;
+ 	}
+ 
++	public List<BoneMetadata>? CalculateBoneMetadata()
+-	public List<BoneMetadata> CalculateBoneMetadata()
+ 	{
+ 		if (BoneCount == 0)
+ 		{
+@@ -3682,7 +3688,7 @@
+ 		}
+ 		for (int v = 0; v < VertexCount; v++)
+ 		{
++			BoneBinding bindings = AssetContract.Required(RawBoneBindings)[v]; // ArmAgedon seam
+-			BoneBinding bindings = RawBoneBindings[v];
+ 			for (int w = 0; w < 4; w++)
+ 			{
+ 				bindings.GetBinding(w, out var boneIndex, out var weight);
+@@ -3690,7 +3696,7 @@
+ 				{
+ 					BoneMetadata metadata = list[boneIndex];
+ 					metadata.SetVertexCount(w, metadata.GetVertexCount(w) + 1);
++					float3 pos = AssetContract.Required(RawPositions)[v]; // ArmAgedon seam
+-					float3 pos = RawPositions[v];
+ 					pos = GetBone(boneIndex).BindPose.TransformPoint3x4(in pos);
+ 					if (pos.IsValid())
+ 					{
+@@ -3703,19 +3709,19 @@
+ 		return list;
+ 	}
+ 
++	public List<ApproximateBoneBounds>? CalculateApproximateBoneBounds()
+-	public List<ApproximateBoneBounds> CalculateApproximateBoneBounds()
+ 	{
+ 		return CalculateApproximateBoneBounds(CalculateBoneMetadata());
+ 	}
+ 
++	public List<ApproximateBoneBounds>? CalculateApproximateBoneBounds(IReadOnlyList<BoneMetadata>? metadata)
+-	public List<ApproximateBoneBounds> CalculateApproximateBoneBounds(IReadOnlyList<BoneMetadata> metadata)
+ 	{
+ 		if (metadata == null)
+ 		{
+ 			return null;
+ 		}
+ 		List<ApproximateBoneBounds> approximate = new List<ApproximateBoneBounds>();
++		List<float3>? points = Pool.BorrowList<float3>();
+-		List<float3> points = Pool.BorrowList<float3>();
+ 		for (int i = 0; i < metadata.Count; i++)
+ 		{
+ 			BoundingBox bounds = metadata[i].bounds;
+@@ -3765,11 +3771,11 @@
+ 		return approximate;
+ 	}
+ 
++	public void GenerateFlatShadingTriangles(VertexCollection? newVertices = null, VertexCollection? originalVertices = null)
+-	public void GenerateFlatShadingTriangles(VertexCollection newVertices = null, VertexCollection originalVertices = null)
+ 	{
++		foreach (Submesh? s in submeshes)
+-		foreach (Submesh s in submeshes)
+ 		{
++			TriangleSubmesh? triangles = s as TriangleSubmesh;
+-			TriangleSubmesh triangles = s as TriangleSubmesh;
+ 			if (triangles != null)
+ 			{
+ 				GenerateFlatShadingTriangles_Internal(triangles.Count, (int i) => triangles.GetTriangle(i), newVertices, originalVertices);
+@@ -3777,7 +3783,7 @@
+ 		}
+ 	}
+ 
++	public void GenerateFlatShadingTriangles(TriangleCollection? triangles, VertexCollection? newVertices = null, VertexCollection? originalVertices = null)
+-	public void GenerateFlatShadingTriangles(TriangleCollection triangles, VertexCollection newVertices = null, VertexCollection originalVertices = null)
+ 	{
+ 		if (triangles == null)
+ 		{
+@@ -3787,7 +3793,7 @@
+ 		GenerateFlatShadingTriangles_Internal(triangles.Count, (int i) => triangles[i], newVertices, originalVertices);
+ 	}
+ 
++	private void GenerateFlatShadingTriangles_Internal(int triangleCount, Func<int, Triangle> getTriangle, VertexCollection? newVertices = null, VertexCollection? originalVertices = null)
+-	private void GenerateFlatShadingTriangles_Internal(int triangleCount, Func<int, Triangle> getTriangle, VertexCollection newVertices = null, VertexCollection originalVertices = null)
+ 	{
+ 		for (int i = 0; i < triangleCount; i++)
+ 		{
+@@ -3834,8 +3840,8 @@
+ 		object emptyKey = new object();
+ 		for (int s = 0; s < SubmeshCount; s++)
+ 		{
++			Submesh? submesh = GetSubmesh(s);
++			SubmeshMergeKey key = new SubmeshMergeKey(keys[s] ?? emptyKey, AssetContract.Required(submesh).Topology); // ArmAgedon seam
+-			Submesh submesh = GetSubmesh(s);
+-			SubmeshMergeKey key = new SubmeshMergeKey(keys[s] ?? emptyKey, submesh.Topology);
+ 			if (merged.TryGetValue(key, out var mergeInto))
+ 			{
+ 				mergeInto.Append(submesh);
+@@ -3853,7 +3859,7 @@
+ 		}
+ 	}
+ 
++	public MeshX? SeparateGeometryUnaffectedByBlendshapes()
+-	public MeshX SeparateGeometryUnaffectedByBlendshapes()
+ 	{
+ 		if (BlendShapeCount == 0)
+ 		{
+@@ -3873,8 +3879,8 @@
+ 		Dictionary<int, int> remap = new Dictionary<int, int>();
+ 		for (int s = 0; s < SubmeshCount; s++)
+ 		{
++			Submesh? submesh = GetSubmesh(s);
++			Submesh splitSubmesh = splitMesh.AddSubmesh(AssetContract.Required(submesh).Topology); // ArmAgedon seam
+-			Submesh submesh = GetSubmesh(s);
+-			Submesh splitSubmesh = splitMesh.AddSubmesh(submesh.Topology);
+ 			for (int i = 0; i < submesh.Count; i++)
+ 			{
+ 				if (mask.IsPrimitiveMasked(s, i))
+@@ -3885,14 +3891,14 @@
+ 				splitSubmesh.IncreaseCount(1);
+ 				for (int v = 0; v < submesh.IndiciesPerElement; v++)
+ 				{
++					int sourceIndex = AssetContract.Required(submesh.RawIndicies)[i * submesh.IndiciesPerElement + v]; // ArmAgedon seam
+-					int sourceIndex = submesh.RawIndicies[i * submesh.IndiciesPerElement + v];
+ 					if (!remap.TryGetValue(sourceIndex, out var targetIndex))
+ 					{
+ 						targetIndex = splitMesh.VertexCount;
+ 						splitMesh.AddVertex(GetVertex(sourceIndex));
+ 						remap.Add(sourceIndex, targetIndex);
+ 					}
++					AssetContract.Required(splitSubmesh.RawIndicies)[offset + v] = targetIndex; // ArmAgedon seam
+-					splitSubmesh.RawIndicies[offset + v] = targetIndex;
+ 				}
+ 			}
+ 		}
+@@ -3911,14 +3917,14 @@
+ 				{
+ 					foreach (BlendShapeFrame frame in blendshape.Frames)
+ 					{
++						AssetContract.Required(frame.RawPositions)[newIndex] = frame.RawPositions[j]; // ArmAgedon seam
+-						frame.RawPositions[newIndex] = frame.RawPositions[j];
+ 						if (blendshape.HasNormals)
+ 						{
++							AssetContract.Required(frame.RawNormals)[newIndex] = frame.RawNormals[j]; // ArmAgedon seam
+-							frame.RawNormals[newIndex] = frame.RawNormals[j];
+ 						}
+ 						if (blendshape.HasTangents)
+ 						{
++							AssetContract.Required(frame.RawTangents)[newIndex] = frame.RawTangents[j]; // ArmAgedon seam
+-							frame.RawTangents[newIndex] = frame.RawTangents[j];
+ 						}
+ 					}
+ 				}
+@@ -3928,9 +3934,9 @@
+ 		VertexCount = newIndex;
+ 		for (int k = 0; k < SubmeshCount; k++)
+ 		{
++			Submesh? submesh2 = GetSubmesh(k);
+-			Submesh submesh2 = GetSubmesh(k);
+ 			newIndex = 0;
++			for (int l = 0; l < AssetContract.Required(submesh2).Count; l++) // ArmAgedon seam
+-			for (int l = 0; l < submesh2.Count; l++)
+ 			{
+ 				if (mask.IsPrimitiveMasked(k, l))
+ 				{
+@@ -3939,7 +3945,7 @@
+ 					newIndex++;
+ 					for (int m = 0; m < submesh2.IndiciesPerElement; m++)
+ 					{
++						int indicie = AssetContract.Required(submesh2.RawIndicies)[offset2 + m]; // ArmAgedon seam
+-						int indicie = submesh2.RawIndicies[offset2 + m];
+ 						mask.IsVertexMasked(indicie);
+ 						indicie = remap[indicie];
+ 						submesh2.RawIndicies[targetOffset + m] = indicie;
+@@ -3955,26 +3961,26 @@
+ 	{
+ 		List<MeshX> meshes = new List<MeshX>();
+ 		Dictionary<int, int> remappedIndicies = new Dictionary<int, int>();
++		foreach (Submesh? submesh in submeshes)
+-		foreach (Submesh submesh in submeshes)
+ 		{
+ 			MeshX mesh = new MeshX();
+ 			mesh.CopyDataChannelFlags(this);
++			Submesh? targetSubmesh = mesh.TryGetSubmesh(AssetContract.Required(submesh).Topology); // ArmAgedon seam
++			AssetContract.Required(targetSubmesh).SetCount(submesh.Count); // ArmAgedon seam
+-			Submesh targetSubmesh = mesh.TryGetSubmesh(submesh.Topology);
+-			targetSubmesh.SetCount(submesh.Count);
+ 			foreach (Bone bone in Bones)
+ 			{
+ 				mesh.AddBone(bone.Name).BindPose = bone.BindPose;
+ 			}
+ 			for (int i = 0; i < submesh.IndicieCount; i++)
+ 			{
++				int sourceIndicie = AssetContract.Required(submesh.RawIndicies)[i]; // ArmAgedon seam
+-				int sourceIndicie = submesh.RawIndicies[i];
+ 				if (!remappedIndicies.TryGetValue(sourceIndicie, out var targetIndicie))
+ 				{
+ 					mesh.AddVertex(GetVertex(sourceIndicie));
+ 					targetIndicie = remappedIndicies.Count;
+ 					remappedIndicies.Add(sourceIndicie, targetIndicie);
+ 				}
++				AssetContract.Required(targetSubmesh.RawIndicies)[i] = targetIndicie; // ArmAgedon seam
+-				targetSubmesh.RawIndicies[i] = targetIndicie;
+ 			}
+ 			foreach (BlendShape blendshape in BlendShapes)
+ 			{
+@@ -3986,14 +3992,14 @@
+ 					BlendShapeFrame copyFrame = copyShape.AddFrame(frame.Weight);
+ 					foreach (KeyValuePair<int, int> indicieMap in remappedIndicies)
+ 					{
++						AssetContract.Required(copyFrame.RawPositions)[indicieMap.Value] = AssetContract.Required(frame.RawPositions)[indicieMap.Key]; // ArmAgedon seam
+-						copyFrame.RawPositions[indicieMap.Value] = frame.RawPositions[indicieMap.Key];
+ 						if (copyShape.HasNormals)
+ 						{
++							AssetContract.Required(copyFrame.RawNormals)[indicieMap.Value] = AssetContract.Required(frame.RawNormals)[indicieMap.Key]; // ArmAgedon seam
+-							copyFrame.RawNormals[indicieMap.Value] = frame.RawNormals[indicieMap.Key];
+ 						}
+ 						if (copyShape.HasTangents)
+ 						{
++							AssetContract.Required(copyFrame.RawTangents)[indicieMap.Value] = AssetContract.Required(frame.RawTangents)[indicieMap.Key]; // ArmAgedon seam
+-							copyFrame.RawTangents[indicieMap.Value] = frame.RawTangents[indicieMap.Key];
+ 						}
+ 					}
+ 				}
+@@ -4008,7 +4014,7 @@
+ 	{
+ 		WeightedList<int> list = new WeightedList<int>();
+ 		int triangleIndex = 0;
++		foreach (Submesh? submesh in Submeshes)
+-		foreach (Submesh submesh in Submeshes)
+ 		{
+ 			if (!(submesh is TriangleSubmesh triangles))
+ 			{
+@@ -4029,14 +4035,14 @@
+ 
+ 	public MeshX GetConvexHull()
+ 	{
++		RawList<float3>? inVertices = Pool.BorrowRawList<float3>();
++		RawList<int>? triangleIndicies = Pool.BorrowRawList<int>();
++		inVertices.AddRange(AssetContract.Required(RawPositions), VertexCount); // ArmAgedon seam
+-		RawList<float3> inVertices = Pool.BorrowRawList<float3>();
+-		RawList<int> triangleIndicies = Pool.BorrowRawList<int>();
+-		inVertices.AddRange(RawPositions, VertexCount);
+ 		PointMerger.RemoveRedundantPoints(inVertices);
+ 		ConvexHullHelper.GetConvexHull(inVertices, triangleIndicies);
+ 		MeshX meshx = new MeshX();
++		TriangleSubmesh? triangles = meshx.TryGetSubmesh<TriangleSubmesh>();
++		AssetContract.Required(triangles).SetCount(triangleIndicies.Count / 3); // ArmAgedon seam
+-		TriangleSubmesh triangles = meshx.TryGetSubmesh<TriangleSubmesh>();
+-		triangles.SetCount(triangleIndicies.Count / 3);
+ 		Dictionary<int, int> remappedIndicies = Pool.BorrowDictionary<int, int>();
+ 		for (int i = 0; i < triangleIndicies.Count; i++)
+ 		{
+@@ -4047,7 +4053,7 @@
+ 				meshx.AddVertex(inVertices[index]);
+ 				remappedIndicies.Add(index, newIndex);
+ 			}
++			AssetContract.Required(triangles.RawIndicies)[i] = newIndex; // ArmAgedon seam
+-			triangles.RawIndicies[i] = newIndex;
+ 		}
+ 		Pool.Return(ref inVertices);
+ 		Pool.Return(ref triangleIndicies);
+@@ -4058,12 +4064,12 @@
+ 
+ 	public MeshX GetMergedDoubles(double cellSize = 0.001)
+ 	{
++		Dictionary<int3, int>? uniquePoints = Pool.BorrowDictionary<int3, int>();
++		Dictionary<int, int>? remappedIndicies = Pool.BorrowDictionary<int, int>();
+-		Dictionary<int3, int> uniquePoints = Pool.BorrowDictionary<int3, int>();
+-		Dictionary<int, int> remappedIndicies = Pool.BorrowDictionary<int, int>();
+ 		MeshX meshx = new MeshX();
+ 		for (int i = 0; i < VertexCount; i++)
+ 		{
++			float3 point = AssetContract.Required(RawPositions)[i]; // ArmAgedon seam
+-			float3 point = RawPositions[i];
+ 			int3 cell = MathX.FloorToInt(point / cellSize);
+ 			if (uniquePoints.TryGetValue(cell, out var firstIndex))
+ 			{
+@@ -4074,13 +4080,13 @@
+ 			uniquePoints.Add(cell, meshx.VertexCount);
+ 			meshx.AddVertex(in point);
+ 		}
++		foreach (Submesh? s in Submeshes)
+-		foreach (Submesh s in Submeshes)
+ 		{
++			Submesh newSubmesh = meshx.AddSubmesh(AssetContract.Required(s).Topology); // ArmAgedon seam
+-			Submesh newSubmesh = meshx.AddSubmesh(s.Topology);
+ 			newSubmesh.SetCount(s.Count);
+ 			for (int j = 0; j < s.IndicieCount; j++)
+ 			{
++				AssetContract.Required(newSubmesh.RawIndicies)[j] = remappedIndicies[AssetContract.Required(s.RawIndicies)[j]]; // ArmAgedon seam
+-				newSubmesh.RawIndicies[j] = remappedIndicies[s.RawIndicies[j]];
+ 			}
+ 		}
+ 		Pool.Return(ref uniquePoints);

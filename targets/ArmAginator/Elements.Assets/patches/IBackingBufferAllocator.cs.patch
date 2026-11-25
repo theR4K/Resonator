@@ -1,0 +1,9 @@
+--- a/Elements/Assets/IBackingBufferAllocator.cs
++++ b/Elements/Assets/IBackingBufferAllocator.cs
+@@ -4,5 +4,5 @@
+ 
+ public interface IBackingBufferAllocator
+ {
++	IBackingMemoryBuffer Allocate(int size, object? owner = null);
+-	IBackingMemoryBuffer Allocate(int size, object owner = null);
+ }

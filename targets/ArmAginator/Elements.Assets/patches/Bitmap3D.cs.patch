@@ -1,0 +1,179 @@
+--- a/Elements/Assets/Bitmap3D.cs
++++ b/Elements/Assets/Bitmap3D.cs
+@@ -21,7 +21,7 @@
+ 
+ 	public const string MAGIC_STRING = "Bmp3D";
+ 
++	private List<int3>? mipmapSizes;
+-	private List<int3> mipmapSizes;
+ 
+ 	public int3 Size { get; private set; }
+ 
+@@ -49,18 +49,18 @@
+ 		}
+ 	}
+ 
++	public Bitmap3D(int width, int height, int depth, TextureFormat format, bool mipmaps, ColorProfile profile, string? originalFormat = null, IBackingBufferAllocator? allocator = null)
+-	public Bitmap3D(int width, int height, int depth, TextureFormat format, bool mipmaps, ColorProfile profile, string originalFormat = null, IBackingBufferAllocator allocator = null)
+ 	{
+ 		Size = new int3(width, height, depth);
+ 		Init(null, format, mipmaps, originalFormat, profile, allocator);
+ 	}
+ 
++	public Bitmap3D(byte[] data, int width, int height, int depth, TextureFormat format, bool mipmaps, ColorProfile profile, string? originalFormat = null)
+-	public Bitmap3D(byte[] data, int width, int height, int depth, TextureFormat format, bool mipmaps, ColorProfile profile, string originalFormat = null)
+ 		: this(new ArrayBackingMemoryBuffer(data), width, height, depth, format, mipmaps, profile, originalFormat)
+ 	{
+ 	}
+ 
++	public Bitmap3D(IBackingMemoryBuffer buffer, int width, int height, int depth, TextureFormat format, bool mipmaps, ColorProfile profile, string? originalFormat = null)
+-	public Bitmap3D(IBackingMemoryBuffer buffer, int width, int height, int depth, TextureFormat format, bool mipmaps, ColorProfile profile, string originalFormat = null)
+ 	{
+ 		Size = new int3(width, height, depth);
+ 		Init(buffer, format, mipmaps, originalFormat, profile, null);
+@@ -123,7 +123,7 @@
+ 	{
+ 		if (mip != 0)
+ 		{
++			return AssetContract.Required(mipmapOrigins)[mip]; // ArmAgedon seam
+-			return mipmapOrigins[mip];
+ 		}
+ 		return 0;
+ 	}
+@@ -132,7 +132,7 @@
+ 	{
+ 		if (mip != 0)
+ 		{
++			return AssetContract.Required(mipmapSizes)[mip]; // ArmAgedon seam
+-			return mipmapSizes[mip];
+ 		}
+ 		return Size;
+ 	}
+@@ -143,11 +143,11 @@
+ 		{
+ 			return x + y * Size.x + z * Size.x * Size.y;
+ 		}
++		int3 size = AssetContract.Required(mipmapSizes)[mip]; // ArmAgedon seam
++		return AssetContract.Required(mipmapOrigins)[mip] + x + y * size.x + z * size.x * size.y; // ArmAgedon seam
+-		int3 size = mipmapSizes[mip];
+-		return mipmapOrigins[mip] + x + y * size.x + z * size.x * size.y;
+ 	}
+ 
++	public static int MipmapLevels(in int3 size, List<int3>? sizes)
+-	public static int MipmapLevels(in int3 size, List<int3> sizes)
+ 	{
+ 		if (size.x > 1 || size.y > 1 || size.z > 1)
+ 		{
+@@ -168,11 +168,11 @@
+ 	public Bitmap3D ConvertToAndDispose(TextureFormat format, IBackingBufferAllocator allocator)
+ 	{
+ 		Bitmap3D result = ConvertTo(format, allocator);
++		AssetContract.Required(Buffer).Dispose(); // ArmAgedon seam
+-		Buffer.Dispose();
+ 		return result;
+ 	}
+ 
++	public Bitmap3D ConvertTo(TextureFormat format, IBackingBufferAllocator? allocator = null)
+-	public Bitmap3D ConvertTo(TextureFormat format, IBackingBufferAllocator allocator = null)
+ 	{
+ 		Bitmap3D bitmap3D = new Bitmap3D(Size.x, Size.y, Size.z, format, HasMipMaps, Profile, OriginalFormat, allocator);
+ 		bitmap3D.FillFrom(this);
+@@ -205,11 +205,11 @@
+ 		binaryWriter.WriteEnumString(Format);
+ 		binaryWriter.Write(HasMipMaps);
+ 		binaryWriter.WriteEnumString(Profile);
++		using Stream dataStream = AssetContract.Required(Buffer).Memory.AsStream(); // ArmAgedon seam
+-		using Stream dataStream = Buffer.Memory.AsStream();
+ 		LZMAHelper.Compress(dataStream, stream);
+ 	}
+ 
++	private static Bitmap3D Decode(Stream stream, IBackingBufferAllocator? allocator = null)
+-	private static Bitmap3D Decode(Stream stream, IBackingBufferAllocator allocator = null)
+ 	{
+ 		BinaryReader rd = new BinaryReader(stream);
+ 		if (rd.ReadString() != "Bmp3D")
+@@ -230,7 +230,7 @@
+ 			profile = rd.ReadEnumString<ColorProfile>();
+ 		}
+ 		Bitmap3D bmp = new Bitmap3D(size.x, size.y, size.z, format, mipmaps, profile, null, allocator);
++		using Stream outDataStream = AssetContract.Required(bmp.Buffer).Memory.AsStream(); // ArmAgedon seam
+-		using Stream outDataStream = bmp.Buffer.Memory.AsStream();
+ 		LZMAHelper.Decompress(stream, outDataStream);
+ 		return bmp;
+ 	}
+@@ -241,13 +241,13 @@
+ 		Encode(stream);
+ 	}
+ 
++	public static Bitmap3D Load(string file, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap3D Load(string file, IBackingBufferAllocator allocator = null)
+ 	{
+ 		using FileStream stream = File.OpenRead(file);
+ 		return Decode(stream, allocator);
+ 	}
+ 
++	public static Bitmap3D LoadFromCUBE(string file, IBackingBufferAllocator? allocator = null)
+-	public static Bitmap3D LoadFromCUBE(string file, IBackingBufferAllocator allocator = null)
+ 	{
+ 		using CUBE_Reader reader = new CUBE_Reader(file);
+ 		if (reader.Dimensions != 3)
+@@ -266,7 +266,7 @@
+ 		return bitmap;
+ 	}
+ 
++	public void SaveToCUBE(string file, string? title = null)
+-	public void SaveToCUBE(string file, string title = null)
+ 	{
+ 		if (Size.x != Size.y || Size.y != Size.z)
+ 		{
+@@ -296,12 +296,12 @@
+ 
+ 	public static Bitmap3D CreateFromSlices(List<Bitmap2D> slices, TextureFormat format, TextureSize sizehandling)
+ 	{
++		return CreateFromSlices(new SliceAccessor(AssetContract.NullableSlices(slices)) /* ArmAgedon seam */, format, sizehandling);
+-		return CreateFromSlices(new SliceAccessor(slices), format, sizehandling);
+ 	}
+ 
+ 	private static Bitmap3D CreateFromSlices(SliceAccessor slices, TextureFormat format, TextureSize sizeHandling)
+ 	{
++		int3 size = new int3(AssetContract.Required(slices.GetSlice(0)).Size, slices.Count); // ArmAgedon seam
+-		int3 size = new int3(slices.GetSlice(0).Size, slices.Count);
+ 		if (sizeHandling != TextureSize.NPOT)
+ 		{
+ 			float3 exp = MathX.Log((float3)size, 2f);
+@@ -319,14 +319,14 @@
+ 			}
+ 			size = MathX.RoundToInt(MathX.Pow(float3.One * 2, in exp));
+ 		}
++		Bitmap3D bitmap3D = new Bitmap3D(size.x, size.y, size.z, format, mipmaps: false, AssetContract.Required(slices.GetSlice(0)).Profile); // ArmAgedon seam
+-		Bitmap3D bitmap3D = new Bitmap3D(size.x, size.y, size.z, format, mipmaps: false, slices.GetSlice(0).Profile);
+ 		bitmap3D.FillFromSlices(slices, sizeHandling != TextureSize.NPOT);
+ 		return bitmap3D;
+ 	}
+ 
+ 	public void FillFromSlices(List<Bitmap2D> slices, bool scale)
+ 	{
++		FillFromSlices(new SliceAccessor(AssetContract.NullableSlices(slices)) /* ArmAgedon seam */, scale);
+-		FillFromSlices(new SliceAccessor(slices), scale);
+ 	}
+ 
+ 	public void FillFromSlices(List<string> paths, bool scale)
+@@ -363,8 +363,8 @@
+ 		}
+ 		for (int z2 = 0; z2 < slices.Count; z2++)
+ 		{
++			Bitmap2D? slice = slices.GetSlice(z2);
++			if (AssetContract.Required(slice).Size.x > Size.x || slice.Size.y > Size.y) // ArmAgedon seam
+-			Bitmap2D slice = slices.GetSlice(z2);
+-			if (slice.Size.x > Size.x || slice.Size.y > Size.y)
+ 			{
+ 				throw new Exception($"Slice {z2} is too big! Slice size: {slice.Size}, 3D Tex Size: {Size}");
+ 			}
+@@ -388,6 +388,6 @@
+ 		int z0 = (int)(uvw.z * (float)(slices.Count - 1));
+ 		int z1 = z0 + 1;
+ 		float zr = z1 - z0;
++		return MathX.Lerp(AssetContract.Required(slices.GetSlice(z0)).SampleUV(uvw.xy), AssetContract.Required(slices.GetSlice(z1)).SampleUV(uvw.xy), zr); // ArmAgedon seam
+-		return MathX.Lerp(slices.GetSlice(z0).SampleUV(uvw.xy), slices.GetSlice(z1).SampleUV(uvw.xy), zr);
+ 	}
+ }

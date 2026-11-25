@@ -1,0 +1,38 @@
+--- a/Elements/Assets/UVSphereCapsule.cs
++++ b/Elements/Assets/UVSphereCapsule.cs
+@@ -34,7 +34,7 @@
+ 
+ 	public float3 BottomOffset;
+ 
++	public float3[,]? Offsets;
+-	public float3[,] Offsets;
+ 
+ 	public bool UseColors;
+ 
+@@ -42,7 +42,7 @@
+ 
+ 	public color BottomColor;
+ 
++	public color[,]? Colors;
+-	public color[,] Colors;
+ 
+ 	public readonly int SegmentVerts;
+ 
+@@ -100,7 +100,7 @@
+ 		}
+ 		SegmentVerts = (FlatSegments ? (Segments * 2) : (Segments + 1));
+ 		RingVerts = (FlatRings ? (_actualRings * 2) : _actualRings);
++		int vertexStart = AssetContract.Required(Mesh).VertexCount; // ArmAgedon seam
+-		int vertexStart = Mesh.VertexCount;
+ 		Mesh.AddVertices(SegmentVerts * RingVerts, AllVertices);
+ 		for (int s = 0; s < Segments; s++)
+ 		{
+@@ -125,7 +125,7 @@
+ 
+ 	public override void Update()
+ 	{
++		AssetContract.Required(Mesh).HasNormals = true; // ArmAgedon seam
+-		Mesh.HasNormals = true;
+ 		Mesh.HasTangents = true;
+ 		Mesh.HasUV0s = true;
+ 		if (UseColors)

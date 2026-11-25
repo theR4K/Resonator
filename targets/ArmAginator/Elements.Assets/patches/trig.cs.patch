@@ -1,0 +1,10 @@
+--- a/Elements/Assets/trig.cs
++++ b/Elements/Assets/trig.cs
+@@ -1,6 +1,6 @@
+ namespace Elements.Assets;
+ 
++public struct @trig(int v0, int v1, int v2)
+-public struct trig(int v0, int v1, int v2)
+ {
+ 	public int v0 = v0;
+ 

@@ -1,0 +1,20 @@
+--- a/Elements/Assets/PolarGrid.cs
++++ b/Elements/Assets/PolarGrid.cs
+@@ -41,7 +41,7 @@
+ 		}
+ 		while (RingCount > rings.Count)
+ 		{
++			rings.Add(new Ring(AssetContract.Required(Mesh), RingSegments)); // ArmAgedon seam
+-			rings.Add(new Ring(Mesh, RingSegments));
+ 		}
+ 		while (LineCount < lines.Count)
+ 		{
+@@ -49,7 +49,7 @@
+ 		}
+ 		while (LineCount > lines.Count)
+ 		{
++			lines.Add(new Quad(AssetContract.Required(AssetContract.Required(Mesh).TryGetSubmesh<TriangleSubmesh>()))); // ArmAgedon seam
+-			lines.Add(new Quad(Mesh));
+ 		}
+ 		for (int i = 0; i < RingCount; i++)
+ 		{

@@ -1,0 +1,69 @@
+--- a/Elements/Assets/Box.cs
++++ b/Elements/Assets/Box.cs
+@@ -23,11 +23,11 @@
+ 	public override void Remove()
+ 	{
+ 		base.Remove();
++		AssetContract.Required(Mesh).RemoveVertices(FirstVertex.Index, 24, updateSubmeshes: false); // ArmAgedon seam
+-		Mesh.RemoveVertices(FirstVertex.Index, 24, updateSubmeshes: false);
+ 	}
+ 
+ 	public Box(Vertex firstVertex)
++		: base(AssetContract.Required(firstVertex.Mesh)) // ArmAgedon seam
+-		: base(firstVertex.Mesh)
+ 	{
+ 		FirstVertex = firstVertex;
+ 	}
+@@ -36,7 +36,7 @@
+ 		: base(submesh.Mesh)
+ 	{
+ 		FirstVertex = AddCubeGeometry(submesh, AllTriangles);
++		AssetContract.Required(Mesh).HasNormals = true; // ArmAgedon seam
+-		Mesh.HasNormals = true;
+ 		Mesh.HasTangents = true;
+ 		Mesh.HasUV0s = true;
+ 	}
+@@ -50,7 +50,7 @@
+ 		}
+ 	}
+ 
++	public static Vertex AddCubeGeometry(TriangleSubmesh submesh, TriangleCollection? triangles = null)
+-	public static Vertex AddCubeGeometry(TriangleSubmesh submesh, TriangleCollection triangles = null)
+ 	{
+ 		MeshX mesh = submesh.Mesh;
+ 		mesh.IncreaseVertexCount(24);
+@@ -72,13 +72,13 @@
+ 
+ 	public override void Update()
+ 	{
++		AssetContract.Required(Mesh).HasColors = Color.HasValue; // ArmAgedon seam
+-		Mesh.HasColors = Color.HasValue;
+ 		UpdateUnsafe(FirstVertex.Index);
+ 	}
+ 
+ 	public void UpdateUnsafe(int index)
+ 	{
++		UpdateBoxVertices(AssetContract.Required(Mesh), index, in Size, in UVScale, new float3?(Position), new floatQ?(Rotation), in Color); // ArmAgedon seam
+-		UpdateBoxVertices(Mesh, index, in Size, in UVScale, new float3?(Position), new floatQ?(Rotation), in Color);
+ 	}
+ 
+ 	private static float3 GetVertexOffset(in float2 v, in float3 halfSize, int index)
+@@ -145,13 +145,13 @@
+ 			{
+ 				pos += position.Value;
+ 			}
++			AssetContract.Required(mesh.RawPositions)[vIdx] = pos; // ArmAgedon seam
++			AssetContract.Required(mesh.RawNormals)[vIdx] = normal; // ArmAgedon seam
++			AssetContract.Required(mesh.RawTangents)[vIdx] = tangent; // ArmAgedon seam
++			AssetContract.Required(mesh.RawUV0s)[vIdx] = voff * 0.5f * uvScale; // ArmAgedon seam
+-			mesh.RawPositions[vIdx] = pos;
+-			mesh.RawNormals[vIdx] = normal;
+-			mesh.RawTangents[vIdx] = tangent;
+-			mesh.RawUV0s[vIdx] = voff * 0.5f * uvScale;
+ 			if (color.HasValue)
+ 			{
++				AssetContract.Required(mesh.RawColors)[vIdx] = color.Value.ToProfile(mesh.Profile); // ArmAgedon seam
+-				mesh.RawColors[vIdx] = color.Value.ToProfile(mesh.Profile);
+ 			}
+ 		}
+ 	}

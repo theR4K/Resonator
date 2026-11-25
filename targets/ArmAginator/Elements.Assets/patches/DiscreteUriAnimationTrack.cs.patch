@@ -1,0 +1,11 @@
+--- a/Elements/Assets/DiscreteUriAnimationTrack.cs
++++ b/Elements/Assets/DiscreteUriAnimationTrack.cs
+@@ -21,7 +21,7 @@
+ 		for (int i = 0; i < count; i++)
+ 		{
+ 			float time = br.ReadSingle();
++			Uri? value = br.ReadUri();
+-			Uri value = br.ReadUri();
+ 			keyframes.Add(new DiscreteKeyframe<Uri>(value, time));
+ 		}
+ 	}

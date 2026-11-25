@@ -1,0 +1,32 @@
+--- a/Elements/Assets/VorbisWriter.cs
++++ b/Elements/Assets/VorbisWriter.cs
+@@ -15,9 +15,9 @@
+ 
+ 	private Comments comments;
+ 
++	private ProcessingState? processingState;
+-	private ProcessingState processingState;
+ 
++	private float[][]? _buffer;
+-	private float[][] _buffer;
+ 
+ 	public bool HeaderWritten { get; private set; }
+ 
+@@ -100,7 +100,7 @@
+ 		{
+ 			WriteHeader();
+ 		}
++		AssetContract.Required(processingState).WriteData(data, samples); // ArmAgedon seam
+-		processingState.WriteData(data, samples);
+ 		if (processingState.PacketOut(out var packet))
+ 		{
+ 			oggStream.PacketIn(packet);
+@@ -115,7 +115,7 @@
+ 
+ 	public void Finish()
+ 	{
++		AssetContract.Required(processingState).WriteEndOfStream(); // ArmAgedon seam
+-		processingState.WriteEndOfStream();
+ 		OggPacket packet;
+ 		while (processingState.PacketOut(out packet))
+ 		{

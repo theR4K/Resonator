@@ -1,0 +1,39 @@
+--- a/Elements/Assets/FlacEncoder.cs
++++ b/Elements/Assets/FlacEncoder.cs
+@@ -7,9 +7,9 @@
+ 
+ public class FlacEncoder : ISampleEncoder, IDisposable
+ {
++	private FlakeWriter? writer;
+-	private FlakeWriter writer;
+ 
++	private AudioBuffer? buffer;
+-	private AudioBuffer buffer;
+ 
+ 	public Stream OutputStream { get; private set; }
+ 
+@@ -25,14 +25,14 @@
+ 
+ 	public void Dispose()
+ 	{
++		AssetContract.Required(writer).Dispose(); // ArmAgedon seam
+-		writer.Dispose();
+ 		writer = null;
+ 		buffer = null;
+ 	}
+ 
+ 	public void Write(ReadOnlySpan<float> samples)
+ 	{
++		AssetContract.Required(buffer).Prepare(samples.Length / buffer.PCM.ChannelCount); // ArmAgedon seam
+-		buffer.Prepare(samples.Length / buffer.PCM.ChannelCount);
+ 		float[,] writeBuffer = buffer.Float;
+ 		switch (buffer.PCM.ChannelCount)
+ 		{
+@@ -82,6 +82,6 @@
+ 			break;
+ 		}
+ 		}
++		AssetContract.Required(writer).Write(buffer); // ArmAgedon seam
+-		writer.Write(buffer);
+ 	}
+ }

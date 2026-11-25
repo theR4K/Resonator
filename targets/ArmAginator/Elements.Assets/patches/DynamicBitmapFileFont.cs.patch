@@ -1,0 +1,97 @@
+--- a/Elements/Assets/DynamicBitmapFileFont.cs
++++ b/Elements/Assets/DynamicBitmapFileFont.cs
+@@ -17,7 +17,7 @@
+ 
+ 		private int2 _cachedSize;
+ 
++		public Bitmap2D? LoadedBitmap { get; private set; }
+-		public Bitmap2D LoadedBitmap { get; private set; }
+ 
+ 		public int2 SpriteResolution
+ 		{
+@@ -31,7 +31,7 @@
+ 			}
+ 		}
+ 
++		public SpriteGlyph(string file, GlyphMetrics metrics, bool tintable, Bitmap2D? loadedBitmap = null)
+-		public SpriteGlyph(string file, GlyphMetrics metrics, bool tintable, Bitmap2D loadedBitmap = null)
+ 		{
+ 			this.file = file;
+ 			this.metrics = metrics;
+@@ -55,7 +55,7 @@
+ 				{
+ 					LoadedBitmap = TextureDecoder.ERRORTEXTURE;
+ 				}
++				_cachedSize = AssetContract.Required(LoadedBitmap).Size; // ArmAgedon seam
+-				_cachedSize = LoadedBitmap.Size;
+ 			}
+ 		}
+ 
+@@ -71,7 +71,7 @@
+ 
+ 	private BiDictionary<uint, uint> _charToGlyphId = new BiDictionary<uint, uint>();
+ 
++	public string? FontName { get; private set; }
+-	public string FontName { get; private set; }
+ 
+ 	public int GlyphCount => _glyphs.Count;
+ 
+@@ -94,7 +94,7 @@
+ 	{
+ 		lock (_lock)
+ 		{
++			if (_glyphs.TryGetValue(glyphId, out SpriteGlyph? glyph))
+-			if (_glyphs.TryGetValue(glyphId, out SpriteGlyph glyph))
+ 			{
+ 				return glyph.tintable;
+ 			}
+@@ -102,11 +102,11 @@
+ 		return false;
+ 	}
+ 
++	public GlyphMetrics? ExtractGlyphMetrics(uint glyphId)
+-	public GlyphMetrics ExtractGlyphMetrics(uint glyphId)
+ 	{
+ 		lock (_lock)
+ 		{
++			if (_glyphs.TryGetValue(glyphId, out SpriteGlyph? glyph))
+-			if (_glyphs.TryGetValue(glyphId, out SpriteGlyph glyph))
+ 			{
+ 				return glyph.metrics;
+ 			}
+@@ -118,7 +118,7 @@
+ 	{
+ 		lock (_lock)
+ 		{
++			if (_glyphs.TryGetValue(glyphId, out SpriteGlyph? glyph))
+-			if (_glyphs.TryGetValue(glyphId, out SpriteGlyph glyph))
+ 			{
+ 				return glyph.SpriteResolution;
+ 			}
+@@ -133,7 +133,7 @@
+ 
+ 	public void RenderRawGlyphBitmap(uint glyphId, Bitmap2D target, IntRect rect, bool rotated)
+ 	{
++		SpriteGlyph? glyph;
+-		SpriteGlyph glyph;
+ 		lock (_lock)
+ 		{
+ 			if (!_glyphs.TryGetValue(glyphId, out glyph))
+@@ -142,7 +142,7 @@
+ 			}
+ 		}
+ 		glyph.EnsureLoadedBitmap();
++		Bitmap2D? bitmap = glyph.LoadedBitmap;
+-		Bitmap2D bitmap = glyph.LoadedBitmap;
+ 		float2 uvMul = 1f / (rect.Size - 1);
+ 		for (int y = 0; y < rect.height; y++)
+ 		{
+@@ -151,7 +151,7 @@
+ 			for (int x = 0; x < rect.width; x++)
+ 			{
+ 				float u = (float)x * uvMul.x;
++				color c = AssetContract.Required(bitmap).SampleUV(rotated ? new float2(v, u) : new float2(u, v)).ConvertProfile(bitmap.Profile, target.Profile); // ArmAgedon seam
+-				color c = bitmap.SampleUV(rotated ? new float2(v, u) : new float2(u, v)).ConvertProfile(bitmap.Profile, target.Profile);
+ 				target.SetPixel(rect.x + x, targetY, in c);
+ 			}
+ 		}

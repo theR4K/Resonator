@@ -1,0 +1,29 @@
+--- a/Elements/Assets/BlenderInterface.cs
++++ b/Elements/Assets/BlenderInterface.cs
+@@ -11,9 +11,9 @@
+ 
+ 	public static bool IsAvailable => File.Exists(Executable);
+ 
++	public static string? RootDir { get; private set; }
+-	public static string RootDir { get; private set; }
+ 
++	public static string? Executable { get; private set; }
+-	public static string Executable { get; private set; }
+ 
+ 	static BlenderInterface()
+ 	{
+@@ -92,12 +92,12 @@
+ 		File.WriteAllText(filename, script);
+ 		string args = string.Format(arguments, filename);
+ 		args = "--disable-autoexec " + args;
++		AssetContract.Required(Process.Start(new ProcessStartInfo(AssetContract.Required(Executable), args) // ArmAgedon seam
+-		Process.Start(new ProcessStartInfo(Executable, args)
+ 		{
+ 			WindowStyle = ProcessWindowStyle.Hidden,
+ 			CreateNoWindow = true,
+ 			UseShellExecute = false
++		})).WaitForExit(); // ArmAgedon seam
+-		}).WaitForExit();
+ 		File.Delete(filename);
+ 	}
+ }

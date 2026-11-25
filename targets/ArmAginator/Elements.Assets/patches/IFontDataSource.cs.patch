@@ -1,0 +1,20 @@
+--- a/Elements/Assets/IFontDataSource.cs
++++ b/Elements/Assets/IFontDataSource.cs
+@@ -5,7 +5,7 @@
+ 
+ public interface IFontDataSource : IDisposable
+ {
++	string? FontName { get; }
+-	string FontName { get; }
+ 
+ 	int GlyphCount { get; }
+ 
+@@ -19,7 +19,7 @@
+ 
+ 	float2 ExtractKerning(uint leftGlyphId, uint rightGlyphId);
+ 
++	GlyphMetrics? ExtractGlyphMetrics(uint glyphId);
+-	GlyphMetrics ExtractGlyphMetrics(uint glyphId);
+ 
+ 	GlyphOutline ExtractGlyphOutline(uint glyphId);
+ 

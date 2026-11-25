@@ -1,0 +1,417 @@
+--- a/Elements/Assets/Poly2Tri/Sweep.cs
++++ b/Elements/Assets/Poly2Tri/Sweep.cs
+@@ -7,7 +7,7 @@
+ {
+ 	private const int MAX_DEPTH = 1024;
+ 
++	private List<Node>? _nodes;
+-	private List<Node> _nodes;
+ 
+ 	public void Triangulate(SweepContext tcx)
+ 	{
+@@ -20,7 +20,7 @@
+ 
+ 	public void Reset()
+ 	{
++		AssetContract.Required(_nodes).Clear(); // ArmAgedon seam
+-		_nodes.Clear();
+ 	}
+ 
+ 	private void SweepPoints(SweepContext tcx)
+@@ -41,8 +41,8 @@
+ 
+ 	private void FinalizationPolygon(SweepContext tcx)
+ 	{
++		Triangle? t = AssetContract.Required(AssetContract.Required(tcx.Front)._head.Next).Triangle; // ArmAgedon seam // ArmAgedon seam
++		TriPoint p = AssetContract.Required(tcx.Front._head.Next).Point; // ArmAgedon seam
+-		Triangle t = tcx.Front._head.Next.Triangle;
+-		TriPoint p = tcx.Front._head.Next.Point;
+ 		while (t != null && !t.GetConstrainedEdgeCW(p))
+ 		{
+ 			t = t.NeighborCCW(p);
+@@ -55,7 +55,7 @@
+ 
+ 	private Node PointEvent(SweepContext tcx, TriPoint point)
+ 	{
++		Node? node = tcx.LocateNode(point);
+-		Node node = tcx.LocateNode(point);
+ 		if (node == null || node.Point == null || node.Next == null || node.Next.Point == null)
+ 		{
+ 			throw new Exception("PointEvent - null node");
+@@ -73,7 +73,7 @@
+ 	{
+ 		tcx.EdgeEvent.ConstrainedEdge = edge;
+ 		tcx.EdgeEvent.Right = edge.P.X > edge.Q.X;
++		if (!IsEdgeSideOfTriangle(AssetContract.Required(node.Triangle), edge.P, edge.Q)) // ArmAgedon seam
+-		if (!IsEdgeSideOfTriangle(node.Triangle, edge.P, edge.Q))
+ 		{
+ 			FillEdgeEvent(tcx, edge, node);
+ 			EdgeEvent(tcx, edge.P, edge.Q, node.Triangle, edge.Q);
+@@ -90,22 +90,22 @@
+ 		{
+ 			return;
+ 		}
++		TriPoint? p1 = triangle.PointCCW(point);
++		Winding o1 = TriUtil.Orient2d(eq, AssetContract.Required(p1), ep); // ArmAgedon seam
+-		TriPoint p1 = triangle.PointCCW(point);
+-		Winding o1 = TriUtil.Orient2d(eq, p1, ep);
+ 		if (o1 == Winding.Collinear)
+ 		{
+ 			if (triangle.Contains(eq, p1))
+ 			{
+ 				triangle.MarkConstrainedEdge(eq, p1);
+ 				tcx.EdgeEvent.ConstrainedEdge.Q = p1;
++				triangle = AssetContract.Required(triangle.NeighborAcross(point)); // ArmAgedon seam
++				EdgeEvent(tcx, ep, p1, AssetContract.Required(triangle), p1); // ArmAgedon seam
+-				triangle = triangle.NeighborAcross(point);
+-				EdgeEvent(tcx, ep, p1, triangle, p1);
+ 				return;
+ 			}
+ 			throw new NotSupportedException("EdgeEvent - collinear points not supported");
+ 		}
++		TriPoint? p2 = triangle.PointCW(point);
++		Winding o2 = TriUtil.Orient2d(eq, AssetContract.Required(p2), ep); // ArmAgedon seam
+-		TriPoint p2 = triangle.PointCW(point);
+-		Winding o2 = TriUtil.Orient2d(eq, p2, ep);
+ 		if (o2 == Winding.Collinear)
+ 		{
+ 			if (!triangle.Contains(eq, p2))
+@@ -114,13 +114,13 @@
+ 			}
+ 			triangle.MarkConstrainedEdge(eq, p2);
+ 			tcx.EdgeEvent.ConstrainedEdge.Q = p2;
++			triangle = AssetContract.Required(triangle.NeighborAcross(point)); // ArmAgedon seam
++			EdgeEvent(tcx, ep, p2, AssetContract.Required(triangle), p2); // ArmAgedon seam
+-			triangle = triangle.NeighborAcross(point);
+-			EdgeEvent(tcx, ep, p2, triangle, p2);
+ 		}
+ 		else if (o1 == o2)
+ 		{
++			triangle = AssetContract.Required((o1 != Winding.CW) ? triangle.NeighborCW(point) : triangle.NeighborCCW(point)); // ArmAgedon seam
++			EdgeEvent(tcx, ep, eq, AssetContract.Required(triangle), point); // ArmAgedon seam
+-			triangle = ((o1 != Winding.CW) ? triangle.NeighborCW(point) : triangle.NeighborCCW(point));
+-			EdgeEvent(tcx, ep, eq, triangle, point);
+ 		}
+ 		else
+ 		{
+@@ -142,11 +142,11 @@
+ 
+ 	private Node NewFrontTriangle(SweepContext tcx, TriPoint point, Node node)
+ 	{
++		Triangle triangle = new Triangle(point, node.Point, AssetContract.Required(node.Next).Point); // ArmAgedon seam
++		triangle.MarkNeighbor(AssetContract.Required(node.Triangle)); // ArmAgedon seam
+-		Triangle triangle = new Triangle(point, node.Point, node.Next.Point);
+-		triangle.MarkNeighbor(node.Triangle);
+ 		tcx.AddToMap(triangle);
+ 		Node new_node = new Node(point);
++		AssetContract.Required(_nodes).Add(new_node); // ArmAgedon seam
+-		_nodes.Add(new_node);
+ 		new_node.Next = node.Next;
+ 		new_node.Prev = node;
+ 		node.Next.Prev = new_node;
+@@ -160,9 +160,9 @@
+ 
+ 	private void Fill(SweepContext tcx, Node node)
+ 	{
++		Triangle triangle = new Triangle(AssetContract.Required(node.Prev).Point, node.Point, AssetContract.Required(node.Next).Point); // ArmAgedon seam
++		triangle.MarkNeighbor(AssetContract.Required(node.Prev.Triangle)); // ArmAgedon seam
++		triangle.MarkNeighbor(AssetContract.Required(node.Triangle)); // ArmAgedon seam
+-		Triangle triangle = new Triangle(node.Prev.Point, node.Point, node.Next.Point);
+-		triangle.MarkNeighbor(node.Prev.Triangle);
+-		triangle.MarkNeighbor(node.Triangle);
+ 		tcx.AddToMap(triangle);
+ 		node.Prev.Next = node.Next;
+ 		node.Next.Prev = node.Prev;
+@@ -174,14 +174,14 @@
+ 
+ 	private void FillAdvancingFront(SweepContext tcx, Node n)
+ 	{
++		Node? node = n.Next;
++		while (AssetContract.Required(node).Next != null && !LargeHole_DontFill(node)) // ArmAgedon seam
+-		Node node = n.Next;
+-		while (node.Next != null && !LargeHole_DontFill(node))
+ 		{
+ 			Fill(tcx, node);
+ 			node = node.Next;
+ 		}
+ 		node = n.Prev;
++		while (AssetContract.Required(node).Prev != null && !LargeHole_DontFill(node)) // ArmAgedon seam
+-		while (node.Prev != null && !LargeHole_DontFill(node))
+ 		{
+ 			Fill(tcx, node);
+ 			node = node.Prev;
+@@ -194,9 +194,9 @@
+ 
+ 	private bool LargeHole_DontFill(Node node)
+ 	{
++		Node? nextNode = node.Next;
++		Node? prevNode = node.Prev;
++		if (!AngleExceeds90Degrees(node.Point, AssetContract.Required(nextNode).Point, AssetContract.Required(prevNode).Point)) // ArmAgedon seam
+-		Node nextNode = node.Next;
+-		Node prevNode = node.Prev;
+-		if (!AngleExceeds90Degrees(node.Point, nextNode.Point, prevNode.Point))
+ 		{
+ 			return false;
+ 		}
+@@ -204,12 +204,12 @@
+ 		{
+ 			return true;
+ 		}
++		Node? next2Node = nextNode.Next;
+-		Node next2Node = nextNode.Next;
+ 		if (next2Node != null && !AngleExceedsPlus90DegreesOrIsNegative(node.Point, next2Node.Point, prevNode.Point))
+ 		{
+ 			return false;
+ 		}
++		Node? prev2Node = prevNode.Prev;
+-		Node prev2Node = prevNode.Prev;
+ 		if (prev2Node != null && !AngleExceedsPlus90DegreesOrIsNegative(node.Point, nextNode.Point, prev2Node.Point))
+ 		{
+ 			return false;
+@@ -257,15 +257,15 @@
+ 
+ 	private double BasinAngle(Node node)
+ 	{
++		double ax = node.Point.X - AssetContract.Required(AssetContract.Required(node.Next).Next).Point.X; // ArmAgedon seam // ArmAgedon seam
++		return Math.Atan2(node.Point.Y - AssetContract.Required(node.Next.Next).Point.Y, ax); // ArmAgedon seam
+-		double ax = node.Point.X - node.Next.Next.Point.X;
+-		return Math.Atan2(node.Point.Y - node.Next.Next.Point.Y, ax);
+ 	}
+ 
+ 	private double HoleAngle(Node node)
+ 	{
++		double ax = AssetContract.Required(node.Next).Point.X - node.Point.X; // ArmAgedon seam
+-		double ax = node.Next.Point.X - node.Point.X;
+ 		double ay = node.Next.Point.Y - node.Point.Y;
++		double bx = AssetContract.Required(node.Prev).Point.X - node.Point.X; // ArmAgedon seam
+-		double bx = node.Prev.Point.X - node.Point.X;
+ 		double by = node.Prev.Point.Y - node.Point.Y;
+ 		return Math.Atan2(ax * by - ay * bx, ax * bx + ay * by);
+ 	}
+@@ -278,19 +278,19 @@
+ 			{
+ 				continue;
+ 			}
++			Triangle? ot = t.GetNeighbor(i);
+-			Triangle ot = t.GetNeighbor(i);
+ 			if (ot == null)
+ 			{
+ 				continue;
+ 			}
++			TriPoint? p = t.Points[i];
++			TriPoint? op = ot.OppositePoint(t, AssetContract.Required(p)); // ArmAgedon seam
++			int oi = ot.Index(AssetContract.Required(op)); // ArmAgedon seam
+-			TriPoint p = t.Points[i];
+-			TriPoint op = ot.OppositePoint(t, p);
+-			int oi = ot.Index(op);
+ 			if (ot.ConstrainedEdge[oi] || ot.DelaunayEdge[oi])
+ 			{
+ 				t.ConstrainedEdge[i] = ot.ConstrainedEdge[oi];
+ 			}
++			else if (Incircle(p, AssetContract.Required(t.PointCCW(p)), AssetContract.Required(t.PointCW(p)), op)) // ArmAgedon seam
+-			else if (Incircle(p, t.PointCCW(p), t.PointCW(p), op))
+ 			{
+ 				t.DelaunayEdge[i] = true;
+ 				ot.DelaunayEdge[oi] = true;
+@@ -355,10 +355,10 @@
+ 	/// </pre>
+ 	private void RotateTrianglePair(Triangle t, TriPoint p, Triangle ot, TriPoint op)
+ 	{
++		Triangle? n1 = t.NeighborCCW(p);
++		Triangle? n2 = t.NeighborCW(p);
++		Triangle? n3 = ot.NeighborCCW(op);
++		Triangle? n4 = ot.NeighborCW(op);
+-		Triangle n1 = t.NeighborCCW(p);
+-		Triangle n2 = t.NeighborCW(p);
+-		Triangle n3 = ot.NeighborCCW(op);
+-		Triangle n4 = ot.NeighborCW(op);
+ 		bool ce1 = t.GetConstrainedEdgeCCW(p);
+ 		bool ce2 = t.GetConstrainedEdgeCW(p);
+ 		bool ce3 = ot.GetConstrainedEdgeCCW(op);
+@@ -400,7 +400,7 @@
+ 
+ 	private void FillBasin(SweepContext tcx, Node node)
+ 	{
++		if (TriUtil.Orient2d(node.Point, AssetContract.Required(node.Next).Point, AssetContract.Required(node.Next.Next).Point) == Winding.CCW) // ArmAgedon seam
+-		if (TriUtil.Orient2d(node.Point, node.Next.Point, node.Next.Next.Point) == Winding.CCW)
+ 		{
+ 			tcx.Basin.LeftNode = node.Next.Next;
+ 		}
+@@ -442,7 +442,7 @@
+ 		}
+ 		if (node.Prev == tcx.Basin.LeftNode)
+ 		{
++			if (TriUtil.Orient2d(node.Point, AssetContract.Required(node.Next).Point, AssetContract.Required(node.Next.Next).Point) == Winding.CW) // ArmAgedon seam
+-			if (TriUtil.Orient2d(node.Point, node.Next.Point, node.Next.Next.Point) == Winding.CW)
+ 			{
+ 				return;
+ 			}
+@@ -450,11 +450,11 @@
+ 		}
+ 		else if (node.Next != tcx.Basin.RightNode)
+ 		{
++			node = ((!(AssetContract.Required(node.Prev).Point.Y < AssetContract.Required(node.Next).Point.Y)) ? node.Next : node.Prev); // ArmAgedon seam
+-			node = ((!(node.Prev.Point.Y < node.Next.Point.Y)) ? node.Next : node.Prev);
+ 		}
+ 		else
+ 		{
++			if (TriUtil.Orient2d(node.Point, AssetContract.Required(node.Prev).Point, AssetContract.Required(node.Prev.Prev).Point) == Winding.CCW) // ArmAgedon seam
+-			if (TriUtil.Orient2d(node.Point, node.Prev.Point, node.Prev.Prev.Point) == Winding.CCW)
+ 			{
+ 				return;
+ 			}
+@@ -465,7 +465,7 @@
+ 
+ 	private bool IsShallow(SweepContext tcx, Node node)
+ 	{
++		double height = ((!tcx.Basin.LeftHighest) ? ((double)(AssetContract.Required(tcx.Basin.RightNode).Point.Y - node.Point.Y)) : ((double)(AssetContract.Required(tcx.Basin.LeftNode).Point.Y - node.Point.Y))); // ArmAgedon seam
+-		double height = ((!tcx.Basin.LeftHighest) ? ((double)(tcx.Basin.RightNode.Point.Y - node.Point.Y)) : ((double)(tcx.Basin.LeftNode.Point.Y - node.Point.Y)));
+ 		if ((double)tcx.Basin.Width > height)
+ 		{
+ 			return true;
+@@ -487,7 +487,7 @@
+ 
+ 	private void FillRightAboveEdgeEvent(SweepContext tcx, Edge edge, Node node)
+ 	{
++		while (AssetContract.Required(node.Next).Point.X < edge.P.X) // ArmAgedon seam
+-		while (node.Next.Point.X < edge.P.X)
+ 		{
+ 			if (TriUtil.Orient2d(edge.Q, node.Next.Point, edge.P) == Winding.CCW)
+ 			{
+@@ -504,7 +504,7 @@
+ 	{
+ 		if (node.Point.X < edge.P.X)
+ 		{
++			if (TriUtil.Orient2d(node.Point, AssetContract.Required(node.Next).Point, AssetContract.Required(node.Next.Next).Point) == Winding.CCW) // ArmAgedon seam
+-			if (TriUtil.Orient2d(node.Point, node.Next.Point, node.Next.Next.Point) == Winding.CCW)
+ 			{
+ 				FillRightConcaveEdgeEvent(tcx, edge, node);
+ 				return;
+@@ -516,8 +516,8 @@
+ 
+ 	private void FillRightConcaveEdgeEvent(SweepContext tcx, Edge edge, Node node)
+ 	{
++		Fill(tcx, AssetContract.Required(node.Next)); // ArmAgedon seam
++		if (node.Next.Point != edge.P && TriUtil.Orient2d(edge.Q, node.Next.Point, edge.P) == Winding.CCW && TriUtil.Orient2d(node.Point, node.Next.Point, AssetContract.Required(node.Next.Next).Point) == Winding.CCW) // ArmAgedon seam
+-		Fill(tcx, node.Next);
+-		if (node.Next.Point != edge.P && TriUtil.Orient2d(edge.Q, node.Next.Point, edge.P) == Winding.CCW && TriUtil.Orient2d(node.Point, node.Next.Point, node.Next.Next.Point) == Winding.CCW)
+ 		{
+ 			FillRightConcaveEdgeEvent(tcx, edge, node);
+ 		}
+@@ -525,7 +525,7 @@
+ 
+ 	private void FillRightConvexEdgeEvent(SweepContext tcx, Edge edge, Node node)
+ 	{
++		if (TriUtil.Orient2d(AssetContract.Required(node.Next).Point, AssetContract.Required(node.Next.Next).Point, AssetContract.Required(node.Next.Next.Next).Point) == Winding.CCW) // ArmAgedon seam
+-		if (TriUtil.Orient2d(node.Next.Point, node.Next.Next.Point, node.Next.Next.Next.Point) == Winding.CCW)
+ 		{
+ 			FillRightConcaveEdgeEvent(tcx, edge, node.Next);
+ 		}
+@@ -537,7 +537,7 @@
+ 
+ 	private void FillLeftAboveEdgeEvent(SweepContext tcx, Edge edge, Node node)
+ 	{
++		while (AssetContract.Required(node.Prev).Point.X > edge.P.X) // ArmAgedon seam
+-		while (node.Prev.Point.X > edge.P.X)
+ 		{
+ 			if (TriUtil.Orient2d(edge.Q, node.Prev.Point, edge.P) == Winding.CW)
+ 			{
+@@ -556,7 +556,7 @@
+ 		{
+ 			return;
+ 		}
++		if (TriUtil.Orient2d(node.Point, AssetContract.Required(node.Prev).Point, AssetContract.Required(node.Prev.Prev).Point) == Winding.CW) // ArmAgedon seam
+-		if (TriUtil.Orient2d(node.Point, node.Prev.Point, node.Prev.Prev.Point) == Winding.CW)
+ 		{
+ 			FillLeftConcaveEdgeEvent(tcx, edge, node);
+ 			return;
+@@ -571,7 +571,7 @@
+ 
+ 	private void FillLeftConvexEdgeEvent(SweepContext tcx, Edge edge, Node node)
+ 	{
++		if (TriUtil.Orient2d(AssetContract.Required(node.Prev).Point, AssetContract.Required(node.Prev.Prev).Point, AssetContract.Required(node.Prev.Prev.Prev).Point) == Winding.CW) // ArmAgedon seam
+-		if (TriUtil.Orient2d(node.Prev.Point, node.Prev.Prev.Point, node.Prev.Prev.Prev.Point) == Winding.CW)
+ 		{
+ 			FillLeftConcaveEdgeEvent(tcx, edge, node.Prev);
+ 		}
+@@ -583,8 +583,8 @@
+ 
+ 	private void FillLeftConcaveEdgeEvent(SweepContext tcx, Edge edge, Node node)
+ 	{
++		Fill(tcx, AssetContract.Required(node.Prev)); // ArmAgedon seam
++		if (node.Prev.Point != edge.P && TriUtil.Orient2d(edge.Q, node.Prev.Point, edge.P) == Winding.CW && TriUtil.Orient2d(node.Point, node.Prev.Point, AssetContract.Required(node.Prev.Prev).Point) == Winding.CW) // ArmAgedon seam
+-		Fill(tcx, node.Prev);
+-		if (node.Prev.Point != edge.P && TriUtil.Orient2d(edge.Q, node.Prev.Point, edge.P) == Winding.CW && TriUtil.Orient2d(node.Point, node.Prev.Point, node.Prev.Prev.Point) == Winding.CW)
+ 		{
+ 			FillLeftConcaveEdgeEvent(tcx, edge, node);
+ 		}
+@@ -592,13 +592,13 @@
+ 
+ 	private void FlipEdgeEvent(SweepContext tcx, TriPoint ep, TriPoint eq, Triangle t, TriPoint p)
+ 	{
++		Triangle? ot = t.NeighborAcross(p);
+-		Triangle ot = t.NeighborAcross(p);
+ 		if (ot == null)
+ 		{
+ 			throw new Exception("FlipEdgeEvent - null neighbour across");
+ 		}
++		TriPoint? op = ot.OppositePoint(t, p);
++		if (TriUtil.InScanArea(p, AssetContract.Required(t.PointCCW(p)), AssetContract.Required(t.PointCW(p)), AssetContract.Required(op))) // ArmAgedon seam
+-		TriPoint op = ot.OppositePoint(t, p);
+-		if (TriUtil.InScanArea(p, t.PointCCW(p), t.PointCW(p), op))
+ 		{
+ 			RotateTrianglePair(t, p, ot, op);
+ 			tcx.MapTriangleToNodes(t);
+@@ -622,8 +622,8 @@
+ 		}
+ 		else
+ 		{
++			TriPoint? newP = NextFlipPoint(ep, eq, ot, op);
++			FlipScanEdgeEvent(tcx, ep, eq, t, ot, AssetContract.Required(newP)); // ArmAgedon seam
+-			TriPoint newP = NextFlipPoint(ep, eq, ot, op);
+-			FlipScanEdgeEvent(tcx, ep, eq, t, ot, newP);
+ 			EdgeEvent(tcx, ep, eq, t, p);
+ 		}
+ 	}
+@@ -646,7 +646,7 @@
+ 		return ot;
+ 	}
+ 
++	private TriPoint? NextFlipPoint(TriPoint ep, TriPoint eq, Triangle ot, TriPoint op)
+-	private TriPoint NextFlipPoint(TriPoint ep, TriPoint eq, Triangle ot, TriPoint op)
+ 	{
+ 		return TriUtil.Orient2d(eq, op, ep) switch
+ 		{
+@@ -658,18 +658,18 @@
+ 
+ 	private void FlipScanEdgeEvent(SweepContext tcx, TriPoint ep, TriPoint eq, Triangle flip_triangle, Triangle t, TriPoint p)
+ 	{
++		Triangle? ot = t.NeighborAcross(p);
+-		Triangle ot = t.NeighborAcross(p);
+ 		if (ot == null)
+ 		{
+ 			throw new Exception("FlipScanEdgeEvent - null neighbour across");
+ 		}
++		TriPoint? op = ot.OppositePoint(t, p);
+-		TriPoint op = ot.OppositePoint(t, p);
+ 		if (op == null)
+ 		{
+ 			throw new Exception("FlipScanEdgeEvent - null opposing point");
+ 		}
++		TriPoint? p2 = flip_triangle.PointCCW(eq);
++		TriPoint? p3 = flip_triangle.PointCW(eq);
+-		TriPoint p2 = flip_triangle.PointCCW(eq);
+-		TriPoint p3 = flip_triangle.PointCW(eq);
+ 		if (p2 == null || p3 == null)
+ 		{
+ 			throw new Exception("FlipScanEdgeEvent - null on either of points");
+@@ -679,7 +679,7 @@
+ 			FlipEdgeEvent(tcx, eq, op, ot, op);
+ 			return;
+ 		}
++		TriPoint? newP = NextFlipPoint(ep, eq, ot, op);
++		FlipScanEdgeEvent(tcx, ep, eq, flip_triangle, ot, AssetContract.Required(newP)); // ArmAgedon seam
+-		TriPoint newP = NextFlipPoint(ep, eq, ot, op);
+-		FlipScanEdgeEvent(tcx, ep, eq, flip_triangle, ot, newP);
+ 	}
+ }

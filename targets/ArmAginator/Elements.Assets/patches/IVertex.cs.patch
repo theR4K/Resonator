@@ -1,0 +1,11 @@
+--- a/Elements/Assets/IVertex.cs
++++ b/Elements/Assets/IVertex.cs
+@@ -4,7 +4,7 @@
+ 
+ public interface IVertex
+ {
++	MeshX? Mesh { get; }
+-	MeshX Mesh { get; }
+ 
+ 	float3 Position { get; set; }
+ 

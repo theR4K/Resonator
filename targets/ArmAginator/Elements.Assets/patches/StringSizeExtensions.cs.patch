@@ -1,0 +1,16 @@
+--- a/Elements/Assets/StringSizeExtensions.cs
++++ b/Elements/Assets/StringSizeExtensions.cs
+@@ -13,11 +13,11 @@
+ 				return sizeMode switch
+ 				{
+ 					StringSizeNode.Mode.Absolute => sizeNode.Size * sizeNode.Root.AutoSizeRatio, 
++					StringSizeNode.Mode.Relative => AssetContract.Required(node.Parent).GetFontSize() * sizeNode.Size,  // ArmAgedon seam
+-					StringSizeNode.Mode.Relative => node.Parent.GetFontSize() * sizeNode.Size, 
+ 					_ => throw new Exception("Unsupported size mode: " + sizeNode.SizeMode), 
+ 				};
+ 			}
++			return AssetContract.Required(node.Parent).GetFontSize(); // ArmAgedon seam
+-			return node.Parent.GetFontSize();
+ 		}
+ 		return tree.ActualSize;
+ 	}

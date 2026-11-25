@@ -1,0 +1,11 @@
+--- a/Elements/Assets/AssetMetadataHelper.cs
++++ b/Elements/Assets/AssetMetadataHelper.cs
+@@ -33,7 +33,7 @@
+ 		throw new Exception("Invalid metadata type: " + metadataType);
+ 	}
+ 
++	public static T? ComputeMetadata<T>(string file) where T : class, IAssetMetadata
+-	public static T ComputeMetadata<T>(string file) where T : class, IAssetMetadata
+ 	{
+ 		if (typeof(T) == typeof(BitmapMetadata))
+ 		{

@@ -1,0 +1,17 @@
+--- a/Elements/Assets/Poly2Tri/SweepBasin.cs
++++ b/Elements/Assets/Poly2Tri/SweepBasin.cs
+@@ -2,11 +2,11 @@
+ 
+ internal class SweepBasin
+ {
++	public Node? LeftNode;
+-	public Node LeftNode;
+ 
++	public Node? BottomNode;
+-	public Node BottomNode;
+ 
++	public Node? RightNode;
+-	public Node RightNode;
+ 
+ 	public float Width;
+ 

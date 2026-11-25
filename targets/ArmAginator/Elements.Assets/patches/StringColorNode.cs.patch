@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringColorNode.cs
++++ b/Elements/Assets/StringColorNode.cs
+@@ -99,7 +99,7 @@
+ 		return new StringColorNode(Color, Mode, startIndex, parent);
+ 	}
+ 
++	public static StringColorNode? Parse(ReadOnlySpan<char> parameter, bool alphaOnly, int startIndex, StringContainerNode parent)
+-	public static StringColorNode Parse(ReadOnlySpan<char> parameter, bool alphaOnly, int startIndex, StringContainerNode parent)
+ 	{
+ 		if (parameter.Length == 0)
+ 		{

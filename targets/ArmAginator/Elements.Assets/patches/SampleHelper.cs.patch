@@ -1,0 +1,45 @@
+--- a/Elements/Assets/SampleHelper.cs
++++ b/Elements/Assets/SampleHelper.cs
+@@ -10,35 +10,35 @@
+ 
+ 	public static int GetSampleChannelCount(this Type type)
+ 	{
++		return (int)AssetContract.Required(AssetContract.Required(type.GetField("CHANNEL_COUNT")).GetValue(null)); // ArmAgedon seam // ArmAgedon seam
+-		return (int)type.GetField("CHANNEL_COUNT").GetValue(null);
+ 	}
+ 
++	public static Span<MonoSample> AsMonoBuffer(this float[]? buffer, int offset = 0, int count = -1)
+-	public static Span<MonoSample> AsMonoBuffer(this float[] buffer, int offset = 0, int count = -1)
+ 	{
+ 		return buffer.AsAudioBuffer<MonoSample>(offset, count);
+ 	}
+ 
++	public static Span<StereoSample> AsStereoBuffer(this float[]? buffer, int offset = 0, int count = -1)
+-	public static Span<StereoSample> AsStereoBuffer(this float[] buffer, int offset = 0, int count = -1)
+ 	{
+ 		return buffer.AsAudioBuffer<StereoSample>(offset, count);
+ 	}
+ 
++	public static Span<QuadSample> AsQuadBuffer(this float[]? buffer, int offset = 0, int count = -1)
+-	public static Span<QuadSample> AsQuadBuffer(this float[] buffer, int offset = 0, int count = -1)
+ 	{
+ 		return buffer.AsAudioBuffer<QuadSample>(offset, count);
+ 	}
+ 
++	public static Span<Surround51Sample> AsSurround51Buffer(this float[]? buffer, int offset = 0, int count = -1)
+-	public static Span<Surround51Sample> AsSurround51Buffer(this float[] buffer, int offset = 0, int count = -1)
+ 	{
+ 		return buffer.AsAudioBuffer<Surround51Sample>(offset, count);
+ 	}
+ 
++	public static Span<Surround71Sample> AsSurround71Buffer(this float[]? buffer, int offset = 0, int count = -1)
+-	public static Span<Surround71Sample> AsSurround71Buffer(this float[] buffer, int offset = 0, int count = -1)
+ 	{
+ 		return buffer.AsAudioBuffer<Surround71Sample>(offset, count);
+ 	}
+ 
++	public static Span<S> AsAudioBuffer<S>(this float[]? buffer, int offset = 0, int count = -1) where S : unmanaged, IAudioSample<S>
+-	public static Span<S> AsAudioBuffer<S>(this float[] buffer, int offset = 0, int count = -1) where S : unmanaged, IAudioSample<S>
+ 	{
+ 		Span<float> rawBuffer = buffer.AsSpan();
+ 		rawBuffer = ((count >= 0) ? rawBuffer.Slice(offset, count) : rawBuffer.Slice(offset));

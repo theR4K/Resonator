@@ -18,11 +18,17 @@
  	{
  		int index = randomSource?.Range(0, list.Count) ?? RandomX.Range(0, list.Count);
  		return list[index];
-@@ -231,7 +231,7 @@
+@@ -226,12 +226,12 @@
+ 		return -1;
+ 	}
+ 
++	public static T[] EnsureSize<T>(this T[]? array, int minLength, bool keepData = false)
+-	public static T[] EnsureSize<T>(this T[] array, int minLength, bool keepData = false)
+ 	{
  		return InternalEnsureSize(array, minLength, keepData);
  	}
  
-+	public static T[]? EnsureExactSize<T>(this T[] array, int length, bool keepData = false, bool allowZeroSize = false)
++	public static T[]? EnsureExactSize<T>(this T[]? array, int length, bool keepData = false, bool allowZeroSize = false)
 -	public static T[] EnsureExactSize<T>(this T[] array, int length, bool keepData = false, bool allowZeroSize = false)
  	{
  		if (length == 0)
@@ -50,6 +56,49 @@
  	{
  		while (collection.Count < count)
  		{
+@@ -281,7 +281,7 @@
+ 		}
+ 	}
+ 
++	private static T[] InternalEnsureSize<T>(T[]? array, int length, bool keepData = false, bool shrinkIfLarge = false)
+-	private static T[] InternalEnsureSize<T>(T[] array, int length, bool keepData = false, bool shrinkIfLarge = false)
+ 	{
+ 		if (array == null || array.Length < length || ((array.Length > length) & shrinkIfLarge))
+ 		{
+@@ -295,27 +295,27 @@
+ 		return array;
+ 	}
+ 
++	public static void ForeachGet<T>(this T[]? array, int index, int count, Action<T> action)
+-	public static void ForeachGet<T>(this T[] array, int index, int count, Action<T> action)
+ 	{
+ 		for (int i = index; i < index + count; i++)
+ 		{
++			action(CoreContract.Required(array)[i] /* ArmAgedon seam */);
+-			action(array[i]);
+ 		}
+ 	}
+ 
++	public static void ForeachSet<T>(this T[]? array, int index, int count, Func<T> action)
+-	public static void ForeachSet<T>(this T[] array, int index, int count, Func<T> action)
+ 	{
+ 		for (int i = index; i < index + count; i++)
+ 		{
++			CoreContract.Required(array)[i] /* ArmAgedon seam */ = action();
+-			array[i] = action();
+ 		}
+ 	}
+ 
++	public static void ForeachProcess<T>(this T[]? array, int index, int count, Func<T, T> action)
+-	public static void ForeachProcess<T>(this T[] array, int index, int count, Func<T, T> action)
+ 	{
+ 		for (int i = index; i < index + count; i++)
+ 		{
++			CoreContract.Required(array)[i] /* ArmAgedon seam */ = action(CoreContract.Required(array)[i] /* ArmAgedon seam */);
+-			array[i] = action(array[i]);
+ 		}
+ 	}
+ 
 @@ -324,7 +324,7 @@
  		StringBuilder stringBuilder = new StringBuilder();
  		foreach (T item in list)

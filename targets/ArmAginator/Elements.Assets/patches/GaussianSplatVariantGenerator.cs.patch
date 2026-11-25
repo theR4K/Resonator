@@ -1,0 +1,94 @@
+--- a/Elements/Assets/GaussianSplatVariantGenerator.cs
++++ b/Elements/Assets/GaussianSplatVariantGenerator.cs
+@@ -9,7 +9,7 @@
+ 
+ public static class GaussianSplatVariantGenerator
+ {
++	public static List<ComputedVariantResult> GenerateVariants(string file, GaussianSplatVariantDescriptor descriptor, VariantGeneratedHandler? variantGenerated = null, Predicate<string>? variantFilter = null)
+-	public static List<ComputedVariantResult> GenerateVariants(string file, GaussianSplatVariantDescriptor descriptor, VariantGeneratedHandler variantGenerated = null, Predicate<string> variantFilter = null)
+ 	{
+ 		List<ComputedVariantResult> results = new List<ComputedVariantResult>();
+ 		variantFilter = variantFilter ?? ((Predicate<string>)((string s) => true));
+@@ -25,16 +25,16 @@
+ 		cloud = GaussianSplatCompressor.ReorderMorton(cloud);
+ 		GenerateBufferVariants(cloud, descriptor, useChunks: false, results, variantGenerated, variantFilter);
+ 		GaussianSplatVariantDescriptor rotationVariant = descriptor.ExtractRotationBufferVariant();
++		if (variantFilter(AssetContract.Required(rotationVariant.VariantIdentifier) /* ArmAgedon seam */))
+-		if (variantFilter(rotationVariant.VariantIdentifier))
+ 		{
++			byte[] buffer = GaussianSplatCompressor.EncodeRotationBuffer(cloud.Rotations, AssetContract.Value(rotationVariant.RotationFormat) /* ArmAgedon seam */);
+-			byte[] buffer = GaussianSplatCompressor.EncodeRotationBuffer(cloud.Rotations, rotationVariant.RotationFormat.Value);
+ 			BufferGenerated(rotationVariant, buffer, results, variantGenerated);
+ 		}
+ 		if (descriptor.UsesChunkData)
+ 		{
+ 			GaussianCloudChunk[] chunks = GaussianSplatCompressor.ConvertToChunked(cloud);
+ 			GaussianSplatVariantDescriptor chunksVariant = descriptor.ExtractChunksVariant();
++			if (variantFilter(AssetContract.Required(chunksVariant.VariantIdentifier) /* ArmAgedon seam */))
+-			if (variantFilter(chunksVariant.VariantIdentifier))
+ 			{
+ 				byte[] buffer2 = new byte[chunks.Length * 64];
+ 				MemoryMarshal.Cast<GaussianCloudChunk, byte>(chunks.AsSpan()).CopyTo(buffer2.AsSpan());
+@@ -45,47 +45,47 @@
+ 		return results;
+ 	}
+ 
++	private static void GenerateBufferVariants(GaussianCloud cloud, GaussianSplatVariantDescriptor descriptor, bool useChunks, List<ComputedVariantResult> results, VariantGeneratedHandler? variantGenerated = null, Predicate<string>? variantFilter = null)
+-	private static void GenerateBufferVariants(GaussianCloud cloud, GaussianSplatVariantDescriptor descriptor, bool useChunks, List<ComputedVariantResult> results, VariantGeneratedHandler variantGenerated = null, Predicate<string> variantFilter = null)
+ 	{
++		if (AssetContract.Value(descriptor.PositionFormat) /* ArmAgedon seam */.UsesChunks() == useChunks)
+-		if (descriptor.PositionFormat.Value.UsesChunks() == useChunks)
+ 		{
+ 			GaussianSplatVariantDescriptor positionVariant = descriptor.ExtractPositionBufferVariant();
++			if (AssetContract.Required(variantFilter)(AssetContract.Required(positionVariant.VariantIdentifier) /* ArmAgedon seam */)) // ArmAgedon seam
+-			if (variantFilter(positionVariant.VariantIdentifier))
+ 			{
++				byte[] buffer = GaussianSplatCompressor.ConvertBuffer(cloud.Positions, AssetContract.Value(positionVariant.PositionFormat) /* ArmAgedon seam */);
+-				byte[] buffer = GaussianSplatCompressor.ConvertBuffer(cloud.Positions, positionVariant.PositionFormat.Value);
+ 				BufferGenerated(positionVariant, buffer, results, variantGenerated);
+ 			}
+ 		}
++		if (AssetContract.Value(descriptor.ScaleFormat) /* ArmAgedon seam */.UsesChunks() == useChunks)
+-		if (descriptor.ScaleFormat.Value.UsesChunks() == useChunks)
+ 		{
+ 			GaussianSplatVariantDescriptor scaleVariant = descriptor.ExtractScaleBufferVariant();
++			if (AssetContract.Required(variantFilter)(AssetContract.Required(scaleVariant.VariantIdentifier) /* ArmAgedon seam */)) // ArmAgedon seam
+-			if (variantFilter(scaleVariant.VariantIdentifier))
+ 			{
++				byte[] buffer2 = GaussianSplatCompressor.ConvertBuffer(cloud.Scales, AssetContract.Value(scaleVariant.ScaleFormat) /* ArmAgedon seam */);
+-				byte[] buffer2 = GaussianSplatCompressor.ConvertBuffer(cloud.Scales, scaleVariant.ScaleFormat.Value);
+ 				BufferGenerated(scaleVariant, buffer2, results, variantGenerated);
+ 			}
+ 		}
++		if (AssetContract.Value(descriptor.ColorFormat) /* ArmAgedon seam */.UsesChunks() == useChunks)
+-		if (descriptor.ColorFormat.Value.UsesChunks() == useChunks)
+ 		{
+ 			GaussianSplatVariantDescriptor colorVariant = descriptor.ExtractColorBufferVariant();
++			if (AssetContract.Required(variantFilter)(AssetContract.Required(colorVariant.VariantIdentifier) /* ArmAgedon seam */)) // ArmAgedon seam
+-			if (variantFilter(colorVariant.VariantIdentifier))
+ 			{
++				byte[]? buffer3 = GaussianSplatCompressor.EncodeColorBuffer(cloud, AssetContract.Value(colorVariant.ColorFormat) /* ArmAgedon seam */);
++				BufferGenerated(colorVariant, AssetContract.Required(buffer3), results, variantGenerated); // ArmAgedon seam
+-				byte[] buffer3 = GaussianSplatCompressor.EncodeColorBuffer(cloud, colorVariant.ColorFormat.Value);
+-				BufferGenerated(colorVariant, buffer3, results, variantGenerated);
+ 			}
+ 		}
++		if (AssetContract.Value(descriptor.SphericalHarmonicsFormat) /* ArmAgedon seam */.UsesChunks() == useChunks)
+-		if (descriptor.SphericalHarmonicsFormat.Value.UsesChunks() == useChunks)
+ 		{
+ 			GaussianSplatVariantDescriptor shVariant = descriptor.ExtractSHBufferVariant();
++			if (AssetContract.Required(variantFilter)(AssetContract.Required(shVariant.VariantIdentifier) /* ArmAgedon seam */)) // ArmAgedon seam
+-			if (variantFilter(shVariant.VariantIdentifier))
+ 			{
++				byte[] buffer4 = GaussianSplatCompressor.EncodeSH(cloud, AssetContract.Value(shVariant.SphericalHarmonicsFormat) /* ArmAgedon seam */);
+-				byte[] buffer4 = GaussianSplatCompressor.EncodeSH(cloud, shVariant.SphericalHarmonicsFormat.Value);
+ 				BufferGenerated(shVariant, buffer4, results, variantGenerated);
+ 			}
+ 		}
+ 	}
+ 
++	private static void BufferGenerated(GaussianSplatVariantDescriptor descriptor, byte[] buffer, List<ComputedVariantResult> results, VariantGeneratedHandler? variantGenerated = null)
+-	private static void BufferGenerated(GaussianSplatVariantDescriptor descriptor, byte[] buffer, List<ComputedVariantResult> results, VariantGeneratedHandler variantGenerated = null)
+ 	{
+ 		if (descriptor.IsComposite)
+ 		{

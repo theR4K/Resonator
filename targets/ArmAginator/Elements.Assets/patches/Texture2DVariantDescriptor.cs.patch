@@ -1,0 +1,83 @@
+--- a/Elements/Assets/Texture2DVariantDescriptor.cs
++++ b/Elements/Assets/Texture2DVariantDescriptor.cs
+@@ -43,11 +43,11 @@
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
+ 	[Newtonsoft.Json.JsonIgnore]
++	public override string? ValidationError
+-	public override string ValidationError
+ 	{
+ 		get
+ 		{
++			string? baseError = base.ValidationError;
+-			string baseError = base.ValidationError;
+ 			if (baseError != null)
+ 			{
+ 				return baseError;
+@@ -69,11 +69,11 @@
+ 	}
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
++	public override string? VariantIdentifier => GenerateVariantIdentifier(Width, Height, MipMaps);
+-	public override string VariantIdentifier => GenerateVariantIdentifier(Width, Height, MipMaps);
+ 
++	public override string? ValidateCloudVariant(BitmapMetadata metadata)
+-	public override string ValidateCloudVariant(BitmapMetadata metadata)
+ 	{
++		string? baseError = base.ValidateCloudVariant(metadata);
+-		string baseError = base.ValidateCloudVariant(metadata);
+ 		if (baseError != null)
+ 		{
+ 			return baseError;
+@@ -149,7 +149,7 @@
+ 
+ 	public static Texture2DVariantDescriptor FromIdentifier(string identifier)
+ 	{
++		Dictionary<string, string>? parameters = TextureVariantDescriptor<Texture2DVariantDescriptor, BitmapMetadata>.ParseBase(identifier, out var compression, out var quality, out var mips, out var colorPreprocess, out var alphaPreprocess, out var version);
+-		Dictionary<string, string> parameters = TextureVariantDescriptor<Texture2DVariantDescriptor, BitmapMetadata>.ParseBase(identifier, out var compression, out var quality, out var mips, out var colorPreprocess, out var alphaPreprocess, out var version);
+ 		if (parameters == null)
+ 		{
+ 			return new Texture2DVariantDescriptor();
+@@ -183,7 +183,7 @@
+ 		return new Texture2DVariantDescriptor(compression, quality, width, height, mips, filtering, colorPreprocess, alphaPreprocess, version);
+ 	}
+ 
++	private string? GenerateVariantIdentifier(int width, int height, bool mips)
+-	private string GenerateVariantIdentifier(int width, int height, bool mips)
+ 	{
+ 		if (OriginalAsset)
+ 		{
+@@ -202,7 +202,7 @@
+ 		return $"{version}compression={TextureCompression}&quality={CompressionQuality}&width={width}&height={height}&mips={mips}{filteringStr}&colorPreprocess={ColorPreprocess}&alphaPreprocess={AlphaPreprocess}";
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is Texture2DVariantDescriptor descriptor)
+ 		{
+@@ -211,13 +211,13 @@
+ 		return false;
+ 	}
+ 
++	public override bool Equals(Texture2DVariantDescriptor? other, VersionComparison versionComparison)
+-	public override bool Equals(Texture2DVariantDescriptor other, VersionComparison versionComparison)
+ 	{
+ 		if (!base.Equals(other, versionComparison))
+ 		{
+ 			return false;
+ 		}
++		if (Width == AssetContract.Required(other).Width && Height == other.Height) // ArmAgedon seam
+-		if (Width == other.Width && Height == other.Height)
+ 		{
+ 			return Filtering == other.Filtering;
+ 		}
+@@ -248,7 +248,7 @@
+ 		return !(left == right);
+ 	}
+ 
++	public override void GenerateLoadChain(List<string?> chain)
+-	public override void GenerateLoadChain(List<string> chain)
+ 	{
+ 		if (OriginalAsset)
+ 		{

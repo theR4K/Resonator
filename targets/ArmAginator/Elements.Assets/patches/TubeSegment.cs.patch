@@ -1,0 +1,23 @@
+--- a/Elements/Assets/TubeSegment.cs
++++ b/Elements/Assets/TubeSegment.cs
+@@ -5,7 +5,7 @@
+ 
+ public class TubeSegment : Segment
+ {
++	private TubeBuilder? _stripBuilder;
+-	private TubeBuilder _stripBuilder;
+ 
+ 	private float _radius = 1f;
+ 
+@@ -35,9 +35,9 @@
+ 		float lerp = (float)index * PointStep;
+ 		float angle = (float)Math.PI * 2f * lerp;
+ 		float3 p = new float3(0f - MathX.Cos(angle), MathX.Sin(angle)) * Radius;
++		if (AssetContract.Required(_stripBuilder)._offsets != null) // ArmAgedon seam
+-		if (_stripBuilder._offsets != null)
+ 		{
++			p = floatQ.AxisAngleRad(float3.Forward, angle) * AssetContract.Required(_stripBuilder._offsets)[index]; // ArmAgedon seam
+-			p = floatQ.AxisAngleRad(float3.Forward, angle) * _stripBuilder._offsets[index];
+ 		}
+ 		return p;
+ 	}

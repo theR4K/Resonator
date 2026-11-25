@@ -1,0 +1,78 @@
+--- a/Elements/Assets/CubemapVariantDescriptor.cs
++++ b/Elements/Assets/CubemapVariantDescriptor.cs
+@@ -32,11 +32,11 @@
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
+ 	[Newtonsoft.Json.JsonIgnore]
++	public override string? ValidationError
+-	public override string ValidationError
+ 	{
+ 		get
+ 		{
++			string? baseError = base.ValidationError;
+-			string baseError = base.ValidationError;
+ 			if (baseError != null)
+ 			{
+ 				return baseError;
+@@ -70,11 +70,11 @@
+ 	}
+ 
+ 	[System.Text.Json.Serialization.JsonIgnore]
++	public override string? VariantIdentifier => GenerateVariantIdentifier(Size, MipMaps);
+-	public override string VariantIdentifier => GenerateVariantIdentifier(Size, MipMaps);
+ 
++	public override string? ValidateCloudVariant(CubemapMetadata metadata)
+-	public override string ValidateCloudVariant(CubemapMetadata metadata)
+ 	{
++		string? baseError = base.ValidateCloudVariant(metadata);
+-		string baseError = base.ValidateCloudVariant(metadata);
+ 		if (baseError != null)
+ 		{
+ 			return baseError;
+@@ -123,7 +123,7 @@
+ 		Size = size;
+ 	}
+ 
++	private string? GenerateVariantIdentifier(int size, bool mips)
+-	private string GenerateVariantIdentifier(int size, bool mips)
+ 	{
+ 		if (OriginalAsset)
+ 		{
+@@ -144,7 +144,7 @@
+ 
+ 	public static CubemapVariantDescriptor FromIdentifier(string identifier)
+ 	{
++		Dictionary<string, string>? parameters = TextureVariantDescriptor<CubemapVariantDescriptor, CubemapMetadata>.ParseBase(identifier, out var compression, out var quality, out var mips, out var colorPreprocess, out var alphaPreprocess, out var version);
+-		Dictionary<string, string> parameters = TextureVariantDescriptor<CubemapVariantDescriptor, CubemapMetadata>.ParseBase(identifier, out var compression, out var quality, out var mips, out var colorPreprocess, out var alphaPreprocess, out var version);
+ 		if (parameters == null)
+ 		{
+ 			return new CubemapVariantDescriptor();
+@@ -162,16 +162,16 @@
+ 		return new CubemapVariantDescriptor(compression, quality, size, mips, colorPreprocess, alphaPreprocess, version);
+ 	}
+ 
++	public override bool Equals(CubemapVariantDescriptor? other, VersionComparison versionComparison)
+-	public override bool Equals(CubemapVariantDescriptor other, VersionComparison versionComparison)
+ 	{
+ 		if (!base.Equals(other, versionComparison))
+ 		{
+ 			return false;
+ 		}
++		return Size == AssetContract.Required(other).Size; // ArmAgedon seam
+-		return Size == other.Size;
+ 	}
+ 
++	public override bool Equals(object? obj)
+-	public override bool Equals(object obj)
+ 	{
+ 		if (obj is CubemapVariantDescriptor descriptor)
+ 		{
+@@ -209,7 +209,7 @@
+ 		return list;
+ 	}
+ 
++	public override void GenerateLoadChain(List<string?> chain)
+-	public override void GenerateLoadChain(List<string> chain)
+ 	{
+ 		if (OriginalAsset)
+ 		{

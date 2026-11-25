@@ -1,0 +1,27 @@
+--- a/Elements/Assets/WavEncoder.cs
++++ b/Elements/Assets/WavEncoder.cs
+@@ -7,7 +7,7 @@
+ 
+ public class WavEncoder : ISampleEncoder, IDisposable
+ {
++	private WaveWriter? writer;
+-	private WaveWriter writer;
+ 
+ 	public Stream OutputStream { get; private set; }
+ 
+@@ -24,13 +24,13 @@
+ 	{
+ 		for (int i = 0; i < samples.Length; i++)
+ 		{
++			AssetContract.Required(writer).WriteSample(samples[i]); // ArmAgedon seam
+-			writer.WriteSample(samples[i]);
+ 		}
+ 	}
+ 
+ 	public void Dispose()
+ 	{
++		AssetContract.Required(writer).Dispose(); // ArmAgedon seam
+-		writer.Dispose();
+ 		writer = null;
+ 	}
+ }

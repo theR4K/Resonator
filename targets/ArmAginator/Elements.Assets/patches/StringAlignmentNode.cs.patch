@@ -1,0 +1,11 @@
+--- a/Elements/Assets/StringAlignmentNode.cs
++++ b/Elements/Assets/StringAlignmentNode.cs
+@@ -17,7 +17,7 @@
+ 		return new StringAlignmentNode(Alignment, startIndex, parent);
+ 	}
+ 
++	public static StringAlignmentNode? Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+-	public static StringAlignmentNode Parse(ReadOnlySpan<char> parameter, int startIndex, StringContainerNode parent)
+ 	{
+ 		parameter = StringNode.ExtractRawParameter(parameter);
+ 		if (IsParameter(parameter, "left"))

@@ -1,0 +1,20 @@
+--- a/Elements/Assets/Texture3DVariantGenerator.cs
++++ b/Elements/Assets/Texture3DVariantGenerator.cs
+@@ -6,7 +6,7 @@
+ 
+ public static class Texture3DVariantGenerator
+ {
++	public static List<ComputedVariantResult> GenerateVariants(string file, Texture3DVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler? variantGenerated = null, Predicate<string>? variantFilter = null)
+-	public static List<ComputedVariantResult> GenerateVariants(string file, Texture3DVariantDescriptor variantDescriptor, int maxThreads = -1, VariantGeneratedHandler variantGenerated = null, Predicate<string> variantFilter = null)
+ 	{
+ 		List<ComputedVariantResult> results = new List<ComputedVariantResult>();
+ 		List<Texture3DVariantDescriptor> list = variantDescriptor.GenerateCloudChain();
+@@ -17,7 +17,7 @@
+ 		Bitmap3D bitmap = Bitmap3D.Load(file);
+ 		bitmap = TextureVariantGenerator.Preprocess(bitmap, variantDescriptor.TextureCompression, variantDescriptor.ColorPreprocess, variantDescriptor.AlphaPreprocess, allowARGB: false);
+ 		Texture3DVariantDescriptor v = list[0];
++		if (variantFilter != null && !variantFilter(AssetContract.Required(v.VariantIdentifier) /* ArmAgedon seam */))
+-		if (variantFilter != null && !variantFilter(v.VariantIdentifier))
+ 		{
+ 			return results;
+ 		}

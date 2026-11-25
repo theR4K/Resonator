@@ -1,0 +1,35 @@
+--- a/Elements/Assets/RawStringAnimationTrack.cs
++++ b/Elements/Assets/RawStringAnimationTrack.cs
+@@ -5,11 +5,11 @@
+ 
+ public class RawStringAnimationTrack : RawAnimationTrack<string>, IAnimationTrack<string>, IAnimationTrack
+ {
++	public string? Sample(float position)
+-	public string Sample(float position)
+ 	{
+ 		GetSampleIndex(position, out var index, out var lerp);
++		string? frame0 = frames[index];
++		string? frame1 = frames[MathX.Min(index + 1, FrameCount - 1)];
+-		string frame0 = frames[index];
+-		string frame1 = frames[MathX.Min(index + 1, FrameCount - 1)];
+ 		if (!(lerp >= 0.5f))
+ 		{
+ 			return frame0;
+@@ -21,7 +21,7 @@
+ 	{
+ 		for (int i = 0; i < FrameCount; i++)
+ 		{
++			string? frame = frames[i];
+-			string frame = frames[i];
+ 			bw.WriteNullable(frame);
+ 		}
+ 	}
+@@ -30,7 +30,7 @@
+ 	{
+ 		for (int i = 0; i < count; i++)
+ 		{
++			string? value = br.ReadNullableString();
+-			string value = br.ReadNullableString();
+ 			frames.Add(value);
+ 		}
+ 	}

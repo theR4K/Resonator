@@ -1,0 +1,26 @@
+--- a/Elements/Assets/VHACDInterface.cs
++++ b/Elements/Assets/VHACDInterface.cs
+@@ -150,18 +150,18 @@
+ 				{
+ 					continue;
+ 				}
++				IndexedFaceSetNode? geometry = shapeNode.Geometry as IndexedFaceSetNode;
++				CoordinateNode? obj = AssetContract.Required(geometry).Coord.Node as CoordinateNode; // ArmAgedon seam
+-				IndexedFaceSetNode geometry = shapeNode.Geometry as IndexedFaceSetNode;
+-				CoordinateNode obj = geometry.Coord.Node as CoordinateNode;
+ 				MeshX meshx = new MeshX();
++				foreach (SFVec3f point in AssetContract.Required(obj).Point.Values) // ArmAgedon seam
+-				foreach (SFVec3f point in obj.Point.Values)
+ 				{
+ 					meshx.AddVertex(new float3(point.X, point.Y, point.Z));
+ 				}
+ 				List<int> indexes = geometry.CoordIndex.Values.Select((SFInt32 sFInt) => sFInt.Value).ToList();
++				TriangleSubmesh? trigs = meshx.TryGetSubmesh<TriangleSubmesh>();
+-				TriangleSubmesh trigs = meshx.TryGetSubmesh<TriangleSubmesh>();
+ 				for (int i = 0; i < indexes.Count; i += 4)
+ 				{
++					AssetContract.Required(trigs).AddTriangle(indexes[i], indexes[i + 1], indexes[i + 2]); // ArmAgedon seam
+-					trigs.AddTriangle(indexes[i], indexes[i + 1], indexes[i + 2]);
+ 				}
+ 				ComputedConvexHull hull = new ComputedConvexHull();
+ 				hull.Mesh = meshx;

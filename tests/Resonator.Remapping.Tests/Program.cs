@@ -115,6 +115,7 @@ Assert(spec.ApiRemaps.Count == 2 && spec.ApiRemaps[0].EndsWith("base.json") && s
 Assert((spec with { PatchDirs = spec.PatchDirs.SkipLast(1).ToArray() }).ApiRemaps.Count == 2, "patch baseline lost own mapping");
 Console.WriteLine("PASS target inheritance and patch baseline mapping retention");
 UpgradeFixupChecks.Run();
+RuntimeAsyncChecks.Run();
 RemapReviewChecks.Run();
 AdapterChecks.Run();
 #if HAS_ASSIMP

@@ -94,6 +94,7 @@ Resonator.Deweaver [options] <file-or-dir>...    revert the weave
 | `verify <dll>` | residue check: no weaver traces left |
 | `known <weaver.dll>` | is this a known `FrooxEngine.Weaver`? |
 | `syncmembers <dll>` | generated `GetSyncMember` consistency of a Flatweave build ([rules](flatweave.md)) |
+| `runtimeasync <dll>` | verify framework await intrinsics have runtime-async callers (.NET 11) |
 | `reweave <dir> [<dll>...] [--weaver <dll>]` | run the real weaver over `<dir>` (default: the three weaved dlls) |
 | `diff <a.dll> <b.dll>` | structural diff: types, fields, methods, attributes, IL |
 | `diff --api <a.dll> <b.dll> [--allowlist <file.json>]` | API-surface diff (recompiled vs original): no IL, no compiler noise |

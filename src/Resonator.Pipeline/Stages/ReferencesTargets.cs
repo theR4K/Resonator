@@ -139,6 +139,11 @@ public static class ReferencesTargets
 
     static XElement CompilerSettings() => new("PropertyGroup",
         new XElement("LangVersion", "13.0"),
+        // ILSpy reconstructs Task awaits, but custom awaiters can retain calls to AsyncHelpers.
+        // Those intrinsics require MethodImplOptions.Async on their caller. Compiling them as
+        // state machines instead builds successfully, then throws NullReferenceException at runtime.
+        // Match the .NET 11 game's runtime-async code generation; older target frameworks cannot use it.
+        new XElement("Features", new XAttribute("Condition", "'$(TargetFramework)' == 'net11.0'"), "$(Features);runtime-async=on"),
         new XElement("AllowUnsafeBlocks", "True"),
         new XElement("GenerateAssemblyInfo", "False"),
         new XElement("TreatWarningsAsErrors", "False"),

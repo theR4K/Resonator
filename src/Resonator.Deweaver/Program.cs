@@ -20,6 +20,7 @@ internal static class Program
           verify <dll>                   residue check: no weaver traces left
           known <weaver.dll>             is this a KNOWN FrooxEngine.Weaver?
           syncmembers <dll>              generated GetSyncMember consistency (Flatweave builds, not reweaved)
+          runtimeasync <dll>             framework await intrinsics have runtime-async callers
           reweave <dir> [<dll>...] [--weaver <dll>]
                                          run the real weaver over <dir> (default: the three weaved dlls)
           diff <a.dll> <b.dll>           structural diff: types, fields, methods, attributes, IL
@@ -52,6 +53,7 @@ internal static class Program
                 "verify" => ResidueCheck.Run(Single(rest, "verify <dll>"), Console.Out),
                 "known" => Known(Single(rest, "known <weaver.dll>")),
                 "syncmembers" => SyncMemberCheck.Run(Single(rest, "syncmembers <dll>"), Console.Out, ResoniteDirs()),
+                "runtimeasync" => RuntimeAsyncCheck.Run(Single(rest, "runtimeasync <dll>"), Console.Out),
                 "reweave" => Reweave(rest),
                 "diff" => AssemblyDiff.Run(rest),
                 "pdbcheck" => PdbCheck.Run(Single(rest, "pdbcheck <dll>")),

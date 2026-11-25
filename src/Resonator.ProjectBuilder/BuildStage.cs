@@ -41,6 +41,13 @@ internal static class BuildStage
             FixCtor.Run(target.OutDll, target.Spec.FixCtorTypes, Console.Out);
         }
 
+        if (target.Spec.Tfm == "net11.0")
+        {
+            Log.Banner("RUNTIMEASYNC (framework await intrinsic callers)");
+            if (RuntimeAsyncCheck.Run(target.OutDll, Console.Out) != 0)
+                throw new Exception("runtime-async check failed (see above)");
+        }
+
         // A flattened build is never reweaved: its generated sync-member switches are final, so a
         // patch that adds a sync field or Worker must keep them consistent.
         if (target.Spec.Weave == WeaveMode.Flatten)

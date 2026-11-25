@@ -58,7 +58,10 @@ A `source` target is checked out at its pinned ref instead (git or release archi
 
 ## 3. Fixup
 
-1. Writes `references.targets`.
+1. Writes `references.targets`. For .NET 11 targets this enables `runtime-async=on`, matching the game.
+   Custom awaits can retain framework `AsyncHelpers` intrinsics after decompilation. Those calls need
+   runtime-async method metadata; a conventional state-machine rebuild compiles but fails during asset loading.
+   Wrapping the intrinsic in an ordinary method does not preserve its suspension semantics.
 2. Repairs mechanical decompiler artifacts in every file (`src/Resonator.Pipeline/Fixups/`):
 
    | Fix | Decompiled | Fixed |
@@ -87,6 +90,8 @@ Then the post-build steps:
 
 - **FixCtor** (`fix_ctor_types`): strips the compiler's default `.ctor` from types where the weaver removed it
   (Fody marker types), so the rebuilt dll matches.
+- **runtimeasync** (every .NET 11 build): rejects framework await intrinsic calls inside state-machine methods or
+  ordinary wrappers. Source-only consumers can run `Resonator.Deweaver runtimeasync <dll>` after their own build.
 - **syncmembers** (every `flatten` build): checks the generated `GetSyncMember` code, see
   [Writing code for Flatweave](flatweave.md).
 - **calli** (`calli` spec, CSCore): rewrites `[CSCalli]` stub calls into `calli` instructions, as upstream's

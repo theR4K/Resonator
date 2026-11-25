@@ -63,7 +63,7 @@ src\Resonator.PatchGenerator\bin\Release\net11.0\Resonator.PatchGenerator.exe ou
 
 | | |
 |---|---|
-| .NET SDK | 10.0 |
+| .NET SDK | 11.0 |
 | OS | Windows (Resonite install, PowerShell paths) |
 | Resonite | `--resonite <dir>`, else `%RESONITE_DIR%`, else `C:\Program Files (x86)\Steam\steamapps\common\Resonite`. The solution build needs it too, for the shader tool (`RESONITE_DIR` or `-p:ResoniteDir=<dir>`). |
 
